@@ -1,5 +1,9 @@
 <p align="center">
-  <img src="assets/branding/logo.png" alt="Nexus Business Manager" width="220">
+  <img
+    src="assets/branding/logo.png"
+    alt="Nexus Business Manager"
+    width="550"
+  >
 </p>
 
 <h1 align="center">Nexus Business Manager</h1>
