@@ -15,3 +15,5 @@ yarn-error.log*
 uploads/
 *.log
 logs/
+database/backups/*.sql
+database/backups/*.sql.gz

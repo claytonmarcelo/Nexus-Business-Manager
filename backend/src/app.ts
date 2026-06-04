@@ -25,6 +25,7 @@ import { notificationRoutes } from './modules/notifications/notifications.routes
 import { auditRoutes } from './modules/audit/audit.routes';
 import { companyRoutes } from './modules/companies/companies.routes';
 import { AppError } from './shared/errors/app-error';
+import { checkDatabaseHealth } from './shared/health-check';
 
 dotenv.config();
 
@@ -153,7 +154,14 @@ export async function buildApp() {
   await app.register(companyRoutes, { prefix: '/api' });
 
   app.get('/api/health', async () => {
-    return { status: 'ok', timestamp: new Date().toISOString(), version: '1.0.0' };
+    const db = await checkDatabaseHealth();
+    return {
+      status: db.ok ? 'healthy' : 'degraded',
+      timestamp: new Date().toISOString(),
+      database: db,
+      uptime: process.uptime(),
+      nodeVersion: process.version,
+    };
   });
 
   return app;

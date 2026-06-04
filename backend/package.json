@@ -7,6 +7,10 @@
     "dev": "tsx watch src/server.ts",
     "build": "tsc",
     "start": "node dist/server.js",
+    "typecheck": "tsc --noEmit",
+    "lint": "vitest run",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "migrate": "tsx src/shared/database/migrate.ts",
     "seed": "tsx src/shared/database/seed.ts"
   },
@@ -34,6 +38,7 @@
     "@types/node": "^20.14.10",
     "@types/pdfkit": "^0.17.6",
     "tsx": "^4.16.2",
-    "typescript": "^5.5.3"
+    "typescript": "^5.5.3",
+    "vitest": "^4.1.8"
   }
 }
