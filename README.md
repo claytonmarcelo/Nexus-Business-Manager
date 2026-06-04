@@ -1,3 +1,7 @@
+🇧🇷 **Português** | [🇺🇸 English](README.en.md)
+
+---
+
 # Nexus Business Manager
 
 ERP SaaS completo com CRM, Estoque, Financeiro, Agendamento, Dashboard, Controle de Usuários, Relatórios e preparação para Multiempresa.
