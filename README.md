@@ -31,6 +31,28 @@
 
 ---
 
+## Screenshots
+
+> As capturas de tela podem ser geradas rodando o projeto localmente. Veja o guia em [`docs/screenshots/README.md`](docs/screenshots/README.md).
+
+<div align="center">
+
+| Login | Dashboard |
+|:-----:|:---------:|
+| <img src="docs/screenshots/login.png" alt="Login" width="300"> | <img src="docs/screenshots/dashboard.png" alt="Dashboard" width="300"> |
+
+| CRM | Estoque |
+|:---:|:-------:|
+| <img src="docs/screenshots/clients.png" alt="Clientes" width="300"> | <img src="docs/screenshots/stock.png" alt="Estoque" width="300"> |
+
+| Financeiro | Relatórios |
+|:----------:|:----------:|
+| <img src="docs/screenshots/financial.png" alt="Financeiro" width="300"> | <img src="docs/screenshots/reports.png" alt="Relatórios" width="300"> |
+
+</div>
+
+---
+
 ## Sobre o Projeto
 
 O **Nexus Business Manager** é um sistema ERP SaaS completo desenvolvido para atender pequenas e médias empresas que precisam de uma solução unificada de gestão.
@@ -169,79 +191,6 @@ O Nexus unifica **tudo em um único sistema**, com dados centralizados, acesso w
 
 ---
 
-## Screenshots
-
-> As capturas de tela podem ser geradas rodando o projeto localmente. Veja o guia em [`docs/screenshots/README.md`](docs/screenshots/README.md).
-
-<div align="center">
-
-| Login | Dashboard |
-|:-----:|:---------:|
-| <img src="docs/screenshots/login.png" alt="Login" width="300"> | <img src="docs/screenshots/dashboard.png" alt="Dashboard" width="300"> |
-
-| CRM | Estoque |
-|:---:|:-------:|
-| <img src="docs/screenshots/clients.png" alt="Clientes" width="300"> | <img src="docs/screenshots/stock.png" alt="Estoque" width="300"> |
-
-| Financeiro | Relatórios |
-|:----------:|:----------:|
-| <img src="docs/screenshots/financial.png" alt="Financeiro" width="300"> | <img src="docs/screenshots/reports.png" alt="Relatórios" width="300"> |
-
-</div>
-
----
-
-## Arquitetura
-
-```
-┌─────────────────────────────────────────────────┐
-│              Frontend Web (React)                │
-│         Acesso via navegador (SPA)               │
-│          http://localhost:5173                    │
-└─────────────────────┬───────────────────────────┘
-                      │  Requisições HTTP (JSON)
-                      │  Authorization: Bearer JWT
-                      ▼
-┌─────────────────────────────────────────────────┐
-│              API REST (Fastify)                  │
-│         Node.js + TypeScript + Zod              │
-│          http://localhost:3333                    │
-│                                                   │
-│  ┌───────────────┐  ┌───────────────────────────┐ │
-│  │  Middlewares   │  │  Autenticação JWT         │ │
-│  │  - Rate Limit │  │  - Verificação de token   │ │
-│  │  - Helmet     │──▶│  - Hierarquia de cargos  │ │
-│  │  - CORS       │  │  - Isolamento empresa     │ │
-│  └───────────────┘  └───────────────────────────┘ │
-│                           │                        │
-│  ┌──────────────────────────────────────────────┐ │
-│  │          15 Módulos de Negócio               │ │
-│  │  Auth │ Users │ Clients │ Products │ Stock   │ │
-│  │  Suppliers │ Purchases │ Sales │ Financial   │ │
-│  │  Appointments │ Dashboard │ Reports          │ │
-│  │  Notifications │ Audit │ Companies           │ │
-│  └──────────────────────────────────────────────┘ │
-│                           │                        │
-│  ┌──────────────────────────────────────────────┐ │
-│  │         MySQL (mysql2/promise)               │ │
-│  │  Isolamento multiempresa via company_id       │ │
-│  │  Auditoria registrada em cada ação           │ │
-│  └──────────────────────────────────────────────┘ │
-└─────────────────────────────────────────────────┘
-```
-
-### Fluxo de autenticação
-
-```
-Cliente ──▶ POST /api/auth ──▶ Zod valida ──▶ bcrypt.compare ──▶ JWT emitido
-   ▲                                                               │
-   └─────────────────── Bearer Token em cada request ──────────────┘
-```
-
-Cada requisição privada passa por: **JWT verify → Role check → Company isolation → Controller → Service → Database**.
-
----
-
 ## Tecnologias
 
 ### Backend
@@ -306,6 +255,122 @@ nexusbusinessmanager/
 ├── assets/            → Recursos de branding
 └── .github/
     └── workflows/     → CI/CD (GitHub Actions)
+```
+
+---
+
+## Multiempresa
+
+O Nexus Business Manager foi projetado com suporte nativo a **múltiplas empresas** (SaaS multi-tenant).
+
+### Como funciona
+
+1. Cada tabela de dados possui uma coluna `company_id`
+2. Toda consulta SQL inclui `WHERE company_id = ?`
+3. O token JWT contém o `companyId` do usuário logado
+4. O middleware de autenticação extrai e repassa o `company_id` automaticamente
+
+### Isolamento
+
+- Empresas **não visualizam** dados de outras empresas
+- Usuários pertencem a uma única empresa
+- O cadastro de empresas é gerenciado pelo módulo de administração
+- Ideal para franquias, grupos empresariais e prestadores de SaaS
+
+---
+
+## Segurança
+
+O projeto implementa múltiplas camadas de segurança:
+
+| Camada          | Descrição                                      |
+|-----------------|------------------------------------------------|
+| **JWT**         | Tokens com expiração configurável              |
+| **bcryptjs**    | Hash seguro com salt para senhas               |
+| **Rate Limit**  | 100 requisições/min global, 5 tentativas de login |
+| **Helmet**      | Headers HTTP de segurança (XSS, CSP, HSTS)     |
+| **Zod**         | Validação rigorosa de todas as entradas        |
+| **Permissões**  | Hierarquia admin > manager > operator > viewer |
+| **Auditoria**   | Registro de todas as ações com IP e data       |
+| **CORS**        | Controle de origens permitidas                 |
+
+---
+
+## Arquitetura
+
+```
+┌─────────────────────────────────────────────────┐
+│              Frontend Web (React)                │
+│         Acesso via navegador (SPA)               │
+│          http://localhost:5173                    │
+└─────────────────────┬───────────────────────────┘
+                      │  Requisições HTTP (JSON)
+                      │  Authorization: Bearer JWT
+                      ▼
+┌─────────────────────────────────────────────────┐
+│              API REST (Fastify)                  │
+│         Node.js + TypeScript + Zod              │
+│          http://localhost:3333                    │
+│                                                   │
+│  ┌───────────────┐  ┌───────────────────────────┐ │
+│  │  Middlewares   │  │  Autenticação JWT         │ │
+│  │  - Rate Limit │  │  - Verificação de token   │ │
+│  │  - Helmet     │──▶│  - Hierarquia de cargos  │ │
+│  │  - CORS       │  │  - Isolamento empresa     │ │
+│  └───────────────┘  └───────────────────────────┘ │
+│                           │                        │
+│  ┌──────────────────────────────────────────────┐ │
+│  │          15 Módulos de Negócio               │ │
+│  │  Auth │ Users │ Clients │ Products │ Stock   │ │
+│  │  Suppliers │ Purchases │ Sales │ Financial   │ │
+│  │  Appointments │ Dashboard │ Reports          │ │
+│  │  Notifications │ Audit │ Companies           │ │
+│  └──────────────────────────────────────────────┘ │
+│                           │                        │
+│  ┌──────────────────────────────────────────────┐ │
+│  │         MySQL (mysql2/promise)               │ │
+│  │  Isolamento multiempresa via company_id       │ │
+│  │  Auditoria registrada em cada ação           │ │
+│  └──────────────────────────────────────────────┘ │
+└─────────────────────────────────────────────────┘
+```
+
+### Fluxo de autenticação
+
+```
+Cliente ──▶ POST /api/auth ──▶ Zod valida ──▶ bcrypt.compare ──▶ JWT emitido
+   ▲                                                               │
+   └─────────────────── Bearer Token em cada request ──────────────┘
+```
+
+Cada requisição privada passa por: **JWT verify → Role check → Company isolation → Controller → Service → Database**.
+
+---
+
+## Banco de Dados
+
+O projeto utiliza **MySQL 8+** como banco de dados relacional.
+
+### Migrations
+
+As migrations estão em `backend/database/migrations/` e são executadas em ordem numérica:
+
+```bash
+npm run migrate
+```
+
+### Seeds
+
+O seed inicial cria o administrador e a empresa padrão:
+
+```bash
+npm run seed
+```
+
+O seed de demonstração popula o banco com dados realistas (clientes, produtos, vendas, etc.):
+
+```bash
+npm run demo-seed
 ```
 
 ---
@@ -379,71 +444,6 @@ DB_NAME=nexus_business_manager
 DB_USER=root
 DB_PASSWORD=
 ```
-
----
-
-## Banco de Dados
-
-O projeto utiliza **MySQL 8+** como banco de dados relacional.
-
-### Migrations
-
-As migrations estão em `backend/database/migrations/` e são executadas em ordem numérica:
-
-```bash
-npm run migrate
-```
-
-### Seeds
-
-O seed inicial cria o administrador e a empresa padrão:
-
-```bash
-npm run seed
-```
-
-O seed de demonstração popula o banco com dados realistas (clientes, produtos, vendas, etc.):
-
-```bash
-npm run demo-seed
-```
-
----
-
-## Multiempresa
-
-O Nexus Business Manager foi projetado com suporte nativo a **múltiplas empresas** (SaaS multi-tenant).
-
-### Como funciona
-
-1. Cada tabela de dados possui uma coluna `company_id`
-2. Toda consulta SQL inclui `WHERE company_id = ?`
-3. O token JWT contém o `companyId` do usuário logado
-4. O middleware de autenticação extrai e repassa o `company_id` automaticamente
-
-### Isolamento
-
-- Empresas **não visualizam** dados de outras empresas
-- Usuários pertencem a uma única empresa
-- O cadastro de empresas é gerenciado pelo módulo de administração
-- Ideal para franquias, grupos empresariais e prestadores de SaaS
-
----
-
-## Segurança
-
-O projeto implementa múltiplas camadas de segurança:
-
-| Camada          | Descrição                                      |
-|-----------------|------------------------------------------------|
-| **JWT**         | Tokens com expiração configurável              |
-| **bcryptjs**    | Hash seguro com salt para senhas               |
-| **Rate Limit**  | 100 requisições/min global, 5 tentativas de login |
-| **Helmet**      | Headers HTTP de segurança (XSS, CSP, HSTS)     |
-| **Zod**         | Validação rigorosa de todas as entradas        |
-| **Permissões**  | Hierarquia admin > manager > operator > viewer |
-| **Auditoria**   | Registro de todas as ações com IP e data       |
-| **CORS**        | Controle de origens permitidas                 |
 
 ---
 
