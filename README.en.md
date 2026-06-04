@@ -1,61 +1,189 @@
-[🇧🇷 Português](README.md) | 🇺🇸 **English**
-
----
-
 <p align="center">
-  <img src="assets/logo.png" alt="Nexus Business Manager" width="200"/>
+  <img src="assets/branding/logo.png" alt="Nexus Business Manager" width="220">
 </p>
 
 <h1 align="center">Nexus Business Manager</h1>
 
 <p align="center">
-  <strong>Complete SaaS ERP for Business Management</strong>
-  <br/>
-  CRM • Inventory • Financial • Scheduling • Reports
+  <strong>Complete SaaS ERP for Business Management</strong><br>
+  Modern system to centralize CRM, Inventory, Purchases, Sales, Financial, Scheduling, Reports and Multi-company in a single platform.
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/node-%3E%3D20-brightgreen" alt="Node"/>
-  <img src="https://img.shields.io/badge/typescript-5.5-blue" alt="TypeScript"/>
-  <img src="https://img.shields.io/badge/react-18-61dafb" alt="React"/>
-  <img src="https://img.shields.io/badge/fastify-4.28-000000" alt="Fastify"/>
-  <img src="https://img.shields.io/badge/mysql-8.0-orange" alt="MySQL"/>
-  <img src="https://img.shields.io/badge/license-MIT-green" alt="License"/>
-  <img src="https://img.shields.io/badge/coverage-20%20tests-brightgreen" alt="Tests"/>
+  <a href="README.md">🇧🇷 Português</a> |
+  🇺🇸 <strong>English</strong>
+</p>
+
+<p align="center">
+  <a href="./LICENSE"><img src="https://img.shields.io/badge/license-MIT-green" alt="MIT License"></a>
+  <img src="https://img.shields.io/badge/version-1.0.0-blue" alt="Version">
+  <img src="https://img.shields.io/badge/typescript-5.5-3178C6?logo=typescript" alt="TypeScript">
+  <img src="https://img.shields.io/badge/node-%3E%3D20-339933?logo=node.js" alt="Node.js">
+  <img src="https://img.shields.io/badge/fastify-4.28-000000?logo=fastify" alt="Fastify">
+  <img src="https://img.shields.io/badge/mysql-8.0-4479A1?logo=mysql" alt="MySQL">
+  <img src="https://img.shields.io/badge/react-18-61DAFB?logo=react" alt="React">
+  <img src="https://img.shields.io/badge/react%20native-0.76-61DAFB?logo=react" alt="React Native">
 </p>
 
 ---
 
-## Overview
+## About the Project
 
-**Nexus Business Manager** is a complete SaaS ERP system developed for small and medium businesses. It brings together CRM, inventory control, financial management, scheduling, reports, and more in a single platform.
+**Nexus Business Manager** is a complete SaaS ERP system designed for small and medium businesses that need a unified management solution.
 
-### Problem Solved
+### Problem it solves
 
-Small businesses need multiple tools to manage clients, inventory, finances, and schedules. Nexus unifies everything in one system with web and mobile access, multi-user support, and centralized data.
+Small businesses often use isolated tools for each area: one system for clients, a spreadsheet for inventory, another for finances, and a separate calendar. This creates rework, inconsistent data, and wasted time.
 
-### Target Audience
+Nexus unifies **everything in a single system** with centralized data, web and mobile access, multi-user support, and complete data isolation between companies.
 
-- Retail stores
-- Service providers
-- Small manufacturers
+### Target audience
+
+- Retail and wholesale stores
+- Service providers (workshops, clinics, offices)
+- Small manufacturers and distributors
 - Freelance professionals
-- Offices and clinics
+- Accounting offices
+
+### Benefits
+
+- **Centralization**: All data in one place
+- **Cost savings**: Replaces multiple paid tools
+- **Scalability**: Architecture ready to grow
+- **Multi-company**: Manage as many companies as you need
+- **Open source**: Freedom to customize and extend
 
 ---
 
-## Tech Stack
+## Features
 
-| Layer       | Technology                         |
-|-------------|------------------------------------|
-| **Backend** | Node.js, Fastify, TypeScript       |
-| **Frontend**| React 18, Vite, Tailwind CSS       |
-| **Mobile**  | React Native (initial structure)   |
-| **Database**| MySQL 8+ (mysql2 + Prisma)         |
-| **Auth**    | JWT (bcryptjs)                     |
-| **Validation** | Zod                             |
-| **Tests**   | Vitest                             |
-| **CI/CD**   | GitHub Actions                     |
+### Authentication
+- Secure login with JWT
+- Token-based session control
+- Password recovery support
+
+### Users
+- Full registration with profiles
+- Role hierarchy: admin, manager, operator, viewer
+- User activation/deactivation
+
+### CRM
+- Client registration with search and pagination
+- Sales history per client
+- Client status (active/inactive)
+
+### Products
+- Registration with unique SKU
+- Categories and pricing
+- Product image support
+
+### Inventory
+- Inbound and outbound movements
+- Quantity control per product
+- Low stock alerts
+- Complete movement history
+
+### Suppliers
+- Registration with contact information
+- Search by name and document
+
+### Purchases
+- Multi-item orders
+- Partial receiving
+- Status: pending, received, cancelled
+- Automatic stock update on receiving
+
+### Sales
+- Multi-item registration
+- Automatic stock deduction
+- Client linking
+- Status: open, completed, cancelled
+
+### Financial
+- Revenue and expenses
+- Cash flow management
+- Customizable categories
+- Status: pending, paid, overdue, cancelled
+- Cash flow report
+
+### Appointments
+- Service calendar
+- Client linking
+- Date filter
+- Status: scheduled, completed, cancelled
+
+### Dashboard
+- KPIs: clients, products, sales, low stock
+- Revenue vs expenses monthly chart
+- Monthly sales chart
+- Products by category chart
+- Total stock value
+
+### Reports
+- Reports in JSON, PDF, and Excel
+- Types: clients, products, financial, stock, sales
+- Direct browser download
+
+### Notifications
+- Low stock alerts
+- Due bill alerts
+- Today's schedule alerts
+- Mark as read / read all
+
+### Audit
+- All actions logged (create, update, delete)
+- Login and logout logging
+- Report export logging
+- User IP recorded
+
+### Multi-company
+- Complete isolation via `company_id`
+- Companies don't see each other's data
+- Company registration and management
+
+---
+
+## Implemented Modules
+
+| Module        | Status |
+|---------------|--------|
+| Authentication| ✅      |
+| Users         | ✅      |
+| CRM           | ✅      |
+| Products      | ✅      |
+| Inventory     | ✅      |
+| Suppliers     | ✅      |
+| Purchases     | ✅      |
+| Sales         | ✅      |
+| Financial     | ✅      |
+| Appointments  | ✅      |
+| Dashboard     | ✅      |
+| Reports       | ✅      |
+| Notifications | ✅      |
+| Audit         | ✅      |
+| Multi-company | ✅      |
+
+---
+
+## Screenshots
+
+> Screenshots can be generated by running the project locally. See the guide at [`docs/screenshots/README.md`](docs/screenshots/README.md).
+
+<div align="center">
+
+| Login | Dashboard |
+|:-----:|:---------:|
+| <img src="docs/screenshots/login.png" alt="Login" width="300"> | <img src="docs/screenshots/dashboard.png" alt="Dashboard" width="300"> |
+
+| CRM | Inventory |
+|:---:|:---------:|
+| <img src="docs/screenshots/clients.png" alt="Clients" width="300"> | <img src="docs/screenshots/stock.png" alt="Inventory" width="300"> |
+
+| Financial | Reports |
+|:---------:|:-------:|
+| <img src="docs/screenshots/financial.png" alt="Financial" width="300"> | <img src="docs/screenshots/reports.png" alt="Reports" width="300"> |
+
+</div>
 
 ---
 
@@ -63,61 +191,118 @@ Small businesses need multiple tools to manage clients, inventory, finances, and
 
 ```
 ┌─────────────────────────────────────────────────┐
-│                   Frontend                       │
-│           React + Vite + Tailwind                │
-│         (SPA - http://localhost:5173)             │
-└────────────────────┬────────────────────────────┘
-                     │  REST API (JSON)
-                     ▼
+│              Web Frontend (React)                │
+│         Browser access (SPA)                     │
+│          http://localhost:5173                    │
+└─────────────────────┬───────────────────────────┘
+                      │  HTTP Requests (JSON)
+                      │  Authorization: Bearer JWT
+                      ▼
 ┌─────────────────────────────────────────────────┐
-│                   Backend                        │
-│        Fastify + TypeScript + Zod                │
-│          (API - http://localhost:3333)            │
+│              REST API (Fastify)                  │
+│         Node.js + TypeScript + Zod              │
+│          http://localhost:3333                    │
 │                                                   │
-│  ┌──────────┐  ┌──────────┐  ┌────────────────┐ │
-│  │  Modules  │  │   JWT    │  │  Permissions   │ │
-│  │  (15)     │◄─┤   Auth   │◄─┤  (Hierarchy)   │ │
-│  └──────────┘  └──────────┘  └────────────────┘ │
-│         │                                         │
-│         ▼                                         │
-│  ┌─────────────────────────────────────────────┐ │
-│  │         MySQL (Multi-tenant)                │ │
-│  │   company_id isolation in all queries       │ │
-│  │   + audit logging per action                │ │
-│  └─────────────────────────────────────────────┘ │
+│  ┌───────────────┐  ┌───────────────────────────┐ │
+│  │  Middlewares   │  │  JWT Authentication       │ │
+│  │  - Rate Limit │  │  - Token verification     │ │
+│  │  - Helmet     │──▶│  - Role hierarchy        │ │
+│  │  - CORS       │  │  - Company isolation      │ │
+│  └───────────────┘  └───────────────────────────┘ │
+│                           │                        │
+│  ┌──────────────────────────────────────────────┐ │
+│  │          15 Business Modules                 │ │
+│  │  Auth │ Users │ Clients │ Products │ Stock   │ │
+│  │  Suppliers │ Purchases │ Sales │ Financial   │ │
+│  │  Appointments │ Dashboard │ Reports          │ │
+│  │  Notifications │ Audit │ Companies           │ │
+│  └──────────────────────────────────────────────┘ │
+│                           │                        │
+│  ┌──────────────────────────────────────────────┐ │
+│  │         MySQL (mysql2/promise)               │ │
+│  │  Multi-tenant isolation via company_id        │ │
+│  │  Audit logged on every action                │ │
+│  └──────────────────────────────────────────────┘ │
 └─────────────────────────────────────────────────┘
 ```
 
-### Auth Flow
+### Authentication flow
 
 ```
-Client ──▶ POST /api/auth ──▶ Validate (Zod) ──▶ bcrypt.compare ──▶ JWT
-   ▲                                                                │
-   └────────────────── Bearer Token ───────────────────────────────┘
+Client ──▶ POST /api/auth ──▶ Zod validates ──▶ bcrypt.compare ──▶ JWT issued
+   ▲                                                              │
+   └─────────────────── Bearer Token on every request ────────────┘
 ```
+
+Every private request goes through: **JWT verify → Role check → Company isolation → Controller → Service → Database**.
 
 ---
 
-## Features
+## Tech Stack
 
-- **JWT Authentication** — Secure login with renewable tokens
-- **Role Hierarchy** — admin > manager > operator > viewer
-- **Multi-tenant (SaaS)** — Data isolation via `company_id`
-- **Full CRUD** — 15 modules with create, edit, search, pagination
-- **Audit** — All actions logged with IP and changed data
-- **Reports** — Export in JSON, PDF, and Excel
-- **Notifications** — Low stock alerts, due bills, scheduled events
-- **Dashboard** — KPIs, revenue/expense charts, sales
-- **Rate Limiting** — Abuse protection (5 login attempts, 100 req/min)
-- **Security** — Helmet (XSS, CSP, HSTS), Zod validation, bcryptjs
+### Backend
+| Technology   | Purpose                     |
+|--------------|-----------------------------|
+| Node.js      | JavaScript runtime          |
+| Fastify      | HTTP framework              |
+| TypeScript   | Static typing               |
+| JWT          | Stateless authentication    |
+| Zod          | Schema validation           |
+| bcryptjs     | Password hashing            |
+| mysql2       | MySQL driver                |
+| Prisma       | ORM (auth module)           |
+
+### Frontend
+| Technology   | Purpose                     |
+|--------------|-----------------------------|
+| React 18     | UI library                  |
+| Vite         | Bundler and dev server      |
+| Tailwind CSS | Styling framework           |
+| React Native | Mobile app                  |
+| Recharts     | Charts and graphs           |
+| Axios        | HTTP client                 |
+
+### Database
+| Technology   | Purpose                     |
+|--------------|-----------------------------|
+| MySQL 8+     | Relational database         |
+| Migrations   | Schema evolution            |
+| Seeds        | Initial data                |
+
+### DevOps
+| Technology      | Purpose                     |
+|-----------------|-----------------------------|
+| Git             | Version control             |
+| GitHub Actions  | CI/CD                       |
+| Vitest          | Unit tests                  |
 
 ---
 
-## Screenshots
+## Folder Structure
 
-> Screenshots are available at [`docs/screenshots/`](docs/screenshots/README.md).
->
-> To generate images, start the project and visit `http://localhost:5173`.
+```
+nexusbusinessmanager/
+├── backend/           → REST API (Fastify + TypeScript)
+│   ├── src/
+│   │   ├── modules/   → 15 business modules
+│   │   ├── shared/    → Middlewares, utils, DB connection
+│   │   └── tests/     → Unit tests (Vitest)
+│   └── database/
+│       └── migrations/→ Versioned SQL migrations
+├── frontend/          → Web application (React + Vite)
+│   └── src/
+│       ├── pages/     → Pages by module
+│       ├── components/→ Reusable components
+│       └── contexts/  → Auth context
+├── mobile/            → Mobile app (React Native)
+├── database/          → SQL schema and backup scripts
+├── docs/              → Complete documentation
+│   ├── en/            → Documentation in English
+│   └── screenshots/   → Application screenshots
+├── assets/            → Branding resources
+└── .github/
+    └── workflows/     → CI/CD (GitHub Actions)
+```
 
 ---
 
@@ -126,35 +311,39 @@ Client ──▶ POST /api/auth ──▶ Validate (Zod) ──▶ bcrypt.compar
 ### Prerequisites
 
 - Node.js >= 20
-- MySQL >= 8
+- MySQL >= 8.0
 - Git
+- npm (included with Node.js)
 
-### Step by Step
+### Step by step
 
 ```bash
 # 1. Clone the repository
 git clone https://github.com/claytonmarcelo/Nexus-Business-Manager.git
 cd nexusbusinessmanager
 
-# 2. Set up the database
+# 2. Set up the MySQL database
 mysql -u root -p < database/schema.sql
 
-# 3. Backend
+# 3. Install and start the backend
 cd backend
 npm install
 cp .env.example .env
-# Edit .env with your credentials
+# Edit the .env file with your credentials
+
 npm run migrate
 npm run seed
-npm run dev            # API at http://localhost:3333
+npm run dev
 
-# 4. Frontend
-cd ../frontend
+# 4. In another terminal, install and start the frontend
+cd frontend
 npm install
-npm run dev            # App at http://localhost:5173
+npm run dev
 ```
 
-### Demo Data
+The API will be available at `http://localhost:3333` and the frontend at `http://localhost:5173`.
+
+### Demo data
 
 ```bash
 cd backend
@@ -167,10 +356,14 @@ Access with:
 
 ---
 
-## Environment Variables (.env)
+## Configuration
+
+### Environment Variables
+
+Create a `.env` file in the `backend/` folder based on `.env.example`:
 
 ```env
-PORT=3000
+PORT=3333
 JWT_SECRET=your_secret_here
 JWT_EXPIRES_IN=8h
 LOG_LEVEL=debug
@@ -185,57 +378,176 @@ DB_PASSWORD=
 
 ---
 
-## Modules
+## Database
 
-| Module       | Routes                  | Description                          |
-|--------------|-------------------------|--------------------------------------|
-| Auth         | `/api/auth/*`           | JWT login + profile                  |
-| Users        | `/api/users/*`          | CRUD with roles                      |
-| Clients      | `/api/clients/*`        | Full CRM with search and pagination  |
-| Products     | `/api/products/*`       | CRUD with unique SKU and image       |
-| Stock        | `/api/stock/*`          | Movements (in/out)                   |
-| Suppliers    | `/api/suppliers/*`      | Registration with search             |
-| Purchases    | `/api/purchases/*`      | Orders + receiving + stock           |
-| Sales        | `/api/sales/*`          | Sales with stock deduction           |
-| Financial    | `/api/financial/*`      | Revenue, expenses, cash flow         |
-| Appointments | `/api/appointments/*`   | Calendar with clients                |
-| Dashboard    | `/api/dashboard`        | KPIs and charts                      |
-| Reports      | `/api/reports/*`        | JSON, PDF, and Excel                 |
-| Notifications| `/api/notifications/*`  | Stock alerts, bills, schedule        |
-| Audit        | `/api/audit/*`          | Action logs (CRUD, login, export)    |
-| Companies    | `/api/companies/*`      | Multi-tenant company management      |
+The project uses **MySQL 8+** as its relational database.
+
+### Migrations
+
+Migrations are in `backend/database/migrations/` and run in numeric order:
+
+```bash
+npm run migrate
+```
+
+### Seeds
+
+The initial seed creates the admin user and default company:
+
+```bash
+npm run seed
+```
+
+The demo seed populates the database with realistic data (clients, products, sales, etc.):
+
+```bash
+npm run demo-seed
+```
+
+---
+
+## Multi-company
+
+Nexus Business Manager was designed with native **multi-company support** (SaaS multi-tenant).
+
+### How it works
+
+1. Every data table has a `company_id` column
+2. Every SQL query includes `WHERE company_id = ?`
+3. The JWT token contains the logged user's `companyId`
+4. The authentication middleware extracts and forwards the `company_id` automatically
+
+### Isolation
+
+- Companies **do not view** other companies' data
+- Users belong to a single company
+- Company management is handled by the administration module
+- Ideal for franchises, business groups, and SaaS providers
+
+---
+
+## Security
+
+The project implements multiple security layers:
+
+| Layer           | Description                                  |
+|-----------------|----------------------------------------------|
+| **JWT**         | Tokens with configurable expiration          |
+| **bcryptjs**    | Secure password hashing with salt            |
+| **Rate Limit**  | 100 requests/min global, 5 login attempts    |
+| **Helmet**      | Security HTTP headers (XSS, CSP, HSTS)       |
+| **Zod**         | Strict input validation                      |
+| **Permissions** | Hierarchy admin > manager > operator > viewer|
+| **Audit**       | All actions logged with IP and timestamp     |
+| **CORS**        | Controlled allowed origins                   |
+
+---
+
+## Documentation
+
+Complete documentation is available in the `docs/` folder:
+
+| Document                  | Description                        |
+|---------------------------|------------------------------------|
+| [Architecture](docs/en/architecture.md) | System diagrams and flows        |
+| [Deployment](docs/en/deployment.md)     | Production deployment guide      |
+| [Backup](docs/en/backup.md)             | Database backup and restore      |
+| [Monitoring](docs/en/monitoring.md)     | Health check and logs            |
+| [Tests](docs/en/tests.md)               | Test execution and coverage      |
+| [Use Cases](docs/en/use-cases.md)       | Real-world application examples  |
+| [Demo Account](docs/demo-account.md)    | Demo credentials                 |
+| [License (EN)](docs/en/license-en.md)   | MIT License explanation          |
 
 ---
 
 ## Roadmap
 
-- [x] Phase 1 — Foundation (structure, design system, database)
-- [x] Phase 2 — Authentication (login, JWT, permissions)
-- [x] Phase 3 — Dashboard (KPIs, charts)
-- [x] Phase 4 — CRM (clients, history)
-- [x] Phase 5 — Inventory (products, movements)
-- [x] Phase 6 — Financial (accounts, cash flow)
-- [x] Phase 7 — Scheduling (calendar, events)
-- [x] Phase 8 — SaaS (multi-company, plans)
-- [ ] Phase 9 — App marketplace
-- [ ] Phase 10 — BI and business intelligence
+### Completed
+- [x] Project foundation (structure, design system, database)
+- [x] Authentication (login, JWT, permissions)
+- [x] Dashboard with KPIs and charts
+- [x] Full CRM (clients, history)
+- [x] Inventory control (products, movements)
+- [x] Financial management (accounts, cash flow)
+- [x] Scheduling (calendar, events)
+- [x] Multi-company architecture (SaaS)
+- [x] Exportable reports (PDF, Excel)
+- [x] Notifications and audit
+- [x] CI/CD pipeline
+- [x] Automated unit tests
+- [x] Complete bilingual documentation
+
+### Future
+- [ ] WhatsApp integration (notifications and CRM)
+- [ ] PIX payment integration
+- [ ] Stripe gateway (SaaS subscriptions)
+- [ ] Mercado Pago gateway
+- [ ] Full mobile app (React Native)
+- [ ] Marketplaces and integrations via public API
+
+---
+
+## Demo
+
+### Online Demo
+
+> *Coming soon: link to online demonstration.*
+
+In the meantime, you can run the project locally:
+
+```bash
+git clone https://github.com/claytonmarcelo/Nexus-Business-Manager.git
+cd nexusbusinessmanager
+cd backend && npm install && npm run dev
+# In another terminal:
+cd frontend && npm install && npm run dev
+```
+
+Access `http://localhost:5173` and log in with:
+- **Email:** `admin@nexusdemo.com`
+- **Password:** `123456`
+
+---
+
+## Developer
+
+<table>
+  <tr>
+    <td rowspan="4" width="100">
+      <img src="https://github.com/claytonmarcelo.png" width="80" style="border-radius: 50%;" alt="C. Marcelo Dev.">
+    </td>
+    <td><strong>C. Marcelo Dev.</strong></td>
+  </tr>
+  <tr>
+    <td><strong>📍</strong> Brazil</td>
+  </tr>
+  <tr>
+    <td>
+      <a href="https://github.com/claytonmarcelo"><img src="https://img.shields.io/badge/GitHub-claytonmarcelo-181717?logo=github" alt="GitHub"></a>
+      <a href="https://youtube.com/@cmarcelodev"><img src="https://img.shields.io/badge/YouTube-CMarceloDev-FF0000?logo=youtube" alt="YouTube"></a>
+      <a href="https://cmarcelodev.com"><img src="https://img.shields.io/badge/Portfolio-cmarcelodev.com-000000?logo=vercel" alt="Portfolio"></a>
+      <a href="#"><img src="https://img.shields.io/badge/LinkedIn-claytonmarcelo-0A66C2?logo=linkedin" alt="LinkedIn"></a>
+    </td>
+  </tr>
+  <tr>
+    <td><em>Full-stack developer specialized in React, Node.js and TypeScript. Passionate about creating solutions that simplify small business management.</em></td>
+  </tr>
+</table>
 
 ---
 
 ## License
 
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file and the explanation at [docs/en/license-en.md](docs/en/license-en.md).
+This project is licensed under the **MIT License** — see the [LICENSE](LICENSE) file for details.
+
+Read the simplified explanation:
+- [Português](docs/license-pt-br.md)
+- [English](docs/en/license-en.md)
 
 ---
 
-## Author
-
-**C. Marcelo Dev.**
-
-[![GitHub](https://img.shields.io/badge/GitHub-claytonmarcelo-181717?logo=github)](https://github.com/claytonmarcelo)
-[![YouTube](https://img.shields.io/badge/YouTube-CMarceloDev-FF0000?logo=youtube)](https://youtube.com/@cmarcelodev)
-[![Portfolio](https://img.shields.io/badge/Portfolio-cmarcelodev.com-000000?logo=vercel)](https://cmarcelodev.com)
-
----
-
-<p align="center">Built with ❤️ by C. Marcelo Dev. Brazil</p>
+<p align="center">
+  <em>Built with dedication by <strong>C. Marcelo Dev. Brazil</strong>.</em>
+  <br>
+  <a href="https://github.com/claytonmarcelo/Nexus-Business-Manager">🔗 GitHub</a>
+</p>
