@@ -478,14 +478,41 @@ Complete documentation is available in the `docs/` folder:
 - [x] Complete bilingual documentation
 
 ### Future
-- [ ] **Phase 9 — App marketplace** — Module and integration store
-- [ ] **Phase 10 — BI and business intelligence** — Advanced reports with machine learning
-- [ ] WhatsApp integration (notifications and CRM)
-- [ ] PIX payment integration
-- [ ] Stripe gateway (SaaS subscriptions)
-- [ ] Mercado Pago gateway
-- [ ] Full mobile app (React Native)
-- [ ] Marketplaces and integrations via public API
+
+#### Phase 9 — App Marketplace
+
+Future area to enable integration of modules, extensions and external services into Nexus Business Manager.
+
+**Possibilities:**
+
+- WhatsApp integrations
+- Google Calendar
+- Google Drive
+- PIX
+- Stripe
+- Mercado Pago
+- Internal apps
+- Business plugins
+- Per-company extensions
+
+> Status: Planned
+
+#### Phase 10 — BI and Business Intelligence
+
+Future strategic analysis layer to transform operational data into management indicators.
+
+**Possibilities:**
+
+- Advanced dashboards
+- Custom KPIs
+- Comparative charts
+- Sales analysis
+- Financial analysis
+- Stock forecasting
+- Executive reports
+- Analytical export
+
+> Status: Planned
 
 ---
 
