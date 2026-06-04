@@ -25,6 +25,11 @@ interface AppointmentRow extends RowDataPacket {
   appointment_time: string | null;
 }
 
+interface DueBillRow extends RowDataPacket {
+  category: string;
+  last_date: string;
+}
+
 export async function listNotifications(companyId: number): Promise<NotificationRow[]> {
   return query<NotificationRow[]>(
     'SELECT * FROM notifications WHERE company_id = ? ORDER BY created_at DESC LIMIT 50',
@@ -87,6 +92,45 @@ export async function generateAlerts(companyId: number): Promise<void> {
         "INSERT INTO notifications (company_id, type, title, message, icon) VALUES (?, 'appointment_reminder', ?, ?, 'calendar')",
         [companyId, `Agendamento amanha: ${appt.title}`, `Compromisso marcado para ${tomorrowStr}${timeStr}`]
       );
+    }
+  }
+
+  const currentMonth = new Date().toISOString().slice(0, 7);
+  const recurringCategories = ['Agua', 'Luz', 'Internet', 'Salarios', 'Aluguel'];
+
+  for (const cat of recurringCategories) {
+    const bills = await query<DueBillRow[]>(
+      `SELECT category, MAX(transaction_date) as last_date
+       FROM transactions WHERE type = 'expense' AND category = ? AND company_id = ?
+       GROUP BY category`,
+      [cat, companyId]
+    );
+
+    if (bills.length === 0) {
+      const exists = await query<RowDataPacket[]>(
+        "SELECT id FROM notifications WHERE company_id = ? AND type = 'due_bill' AND message LIKE ? AND read = FALSE",
+        [companyId, `%${cat}%`]
+      );
+      if (exists.length === 0) {
+        await execute(
+          "INSERT INTO notifications (company_id, type, title, message, icon) VALUES (?, 'due_bill', ?, ?, 'warning')",
+          [companyId, `Conta pendente: ${cat}`, `Nenhum registro de ${cat} encontrado. Possivel conta em aberto.`]
+        );
+      }
+    } else {
+      const lastDate = bills[0].last_date;
+      if (lastDate && !lastDate.startsWith(currentMonth)) {
+        const exists = await query<RowDataPacket[]>(
+          "SELECT id FROM notifications WHERE company_id = ? AND type = 'due_bill' AND message LIKE ? AND read = FALSE",
+          [companyId, `%${cat}%`]
+        );
+        if (exists.length === 0) {
+          await execute(
+            "INSERT INTO notifications (company_id, type, title, message, icon) VALUES (?, 'due_bill', ?, ?, 'warning')",
+            [companyId, `Conta vencendo: ${cat}`, `Ultimo registro de ${cat} foi em ${lastDate}. Verifique se ja foi paga.`]
+          );
+        }
+      }
     }
   }
 }

@@ -10,4 +10,7 @@ export async function reportRoutes(app: FastifyInstance) {
   app.get('/reports/products', { preHandler: [authorize('admin', 'manager', 'viewer')] }, reportController.productsReportHandler);
   app.get('/reports/financial', { preHandler: [authorize('admin', 'manager', 'viewer')] }, reportController.financialReportHandler);
   app.get('/reports/stock', { preHandler: [authorize('admin', 'manager', 'viewer')] }, reportController.stockReportHandler);
+
+  app.get('/reports/pdf/:type', { preHandler: [authorize('admin', 'manager')] }, reportController.downloadPDFHandler);
+  app.get('/reports/xlsx/:type', { preHandler: [authorize('admin', 'manager')] }, reportController.downloadExcelHandler);
 }
