@@ -1,0 +1,80 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+}
+
+model Company {
+  id        Int      @id @default(autoincrement())
+  name      String
+  cnpj      String?  @unique
+  email     String?
+  phone     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  users     User[]
+  customers Customer[]
+  products  Product[]
+}
+
+model User {
+  id           Int      @id @default(autoincrement())
+  companyId   Int?
+  name         String
+  email        String   @unique
+  passwordHash String
+  role         String   @default("ADMIN")
+  active       Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  company Company? @relation(fields: [companyId], references: [id])
+}
+
+model Customer {
+  id        Int      @id @default(autoincrement())
+  companyId Int
+  name      String
+  email     String?
+  phone     String?
+  document  String?
+  notes     String?  @db.Text
+  status    String   @default("ACTIVE")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  company Company @relation(fields: [companyId], references: [id])
+}
+
+model Product {
+  id            Int      @id @default(autoincrement())
+  companyId     Int
+  name          String
+  sku           String?
+  category      String?
+  costPrice     Decimal? @db.Decimal(10, 2)
+  salePrice     Decimal  @db.Decimal(10, 2)
+  stockQuantity Int      @default(0)
+  minStock      Int      @default(0)
+  imageUrl      String?
+  active        Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  company        Company @relation(fields: [companyId], references: [id])
+  stockMovements StockMovement[]
+}
+
+model StockMovement {
+  id        Int      @id @default(autoincrement())
+  productId Int
+  type      String
+  quantity  Int
+  reason    String?
+  createdAt DateTime @default(now())
+
+  product Product @relation(fields: [productId], references: [id])
+}
