@@ -17,7 +17,7 @@ export function Stock() {
       const [movRes, prodRes] = await Promise.all([api.get('/stock'), api.get('/products')]);
       setMovements(movRes.data);
       setProducts(prodRes.data);
-    } catch { /* ignore */ }
+    } catch { console.error('Erro ao carregar estoque'); }
     finally { setLoading(false); }
   }
 

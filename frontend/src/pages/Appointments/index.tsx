@@ -23,7 +23,7 @@ export function Appointments() {
       const [appRes, cliRes] = await Promise.all([api.get(url), api.get('/clients')]);
       setAppointments(appRes.data);
       setClients(cliRes.data);
-    } catch { /* ignore */ }
+    } catch { console.error('Erro ao carregar agendamentos'); }
     finally { setLoading(false); }
   }
 
@@ -67,14 +67,14 @@ export function Appointments() {
     try {
       await api.delete(`/appointments/${id}`);
       loadData(filterDate || undefined);
-    } catch { /* ignore */ }
+    } catch { console.error('Erro ao excluir agendamento'); }
   }
 
   async function handleStatusChange(id: number, status: string) {
     try {
       await api.put(`/appointments/${id}`, { status });
       loadData(filterDate || undefined);
-    } catch { /* ignore */ }
+    } catch { console.error('Erro ao alterar status do agendamento'); }
   }
 
   function handleFilter(date: string) {

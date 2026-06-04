@@ -1,7 +1,6 @@
 import { useState, useEffect, FormEvent } from 'react';
 import api from '../../services/api';
 import { Client } from '../../types';
-import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
 import { EmptyState } from '../../components/ui/EmptyState';
 import { TableSkeleton } from '../../components/ui/Skeleton';
 
@@ -25,7 +24,7 @@ export function Clients() {
       if (query) params.search = query;
       const res = await api.get('/clients', { params });
       setClients(res.data.data || res.data);
-    } catch { /* ignore */ }
+    } catch { console.error('Erro ao carregar clientes'); }
     finally { setLoading(false); }
   }
 
@@ -78,7 +77,7 @@ export function Clients() {
     try {
       await api.delete(`/clients/${id}`);
       loadClients(search);
-    } catch { /* ignore */ }
+    } catch { console.error('Erro ao excluir cliente'); }
   }
 
   return (

@@ -14,7 +14,7 @@ export function Notifications() {
       const res = await api.get('/notifications');
       setNotifications(res.data.notifications);
       setUnreadCount(res.data.unreadCount);
-    } catch { /* ignore */ }
+    } catch { console.error('Erro ao carregar notificacoes'); }
     finally { setLoading(false); }
   }
 
@@ -22,21 +22,21 @@ export function Notifications() {
     try {
       await api.put(`/notifications/${id}/read`);
       load();
-    } catch { /* ignore */ }
+    } catch { console.error('Erro ao marcar notificacao como lida'); }
   }
 
   async function handleMarkAllRead() {
     try {
       await api.put('/notifications/read-all');
       load();
-    } catch { /* ignore */ }
+    } catch { console.error('Erro ao marcar todas como lidas'); }
   }
 
   async function handleGenerate() {
     try {
       await api.post('/notifications/generate');
       load();
-    } catch { /* ignore */ }
+    } catch { console.error('Erro ao gerar notificacoes'); }
   }
 
   const iconMap: Record<string, string> = {

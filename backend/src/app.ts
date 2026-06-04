@@ -25,6 +25,7 @@ import { notificationRoutes } from './modules/notifications/notifications.routes
 import { auditRoutes } from './modules/audit/audit.routes';
 import { companyRoutes } from './modules/companies/companies.routes';
 import { AppError } from './shared/errors/app-error';
+import { ZodError } from 'zod';
 import { checkDatabaseHealth } from './shared/health-check';
 
 dotenv.config();
@@ -117,6 +118,15 @@ export async function buildApp() {
         message: message,
         errorCode: 'VALIDATION_ERROR',
         details: error.validation,
+      });
+    }
+
+    if (error instanceof ZodError) {
+      return reply.status(400).send({
+        success: false,
+        message: 'Dados invalidos',
+        errorCode: 'VALIDATION_ERROR',
+        details: error.issues.map((i) => ({ field: i.path.join('.'), message: i.message })),
       });
     }
 

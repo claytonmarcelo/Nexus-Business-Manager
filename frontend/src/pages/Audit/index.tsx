@@ -12,7 +12,7 @@ export function Audit() {
     try {
       const res = await api.get('/audit');
       setLogs(res.data);
-    } catch { /* ignore */ }
+    } catch { console.error('Erro ao carregar auditoria'); }
     finally { setLoading(false); }
   }
 

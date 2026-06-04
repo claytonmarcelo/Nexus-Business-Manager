@@ -14,7 +14,7 @@ export const createPurchaseSchema = z.object({
 });
 
 export const updatePurchaseStatusSchema = z.object({
-  status: z.enum(['received', 'cancelled']),
+  status: z.enum(['RECEBIDA', 'CANCELADA']),
 });
 
 export type CreatePurchaseInput = z.infer<typeof createPurchaseSchema>;

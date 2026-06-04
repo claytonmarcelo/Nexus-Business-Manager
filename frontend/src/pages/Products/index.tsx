@@ -18,7 +18,7 @@ export function Products() {
     try {
       const res = await api.get('/products');
       setProducts(res.data);
-    } catch { /* ignore */ }
+    } catch { console.error('Erro ao carregar produtos'); }
     finally { setLoading(false); }
   }
 
@@ -66,7 +66,7 @@ export function Products() {
     try {
       await api.delete(`/products/${id}`);
       loadProducts();
-    } catch { /* ignore */ }
+    } catch { console.error('Erro ao excluir produto'); }
   }
 
   function formatPrice(value: number) {

@@ -16,7 +16,7 @@ export function Suppliers() {
     try {
       const res = await api.get('/suppliers');
       setSuppliers(res.data);
-    } catch { /* ignore */ }
+    } catch { console.error('Erro ao carregar fornecedores'); }
     finally { setLoading(false); }
   }
 
@@ -55,7 +55,7 @@ export function Suppliers() {
     try {
       await api.delete(`/suppliers/${id}`);
       loadSuppliers();
-    } catch { /* ignore */ }
+    } catch { console.error('Erro ao excluir fornecedor'); }
   }
 
   return (

@@ -1,5 +1,4 @@
 import { describe, it, expect, vi } from "vitest";
-import { AppError } from "../shared/errors/app-error";
 
 vi.mock("../shared/database/connection", () => ({
   query: vi.fn(),

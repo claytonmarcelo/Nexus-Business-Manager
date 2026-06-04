@@ -23,7 +23,7 @@ export function Financial() {
       const [transRes, flowRes] = await Promise.all([api.get('/financial'), api.get('/financial/cashflow')]);
       setTransactions(transRes.data);
       setCashFlow(flowRes.data);
-    } catch { /* ignore */ }
+    } catch { console.error('Erro ao carregar dados financeiros'); }
     finally { setLoading(false); }
   }
 
@@ -45,7 +45,7 @@ export function Financial() {
     try {
       await api.delete(`/financial/${id}`);
       loadData();
-    } catch { /* ignore */ }
+    } catch { console.error('Erro ao excluir transacao'); }
   }
 
   const revenueCategories = ['Vendas', 'Servicos', 'Investimentos', 'Outros'];

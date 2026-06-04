@@ -19,7 +19,7 @@ export function Sales() {
       setSales(salRes.data);
       setClients(cliRes.data);
       setProducts(prodRes.data);
-    } catch { /* ignore */ }
+    } catch { console.error('Erro ao carregar vendas'); }
     finally { setLoading(false); }
   }
 

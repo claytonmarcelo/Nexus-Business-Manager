@@ -13,20 +13,34 @@ export function Dashboard() {
   const { user } = useAuth();
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
   useEffect(() => {
     async function load() {
       try {
         const res = await api.get('/dashboard');
         setData(res.data);
-      } catch { /* ignore */ }
+      } catch {
+        setError('Erro ao carregar dashboard. Verifique a conexao com o servidor.');
+      }
       finally { setLoading(false); }
     }
     load();
   }, []);
 
-  if (loading || !data) {
+  if (loading) {
     return <div className="p-8 text-center text-gray-500">Carregando dashboard...</div>;
+  }
+
+  if (error) {
+    return <div className="p-8 text-center">
+      <p className="text-red-500 mb-4">{error}</p>
+      <button onClick={() => { setLoading(true); setError(''); api.get('/dashboard').then(r => setData(r.data)).catch(() => setError('Erro ao carregar dashboard')).finally(() => setLoading(false)); }} className="px-4 py-2 bg-nexus-600 text-white rounded-lg hover:bg-nexus-700">Tentar novamente</button>
+    </div>;
+  }
+
+  if (!data) {
+    return <div className="p-8 text-center text-gray-500">Nenhum dado disponivel.</div>;
   }
 
   const { stats, charts } = data;

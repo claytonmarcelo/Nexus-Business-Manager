@@ -28,7 +28,7 @@ export function Users() {
     try {
       const res = await api.get('/users');
       setUsers(res.data);
-    } catch { /* ignore */ }
+    } catch { console.error('Erro ao carregar usuarios'); }
     finally { setLoading(false); }
   }
 
@@ -69,7 +69,7 @@ export function Users() {
     try {
       await api.put(`/users/${user.id}`, { active: !user.active });
       loadUsers();
-    } catch { /* ignore */ }
+    } catch { console.error('Erro ao alternar status do usuario'); }
   }
 
   function getRoleBadge(role: string) {

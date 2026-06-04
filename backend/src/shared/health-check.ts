@@ -1,5 +1,5 @@
-import { query } from "../shared/database/connection";
-import { RowDataPacket } from "mysql2";
+import { query } from "./database/connection";
+import { RowDataPacket } from "mysql2/promise";
 
 export async function checkDatabaseHealth(): Promise<{ ok: boolean; latencyMs: number }> {
   const start = Date.now();

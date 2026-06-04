@@ -12,24 +12,28 @@ export async function clientsReportHandler(request: FastifyRequest, reply: Fasti
 export async function productsReportHandler(request: FastifyRequest, reply: FastifyReply) {
   const user = request.user as { id: number; name: string; companyId: number };
   const data = await reportService.generateProductReport(user.companyId);
+  await log(user.id, user.name, 'EXPORT', 'report', null, null, { type: 'products' }, request.ip, user.companyId);
   return reply.send({ success: true, data });
 }
 
 export async function financialReportHandler(request: FastifyRequest, reply: FastifyReply) {
   const user = request.user as { id: number; name: string; companyId: number };
   const data = await reportService.generateFinancialReport(user.companyId);
+  await log(user.id, user.name, 'EXPORT', 'report', null, null, { type: 'financial' }, request.ip, user.companyId);
   return reply.send({ success: true, data });
 }
 
 export async function stockReportHandler(request: FastifyRequest, reply: FastifyReply) {
   const user = request.user as { id: number; name: string; companyId: number };
   const data = await reportService.generateStockReport(user.companyId);
+  await log(user.id, user.name, 'EXPORT', 'report', null, null, { type: 'stock' }, request.ip, user.companyId);
   return reply.send({ success: true, data });
 }
 
 export async function salesReportHandler(request: FastifyRequest, reply: FastifyReply) {
   const user = request.user as { id: number; name: string; companyId: number };
   const data = await reportService.generateSalesReport(user.companyId);
+  await log(user.id, user.name, 'EXPORT', 'report', null, null, { type: 'sales' }, request.ip, user.companyId);
   return reply.send({ success: true, data });
 }
 

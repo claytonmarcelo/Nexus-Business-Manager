@@ -19,7 +19,7 @@ export function Purchases() {
       setPurchases(purRes.data);
       setSuppliers(supRes.data);
       setProducts(prodRes.data);
-    } catch { /* ignore */ }
+    } catch { console.error('Erro ao carregar compras'); }
     finally { setLoading(false); }
   }
 

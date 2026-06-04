@@ -12,7 +12,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "migrate": "tsx src/shared/database/migrate.ts",
-    "seed": "tsx src/shared/database/seed.ts"
+    "seed": "tsx src/shared/database/seed.ts",
+    "demo-seed": "tsx src/shared/database/demo-seed.ts"
   },
   "dependencies": {
     "@fastify/cors": "^9.0.1",
