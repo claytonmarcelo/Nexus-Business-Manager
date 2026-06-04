@@ -478,6 +478,8 @@ A documentação completa está disponível na pasta `docs/`:
 - [x] Documentação completa bilíngue
 
 ### Futuro
+- [ ] **Fase 9 — Marketplace de aplicativos** — Loja de módulos e integrações
+- [ ] **Fase 10 — BI e inteligência de negócios** — Relatórios avançados com machine learning
 - [ ] Integração com WhatsApp (notificações e CRM)
 - [ ] Integração com PIX (pagamentos)
 - [ ] Gateway Stripe (assinaturas SaaS)

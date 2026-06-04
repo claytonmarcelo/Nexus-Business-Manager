@@ -47,3 +47,13 @@
 - Multiempresa
 - Planos
 - Assinaturas
+
+## Fase 9 — Marketplace de Aplicativos
+- Loja de módulos
+- Integrações via API pública
+- Plugins de terceiros
+
+## Fase 10 — BI e Inteligência de Negócios
+- Relatórios avançados
+- Machine learning para previsões
+- Análise preditiva de vendas e estoque

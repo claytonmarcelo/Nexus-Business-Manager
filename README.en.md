@@ -478,6 +478,8 @@ Complete documentation is available in the `docs/` folder:
 - [x] Complete bilingual documentation
 
 ### Future
+- [ ] **Phase 9 — App marketplace** — Module and integration store
+- [ ] **Phase 10 — BI and business intelligence** — Advanced reports with machine learning
 - [ ] WhatsApp integration (notifications and CRM)
 - [ ] PIX payment integration
 - [ ] Stripe gateway (SaaS subscriptions)
