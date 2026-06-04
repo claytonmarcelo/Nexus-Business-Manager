@@ -17,39 +17,40 @@ interface ProductRow extends RowDataPacket {
   updated_at: string;
 }
 
-export async function listProducts(): Promise<ProductRow[]> {
+export async function listProducts(companyId: number): Promise<ProductRow[]> {
   return query<ProductRow[]>(
-    'SELECT id, name, sku, category, price, quantity, image, created_by, active, created_at, updated_at FROM products WHERE active = TRUE ORDER BY created_at DESC'
+    'SELECT id, name, sku, category, price, quantity, image, created_by, active, created_at, updated_at FROM products WHERE active = TRUE AND company_id = ? ORDER BY created_at DESC',
+    [companyId]
   );
 }
 
-export async function getProductById(id: number): Promise<ProductRow> {
+export async function getProductById(id: number, companyId: number): Promise<ProductRow> {
   const products = await query<ProductRow[]>(
-    'SELECT id, name, sku, category, price, quantity, image, created_by, active, created_at, updated_at FROM products WHERE id = ?',
-    [id]
+    'SELECT id, name, sku, category, price, quantity, image, created_by, active, created_at, updated_at FROM products WHERE id = ? AND company_id = ?',
+    [id, companyId]
   );
   if (products.length === 0) throw new AppError('Produto nao encontrado', 404);
   return products[0];
 }
 
-export async function createProduct(data: CreateProductInput, userId: number): Promise<ProductRow> {
-  const existing = await query<ProductRow[]>('SELECT id FROM products WHERE sku = ?', [data.sku]);
-  if (existing.length > 0) throw new AppError('SKU ja cadastrado', 409);
+export async function createProduct(data: CreateProductInput, userId: number, companyId: number): Promise<ProductRow> {
+  const existing = await query<ProductRow[]>('SELECT id FROM products WHERE sku = ? AND company_id = ?', [data.sku, companyId]);
+  if (existing.length > 0) throw new AppError('SKU ja cadastrado nesta empresa', 409);
 
   const result = await execute(
-    'INSERT INTO products (name, sku, category, price, quantity, image, created_by) VALUES (?, ?, ?, ?, ?, ?, ?)',
-    [data.name, data.sku, data.category || null, data.price, data.quantity, data.image || null, userId]
+    'INSERT INTO products (name, sku, category, price, quantity, image, created_by, company_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+    [data.name, data.sku, data.category || null, data.price, data.quantity, data.image || null, userId, companyId]
   );
-  return getProductById(result.insertId);
+  return getProductById(result.insertId, companyId);
 }
 
-export async function updateProduct(id: number, data: UpdateProductInput): Promise<ProductRow> {
-  await getProductById(id);
+export async function updateProduct(id: number, data: UpdateProductInput, companyId: number): Promise<ProductRow> {
+  await getProductById(id, companyId);
 
   if (data.sku) {
     const existing = await query<ProductRow[]>(
-      'SELECT id FROM products WHERE sku = ? AND id != ?',
-      [data.sku, id]
+      'SELECT id FROM products WHERE sku = ? AND id != ? AND company_id = ?',
+      [data.sku, id, companyId]
     );
     if (existing.length > 0) throw new AppError('SKU ja cadastrado', 409);
   }
@@ -66,14 +67,14 @@ export async function updateProduct(id: number, data: UpdateProductInput): Promi
   if (data.active !== undefined) { fields.push('active = ?'); values.push(data.active); }
 
   if (fields.length > 0) {
-    values.push(id);
-    await execute(`UPDATE products SET ${fields.join(', ')} WHERE id = ?`, values);
+    values.push(id, companyId);
+    await execute(`UPDATE products SET ${fields.join(', ')} WHERE id = ? AND company_id = ?`, values);
   }
 
-  return getProductById(id);
+  return getProductById(id, companyId);
 }
 
-export async function deleteProduct(id: number): Promise<void> {
-  await getProductById(id);
-  await execute('UPDATE products SET active = FALSE WHERE id = ?', [id]);
+export async function deleteProduct(id: number, companyId: number): Promise<void> {
+  await getProductById(id, companyId);
+  await execute('UPDATE products SET active = FALSE WHERE id = ? AND company_id = ?', [id, companyId]);
 }

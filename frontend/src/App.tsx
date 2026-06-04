@@ -6,6 +6,16 @@ import { Dashboard } from './pages/Dashboard';
 import { Users } from './pages/Users';
 import { Clients } from './pages/Clients';
 import { Products } from './pages/Products';
+import { Stock } from './pages/Stock';
+import { Suppliers } from './pages/Suppliers';
+import { Purchases } from './pages/Purchases';
+import { Sales } from './pages/Sales';
+import { Financial } from './pages/Financial';
+import { Appointments } from './pages/Appointments';
+import { Reports } from './pages/Reports';
+import { Notifications } from './pages/Notifications';
+import { Audit } from './pages/Audit';
+import { Companies } from './pages/Companies';
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, loading } = useAuth();
@@ -58,7 +68,17 @@ function AppRoutes() {
         <Route path="dashboard" element={<Dashboard />} />
         <Route path="users" element={<Users />} />
         <Route path="clients" element={<Clients />} />
+        <Route path="suppliers" element={<Suppliers />} />
         <Route path="products" element={<Products />} />
+        <Route path="stock" element={<Stock />} />
+        <Route path="purchases" element={<Purchases />} />
+        <Route path="sales" element={<Sales />} />
+        <Route path="financial" element={<Financial />} />
+        <Route path="appointments" element={<Appointments />} />
+        <Route path="reports" element={<Reports />} />
+        <Route path="notifications" element={<Notifications />} />
+        <Route path="audit" element={<Audit />} />
+        <Route path="companies" element={<Companies />} />
       </Route>
       <Route path="*" element={<Navigate to="/dashboard" replace />} />
     </Routes>

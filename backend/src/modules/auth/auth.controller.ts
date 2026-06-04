@@ -7,11 +7,12 @@ export async function loginHandler(request: FastifyRequest, reply: FastifyReply)
 
   const user = await authenticateUser(data);
 
-  const token = reply.jwtSign({
+  const token = await reply.jwtSign({
     id: user.id,
     name: user.name,
     email: user.email,
     role: user.role,
+    companyId: user.companyId,
   });
 
   return reply.send({
@@ -21,17 +22,25 @@ export async function loginHandler(request: FastifyRequest, reply: FastifyReply)
       name: user.name,
       email: user.email,
       role: user.role,
+      companyId: user.companyId,
     },
   });
 }
 
 export async function profileHandler(request: FastifyRequest, reply: FastifyReply) {
-  const user = request.user as { id: number; name: string; email: string; role: string };
+  const user = request.user as {
+    id: number;
+    name: string;
+    email: string;
+    role: string;
+    companyId: number;
+  };
 
   return reply.send({
     id: user.id,
     name: user.name,
     email: user.email,
     role: user.role,
+    companyId: user.companyId,
   });
 }

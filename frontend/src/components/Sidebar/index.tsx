@@ -2,10 +2,20 @@ import { NavLink } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 
 const navItems = [
-  { to: '/dashboard', label: 'Dashboard', icon: 'H' },
+  { to: '/dashboard', label: 'Dashboard', icon: 'D' },
   { to: '/users', label: 'Usuarios', icon: 'U', roles: ['admin', 'manager'] },
   { to: '/clients', label: 'Clientes', icon: 'C' },
+  { to: '/suppliers', label: 'Fornecedores', icon: 'F' },
   { to: '/products', label: 'Produtos', icon: 'P' },
+  { to: '/stock', label: 'Estoque', icon: 'E' },
+  { to: '/purchases', label: 'Compras', icon: 'C' },
+  { to: '/sales', label: 'Vendas', icon: 'V' },
+  { to: '/financial', label: 'Financeiro', icon: '$' },
+  { to: '/appointments', label: 'Agenda', icon: 'A' },
+  { to: '/reports', label: 'Relatorios', icon: 'R' },
+  { to: '/notifications', label: 'Notificacoes', icon: 'N' },
+  { to: '/audit', label: 'Auditoria', icon: 'L', roles: ['admin', 'manager'] },
+  { to: '/companies', label: 'Empresas', icon: 'M', roles: ['admin'] },
 ];
 
 export function Sidebar() {
@@ -18,7 +28,7 @@ export function Sidebar() {
         <p className="text-nexus-300 text-sm mt-1">Business Manager</p>
       </div>
 
-      <nav className="flex-1 p-4 space-y-1">
+      <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
         {navItems
           .filter((item) => !item.roles || item.roles.includes(user?.role || ''))
           .map((item) => (

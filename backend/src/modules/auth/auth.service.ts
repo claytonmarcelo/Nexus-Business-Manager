@@ -11,6 +11,7 @@ export async function authenticateUser(data: LoginInput) {
     },
     select: {
       id: true,
+      companyId: true,
       name: true,
       email: true,
       passwordHash: true,
@@ -30,6 +31,7 @@ export async function authenticateUser(data: LoginInput) {
 
   return {
     id: user.id,
+    companyId: user.companyId,
     name: user.name,
     email: user.email,
     role: user.role,

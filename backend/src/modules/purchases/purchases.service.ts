@@ -1,0 +1,115 @@
+import { query, execute } from '../../shared/database/connection';
+import { AppError } from '../../shared/errors/app-error';
+import { CreatePurchaseInput, UpdatePurchaseStatusInput } from './purchases.schema';
+import { RowDataPacket } from 'mysql2';
+
+interface PurchaseRow extends RowDataPacket {
+  id: number;
+  supplier_id: number | null;
+  total_value: number;
+  status: string;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+  supplier_name: string | null;
+}
+
+interface PurchaseItemRow extends RowDataPacket {
+  id: number;
+  purchase_id: number;
+  product_id: number;
+  quantity: number;
+  unit_price: number;
+  total_price: number;
+  product_name: string;
+}
+
+interface ProductRow extends RowDataPacket {
+  id: number;
+  quantity: number;
+}
+
+export async function listPurchases(companyId: number): Promise<PurchaseRow[]> {
+  return query<PurchaseRow[]>(
+    `SELECT p.*, s.company_name as supplier_name
+     FROM purchases p
+     LEFT JOIN suppliers s ON s.id = p.supplier_id
+     WHERE p.company_id = ?
+     ORDER BY p.created_at DESC`,
+    [companyId]
+  );
+}
+
+export async function getPurchaseById(id: number, companyId: number): Promise<PurchaseRow> {
+  const purchases = await query<PurchaseRow[]>(
+    `SELECT p.*, s.company_name as supplier_name
+     FROM purchases p
+     LEFT JOIN suppliers s ON s.id = p.supplier_id
+     WHERE p.id = ? AND p.company_id = ?`, [id, companyId]
+  );
+  if (purchases.length === 0) throw new AppError('Compra nao encontrada', 404);
+  return purchases[0];
+}
+
+export async function getPurchaseItems(purchaseId: number): Promise<PurchaseItemRow[]> {
+  return query<PurchaseItemRow[]>(
+    `SELECT pi.*, pr.name as product_name
+     FROM purchase_items pi
+     JOIN products pr ON pr.id = pi.product_id
+     WHERE pi.purchase_id = ?`, [purchaseId]
+  );
+}
+
+export async function createPurchase(data: CreatePurchaseInput, userId: number, companyId: number): Promise<PurchaseRow> {
+  let totalValue = 0;
+  for (const item of data.items) {
+    totalValue += item.quantity * item.unit_price;
+  }
+
+  const result = await execute(
+    'INSERT INTO purchases (supplier_id, total_value, notes, created_by, company_id) VALUES (?, ?, ?, ?, ?)',
+    [data.supplier_id || null, totalValue, data.notes || null, userId, companyId]
+  );
+
+  const purchaseId = result.insertId;
+
+  for (const item of data.items) {
+    const totalPrice = item.quantity * item.unit_price;
+    await execute(
+      'INSERT INTO purchase_items (purchase_id, product_id, quantity, unit_price, total_price) VALUES (?, ?, ?, ?, ?)',
+      [purchaseId, item.product_id, item.quantity, item.unit_price, totalPrice]
+    );
+  }
+
+  return getPurchaseById(purchaseId, companyId);
+}
+
+export async function receivePurchase(id: number, userId: number, companyId: number): Promise<void> {
+  const purchase = await getPurchaseById(id, companyId);
+  if (purchase.status !== 'pending') throw new AppError('Compra ja foi processada', 400);
+
+  const items = await getPurchaseItems(id);
+
+  for (const item of items) {
+    const products = await query<ProductRow[]>(
+      'SELECT id, quantity FROM products WHERE id = ?', [item.product_id]
+    );
+    if (products.length === 0) throw new AppError(`Produto ID ${item.product_id} nao encontrado`, 404);
+
+    const newQty = products[0].quantity + item.quantity;
+    await execute('UPDATE products SET quantity = ? WHERE id = ?', [newQty, item.product_id]);
+
+    await execute(
+      'INSERT INTO stock_movements (product_id, type, quantity, description, reference_type, reference_id, created_by, company_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+      [item.product_id, 'in', item.quantity, 'Entrada por compra', 'purchase', id, userId, companyId]
+    );
+  }
+
+  await execute("UPDATE purchases SET status = 'received' WHERE id = ?", [id]);
+}
+
+export async function updatePurchaseStatus(id: number, data: UpdatePurchaseStatusInput, companyId: number): Promise<PurchaseRow> {
+  await getPurchaseById(id, companyId);
+  await execute('UPDATE purchases SET status = ? WHERE id = ?', [data.status, id]);
+  return getPurchaseById(id, companyId);
+}

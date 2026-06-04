@@ -10,34 +10,36 @@ interface UserRow extends RowDataPacket {
   email: string;
   role: string;
   active: number;
+  company_id: number;
   created_at: string;
   updated_at: string;
 }
 
-export async function listUsers(): Promise<UserRow[]> {
+export async function listUsers(companyId: number): Promise<UserRow[]> {
   return query<UserRow[]>(
-    'SELECT id, name, email, role, active, created_at, updated_at FROM users ORDER BY created_at DESC'
+    'SELECT id, name, email, role, active, company_id, created_at, updated_at FROM users WHERE company_id = ? ORDER BY created_at DESC',
+    [companyId]
   );
 }
 
 export async function getUserById(id: number): Promise<UserRow> {
   const users = await query<UserRow[]>(
-    'SELECT id, name, email, role, active, created_at, updated_at FROM users WHERE id = ?',
+    'SELECT id, name, email, role, active, company_id, created_at, updated_at FROM users WHERE id = ?',
     [id]
   );
   if (users.length === 0) throw new AppError('Usuario nao encontrado', 404);
   return users[0];
 }
 
-export async function createUser(data: CreateUserInput): Promise<UserRow> {
+export async function createUser(data: CreateUserInput, companyId: number): Promise<UserRow> {
   const existing = await query<UserRow[]>('SELECT id FROM users WHERE email = ?', [data.email]);
   if (existing.length > 0) throw new AppError('Email ja cadastrado', 409);
 
   const hashedPassword = await bcrypt.hash(data.password, 10);
 
   const result = await execute(
-    'INSERT INTO users (name, email, password, role) VALUES (?, ?, ?, ?)',
-    [data.name, data.email, hashedPassword, data.role]
+    'INSERT INTO users (name, email, password, role, company_id) VALUES (?, ?, ?, ?, ?)',
+    [data.name, data.email, hashedPassword, data.role, companyId]
   );
 
   return getUserById(result.insertId);

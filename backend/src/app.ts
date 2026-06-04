@@ -10,6 +10,17 @@ import { authRoutes } from './modules/auth/auth.routes';
 import { userRoutes } from './modules/users/users.routes';
 import { clientRoutes } from './modules/clients/clients.routes';
 import { productRoutes } from './modules/products/products.routes';
+import { stockRoutes } from './modules/stock/stock.routes';
+import { supplierRoutes } from './modules/suppliers/suppliers.routes';
+import { purchaseRoutes } from './modules/purchases/purchases.routes';
+import { saleRoutes } from './modules/sales/sales.routes';
+import { financialRoutes } from './modules/financial/financial.routes';
+import { appointmentRoutes } from './modules/appointments/appointments.routes';
+import { dashboardRoutes } from './modules/dashboard/dashboard.routes';
+import { reportRoutes } from './modules/reports/reports.routes';
+import { notificationRoutes } from './modules/notifications/notifications.routes';
+import { auditRoutes } from './modules/audit/audit.routes';
+import { companyRoutes } from './modules/companies/companies.routes';
 import { AppError } from './shared/errors/app-error';
 
 dotenv.config();
@@ -79,6 +90,17 @@ export async function buildApp() {
   await app.register(userRoutes, { prefix: '/api' });
   await app.register(clientRoutes, { prefix: '/api' });
   await app.register(productRoutes, { prefix: '/api' });
+  await app.register(stockRoutes, { prefix: '/api' });
+  await app.register(supplierRoutes, { prefix: '/api' });
+  await app.register(purchaseRoutes, { prefix: '/api' });
+  await app.register(saleRoutes, { prefix: '/api' });
+  await app.register(financialRoutes, { prefix: '/api' });
+  await app.register(appointmentRoutes, { prefix: '/api' });
+  await app.register(dashboardRoutes, { prefix: '/api' });
+  await app.register(reportRoutes, { prefix: '/api' });
+  await app.register(notificationRoutes, { prefix: '/api' });
+  await app.register(auditRoutes, { prefix: '/api' });
+  await app.register(companyRoutes, { prefix: '/api' });
 
   app.get('/api/health', async () => {
     return { status: 'ok', timestamp: new Date().toISOString(), version: '1.0.0' };
