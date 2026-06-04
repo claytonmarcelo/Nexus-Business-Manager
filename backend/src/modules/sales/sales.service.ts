@@ -2,11 +2,13 @@ import { query, execute } from '../../shared/database/connection';
 import { AppError } from '../../shared/errors/app-error';
 import { CreateSaleInput } from './sales.schema';
 import { RowDataPacket } from 'mysql2';
+import { PaginationParams, PaginatedResult, buildPaginatedResponse } from '../../shared/utils/pagination';
 
 interface SaleRow extends RowDataPacket {
   id: number;
   client_id: number | null;
   total_value: number;
+  status: string;
   notes: string | null;
   created_at: string;
   client_name: string | null;
@@ -27,15 +29,31 @@ interface ProductRow extends RowDataPacket {
   quantity: number;
 }
 
-export async function listSales(companyId: number): Promise<SaleRow[]> {
-  return query<SaleRow[]>(
+export async function listSales(companyId: number, params: PaginationParams): Promise<PaginatedResult<SaleRow>> {
+  const where = ['s.company_id = ?'];
+  const values: unknown[] = [companyId];
+
+  if (params.search) {
+    where.push('(c.name LIKE ? OR s.notes LIKE ?)');
+    const term = `%${params.search}%`;
+    values.push(term, term);
+  }
+
+  const countResult = await query<RowDataPacket[]>(
+    `SELECT COUNT(*) as total FROM sales s LEFT JOIN clients c ON c.id = s.client_id WHERE ${where.join(' AND ')}`, values
+  );
+  const total = countResult[0].total;
+
+  const data = await query<SaleRow[]>(
     `SELECT s.*, c.name as client_name
      FROM sales s
      LEFT JOIN clients c ON c.id = s.client_id
-     WHERE s.company_id = ?
-     ORDER BY s.created_at DESC`,
-    [companyId]
+     WHERE ${where.join(' AND ')}
+     ORDER BY s.created_at DESC LIMIT ? OFFSET ?`,
+    [...values, params.limit, params.offset]
   );
+
+  return buildPaginatedResponse(data, total, params);
 }
 
 export async function getSaleById(id: number, companyId: number): Promise<SaleRow> {
@@ -79,8 +97,8 @@ export async function createSale(data: CreateSaleInput, userId: number, companyI
   }
 
   const result = await execute(
-    'INSERT INTO sales (client_id, total_value, notes, created_by, company_id) VALUES (?, ?, ?, ?, ?)',
-    [data.client_id || null, totalValue, data.notes || null, userId, companyId]
+    'INSERT INTO sales (client_id, total_value, status, notes, created_by, company_id) VALUES (?, ?, ?, ?, ?, ?)',
+    [data.client_id || null, totalValue, data.status || 'CONCLUIDA', data.notes || null, userId, companyId]
   );
 
   const saleId = result.insertId;

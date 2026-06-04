@@ -2,6 +2,7 @@ import { query, execute } from '../../shared/database/connection';
 import { AppError } from '../../shared/errors/app-error';
 import { CreateSupplierInput, UpdateSupplierInput } from './suppliers.schema';
 import { RowDataPacket } from 'mysql2';
+import { PaginationParams, PaginatedResult, buildPaginatedResponse } from '../../shared/utils/pagination';
 
 interface SupplierRow extends RowDataPacket {
   id: number;
@@ -14,11 +15,25 @@ interface SupplierRow extends RowDataPacket {
   updated_at: string;
 }
 
-export async function listSuppliers(companyId: number): Promise<SupplierRow[]> {
-  return query<SupplierRow[]>(
-    'SELECT id, company_name, phone, email, contact_name, active, created_at, updated_at FROM suppliers WHERE active = TRUE AND company_id = ? ORDER BY created_at DESC',
-    [companyId]
+export async function listSuppliers(companyId: number, params: PaginationParams): Promise<PaginatedResult<SupplierRow>> {
+  const where = ['active = TRUE', 'company_id = ?'];
+  const values: unknown[] = [companyId];
+
+  if (params.search) {
+    where.push('(company_name LIKE ? OR phone LIKE ? OR email LIKE ? OR contact_name LIKE ?)');
+    const term = `%${params.search}%`;
+    values.push(term, term, term, term);
+  }
+
+  const countResult = await query<RowDataPacket[]>(`SELECT COUNT(*) as total FROM suppliers WHERE ${where.join(' AND ')}`, values);
+  const total = countResult[0].total;
+
+  const data = await query<SupplierRow[]>(
+    `SELECT id, company_name, phone, email, contact_name, active, created_at, updated_at FROM suppliers WHERE ${where.join(' AND ')} ORDER BY created_at DESC LIMIT ? OFFSET ?`,
+    [...values, params.limit, params.offset]
   );
+
+  return buildPaginatedResponse(data, total, params);
 }
 
 export async function getSupplierById(id: number, companyId: number): Promise<SupplierRow> {

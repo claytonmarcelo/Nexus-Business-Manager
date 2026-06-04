@@ -2,6 +2,7 @@ import { query, execute } from '../../shared/database/connection';
 import { AppError } from '../../shared/errors/app-error';
 import { CreateTransactionInput, UpdateTransactionInput } from './financial.schema';
 import { RowDataPacket } from 'mysql2';
+import { PaginationParams, PaginatedResult, buildPaginatedResponse } from '../../shared/utils/pagination';
 
 interface TransactionRow extends RowDataPacket {
   id: number;
@@ -9,6 +10,7 @@ interface TransactionRow extends RowDataPacket {
   category: string;
   description: string;
   value: number;
+  status: string;
   transaction_date: string;
   created_at: string;
 }
@@ -19,11 +21,25 @@ interface CashFlowRow extends RowDataPacket {
   balance: number;
 }
 
-export async function listTransactions(companyId: number): Promise<TransactionRow[]> {
-  return query<TransactionRow[]>(
-    'SELECT * FROM transactions WHERE company_id = ? ORDER BY transaction_date DESC, created_at DESC',
-    [companyId]
+export async function listTransactions(companyId: number, params: PaginationParams): Promise<PaginatedResult<TransactionRow>> {
+  const where = ['company_id = ?'];
+  const values: unknown[] = [companyId];
+
+  if (params.search) {
+    where.push('(description LIKE ? OR category LIKE ?)');
+    const term = `%${params.search}%`;
+    values.push(term, term);
+  }
+
+  const countResult = await query<RowDataPacket[]>(`SELECT COUNT(*) as total FROM transactions WHERE ${where.join(' AND ')}`, values);
+  const total = countResult[0].total;
+
+  const data = await query<TransactionRow[]>(
+    `SELECT * FROM transactions WHERE ${where.join(' AND ')} ORDER BY transaction_date DESC, created_at DESC LIMIT ? OFFSET ?`,
+    [...values, params.limit, params.offset]
   );
+
+  return buildPaginatedResponse(data, total, params);
 }
 
 export async function getTransactionById(id: number, companyId: number): Promise<TransactionRow> {
@@ -36,8 +52,8 @@ export async function getTransactionById(id: number, companyId: number): Promise
 
 export async function createTransaction(data: CreateTransactionInput, userId: number, companyId: number): Promise<TransactionRow> {
   const result = await execute(
-    'INSERT INTO transactions (type, category, description, value, transaction_date, created_by, company_id) VALUES (?, ?, ?, ?, ?, ?, ?)',
-    [data.type, data.category, data.description, data.value, data.transaction_date, userId, companyId]
+    'INSERT INTO transactions (type, category, description, value, status, transaction_date, created_by, company_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+    [data.type, data.category, data.description, data.value, data.status || 'PENDENTE', data.transaction_date, userId, companyId]
   );
   return getTransactionById(result.insertId, companyId);
 }
@@ -52,6 +68,7 @@ export async function updateTransaction(id: number, data: UpdateTransactionInput
   if (data.category !== undefined) { fields.push('category = ?'); values.push(data.category); }
   if (data.description !== undefined) { fields.push('description = ?'); values.push(data.description); }
   if (data.value !== undefined) { fields.push('value = ?'); values.push(data.value); }
+  if (data.status !== undefined) { fields.push('status = ?'); values.push(data.status); }
   if (data.transaction_date !== undefined) { fields.push('transaction_date = ?'); values.push(data.transaction_date); }
 
   if (fields.length > 0) {

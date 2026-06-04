@@ -1,5 +1,6 @@
 import { execute, query } from '../../shared/database/connection';
 import { RowDataPacket } from 'mysql2';
+import { PaginationParams, PaginatedResult, buildPaginatedResponse } from '../../shared/utils/pagination';
 
 interface AuditLogRow extends RowDataPacket {
   id: number;
@@ -43,11 +44,19 @@ export async function log(
   );
 }
 
-export async function listLogs(companyId: number): Promise<AuditLogRow[]> {
-  return query<AuditLogRow[]>(
-    'SELECT * FROM audit_logs WHERE company_id = ? ORDER BY created_at DESC LIMIT 200',
-    [companyId]
+export async function listLogs(companyId: number, params: PaginationParams): Promise<PaginatedResult<AuditLogRow>> {
+  const where = ['company_id = ?'];
+  const values: unknown[] = [companyId];
+
+  const countResult = await query<RowDataPacket[]>(`SELECT COUNT(*) as total FROM audit_logs WHERE ${where.join(' AND ')}`, values);
+  const total = countResult[0].total;
+
+  const data = await query<AuditLogRow[]>(
+    `SELECT * FROM audit_logs WHERE ${where.join(' AND ')} ORDER BY created_at DESC LIMIT ? OFFSET ?`,
+    [...values, params.limit, params.offset]
   );
+
+  return buildPaginatedResponse(data, total, params);
 }
 
 export async function listLogsByEntity(companyId: number, entityType: string, entityId: number): Promise<AuditLogRow[]> {

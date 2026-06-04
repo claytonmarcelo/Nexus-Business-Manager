@@ -9,6 +9,7 @@ export const purchaseItemSchema = z.object({
 export const createPurchaseSchema = z.object({
   supplier_id: z.number().int().positive().optional().nullable(),
   notes: z.string().optional().nullable(),
+  status: z.enum(['PENDENTE', 'RECEBIDA', 'CANCELADA']).optional().default('PENDENTE'),
   items: z.array(purchaseItemSchema).min(1, 'Adicione pelo menos um item'),
 });
 

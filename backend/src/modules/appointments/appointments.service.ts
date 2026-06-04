@@ -2,6 +2,7 @@ import { query, execute } from '../../shared/database/connection';
 import { AppError } from '../../shared/errors/app-error';
 import { CreateAppointmentInput, UpdateAppointmentInput } from './appointments.schema';
 import { RowDataPacket } from 'mysql2';
+import { PaginationParams, PaginatedResult, buildPaginatedResponse } from '../../shared/utils/pagination';
 
 interface AppointmentRow extends RowDataPacket {
   id: number;
@@ -15,15 +16,31 @@ interface AppointmentRow extends RowDataPacket {
   client_name: string | null;
 }
 
-export async function listAppointments(companyId: number): Promise<AppointmentRow[]> {
-  return query<AppointmentRow[]>(
+export async function listAppointments(companyId: number, params: PaginationParams): Promise<PaginatedResult<AppointmentRow>> {
+  const where = ['a.company_id = ?'];
+  const values: unknown[] = [companyId];
+
+  if (params.search) {
+    where.push('(a.title LIKE ? OR c.name LIKE ?)');
+    const term = `%${params.search}%`;
+    values.push(term, term);
+  }
+
+  const countResult = await query<RowDataPacket[]>(
+    `SELECT COUNT(*) as total FROM appointments a LEFT JOIN clients c ON c.id = a.client_id WHERE ${where.join(' AND ')}`, values
+  );
+  const total = countResult[0].total;
+
+  const data = await query<AppointmentRow[]>(
     `SELECT a.*, c.name as client_name
      FROM appointments a
      LEFT JOIN clients c ON c.id = a.client_id
-     WHERE a.company_id = ?
-     ORDER BY a.appointment_date DESC, a.appointment_time ASC`,
-    [companyId]
+     WHERE ${where.join(' AND ')}
+     ORDER BY a.appointment_date DESC, a.appointment_time ASC LIMIT ? OFFSET ?`,
+    [...values, params.limit, params.offset]
   );
+
+  return buildPaginatedResponse(data, total, params);
 }
 
 export async function getAppointmentsByDate(date: string, companyId: number): Promise<AppointmentRow[]> {
@@ -49,8 +66,8 @@ export async function getAppointmentById(id: number, companyId: number): Promise
 
 export async function createAppointment(data: CreateAppointmentInput, userId: number, companyId: number): Promise<AppointmentRow> {
   const result = await execute(
-    'INSERT INTO appointments (title, description, appointment_date, appointment_time, client_id, created_by, company_id) VALUES (?, ?, ?, ?, ?, ?, ?)',
-    [data.title, data.description || null, data.appointment_date, data.appointment_time || null, data.client_id || null, userId, companyId]
+    'INSERT INTO appointments (title, description, appointment_date, appointment_time, client_id, status, created_by, company_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+    [data.title, data.description || null, data.appointment_date, data.appointment_time || null, data.client_id || null, data.status || 'scheduled', userId, companyId]
   );
   return getAppointmentById(result.insertId, companyId);
 }

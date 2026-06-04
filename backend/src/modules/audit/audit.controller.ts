@@ -1,15 +1,17 @@
 import { FastifyRequest, FastifyReply } from 'fastify';
 import * as auditService from './audit.service';
+import { parsePagination } from '../../shared/utils/pagination';
 
 export async function listHandler(request: FastifyRequest, reply: FastifyReply) {
-  const user = request.user as { id: number; company_id: number };
-  const logs = await auditService.listLogs(user.company_id);
-  return reply.send(logs);
+  const user = request.user as { companyId: number };
+  const params = parsePagination(request.query as Record<string, any>);
+  const result = await auditService.listLogs(user.companyId, params);
+  return reply.send({ success: true, ...result });
 }
 
 export async function listByEntityHandler(request: FastifyRequest, reply: FastifyReply) {
-  const user = request.user as { id: number; company_id: number };
+  const user = request.user as { companyId: number };
   const { entityType, entityId } = request.params as { entityType: string; entityId: string };
-  const logs = await auditService.listLogsByEntity(user.company_id, entityType, Number(entityId));
-  return reply.send(logs);
+  const logs = await auditService.listLogsByEntity(user.companyId, entityType, Number(entityId));
+  return reply.send({ success: true, data: logs });
 }

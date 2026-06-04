@@ -28,6 +28,15 @@ export async function generateFinancialReport(companyId: number): Promise<Report
   );
 }
 
+export async function generateSalesReport(companyId: number): Promise<ReportRow[]> {
+  return query<ReportRow[]>(
+    `SELECT s.id, c.name as client, s.total_value, s.status, s.created_at
+     FROM sales s
+     LEFT JOIN clients c ON c.id = s.client_id
+     WHERE s.company_id = ? ORDER BY s.created_at DESC`, [companyId]
+  );
+}
+
 export async function generateStockReport(companyId: number): Promise<ReportRow[]> {
   return query<ReportRow[]>(
     `SELECT p.id, p.name, p.sku, p.category, p.price, p.quantity, (p.price * p.quantity) as stock_value,
@@ -60,6 +69,11 @@ const reportHeaders: Record<string, { label: string; align?: string }[]> = {
     { label: 'Categoria' }, { label: 'Preco', align: 'right' },
     { label: 'Qtd', align: 'right' }, { label: 'Valor Estoque', align: 'right' },
     { label: 'Entradas', align: 'right' }, { label: 'Saidas', align: 'right' },
+  ],
+  sales: [
+    { label: 'ID' }, { label: 'Cliente' },
+    { label: 'Valor Total', align: 'right' },
+    { label: 'Status' }, { label: 'Data' },
   ],
 };
 
@@ -157,6 +171,7 @@ async function getReportData(companyId: number, type: string): Promise<ReportRow
     case 'products': return generateProductReport(companyId);
     case 'financial': return generateFinancialReport(companyId);
     case 'stock': return generateStockReport(companyId);
+    case 'sales': return generateSalesReport(companyId);
     default: return [];
   }
 }

@@ -2,6 +2,7 @@ import { query, execute } from '../../shared/database/connection';
 import { AppError } from '../../shared/errors/app-error';
 import { CreateMovementInput } from './stock.schema';
 import { RowDataPacket } from 'mysql2';
+import { PaginationParams, PaginatedResult, buildPaginatedResponse } from '../../shared/utils/pagination';
 
 interface StockMovementRow extends RowDataPacket {
   id: number;
@@ -21,15 +22,31 @@ interface ProductRow extends RowDataPacket {
   quantity: number;
 }
 
-export async function listMovements(companyId: number): Promise<StockMovementRow[]> {
-  return query<StockMovementRow[]>(
+export async function listMovements(companyId: number, params: PaginationParams): Promise<PaginatedResult<StockMovementRow>> {
+  const where = ['sm.company_id = ?'];
+  const values: unknown[] = [companyId];
+
+  if (params.search) {
+    where.push('(p.name LIKE ? OR sm.description LIKE ?)');
+    const term = `%${params.search}%`;
+    values.push(term, term);
+  }
+
+  const countResult = await query<RowDataPacket[]>(
+    `SELECT COUNT(*) as total FROM stock_movements sm JOIN products p ON p.id = sm.product_id WHERE ${where.join(' AND ')}`, values
+  );
+  const total = countResult[0].total;
+
+  const data = await query<StockMovementRow[]>(
     `SELECT sm.*, p.name as product_name
      FROM stock_movements sm
      JOIN products p ON p.id = sm.product_id
-     WHERE sm.company_id = ?
-     ORDER BY sm.created_at DESC`,
-    [companyId]
+     WHERE ${where.join(' AND ')}
+     ORDER BY sm.created_at DESC LIMIT ? OFFSET ?`,
+    [...values, params.limit, params.offset]
   );
+
+  return buildPaginatedResponse(data, total, params);
 }
 
 export async function getMovementsByProduct(productId: number, companyId: number): Promise<StockMovementRow[]> {

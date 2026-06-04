@@ -7,6 +7,7 @@ export const createClientSchema = z.object({
   document: z.string().optional().nullable(),
   address: z.string().optional().nullable(),
   notes: z.string().optional().nullable(),
+  status: z.enum(['ATIVO', 'INATIVO']).optional().default('ATIVO'),
 });
 
 export const updateClientSchema = z.object({
@@ -16,6 +17,7 @@ export const updateClientSchema = z.object({
   document: z.string().optional().nullable(),
   address: z.string().optional().nullable(),
   notes: z.string().optional().nullable(),
+  status: z.enum(['ATIVO', 'INATIVO']).optional(),
   active: z.boolean().optional(),
 });
 

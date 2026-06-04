@@ -7,6 +7,7 @@ export const createProductSchema = z.object({
   price: z.number().positive('Preco deve ser positivo'),
   quantity: z.number().int().min(0, 'Quantidade nao pode ser negativa'),
   image: z.string().optional().nullable(),
+  status: z.enum(['ATIVO', 'INATIVO']).optional().default('ATIVO'),
 });
 
 export const updateProductSchema = z.object({
@@ -16,6 +17,7 @@ export const updateProductSchema = z.object({
   price: z.number().positive().optional(),
   quantity: z.number().int().min(0).optional(),
   image: z.string().optional().nullable(),
+  status: z.enum(['ATIVO', 'INATIVO']).optional(),
   active: z.boolean().optional(),
 });
 

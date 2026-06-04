@@ -3,6 +3,7 @@ import { query, execute } from '../../shared/database/connection';
 import { AppError } from '../../shared/errors/app-error';
 import { CreateUserInput, UpdateUserInput } from './users.schema';
 import { RowDataPacket } from 'mysql2';
+import { PaginationParams, PaginatedResult, buildPaginatedResponse } from '../../shared/utils/pagination';
 
 interface UserRow extends RowDataPacket {
   id: number;
@@ -15,11 +16,25 @@ interface UserRow extends RowDataPacket {
   updated_at: string;
 }
 
-export async function listUsers(companyId: number): Promise<UserRow[]> {
-  return query<UserRow[]>(
-    'SELECT id, name, email, role, active, company_id, created_at, updated_at FROM users WHERE company_id = ? ORDER BY created_at DESC',
-    [companyId]
+export async function listUsers(companyId: number, params: PaginationParams): Promise<PaginatedResult<UserRow>> {
+  const where = ['company_id = ?'];
+  const values: unknown[] = [companyId];
+
+  if (params.search) {
+    where.push('(name LIKE ? OR email LIKE ?)');
+    const term = `%${params.search}%`;
+    values.push(term, term);
+  }
+
+  const countResult = await query<RowDataPacket[]>(`SELECT COUNT(*) as total FROM users WHERE ${where.join(' AND ')}`, values);
+  const total = countResult[0].total;
+
+  const data = await query<UserRow[]>(
+    `SELECT id, name, email, role, active, company_id, created_at, updated_at FROM users WHERE ${where.join(' AND ')} ORDER BY created_at DESC LIMIT ? OFFSET ?`,
+    [...values, params.limit, params.offset]
   );
+
+  return buildPaginatedResponse(data, total, params);
 }
 
 export async function getUserById(id: number): Promise<UserRow> {

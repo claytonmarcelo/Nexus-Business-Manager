@@ -190,3 +190,19 @@ export interface AuditLog {
   ip_address: string | null;
   created_at: string;
 }
+
+export interface ApiResponse<T> {
+  success: boolean;
+  message?: string;
+  errorCode?: string;
+  data?: T;
+}
+
+export interface PaginatedResponse<T> {
+  success: boolean;
+  data: T[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}

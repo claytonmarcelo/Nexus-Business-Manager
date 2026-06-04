@@ -2,6 +2,7 @@ import { query, execute } from '../../shared/database/connection';
 import { AppError } from '../../shared/errors/app-error';
 import { CreatePurchaseInput, UpdatePurchaseStatusInput } from './purchases.schema';
 import { RowDataPacket } from 'mysql2';
+import { PaginationParams, PaginatedResult, buildPaginatedResponse } from '../../shared/utils/pagination';
 
 interface PurchaseRow extends RowDataPacket {
   id: number;
@@ -29,15 +30,31 @@ interface ProductRow extends RowDataPacket {
   quantity: number;
 }
 
-export async function listPurchases(companyId: number): Promise<PurchaseRow[]> {
-  return query<PurchaseRow[]>(
+export async function listPurchases(companyId: number, params: PaginationParams): Promise<PaginatedResult<PurchaseRow>> {
+  const where = ['p.company_id = ?'];
+  const values: unknown[] = [companyId];
+
+  if (params.search) {
+    where.push('(s.company_name LIKE ? OR p.notes LIKE ?)');
+    const term = `%${params.search}%`;
+    values.push(term, term);
+  }
+
+  const countResult = await query<RowDataPacket[]>(
+    `SELECT COUNT(*) as total FROM purchases p LEFT JOIN suppliers s ON s.id = p.supplier_id WHERE ${where.join(' AND ')}`, values
+  );
+  const total = countResult[0].total;
+
+  const data = await query<PurchaseRow[]>(
     `SELECT p.*, s.company_name as supplier_name
      FROM purchases p
      LEFT JOIN suppliers s ON s.id = p.supplier_id
-     WHERE p.company_id = ?
-     ORDER BY p.created_at DESC`,
-    [companyId]
+     WHERE ${where.join(' AND ')}
+     ORDER BY p.created_at DESC LIMIT ? OFFSET ?`,
+    [...values, params.limit, params.offset]
   );
+
+  return buildPaginatedResponse(data, total, params);
 }
 
 export async function getPurchaseById(id: number, companyId: number): Promise<PurchaseRow> {
@@ -67,8 +84,8 @@ export async function createPurchase(data: CreatePurchaseInput, userId: number, 
   }
 
   const result = await execute(
-    'INSERT INTO purchases (supplier_id, total_value, notes, created_by, company_id) VALUES (?, ?, ?, ?, ?)',
-    [data.supplier_id || null, totalValue, data.notes || null, userId, companyId]
+    'INSERT INTO purchases (supplier_id, total_value, status, notes, created_by, company_id) VALUES (?, ?, ?, ?, ?, ?)',
+    [data.supplier_id || null, totalValue, data.status || 'PENDENTE', data.notes || null, userId, companyId]
   );
 
   const purchaseId = result.insertId;
@@ -86,7 +103,7 @@ export async function createPurchase(data: CreatePurchaseInput, userId: number, 
 
 export async function receivePurchase(id: number, userId: number, companyId: number): Promise<void> {
   const purchase = await getPurchaseById(id, companyId);
-  if (purchase.status !== 'pending') throw new AppError('Compra ja foi processada', 400);
+  if (purchase.status !== 'PENDENTE') throw new AppError('Compra ja foi processada', 400);
 
   const items = await getPurchaseItems(id);
 
@@ -105,7 +122,13 @@ export async function receivePurchase(id: number, userId: number, companyId: num
     );
   }
 
-  await execute("UPDATE purchases SET status = 'received' WHERE id = ?", [id]);
+  await execute("UPDATE purchases SET status = 'RECEBIDA' WHERE id = ?", [id]);
+}
+
+export async function cancelPurchase(id: number, companyId: number): Promise<PurchaseRow> {
+  await getPurchaseById(id, companyId);
+  await execute("UPDATE purchases SET status = 'CANCELADA' WHERE id = ? AND company_id = ?", [id, companyId]);
+  return getPurchaseById(id, companyId);
 }
 
 export async function updatePurchaseStatus(id: number, data: UpdatePurchaseStatusInput, companyId: number): Promise<PurchaseRow> {

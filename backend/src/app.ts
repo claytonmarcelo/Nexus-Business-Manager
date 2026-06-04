@@ -3,7 +3,10 @@ import cors from '@fastify/cors';
 import jwt from '@fastify/jwt';
 import multipart from '@fastify/multipart';
 import fastifyStatic from '@fastify/static';
+import rateLimit from '@fastify/rate-limit';
+import helmet from '@fastify/helmet';
 import path from 'path';
+import fs from 'fs';
 import dotenv from 'dotenv';
 
 import { authRoutes } from './modules/auth/auth.routes';
@@ -26,10 +29,29 @@ import { AppError } from './shared/errors/app-error';
 dotenv.config();
 
 export async function buildApp() {
+  const logDir = path.resolve(__dirname, '..', 'logs');
+  if (!fs.existsSync(logDir)) fs.mkdirSync(logDir, { recursive: true });
+
   const app = Fastify({
     logger: {
       level: 'info',
+      file: path.join(logDir, 'app.log'),
+      transport: {
+        target: 'pino-pretty',
+        options: { colorize: false, translateTime: 'SYS:yyyy-mm-dd HH:MM:ss' },
+      },
     },
+  });
+
+  await app.register(rateLimit, {
+    max: 100,
+    timeWindow: '1 minute',
+    keyGenerator: (req) => req.ip,
+  });
+
+  await app.register(helmet, {
+    contentSecurityPolicy: false,
+    crossOriginResourcePolicy: { policy: 'cross-origin' },
   });
 
   await app.register(cors, {
@@ -57,32 +79,60 @@ export async function buildApp() {
   app.decorate('authenticate', async (request: any, reply: any) => {
     try {
       await request.jwtVerify();
+      if (request.user) {
+        request.user.company_id = request.user.companyId;
+        request.user.companyId = request.user.companyId || request.user.company_id;
+      }
     } catch {
       throw new AppError('Token invalido ou ausente', 401);
     }
   });
 
-  app.setErrorHandler((error, _request, reply) => {
+  function errorCode(status: number): string {
+    if (status === 400) return 'VALIDATION_ERROR';
+    if (status === 401) return 'UNAUTHORIZED';
+    if (status === 403) return 'FORBIDDEN';
+    if (status === 404) return 'NOT_FOUND';
+    if (status === 409) return 'CONFLICT';
+    if (status === 429) return 'TOO_MANY_REQUESTS';
+    return 'INTERNAL_ERROR';
+  }
+
+  app.setErrorHandler((error, request, reply) => {
+    const statusCode = error.statusCode || (error instanceof AppError ? error.statusCode : 500);
+    const message = error.message || 'Erro interno do servidor';
+
+    if (statusCode === 429) {
+      return reply.status(429).send({
+        success: false,
+        message: 'Muitas requisicoes. Tente novamente em alguns instantes.',
+        errorCode: 'TOO_MANY_REQUESTS',
+      });
+    }
+
     if (error.validation) {
       return reply.status(400).send({
-        error: 'Erro de validacao',
-        message: error.message,
+        success: false,
+        message: message,
+        errorCode: 'VALIDATION_ERROR',
         details: error.validation,
       });
     }
 
     if (error instanceof AppError) {
-      return reply.status(error.statusCode).send({
-        error: error.message,
-        statusCode: error.statusCode,
+      return reply.status(statusCode).send({
+        success: false,
+        message: message,
+        errorCode: errorCode(statusCode),
       });
     }
 
     app.log.error(error);
 
     return reply.status(500).send({
-      error: 'Erro interno do servidor',
-      statusCode: 500,
+      success: false,
+      message: 'Erro interno do servidor',
+      errorCode: 'INTERNAL_ERROR',
     });
   });
 
