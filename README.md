@@ -298,52 +298,61 @@ O projeto implementa múltiplas camadas de segurança:
 
 ## Arquitetura
 
-```
-┌─────────────────────────────────────────────────┐
-│              Frontend Web (React)                │
-│         Acesso via navegador (SPA)               │
-│          http://localhost:5173                    │
-└─────────────────────┬───────────────────────────┘
-                      │  Requisições HTTP (JSON)
-                      │  Authorization: Bearer JWT
-                      ▼
-┌─────────────────────────────────────────────────┐
-│              API REST (Fastify)                  │
-│         Node.js + TypeScript + Zod              │
-│          http://localhost:3333                    │
-│                                                   │
-│  ┌───────────────┐  ┌───────────────────────────┐ │
-│  │  Middlewares   │  │  Autenticação JWT         │ │
-│  │  - Rate Limit │  │  - Verificação de token   │ │
-│  │  - Helmet     │──▶│  - Hierarquia de cargos  │ │
-│  │  - CORS       │  │  - Isolamento empresa     │ │
-│  └───────────────┘  └───────────────────────────┘ │
-│                           │                        │
-│  ┌──────────────────────────────────────────────┐ │
-│  │          15 Módulos de Negócio               │ │
-│  │  Auth │ Users │ Clients │ Products │ Stock   │ │
-│  │  Suppliers │ Purchases │ Sales │ Financial   │ │
-│  │  Appointments │ Dashboard │ Reports          │ │
-│  │  Notifications │ Audit │ Companies           │ │
-│  └──────────────────────────────────────────────┘ │
-│                           │                        │
-│  ┌──────────────────────────────────────────────┐ │
-│  │         MySQL (mysql2/promise)               │ │
-│  │  Isolamento multiempresa via company_id       │ │
-│  │  Auditoria registrada em cada ação           │ │
-│  └──────────────────────────────────────────────┘ │
-└─────────────────────────────────────────────────┘
+```text
+┌─────────────────────┐
+│   Frontend Web      │
+│ React + TypeScript  │
+└──────────┬──────────┘
+           │ HTTP + JWT
+           ▼
+┌─────────────────────┐
+│   API REST          │
+│ Fastify + Node.js   │
+│ TypeScript + Zod    │
+└──────────┬──────────┘
+           │
+           ▼
+┌─────────────────────┐
+│ 15 Módulos ERP      │
+│ CRM • Estoque       │
+│ Compras • Vendas    │
+│ Financeiro          │
+│ Agenda • Relatórios │
+│ Auditoria           │
+│ Multiempresa        │
+└──────────┬──────────┘
+           │
+           ▼
+┌─────────────────────┐
+│ MySQL               │
+│ company_id          │
+│ Auditoria           │
+└─────────────────────┘
 ```
 
-### Fluxo de autenticação
+### Segurança
 
-```
-Cliente ──▶ POST /api/auth ──▶ Zod valida ──▶ bcrypt.compare ──▶ JWT emitido
-   ▲                                                               │
-   └─────────────────── Bearer Token em cada request ──────────────┘
-```
+* JWT Authentication
+* Rate Limiting
+* Helmet
+* CORS
+* Hierarquia de Permissões
+* Isolamento Multiempresa
 
-Cada requisição privada passa por: **JWT verify → Role check → Company isolation → Controller → Service → Database**.
+### Arquitetura
+
+* Frontend React
+* Backend Fastify
+* Banco MySQL
+* API REST
+* Multiempresa por company_id
+
+### Escalabilidade
+
+* Arquitetura modular
+* Separação por domínio
+* Preparado para SaaS
+* Preparado para integrações futuras
 
 ---
 
