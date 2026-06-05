@@ -19,9 +19,15 @@ export function Dashboard() {
     async function load() {
       try {
         const res = await api.get('/dashboard');
-        setData(res.data);
-      } catch {
-        setError('Erro ao carregar dashboard. Verifique a conexao com o servidor.');
+        if (res.data && res.data.data) {
+          setData(res.data.data);
+        } else {
+          setData(res.data);
+        }
+      } catch (err: any) {
+        console.error('Erro ao carregar dashboard:', err);
+        const errorMsg = err?.response?.data?.message || err?.message || 'Erro ao carregar dashboard. Verifique a conexão com o servidor.';
+        setError(errorMsg);
       }
       finally { setLoading(false); }
     }

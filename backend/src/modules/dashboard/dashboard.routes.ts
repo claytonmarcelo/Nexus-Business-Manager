@@ -6,5 +6,5 @@ import * as dashboardController from './dashboard.controller';
 export async function dashboardRoutes(app: FastifyInstance) {
   app.addHook('preHandler', authenticate);
 
-  app.get('/dashboard', { preHandler: [authorize('admin', 'manager', 'viewer')] }, dashboardController.statsHandler);
+  app.get('/dashboard', { preHandler: [authorize('admin', 'manager', 'operator', 'viewer')] }, dashboardController.statsHandler);
 }
