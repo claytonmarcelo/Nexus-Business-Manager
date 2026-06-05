@@ -30,27 +30,27 @@
 </p>
 
 ---
-
 ## Screenshots
 
-> As capturas de tela podem ser geradas rodando o projeto localmente. Veja o guia em [`docs/screenshots/README.md`](docs/screenshots/README.md).
+> Capturas ilustrativas da interface do Nexus Business Manager.
 
 <div align="center">
 
-| Login | Dashboard |
-|:-----:|:---------:|
-| <img src="docs/screenshots/login.png" alt="Login" width="300"> | <img src="docs/screenshots/dashboard.png" alt="Dashboard" width="300"> |
+|                               Login                              |                                 Dashboard                                |
+| :--------------------------------------------------------------: | :----------------------------------------------------------------------: |
+| <img src="assets/screenshots/login.png" alt="Login" width="300"> | <img src="assets/screenshots/dashboard.png" alt="Dashboard" width="300"> |
 
-| CRM | Estoque |
-|:---:|:-------:|
-| <img src="docs/screenshots/clients.png" alt="Clientes" width="300"> | <img src="docs/screenshots/stock.png" alt="Estoque" width="300"> |
+|                              CRM Clientes                              |                                Estoque                               |
+| :--------------------------------------------------------------------: | :------------------------------------------------------------------: |
+| <img src="assets/screenshots/clientes.png" alt="Clientes" width="300"> | <img src="assets/screenshots/estoque.png" alt="Estoque" width="300"> |
 
-| Financeiro | Relatórios |
-|:----------:|:----------:|
-| <img src="docs/screenshots/financial.png" alt="Financeiro" width="300"> | <img src="docs/screenshots/reports.png" alt="Relatórios" width="300"> |
+|                                 Financeiro                                 |                                 Relatórios                                 |
+| :------------------------------------------------------------------------: | :------------------------------------------------------------------------: |
+| <img src="assets/screenshots/financeiro.png" alt="Financeiro" width="300"> | <img src="assets/screenshots/relatorios.png" alt="Relatórios" width="300"> |
 
 </div>
 
+---
 ---
 
 ## Sobre o Projeto
