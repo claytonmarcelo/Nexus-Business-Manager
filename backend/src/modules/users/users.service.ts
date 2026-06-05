@@ -96,7 +96,12 @@ export async function updateUser(id: number, data: UpdateUserInput): Promise<Use
 
   if (data.name) { fields.push('name = ?'); values.push(data.name); }
   if (data.email) { fields.push('email = ?'); values.push(data.email); }
-  if (data.role) { fields.push('role = ?'); values.push(data.role); }
+  if (data.role) {
+    if (currentUser.email === 'marcelolimadez@gmail.com' && data.role !== 'admin') {
+      throw new AppError('Este usuario administrador e reservado para testes do sistema e nao pode ser rebaixado.', 403);
+    }
+    fields.push('role = ?'); values.push(data.role);
+  }
   if (data.active !== undefined) { fields.push('active = ?'); values.push(data.active); }
   if (data.avatarUrl) { fields.push('avatar_url = ?'); values.push(data.avatarUrl); }
   if (data.themePreference) { fields.push('theme_preference = ?'); values.push(data.themePreference); }
@@ -126,6 +131,9 @@ export async function updateAvatar(userId: number, avatarUrl: string): Promise<v
 }
 
 export async function deleteUser(id: number): Promise<void> {
-  await getUserById(id);
+  const user = await getUserById(id);
+  if (user.email === 'marcelolimadez@gmail.com') {
+    throw new AppError('Este usuario administrador e reservado para testes do sistema e nao pode ser removido.', 403);
+  }
   await execute('UPDATE users SET active = FALSE WHERE id = ?', [id]);
 }
