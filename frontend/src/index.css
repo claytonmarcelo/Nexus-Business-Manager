@@ -440,10 +440,10 @@ input:focus, textarea:focus, select:focus {
 .dark .bg-contrast-soft {
   background: var(--dark-card-soft);
 }
-/* Sidebar logo responsivo - 20% maior */
+/* Sidebar logo responsivo - Tamanho maior para melhor visualização */
 .sidebar-logo {
-  width: 154px;
-  max-width: 90%;
+  width: 200px;           /* Significativamente maior para melhor visualização */
+  max-width: 95%;
   height: auto;
   display: block;
   margin: 0 auto;
@@ -452,12 +452,12 @@ input:focus, textarea:focus, select:focus {
 
 @media (max-width: 768px) {
   .sidebar-logo {
-    width: 132px; /* 20% maior que os 110px anteriores */
+    width: 180px;         /* Mantém proporção em tablets */
   }
 }
 
 @media (max-width: 480px) {
   .sidebar-logo {
-    width: 120px; /* Mantém proporção em telas muito pequenas */
+    width: 160px;         /* Ainda visível em telas pequenas */
   }
 }

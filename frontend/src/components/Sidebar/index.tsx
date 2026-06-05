@@ -114,7 +114,7 @@ export function Sidebar() {
 
   return (
     <aside className="w-64 bg-brand-blackCherry text-brand-ivorySmoke min-h-screen flex flex-col">
-      <div className="p-6 flex items-center justify-center">
+      <div className="p-8 flex items-center justify-center">
         <img 
           src="/logo.png" 
           alt="Nexus Business Manager" 
