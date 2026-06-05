@@ -123,12 +123,12 @@ export function Register() {
 
   return (
     <div className="min-h-screen flex items-center justify-center"
-      style={{ background: 'linear-gradient(180deg, #1A0D12 0%, #24171C 45%, #32252B 100%)' }}>
+      style={{ background: 'linear-gradient(180deg, #050505 0%, #151515 45%, #242424 100%)' }}>
       <div className="w-full max-w-md">
         <AuthLogo />
 
         <div className="rounded-[18px] p-8 mx-4"
-          style={{ background: 'rgba(50, 37, 43, 0.96)', border: '1px solid rgba(214, 179, 112, 0.22)', boxShadow: '0 18px 45px rgba(0, 0, 0, 0.35)' }}>
+          style={{ background: 'rgba(36, 36, 36, 0.96)', border: '1px solid rgba(214, 179, 112, 0.22)', boxShadow: '0 18px 45px rgba(0, 0, 0, 0.35)' }}>
           <h2 className="text-2xl font-semibold mb-2" style={{ color: '#F7F2EC' }}>Criar conta</h2>
           <p className="mb-6" style={{ color: 'rgba(247, 242, 236, 0.72)' }}>Preencha os dados para se cadastrar</p>
 
@@ -176,22 +176,25 @@ export function Register() {
               />
               {password && (
                 <div className="mt-2 space-y-1">
-                  <div className="h-1.5 rounded-full overflow-hidden" style={{ background: 'rgba(183, 110, 121, 0.2)' }}>
+                  <div className="h-1.5 rounded-full overflow-hidden" style={{ background: 'rgba(62, 149, 143, 0.2)' }}>
                     <div 
                       className="h-full rounded-full transition-all duration-300" 
                       style={{ 
                         width: `${(getPasswordStrength(password) / 6) * 100}%`,
-                        background: getPasswordStrength(password) < 3 ? '#E57373' : 
-                                   getPasswordStrength(password) < 5 ? '#D6B370' : '#4CAF50'
+                        background: getPasswordStrength(password) < 3 ? '#A94442' : 
+                                   getPasswordStrength(password) < 5 ? '#D6B370' : 
+                                   getPasswordStrength(password) === 5 ? '#3E958F' : '#85D5D2'
                       }} 
                     />
                   </div>
                   <div className="text-xs" style={{ 
-                    color: getPasswordStrength(password) < 3 ? '#E57373' : 
-                           getPasswordStrength(password) < 5 ? '#D6B370' : '#4CAF50'
+                    color: getPasswordStrength(password) < 3 ? '#A94442' : 
+                           getPasswordStrength(password) < 5 ? '#D6B370' : 
+                           getPasswordStrength(password) === 5 ? '#3E958F' : '#85D5D2'
                   }}>
                     {getPasswordStrength(password) < 3 ? 'Senha fraca' :
-                     getPasswordStrength(password) < 5 ? 'Senha média' : 'Senha forte'}
+                     getPasswordStrength(password) < 5 ? 'Senha média' : 
+                     getPasswordStrength(password) === 5 ? 'Senha forte' : 'Senha muito forte'}
                   </div>
                 </div>
               )}

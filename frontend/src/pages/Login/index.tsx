@@ -3,9 +3,9 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { AuthLogo } from '../../components/AuthLogo';
 
-function getPasswordStrength(password: string): { level: 'none' | 'weak' | 'medium' | 'strong'; label: string; color: string; bgColor: string; width: string } {
+function getPasswordStrength(password: string): { level: 'none' | 'weak' | 'medium' | 'strong' | 'very_strong'; label: string; color: string; bgColor: string; width: string } {
   if (!password) return { level: 'none', label: '', color: '', bgColor: '', width: '0%' };
-  if (password.length < 8) return { level: 'weak', label: 'Fraca', color: '#E57373', bgColor: '#E57373', width: '25%' };
+  if (password.length < 8) return { level: 'weak', label: 'Fraca', color: '#A94442', bgColor: '#A94442', width: '25%' };
 
   const hasUpper = /[A-Z]/.test(password);
   const hasLower = /[a-z]/.test(password);
@@ -14,9 +14,10 @@ function getPasswordStrength(password: string): { level: 'none' | 'weak' | 'medi
 
   const score = [hasUpper, hasLower, hasNumber, hasSpecial].filter(Boolean).length;
 
-  if (score >= 4) return { level: 'strong', label: 'Forte', color: '#4CAF50', bgColor: '#4CAF50', width: '100%' };
-  if (score >= 2) return { level: 'medium', label: 'Media', color: '#D6B370', bgColor: '#D6B370', width: '60%' };
-  return { level: 'weak', label: 'Fraca', color: '#E57373', bgColor: '#E57373', width: '25%' };
+  if (score === 4) return { level: 'very_strong', label: 'Muito Forte', color: '#85D5D2', bgColor: '#85D5D2', width: '100%' };
+  if (score === 3) return { level: 'strong', label: 'Forte', color: '#3E958F', bgColor: '#3E958F', width: '75%' };
+  if (score === 2) return { level: 'medium', label: 'Média', color: '#D6B370', bgColor: '#D6B370', width: '50%' };
+  return { level: 'weak', label: 'Fraca', color: '#A94442', bgColor: '#A94442', width: '25%' };
 }
 
 export function Login() {
@@ -47,12 +48,12 @@ export function Login() {
 
   return (
     <div className="min-h-screen flex items-center justify-center"
-      style={{ background: 'linear-gradient(180deg, #1A0D12 0%, #24171C 45%, #32252B 100%)' }}>
+      style={{ background: 'linear-gradient(180deg, #050505 0%, #151515 45%, #242424 100%)' }}>
       <div className="w-full max-w-md">
         <AuthLogo />
 
         <div className="rounded-[18px] p-8 mx-4"
-          style={{ background: 'rgba(50, 37, 43, 0.96)', border: '1px solid rgba(214, 179, 112, 0.22)', boxShadow: '0 18px 45px rgba(0, 0, 0, 0.35)' }}>
+          style={{ background: 'rgba(36, 36, 36, 0.96)', border: '1px solid rgba(214, 179, 112, 0.22)', boxShadow: '0 18px 45px rgba(0, 0, 0, 0.35)' }}>
           <h2 className="text-2xl font-semibold mb-2" style={{ color: '#F7F2EC' }}>Acessar sistema</h2>
           <p className="mb-6" style={{ color: 'rgba(247, 242, 236, 0.72)' }}>Informe seus dados para entrar</p>
 
@@ -98,7 +99,7 @@ export function Login() {
               </div>
               {password && (
                 <div className="mt-2 space-y-1">
-                  <div className="h-1.5 rounded-full overflow-hidden" style={{ background: 'rgba(183, 110, 121, 0.2)' }}>
+                  <div className="h-1.5 rounded-full overflow-hidden" style={{ background: 'rgba(62, 149, 143, 0.2)' }}>
                     <div className="h-full rounded-full transition-all duration-300" style={{ width: strength.width, background: strength.bgColor }} />
                   </div>
                   <p className="text-xs font-medium" style={{ color: strength.color }}>
