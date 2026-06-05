@@ -554,45 +554,20 @@ Access `http://localhost:5173` and log in with:
 ## 👨‍💻 Developer
 
 <table>
-<tr>
-<td width="120">
-
-<img src="https://github.com/claytonmarcelo.png" width="100" alt="Clayton Marcelo">
-
-</td>
-
-<td>
-
-<h3>C. Marcelo Dev.</h3>
-
-📍 Brazil
-
-<br><br>
-
-<a href="https://github.com/claytonmarcelo" target="_blank">
-<img src="https://img.shields.io/badge/GitHub-claytonmarcelo-181717?style=flat-square&logo=github">
-</a>
-
-<a href="https://www.youtube.com/@c.marcelodev.brasil" target="_blank">
-<img src="https://img.shields.io/badge/YouTube-CMarceloDev-FF0000?style=flat-square&logo=youtube">
-</a>
-
-<a href="https://cmarcelodev.com" target="_blank">
-<img src="https://img.shields.io/badge/Portfolio-cmarcelodev.com-000000?style=flat-square">
-</a>
-
-<a href="https://www.linkedin.com/in/clayton-marcelo-dev/" target="_blank">
-<img src="https://img.shields.io/badge/LinkedIn-claytonmarcelo-0A66C2?style=flat-square&logo=linkedin">
-</a>
-
-<br><br>
-
-Full Stack Developer specialized in React, React Native, Node.js, Fastify, TypeScript, MySQL and enterprise SaaS solutions development.
-
-Creator of the Nexus Business Manager project, a modern ERP platform developed to centralize CRM, Inventory, Purchases, Sales, Financial, Scheduling, Reports and Multi-company in a single solution.
-
-</td>
-</tr>
+  <tr>
+    <td width="90">
+      <img src="https://github.com/claytonmarcelo.png" width="90" alt="Clayton Marcelo">
+    </td>
+    <td>
+      <strong>C. Marcelo Dev.</strong><br>
+      <strong>📍</strong> Brazil<br><br>
+      <a href="https://github.com/claytonmarcelo" target="_blank"><img src="https://img.shields.io/badge/GitHub-claytonmarcelo-181717?style=flat-square&logo=github"></a>
+      <a href="https://www.youtube.com/@c.marcelodev.brasil" target="_blank"><img src="https://img.shields.io/badge/YouTube-CMarceloDev-FF0000?style=flat-square&logo=youtube"></a>
+      <a href="https://cmarcelodev.com" target="_blank"><img src="https://img.shields.io/badge/Portfolio-cmarcelodev.com-000000?style=flat-square"></a>
+      <a href="https://www.linkedin.com/in/clayton-marcelo-dev/" target="_blank"><img src="https://img.shields.io/badge/LinkedIn-claytonmarcelo-0A66C2?style=flat-square&logo=linkedin"></a><br><br>
+      <em>Full Stack Developer specialized in React, React Native, Node.js, Fastify, TypeScript, MySQL and enterprise SaaS solutions development.</em>
+    </td>
+  </tr>
 </table>
 
 ---
