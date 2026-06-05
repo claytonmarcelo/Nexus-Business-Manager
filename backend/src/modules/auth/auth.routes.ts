@@ -3,9 +3,7 @@ import { loginHandler, registerHandler, profileHandler, logoutHandler } from './
 import { authenticate } from '../../shared/middlewares/auth.middleware';
 
 export async function authRoutes(app: FastifyInstance) {
-  app.post('/auth/login', {
-    config: { rateLimit: { max: 5, timeWindow: '15 minutes' } },
-  }, loginHandler);
+  app.post('/auth/login', loginHandler);
 
   app.post('/auth/register', registerHandler);
 
