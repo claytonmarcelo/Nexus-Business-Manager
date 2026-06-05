@@ -83,7 +83,7 @@ export function Appointments() {
   }
 
   const statusBadge: Record<string, string> = {
-    scheduled: 'bg-blue-100 text-blue-800',
+    scheduled: 'bg-brand-roseGold/20 text-brand-roseGold',
     completed: 'bg-green-100 text-green-800',
     cancelled: 'bg-red-100 text-red-800',
   };
@@ -98,15 +98,15 @@ export function Appointments() {
     <div>
       <div className="flex justify-between items-center mb-8">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Agenda</h1>
-          <p className="text-gray-500 mt-1">Compromissos e agendamentos</p>
+          <h1 className="page-title">Agenda</h1>
+          <p className="text-brand-graphiteWine/60 mt-1">Compromissos e agendamentos</p>
         </div>
         <button onClick={openCreate} className="btn-primary">Novo Agendamento</button>
       </div>
 
       <div className="mb-6 flex gap-4 items-center">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Filtrar por data</label>
+          <label className="block text-sm font-medium text-brand-blackCherry mb-1">Filtrar por data</label>
           <input type="date" className="input-field" value={filterDate}
             onChange={(e) => handleFilter(e.target.value)} />
         </div>
@@ -117,13 +117,13 @@ export function Appointments() {
 
       <div className="card overflow-hidden p-0">
         {loading ? (
-          <div className="p-8 text-center text-gray-500">Carregando...</div>
+          <div className="p-8 text-center text-brand-graphiteWine/70">Carregando...</div>
         ) : appointments.length === 0 ? (
-          <div className="p-8 text-center text-gray-500">Nenhum agendamento encontrado</div>
+          <div className="p-8 text-center text-brand-graphiteWine/70">Nenhum agendamento encontrado</div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
-              <thead className="bg-brand-graphiteWine text-brand-ivorySmoke">
+              <thead className="bg-brand-blackCherry text-brand-ivorySmoke">
                 <tr>
                   <th className="text-left py-3 px-4 font-medium text-brand-ivorySmoke">Data</th>
                   <th className="text-left py-3 px-4 font-medium text-brand-ivorySmoke">Hora</th>
@@ -135,11 +135,11 @@ export function Appointments() {
               </thead>
               <tbody className="divide-y divide-gray-100">
                 {appointments.map((a) => (
-                  <tr key={a.id} className="hover:bg-gray-50">
+                  <tr key={a.id} className="hover:bg-[rgba(214,179,112,0.18)]">
                     <td className="py-3 px-4">{new Date(a.appointment_date).toLocaleDateString('pt-BR')}</td>
-                    <td className="py-3 px-4 text-gray-500">{a.appointment_time || '-'}</td>
+                    <td className="py-3 px-4 text-brand-graphiteWine/70">{a.appointment_time || '-'}</td>
                     <td className="py-3 px-4 font-medium">{a.title}</td>
-                    <td className="py-3 px-4 text-gray-500">{a.client_name || '-'}</td>
+                    <td className="py-3 px-4 text-brand-graphiteWine/70">{a.client_name || '-'}</td>
                     <td className="py-3 px-4">
                       <span className={`badge ${statusBadge[a.status]}`}>{statusLabel[a.status]}</span>
                     </td>
@@ -162,30 +162,30 @@ export function Appointments() {
       </div>
 
       {showModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-brand-blackCherry/45 flex items-center justify-center z-50">
           <div className="bg-white rounded-2xl p-8 w-full max-w-md mx-4">
             <h2 className="text-xl font-semibold mb-6">{editing ? 'Editar Agendamento' : 'Novo Agendamento'}</h2>
             {error && <div className="bg-red-50 text-red-700 px-4 py-3 rounded-lg mb-4 text-sm">{error}</div>}
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Titulo</label>
+                <label className="block text-sm font-medium text-brand-blackCherry mb-1">Titulo</label>
                 <input type="text" className="input-field" required value={formData.title}
                   onChange={(e) => setFormData({ ...formData, title: e.target.value })} />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Data</label>
+                  <label className="block text-sm font-medium text-brand-blackCherry mb-1">Data</label>
                   <input type="date" className="input-field" required value={formData.appointment_date}
                     onChange={(e) => setFormData({ ...formData, appointment_date: e.target.value })} />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Horario</label>
+                  <label className="block text-sm font-medium text-brand-blackCherry mb-1">Horario</label>
                   <input type="time" className="input-field" value={formData.appointment_time}
                     onChange={(e) => setFormData({ ...formData, appointment_time: e.target.value })} />
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Cliente</label>
+                <label className="block text-sm font-medium text-brand-blackCherry mb-1">Cliente</label>
                 <select className="input-field" value={formData.client_id}
                   onChange={(e) => setFormData({ ...formData, client_id: Number(e.target.value) })}>
                   <option value={0}>Nenhum</option>
@@ -193,7 +193,7 @@ export function Appointments() {
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Descricao</label>
+                <label className="block text-sm font-medium text-brand-blackCherry mb-1">Descricao</label>
                 <textarea className="input-field" rows={3} value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })} />
               </div>

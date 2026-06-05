@@ -7,7 +7,7 @@ export function Layout() {
     <ToastProvider>
       <div className="flex min-h-screen">
         <Sidebar />
-        <main className="flex-1 p-8 overflow-auto">
+        <main className="flex-1 p-8 overflow-auto page-bg">
           <Outlet />
         </main>
       </div>

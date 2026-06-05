@@ -86,21 +86,21 @@ export function Users() {
     <div>
       <div className="flex justify-between items-center mb-8">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Usuarios</h1>
-          <p className="text-gray-500 mt-1">Gerenciar usuarios do sistema</p>
+          <h1 className="page-title">Usuarios</h1>
+          <p className="text-brand-graphiteWine/60 mt-1">Gerenciar usuarios do sistema</p>
         </div>
         <button onClick={openCreate} className="btn-primary">Novo Usuario</button>
       </div>
 
       <div className="card overflow-hidden p-0">
         {loading ? (
-          <div className="p-8 text-center text-gray-500">Carregando...</div>
+          <div className="p-8 text-center text-brand-graphiteWine/70">Carregando...</div>
         ) : users.length === 0 ? (
-          <div className="p-8 text-center text-gray-500">Nenhum usuario encontrado</div>
+          <div className="p-8 text-center text-brand-graphiteWine/70">Nenhum usuario encontrado</div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
-              <thead className="bg-brand-graphiteWine text-brand-ivorySmoke">
+              <thead className="bg-brand-blackCherry text-brand-ivorySmoke">
                 <tr>
                   <th className="text-left py-3 px-4 font-medium text-brand-ivorySmoke">Nome</th>
                   <th className="text-left py-3 px-4 font-medium text-brand-ivorySmoke">Email</th>
@@ -111,9 +111,9 @@ export function Users() {
               </thead>
               <tbody className="divide-y divide-gray-100">
                 {users.map((user) => (
-                  <tr key={user.id} className="hover:bg-gray-50">
+                  <tr key={user.id} className="hover:bg-[rgba(214,179,112,0.18)]">
                     <td className="py-3 px-4 font-medium">{user.name}</td>
-                    <td className="py-3 px-4 text-gray-500">{user.email}</td>
+                    <td className="py-3 px-4 text-brand-graphiteWine/70">{user.email}</td>
                     <td className="py-3 px-4">
                       <span className={getRoleBadge(user.role)}>
                         {roleLabels[user.role]}
@@ -139,7 +139,7 @@ export function Users() {
       </div>
 
       {showModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-brand-blackCherry/45 flex items-center justify-center z-50">
           <div className="bg-white rounded-2xl p-8 w-full max-w-md mx-4">
             <h2 className="text-xl font-semibold mb-6">
               {editingUser ? 'Editar Usuario' : 'Novo Usuario'}
@@ -151,7 +151,7 @@ export function Users() {
 
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Nome</label>
+                <label className="block text-sm font-medium text-brand-blackCherry mb-1">Nome</label>
                 <input
                   type="text" className="input-field" required
                   value={formData.name}
@@ -159,7 +159,7 @@ export function Users() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                <label className="block text-sm font-medium text-brand-blackCherry mb-1">Email</label>
                 <input
                   type="email" className="input-field" required
                   value={formData.email}
@@ -167,7 +167,7 @@ export function Users() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-brand-blackCherry mb-1">
                   {editingUser ? 'Nova Senha (deixe em branco para manter)' : 'Senha'}
                 </label>
                 <input
@@ -178,7 +178,7 @@ export function Users() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Perfil</label>
+                <label className="block text-sm font-medium text-brand-blackCherry mb-1">Perfil</label>
                 <select
                   className="input-field"
                   value={formData.role}

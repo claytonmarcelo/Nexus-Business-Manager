@@ -13,16 +13,27 @@
 
 @layer base {
   body {
-    @apply bg-brand-ivorySmoke text-brand-blackCherry transition-colors duration-200;
+    @apply transition-colors duration-200;
   }
-  .dark body, .dark {
-    @apply bg-brand-blackCherry text-brand-ivorySmoke;
+  body, .page-bg {
+    background: linear-gradient(135deg, #F7F2EC 0%, #F2EBE4 50%, #EEE6DD 100%);
+    color: #1A0D12;
+  }
+  .dark body, .dark, .dark .page-bg {
+    background: #1A0D12;
+    color: #F7F2EC;
   }
 }
 
 @layer components {
   .btn-primary {
-    @apply bg-brand-roseGold hover:bg-brand-champagneGold hover:text-brand-blackCherry text-brand-ivorySmoke font-medium py-2 px-4 rounded-lg transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed;
+    @apply font-medium py-2 px-4 rounded-lg transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed;
+    background: #B76E79;
+    color: #FFFFFF;
+  }
+  .btn-primary:hover:not(:disabled) {
+    background: #D6B370;
+    color: #1A0D12;
   }
 
   .btn-secondary {
@@ -37,17 +48,42 @@
   }
 
   .input-field {
-    @apply w-full px-3 py-2 border border-brand-roseGold/50 rounded-lg bg-white text-brand-blackCherry focus:outline-none focus:ring-2 focus:ring-brand-champagneGold focus:border-brand-champagneGold transition-colors duration-200;
+    @apply w-full px-3 py-2 rounded-lg transition-colors duration-200;
+    background: #FFFFFF;
+    color: #1A0D12;
+    border: 1px solid rgba(183, 110, 121, 0.50);
+  }
+  .input-field::placeholder {
+    color: rgba(50, 37, 43, 0.65);
+  }
+  .input-field:focus {
+    outline: none;
+    border-color: #D6B370;
+    box-shadow: 0 0 0 3px rgba(214, 179, 112, 0.18);
   }
   .dark .input-field {
-    @apply bg-brand-graphiteWine border-brand-roseGold/30 text-brand-ivorySmoke placeholder-gray-400 focus:ring-brand-champagneGold focus:border-brand-champagneGold;
+    background: #32252B;
+    border-color: rgba(183, 110, 121, 0.30);
+    color: #F7F2EC;
+  }
+  .dark .input-field::placeholder {
+    color: rgba(247, 242, 236, 0.50);
+  }
+  .dark .input-field:focus {
+    border-color: #D6B370;
+    box-shadow: 0 0 0 3px rgba(214, 179, 112, 0.25);
   }
 
   .card {
-    @apply bg-white rounded-xl shadow-sm border border-brand-champagneGold/40 p-6 transition-colors duration-200;
+    background: #FFFFFF;
+    border: 1px solid rgba(214, 179, 112, 0.45);
+    box-shadow: 0 16px 40px rgba(26, 13, 18, 0.10);
+    @apply rounded-xl p-6 transition-colors duration-200;
   }
   .dark .card {
-    @apply bg-brand-graphiteWine border-brand-roseGold/20;
+    background: #32252B;
+    border-color: rgba(214, 179, 112, 0.28);
+    box-shadow: none;
   }
 
   .badge {
@@ -76,9 +112,35 @@
   }
 
   .badge-viewer {
-    @apply badge bg-gray-100 text-gray-800;
+    @apply badge bg-brand-graphiteWine/10 text-brand-graphiteWine;
   }
   .dark .badge-viewer {
-    @apply bg-gray-700 text-gray-200;
+    @apply bg-brand-graphiteWine/60 text-brand-ivorySmoke;
+  }
+
+  .page-title {
+    @apply text-2xl font-bold;
+    color: #1A0D12;
+  }
+
+  .section-title {
+    @apply text-sm font-semibold mb-4;
+    color: #1A0D12;
+  }
+
+  .table-header {
+    background: #1A0D12;
+    color: #F7F2EC;
+  }
+
+  .table-row {
+    background: #FFFFFF;
+    color: #1A0D12;
+  }
+  .table-row:nth-child(even) {
+    background: #F7F2EC;
+  }
+  .table-row:hover {
+    background: rgba(214, 179, 112, 0.18);
   }
 }

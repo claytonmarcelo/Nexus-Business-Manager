@@ -29,7 +29,7 @@ export function Dashboard() {
   }, []);
 
   if (loading) {
-    return <div className="p-8 text-center text-gray-500">Carregando dashboard...</div>;
+    return <div className="p-8 text-center text-brand-graphiteWine/60">Carregando dashboard...</div>;
   }
 
   if (error) {
@@ -40,7 +40,7 @@ export function Dashboard() {
   }
 
   if (!data) {
-    return <div className="p-8 text-center text-gray-500">Nenhum dado disponivel.</div>;
+    return <div className="p-8 text-center text-brand-graphiteWine/60">Nenhum dado disponivel.</div>;
   }
 
   const { stats, charts } = data;
@@ -51,11 +51,11 @@ export function Dashboard() {
   });
 
   const cards = [
-    { label: 'Clientes', value: stats.total_clients, color: 'bg-brand-graphiteWine' },
-    { label: 'Produtos', value: stats.total_products, color: 'bg-brand-roseGold' },
-    { label: 'Fornecedores', value: stats.total_suppliers, color: 'bg-brand-graphiteWine' },
-    { label: 'Vendas', value: stats.total_sales, color: 'bg-brand-roseGold' },
-    { label: 'Estoque Baixo', value: stats.low_stock_count, color: stats.low_stock_count > 0 ? 'bg-red-500' : 'bg-gray-400' },
+    { label: 'Clientes', value: stats.total_clients, color: 'bg-brand-champagneGold' },
+    { label: 'Produtos', value: stats.total_products, color: 'bg-brand-roseGold/70' },
+    { label: 'Fornecedores', value: stats.total_suppliers, color: 'bg-brand-champagneGold' },
+    { label: 'Vendas', value: stats.total_sales, color: 'bg-brand-roseGold/70' },
+    { label: 'Estoque Baixo', value: stats.low_stock_count, color: stats.low_stock_count > 0 ? 'bg-red-500' : 'bg-gray-300' },
   ];
 
   const revenueCards = [
@@ -67,15 +67,15 @@ export function Dashboard() {
   return (
     <div>
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-        <p className="text-gray-500 mt-1">Bem-vindo, {user?.name}!</p>
+        <h1 className="text-2xl font-bold text-brand-blackCherry">Dashboard</h1>
+        <p className="text-brand-graphiteWine/60 mt-1">Bem-vindo, {user?.name}!</p>
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
         {cards.map((card) => (
           <div key={card.label} className="card text-center">
-            <p className="text-sm text-gray-500">{card.label}</p>
-            <p className={`text-2xl font-bold mt-1 ${card.color.replace('bg-', 'text-')}`}>{card.value}</p>
+              <p className="text-sm text-brand-graphiteWine/60">{card.label}</p>
+              <p className={`text-2xl font-bold mt-1 ${card.color.replace('bg-', 'text-')}`}>{card.value}</p>
             <div className={`h-1.5 rounded-full mt-2 ${card.color}`} style={{ width: `${Math.min(100, (card.value / 100) * 100)}%` }} />
           </div>
         ))}
@@ -84,7 +84,7 @@ export function Dashboard() {
       <div className="grid grid-cols-3 gap-4 mb-8">
         {revenueCards.map((card) => (
           <div key={card.label} className="card">
-            <p className="text-sm text-gray-500">{card.label}</p>
+              <p className="text-sm text-brand-graphiteWine/60">{card.label}</p>
             <p className={`text-2xl font-bold ${card.color}`}>
               {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(card.value)}
             </p>
@@ -94,7 +94,7 @@ export function Dashboard() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
         <div className="card">
-          <h3 className="text-sm font-semibold text-gray-900 mb-4">Receitas x Despesas por Mes</h3>
+            <h3 className="text-sm font-semibold text-brand-blackCherry mb-4">Receitas x Despesas por Mes</h3>
           <ResponsiveContainer width="100%" height={300}>
             <BarChart data={revenueExpenseData}>
               <CartesianGrid strokeDasharray="3 3" />
@@ -108,7 +108,7 @@ export function Dashboard() {
         </div>
 
         <div className="card">
-          <h3 className="text-sm font-semibold text-gray-900 mb-4">Vendas por Mes</h3>
+            <h3 className="text-sm font-semibold text-brand-blackCherry mb-4">Vendas por Mes</h3>
           <ResponsiveContainer width="100%" height={300}>
             <BarChart data={charts.salesByMonth}>
               <CartesianGrid strokeDasharray="3 3" />
@@ -121,7 +121,7 @@ export function Dashboard() {
         </div>
 
         <div className="card">
-          <h3 className="text-sm font-semibold text-gray-900 mb-4">Produtos por Categoria</h3>
+            <h3 className="text-sm font-semibold text-brand-blackCherry mb-4">Produtos por Categoria</h3>
           <ResponsiveContainer width="100%" height={300}>
             <PieChart>
               <Pie data={charts.productsByCategory} dataKey="value" nameKey="label" cx="50%" cy="50%" outerRadius={100} label>
@@ -136,16 +136,16 @@ export function Dashboard() {
         </div>
 
         <div className="card">
-          <h3 className="text-sm font-semibold text-gray-900 mb-4">Valor em Estoque</h3>
+          <h3 className="text-sm font-semibold text-brand-blackCherry mb-4">Valor em Estoque</h3>
           <p className="text-4xl font-bold mb-4" style={{ color: '#B76E79' }}>
             {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(stats.stock_value)}
           </p>
-          <div className="space-y-3 text-sm text-gray-600">
-            <div className="flex justify-between py-2 border-b border-gray-100">
+          <div className="space-y-3 text-sm text-brand-graphiteWine/70">
+            <div className="flex justify-between py-2 border-b border-brand-ivorySmoke">
               <span>Total de Produtos</span>
               <span className="font-medium">{stats.total_products}</span>
             </div>
-            <div className="flex justify-between py-2 border-b border-gray-100">
+            <div className="flex justify-between py-2 border-b border-brand-ivorySmoke">
               <span>Total de Vendas</span>
               <span className="font-medium">{stats.total_sales}</span>
             </div>

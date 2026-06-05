@@ -77,21 +77,21 @@ export function Products() {
     <div>
       <div className="flex justify-between items-center mb-8">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Produtos</h1>
-          <p className="text-gray-500 mt-1">Gerenciar catalogo de produtos</p>
+          <h1 className="page-title">Produtos</h1>
+          <p className="text-brand-graphiteWine/60 mt-1">Gerenciar catalogo de produtos</p>
         </div>
         <button onClick={openCreate} className="btn-primary">Novo Produto</button>
       </div>
 
       <div className="card overflow-hidden p-0">
         {loading ? (
-          <div className="p-8 text-center text-gray-500">Carregando...</div>
+          <div className="p-8 text-center text-brand-graphiteWine/70">Carregando...</div>
         ) : products.length === 0 ? (
-          <div className="p-8 text-center text-gray-500">Nenhum produto encontrado</div>
+          <div className="p-8 text-center text-brand-graphiteWine/70">Nenhum produto encontrado</div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
-              <thead className="bg-brand-graphiteWine text-brand-ivorySmoke">
+              <thead className="bg-brand-blackCherry text-brand-ivorySmoke">
                 <tr>
                   <th className="text-left py-3 px-4 font-medium text-brand-ivorySmoke">Nome</th>
                   <th className="text-left py-3 px-4 font-medium text-brand-ivorySmoke">SKU</th>
@@ -103,17 +103,17 @@ export function Products() {
               </thead>
               <tbody className="divide-y divide-gray-100">
                 {products.map((product) => (
-                  <tr key={product.id} className="hover:bg-gray-50">
+                  <tr key={product.id} className="hover:bg-[rgba(214,179,112,0.18)]">
                     <td className="py-3 px-4 font-medium">{product.name}</td>
-                    <td className="py-3 px-4 text-gray-500 font-mono">{product.sku}</td>
+                    <td className="py-3 px-4 text-brand-graphiteWine/70 font-mono">{product.sku}</td>
                     <td className="py-3 px-4">
                       {product.category ? (
-                        <span className="badge bg-gray-100 text-gray-800">{product.category}</span>
+                        <span className="badge bg-brand-graphiteWine/10 text-brand-graphiteWine">{product.category}</span>
                       ) : '-'}
                     </td>
                     <td className="py-3 px-4 font-medium">{formatPrice(product.price)}</td>
                     <td className="py-3 px-4">
-                      <span className={`font-medium ${product.quantity <= 5 ? 'text-red-600' : 'text-gray-900'}`}>
+                      <span className={`font-medium ${product.quantity <= 5 ? 'text-red-600' : 'text-brand-blackCherry'}`}>
                         {product.quantity}
                       </span>
                     </td>
@@ -130,7 +130,7 @@ export function Products() {
       </div>
 
       {showModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-brand-blackCherry/45 flex items-center justify-center z-50">
           <div className="bg-white rounded-2xl p-8 w-full max-w-lg mx-4">
             <h2 className="text-xl font-semibold mb-6">
               {editingProduct ? 'Editar Produto' : 'Novo Produto'}
@@ -142,36 +142,36 @@ export function Products() {
 
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Nome</label>
+                <label className="block text-sm font-medium text-brand-blackCherry mb-1">Nome</label>
                 <input type="text" className="input-field" required value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })} />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">SKU</label>
+                  <label className="block text-sm font-medium text-brand-blackCherry mb-1">SKU</label>
                   <input type="text" className="input-field" required value={formData.sku}
                     onChange={(e) => setFormData({ ...formData, sku: e.target.value })} />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Categoria</label>
+                  <label className="block text-sm font-medium text-brand-blackCherry mb-1">Categoria</label>
                   <input type="text" className="input-field" value={formData.category}
                     onChange={(e) => setFormData({ ...formData, category: e.target.value })} />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Preco</label>
+                  <label className="block text-sm font-medium text-brand-blackCherry mb-1">Preco</label>
                   <input type="number" step="0.01" min="0" className="input-field" required value={formData.price}
                     onChange={(e) => setFormData({ ...formData, price: Number(e.target.value) })} />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Quantidade</label>
+                  <label className="block text-sm font-medium text-brand-blackCherry mb-1">Quantidade</label>
                   <input type="number" min="0" className="input-field" required value={formData.quantity}
                     onChange={(e) => setFormData({ ...formData, quantity: Number(e.target.value) })} />
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">URL da Imagem</label>
+                <label className="block text-sm font-medium text-brand-blackCherry mb-1">URL da Imagem</label>
                 <input type="text" className="input-field" value={formData.image}
                   onChange={(e) => setFormData({ ...formData, image: e.target.value })} />
               </div>

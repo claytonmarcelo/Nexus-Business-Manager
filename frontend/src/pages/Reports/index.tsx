@@ -57,8 +57,8 @@ export function Reports() {
   return (
     <div>
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900">Relatorios</h1>
-        <p className="text-gray-500 mt-1">Exporte dados em PDF ou Excel</p>
+        <h1 className="page-title">Relatorios</h1>
+        <p className="text-brand-graphiteWine/60 mt-1">Exporte dados em PDF ou Excel</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -69,8 +69,8 @@ export function Reports() {
               <div className="flex items-center gap-3 mb-4">
                 <span className="text-2xl">{reportIcons[type]}</span>
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-900">Relatorio de {reportLabels[type]}</h3>
-                  <p className="text-sm text-gray-500">
+                  <h3 className="text-lg font-semibold text-brand-blackCherry">Relatorio de {reportLabels[type]}</h3>
+                  <p className="text-sm text-brand-graphiteWine/70">
                     {type === 'clients' && 'Lista completa de clientes cadastrados'}
                     {type === 'products' && 'Catalogo de produtos com precos e quantidades'}
                     {type === 'financial' && 'Todas as receitas e despesas registradas'}
@@ -101,8 +101,8 @@ export function Reports() {
       </div>
 
       <div className="card mt-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-2">Sobre os Relatorios</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-600">
+        <h3 className="text-lg font-semibold text-brand-blackCherry mb-2">Sobre os Relatorios</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-brand-graphiteWine/80">
           <div className="flex items-start gap-2">
             <span className="text-green-500 font-bold">PDF</span>
             <span>Relatorio formatado com cabecalho, tabelas e data de geracao. Pronto para imprimir ou enviar.</span>

@@ -49,8 +49,8 @@ export function Notifications() {
     <div>
       <div className="flex justify-between items-center mb-8">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Notificacoes</h1>
-          <p className="text-gray-500 mt-1">
+          <h1 className="page-title">Notificacoes</h1>
+          <p className="text-brand-graphiteWine/60 mt-1">
             {unreadCount > 0 ? `${unreadCount} nao lida(s)` : 'Todas lidas'}
           </p>
         </div>
@@ -64,18 +64,18 @@ export function Notifications() {
 
       <div className="card overflow-hidden p-0">
         {loading ? (
-          <div className="p-8 text-center text-gray-500">Carregando...</div>
+          <div className="p-8 text-center text-brand-graphiteWine/70">Carregando...</div>
         ) : notifications.length === 0 ? (
-          <div className="p-8 text-center text-gray-500">Nenhuma notificacao</div>
+          <div className="p-8 text-center text-brand-graphiteWine/70">Nenhuma notificacao</div>
         ) : (
           <div className="divide-y divide-gray-100">
             {notifications.map((n) => (
-              <div key={n.id} className={`flex items-start gap-4 p-4 ${!n.read ? 'bg-brand-roseGold/10' : 'hover:bg-gray-50'}`}>
+              <div key={n.id} className={`flex items-start gap-4 p-4 ${!n.read ? 'bg-brand-roseGold/10' : 'hover:bg-[rgba(214,179,112,0.18)]'}`}>
                 <span className="text-xl">{iconMap[n.icon || 'info'] || 'ℹ️'}</span>
                 <div className="flex-1 min-w-0">
                   <p className={`text-sm ${!n.read ? 'font-semibold' : ''}`}>{n.title}</p>
-                  {n.message && <p className="text-xs text-gray-500 mt-0.5">{n.message}</p>}
-                  <p className="text-xs text-gray-400 mt-1">{new Date(n.created_at).toLocaleString('pt-BR')}</p>
+                  {n.message && <p className="text-xs text-brand-graphiteWine/70 mt-0.5">{n.message}</p>}
+                  <p className="text-xs text-brand-graphiteWine/50 mt-1">{new Date(n.created_at).toLocaleString('pt-BR')}</p>
                 </div>
                 {!n.read && (
                   <button onClick={() => handleMarkRead(n.id)} className="text-xs text-brand-roseGold hover:text-brand-champagneGold font-medium whitespace-nowrap">

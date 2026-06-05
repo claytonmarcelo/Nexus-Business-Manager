@@ -45,23 +45,23 @@ export function Login() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: '#1A0D12' }}>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#F7F2EC] to-[#EEE6DD]">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <div className="flex justify-center mb-6">
             <img
-              src="/assets/branding/logo.png"
+              src="/logo.png"
               alt="Nexus Business Manager"
               className="w-[120px] sm:w-[150px] md:w-[180px] h-auto"
             />
           </div>
-          <h1 className="text-4xl font-bold tracking-tight" style={{ color: '#D6B370' }}>Nexus</h1>
-          <p className="mt-2" style={{ color: '#B76E79' }}>Business Manager</p>
+          <h1 className="text-4xl font-bold tracking-tight text-brand-blackCherry">Nexus</h1>
+          <p className="mt-2 text-brand-roseGold">Business Manager</p>
         </div>
 
-        <div className="rounded-2xl shadow-2xl p-8" style={{ backgroundColor: '#F7F2EC' }}>
-          <h2 className="text-2xl font-semibold mb-2" style={{ color: '#1A0D12' }}>Acessar sistema</h2>
-          <p className="mb-6" style={{ color: '#32252B' }}>Informe seus dados para entrar</p>
+        <div className="rounded-2xl p-8 bg-white border border-brand-champagneGold/45" style={{ boxShadow: '0 16px 40px rgba(26, 13, 18, 0.12)' }}>
+          <h2 className="text-2xl font-semibold mb-2 text-brand-blackCherry">Acessar sistema</h2>
+          <p className="mb-6 text-brand-blackCherry/80">Informe seus dados para entrar</p>
 
           {error && (
             <div className="bg-red-50 text-red-700 px-4 py-3 rounded-lg mb-4 text-sm">
@@ -71,7 +71,7 @@ export function Login() {
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium mb-1" style={{ color: '#32252B' }}>Email</label>
+              <label className="block text-sm font-medium mb-1 text-brand-blackCherry">Email</label>
               <input
                 type="email"
                 value={email}
@@ -83,7 +83,7 @@ export function Login() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-1" style={{ color: '#32252B' }}>Senha</label>
+              <label className="block text-sm font-medium mb-1 text-brand-blackCherry">Senha</label>
               <div className="relative">
                 <input
                   type={showPassword ? 'text' : 'password'}
@@ -119,7 +119,7 @@ export function Login() {
                   </p>
                 </div>
               )}
-              <p className="text-xs mt-1" style={{ color: '#32252B' }}>Minimo 8 caracteres, maximo 64</p>
+              <p className="text-xs mt-1 text-brand-graphiteWine/70">Minimo 8 caracteres, maximo 64</p>
             </div>
 
             <button

@@ -113,9 +113,22 @@ export function Sidebar() {
                 `flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors ${
                   isActive
                     ? 'text-brand-champagneGold font-bold'
-                    : 'text-brand-ivorySmoke/70 hover:text-brand-roseGold'
+                    : 'text-brand-ivorySmoke/70 hover:text-brand-ivorySmoke'
                 }`
               }
+              style={({ isActive }: { isActive: boolean }) => isActive ? { backgroundColor: 'rgba(214, 179, 112, 0.18)' } : undefined}
+              onMouseEnter={(e) => {
+                const el = e.currentTarget;
+                if (!el.classList.contains('text-brand-champagneGold')) {
+                  el.style.backgroundColor = 'rgba(183, 110, 121, 0.16)';
+                }
+              }}
+              onMouseLeave={(e) => {
+                const el = e.currentTarget;
+                if (!el.classList.contains('text-brand-champagneGold')) {
+                  el.style.backgroundColor = '';
+                }
+              }}
               onClick={() => {}}
             >
               <span className="w-8 h-8 flex items-center justify-center bg-brand-graphiteWine rounded-lg text-xs font-bold">

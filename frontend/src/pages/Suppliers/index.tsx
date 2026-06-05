@@ -62,21 +62,21 @@ export function Suppliers() {
     <div>
       <div className="flex justify-between items-center mb-8">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Fornecedores</h1>
-          <p className="text-gray-500 mt-1">Cadastro de fornecedores</p>
+          <h1 className="page-title">Fornecedores</h1>
+          <p className="text-brand-graphiteWine/60 mt-1">Cadastro de fornecedores</p>
         </div>
         <button onClick={openCreate} className="btn-primary">Novo Fornecedor</button>
       </div>
 
       <div className="card overflow-hidden p-0">
         {loading ? (
-          <div className="p-8 text-center text-gray-500">Carregando...</div>
+          <div className="p-8 text-center text-brand-graphiteWine/70">Carregando...</div>
         ) : suppliers.length === 0 ? (
-          <div className="p-8 text-center text-gray-500">Nenhum fornecedor encontrado</div>
+          <div className="p-8 text-center text-brand-graphiteWine/70">Nenhum fornecedor encontrado</div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
-              <thead className="bg-brand-graphiteWine text-brand-ivorySmoke">
+              <thead className="bg-brand-blackCherry text-brand-ivorySmoke">
                 <tr>
                   <th className="text-left py-3 px-4 font-medium text-brand-ivorySmoke">Empresa</th>
                   <th className="text-left py-3 px-4 font-medium text-brand-ivorySmoke">Telefone</th>
@@ -87,11 +87,11 @@ export function Suppliers() {
               </thead>
               <tbody className="divide-y divide-gray-100">
                 {suppliers.map((s) => (
-                  <tr key={s.id} className="hover:bg-gray-50">
+                  <tr key={s.id} className="hover:bg-[rgba(214,179,112,0.18)]">
                     <td className="py-3 px-4 font-medium">{s.company_name}</td>
-                    <td className="py-3 px-4 text-gray-500">{s.phone || '-'}</td>
-                    <td className="py-3 px-4 text-gray-500">{s.email || '-'}</td>
-                    <td className="py-3 px-4 text-gray-500">{s.contact_name || '-'}</td>
+                    <td className="py-3 px-4 text-brand-graphiteWine/70">{s.phone || '-'}</td>
+                    <td className="py-3 px-4 text-brand-graphiteWine/70">{s.email || '-'}</td>
+                    <td className="py-3 px-4 text-brand-graphiteWine/70">{s.contact_name || '-'}</td>
                     <td className="py-3 px-4 text-right space-x-2">
                       <button onClick={() => openEdit(s)} className="text-brand-roseGold hover:text-brand-champagneGold font-medium">Editar</button>
                       <button onClick={() => handleDelete(s.id)} className="text-red-600 hover:text-red-800 font-medium">Excluir</button>
@@ -105,30 +105,30 @@ export function Suppliers() {
       </div>
 
       {showModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-brand-blackCherry/45 flex items-center justify-center z-50">
           <div className="bg-white rounded-2xl p-8 w-full max-w-md mx-4">
             <h2 className="text-xl font-semibold mb-6">{editing ? 'Editar Fornecedor' : 'Novo Fornecedor'}</h2>
             {error && <div className="bg-red-50 text-red-700 px-4 py-3 rounded-lg mb-4 text-sm">{error}</div>}
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Empresa</label>
+                <label className="block text-sm font-medium text-brand-blackCherry mb-1">Empresa</label>
                 <input type="text" className="input-field" required value={formData.company_name}
                   onChange={(e) => setFormData({ ...formData, company_name: e.target.value })} />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Telefone</label>
+                  <label className="block text-sm font-medium text-brand-blackCherry mb-1">Telefone</label>
                   <input type="text" className="input-field" value={formData.phone}
                     onChange={(e) => setFormData({ ...formData, phone: e.target.value })} />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                  <label className="block text-sm font-medium text-brand-blackCherry mb-1">Email</label>
                   <input type="email" className="input-field" value={formData.email}
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })} />
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Nome do Contato</label>
+                <label className="block text-sm font-medium text-brand-blackCherry mb-1">Nome do Contato</label>
                 <input type="text" className="input-field" value={formData.contact_name}
                   onChange={(e) => setFormData({ ...formData, contact_name: e.target.value })} />
               </div>

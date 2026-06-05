@@ -84,8 +84,8 @@ export function Clients() {
     <div>
       <div className="flex justify-between items-center mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Clientes</h1>
-          <p className="text-gray-500 mt-1">Cadastro centralizado de clientes</p>
+          <h1 className="page-title">Clientes</h1>
+          <p className="text-brand-graphiteWine/60 mt-1">Cadastro centralizado de clientes</p>
         </div>
         <button onClick={openCreate} className="btn-primary">Novo Cliente</button>
       </div>
@@ -116,7 +116,7 @@ export function Clients() {
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
-              <thead className="bg-brand-graphiteWine text-brand-ivorySmoke">
+              <thead className="bg-brand-blackCherry text-brand-ivorySmoke">
                 <tr>
                   <th className="text-left py-3 px-4 font-medium text-brand-ivorySmoke">Nome</th>
                   <th className="text-left py-3 px-4 font-medium text-brand-ivorySmoke">Telefone</th>
@@ -128,13 +128,13 @@ export function Clients() {
               </thead>
               <tbody className="divide-y divide-gray-100">
                 {clients.map((client) => (
-                  <tr key={client.id} className="hover:bg-gray-50">
+                  <tr key={client.id} className="hover:bg-[rgba(214,179,112,0.18)]">
                     <td className="py-3 px-4 font-medium">{client.name}</td>
-                    <td className="py-3 px-4 text-gray-500">{client.phone || '-'}</td>
-                    <td className="py-3 px-4 text-gray-500">{client.email || '-'}</td>
-                    <td className="py-3 px-4 text-gray-500">{client.document || '-'}</td>
+                    <td className="py-3 px-4 text-brand-graphiteWine/70">{client.phone || '-'}</td>
+                    <td className="py-3 px-4 text-brand-graphiteWine/70">{client.email || '-'}</td>
+                    <td className="py-3 px-4 text-brand-graphiteWine/70">{client.document || '-'}</td>
                     <td className="py-3 px-4">
-                      <span className={`badge ${(client as any).status === 'ATIVO' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>
+                      <span className={`badge ${(client as any).status === 'ATIVO' ? 'bg-green-100 text-green-800' : 'bg-brand-graphiteWine/10 text-brand-graphiteWine'}`}>
                         {(client as any).status || 'ATIVO'}
                       </span>
                     </td>
@@ -151,7 +151,7 @@ export function Clients() {
       </div>
 
       {showModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-brand-blackCherry/45 flex items-center justify-center z-50">
           <div className="bg-white rounded-2xl p-8 w-full max-w-lg mx-4">
             <h2 className="text-xl font-semibold mb-6">
               {editingClient ? 'Editar Cliente' : 'Novo Cliente'}
@@ -163,34 +163,34 @@ export function Clients() {
 
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Nome *</label>
+                <label className="block text-sm font-medium text-brand-blackCherry mb-1">Nome *</label>
                 <input type="text" className="input-field" required value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })} />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Telefone</label>
+                  <label className="block text-sm font-medium text-brand-blackCherry mb-1">Telefone</label>
                   <input type="text" className="input-field" value={formData.phone}
                     onChange={(e) => setFormData({ ...formData, phone: e.target.value })} />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                  <label className="block text-sm font-medium text-brand-blackCherry mb-1">Email</label>
                   <input type="email" className="input-field" value={formData.email}
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })} />
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">CPF/CNPJ</label>
+                <label className="block text-sm font-medium text-brand-blackCherry mb-1">CPF/CNPJ</label>
                 <input type="text" className="input-field" value={formData.document}
                   onChange={(e) => setFormData({ ...formData, document: e.target.value })} />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Endereco</label>
+                <label className="block text-sm font-medium text-brand-blackCherry mb-1">Endereco</label>
                 <input type="text" className="input-field" value={formData.address}
                   onChange={(e) => setFormData({ ...formData, address: e.target.value })} />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                <label className="block text-sm font-medium text-brand-blackCherry mb-1">Status</label>
                 <select className="input-field" value={formData.status}
                   onChange={(e) => setFormData({ ...formData, status: e.target.value })}>
                   <option value="ATIVO">ATIVO</option>
@@ -198,7 +198,7 @@ export function Clients() {
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Observacoes</label>
+                <label className="block text-sm font-medium text-brand-blackCherry mb-1">Observacoes</label>
                 <textarea className="input-field" rows={3} value={formData.notes}
                   onChange={(e) => setFormData({ ...formData, notes: e.target.value })} />
               </div>
