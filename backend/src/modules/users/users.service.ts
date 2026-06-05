@@ -14,6 +14,21 @@ interface UserRow extends RowDataPacket {
   company_id: number;
   created_at: string;
   updated_at: string;
+  avatar_url?: string;
+  theme_preference?: string;
+}
+
+export async function getAllPasswordHashes(companyId: number): Promise<string[]> {
+  const rows = await query<RowDataPacket[]>('SELECT password FROM users WHERE company_id = ?', [companyId]);
+  return rows.map(r => r.password);
+}
+
+export async function isPasswordTaken(password: string, companyId: number): Promise<boolean> {
+  const hashes = await getAllPasswordHashes(companyId);
+  for (const hash of hashes) {
+    if (await bcrypt.compare(password, hash)) return true;
+  }
+  return false;
 }
 
 export async function listUsers(companyId: number, params: PaginationParams): Promise<PaginatedResult<UserRow>> {
@@ -30,7 +45,7 @@ export async function listUsers(companyId: number, params: PaginationParams): Pr
   const total = countResult[0].total;
 
   const data = await query<UserRow[]>(
-    `SELECT id, name, email, role, active, company_id, created_at, updated_at FROM users WHERE ${where.join(' AND ')} ORDER BY created_at DESC LIMIT ? OFFSET ?`,
+    `SELECT id, name, email, role, active, company_id, created_at, updated_at, avatar_url, theme_preference FROM users WHERE ${where.join(' AND ')} ORDER BY created_at DESC LIMIT ? OFFSET ?`,
     [...values, params.limit, params.offset]
   );
 
@@ -39,7 +54,7 @@ export async function listUsers(companyId: number, params: PaginationParams): Pr
 
 export async function getUserById(id: number): Promise<UserRow> {
   const users = await query<UserRow[]>(
-    'SELECT id, name, email, role, active, company_id, created_at, updated_at FROM users WHERE id = ?',
+    'SELECT id, name, email, role, active, company_id, created_at, updated_at, avatar_url, theme_preference FROM users WHERE id = ?',
     [id]
   );
   if (users.length === 0) throw new AppError('Usuario nao encontrado', 404);
@@ -49,6 +64,10 @@ export async function getUserById(id: number): Promise<UserRow> {
 export async function createUser(data: CreateUserInput, companyId: number): Promise<UserRow> {
   const existing = await query<UserRow[]>('SELECT id FROM users WHERE email = ?', [data.email]);
   if (existing.length > 0) throw new AppError('Email ja cadastrado', 409);
+
+  if (await isPasswordTaken(data.password, companyId)) {
+    throw new AppError('Por segurança, escolha uma senha diferente.', 409);
+  }
 
   const hashedPassword = await bcrypt.hash(data.password, 10);
 
@@ -61,7 +80,8 @@ export async function createUser(data: CreateUserInput, companyId: number): Prom
 }
 
 export async function updateUser(id: number, data: UpdateUserInput): Promise<UserRow> {
-  await getUserById(id);
+  const currentUser = await getUserById(id);
+  const companyId = currentUser.company_id;
 
   if (data.email) {
     const existing = await query<UserRow[]>(
@@ -78,7 +98,12 @@ export async function updateUser(id: number, data: UpdateUserInput): Promise<Use
   if (data.email) { fields.push('email = ?'); values.push(data.email); }
   if (data.role) { fields.push('role = ?'); values.push(data.role); }
   if (data.active !== undefined) { fields.push('active = ?'); values.push(data.active); }
-  if (data.password) {
+  if (data.avatarUrl) { fields.push('avatar_url = ?'); values.push(data.avatarUrl); }
+  if (data.themePreference) { fields.push('theme_preference = ?'); values.push(data.themePreference); }
+  if (data.password && data.password.length >= 8) {
+    if (await isPasswordTaken(data.password, companyId)) {
+      throw new AppError('Por segurança, escolha uma senha diferente.', 409);
+    }
     const hashedPassword = await bcrypt.hash(data.password, 10);
     fields.push('password = ?');
     values.push(hashedPassword);
@@ -90,6 +115,14 @@ export async function updateUser(id: number, data: UpdateUserInput): Promise<Use
   }
 
   return getUserById(id);
+}
+
+export async function updateTheme(userId: number, theme: string): Promise<void> {
+  await execute('UPDATE users SET theme_preference = ? WHERE id = ?', [theme, userId]);
+}
+
+export async function updateAvatar(userId: number, avatarUrl: string): Promise<void> {
+  await execute('UPDATE users SET avatar_url = ? WHERE id = ?', [avatarUrl, userId]);
 }
 
 export async function deleteUser(id: number): Promise<void> {

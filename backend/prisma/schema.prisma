@@ -26,10 +26,12 @@ model User {
   name         String
   email        String   @unique
   passwordHash String
-  role         String   @default("ADMIN")
-  active       Boolean  @default(true)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  role            String   @default("ADMIN")
+  active          Boolean  @default(true)
+  avatarUrl       String?
+  themePreference String   @default("dark")
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
   company Company? @relation(fields: [companyId], references: [id])
 }

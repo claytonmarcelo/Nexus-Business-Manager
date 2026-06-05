@@ -68,7 +68,7 @@ export async function buildApp() {
   });
 
   await app.register(multipart, {
-    limits: { fileSize: 5 * 1024 * 1024 },
+    limits: { fileSize: 2 * 1024 * 1024 },
   });
 
   const uploadsDir = path.resolve(__dirname, '..', 'uploads');
@@ -77,6 +77,9 @@ export async function buildApp() {
     prefix: '/uploads/',
     decorateReply: false,
   });
+
+  const avatarsDir = path.resolve(__dirname, '..', 'uploads', 'avatars');
+  if (!fs.existsSync(avatarsDir)) fs.mkdirSync(avatarsDir, { recursive: true });
 
   app.decorate('authenticate', async (request: any, reply: any) => {
     try {

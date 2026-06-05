@@ -16,6 +16,8 @@ export async function authenticateUser(data: LoginInput) {
       email: true,
       passwordHash: true,
       role: true,
+      avatarUrl: true,
+      themePreference: true,
     },
   });
 
@@ -35,5 +37,7 @@ export async function authenticateUser(data: LoginInput) {
     name: user.name,
     email: user.email,
     role: user.role,
+    avatarUrl: user.avatarUrl,
+    themePreference: user.themePreference,
   };
 }

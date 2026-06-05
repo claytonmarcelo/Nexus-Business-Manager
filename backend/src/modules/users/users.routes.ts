@@ -10,5 +10,8 @@ export async function userRoutes(app: FastifyInstance) {
   app.get('/users/:id', { preHandler: [authorize('admin', 'manager', 'viewer')] }, userController.getByIdHandler);
   app.post('/users', { preHandler: [authorize('admin')] }, userController.createHandler);
   app.put('/users/:id', { preHandler: [authorize('admin', 'manager')] }, userController.updateHandler);
+  app.post('/users/avatar', { preHandler: [authenticate] }, userController.uploadAvatarHandler);
+  app.put('/users/theme', { preHandler: [authenticate] }, userController.updateThemeHandler);
+  app.put('/users/profile', { preHandler: [authenticate] }, userController.updateProfileHandler);
   app.delete('/users/:id', { preHandler: [authorize('admin')] }, userController.deleteHandler);
 }

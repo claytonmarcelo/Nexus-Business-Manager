@@ -5,6 +5,10 @@ export interface User {
   role: 'admin' | 'manager' | 'operator' | 'viewer';
   active?: boolean;
   company_id?: number;
+  avatar_url?: string;
+  avatarUrl?: string;
+  theme_preference?: string;
+  themePreference?: string;
   created_at?: string;
   updated_at?: string;
 }

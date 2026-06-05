@@ -2,13 +2,32 @@ import { useState, FormEvent } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 
+function getPasswordStrength(password: string): { level: 'none' | 'weak' | 'medium' | 'strong'; label: string; color: string; width: string } {
+  if (!password) return { level: 'none', label: '', color: '', width: '0%' };
+  if (password.length < 8) return { level: 'weak', label: 'Fraca', color: 'bg-red-500', width: '25%' };
+
+  const hasUpper = /[A-Z]/.test(password);
+  const hasLower = /[a-z]/.test(password);
+  const hasNumber = /[0-9]/.test(password);
+  const hasSpecial = /[^A-Za-z0-9]/.test(password);
+
+  const score = [hasUpper, hasLower, hasNumber, hasSpecial].filter(Boolean).length;
+
+  if (score >= 4) return { level: 'strong', label: 'Forte', color: 'bg-green-500', width: '100%' };
+  if (score >= 2) return { level: 'medium', label: 'Media', color: 'bg-yellow-500', width: '60%' };
+  return { level: 'weak', label: 'Fraca', color: 'bg-red-500', width: '25%' };
+}
+
 export function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const { signIn } = useAuth();
   const navigate = useNavigate();
+
+  const strength = getPasswordStrength(password);
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -19,7 +38,7 @@ export function Login() {
       await signIn(email, password);
       navigate('/dashboard');
     } catch (err: any) {
-      setError(err.response?.data?.error || 'Erro ao fazer login');
+      setError(err.response?.data?.message || err.response?.data?.error || 'Erro ao fazer login');
     } finally {
       setLoading(false);
     }
@@ -58,14 +77,41 @@ export function Login() {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Senha</label>
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="input-field"
-                placeholder="Sua senha"
-                required
-              />
+              <div className="relative">
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="input-field pr-10"
+                  placeholder="Sua senha"
+                  required
+                  minLength={8}
+                  maxLength={64}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 text-sm"
+                  tabIndex={-1}
+                >
+                  {showPassword ? 'Ocultar' : 'Mostrar'}
+                </button>
+              </div>
+              {password && (
+                <div className="mt-2 space-y-1">
+                  <div className="h-1.5 rounded-full bg-gray-200 overflow-hidden">
+                    <div className={`h-full rounded-full transition-all duration-300 ${strength.color}`} style={{ width: strength.width }} />
+                  </div>
+                  <p className={`text-xs font-medium ${
+                    strength.level === 'strong' ? 'text-green-600' :
+                    strength.level === 'medium' ? 'text-yellow-600' :
+                    strength.level === 'weak' ? 'text-red-600' : ''
+                  }`}>
+                    {strength.label && `Forca: ${strength.label}`}
+                  </p>
+                </div>
+              )}
+              <p className="text-xs text-gray-400 mt-1">Minimo 8 caracteres, maximo 64</p>
             </div>
 
             <button type="submit" disabled={loading} className="btn-primary w-full">

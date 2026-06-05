@@ -8,6 +8,7 @@ interface AuthContextData {
   loading: boolean;
   signIn: (email: string, password: string) => Promise<void>;
   signOut: () => void;
+  updateUser: (userData: Partial<User>) => void;
   isAuthenticated: boolean;
 }
 
@@ -37,6 +38,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.setItem('@nexus:token', newToken);
     localStorage.setItem('@nexus:user', JSON.stringify(userData));
 
+    // Sync theme preference from backend
+    if (userData.theme_preference || userData.themePreference) {
+      const theme = userData.theme_preference || userData.themePreference || 'dark';
+      localStorage.setItem('@nexus:theme', theme);
+    }
+
     setToken(newToken);
     setUser(userData);
   }
@@ -44,13 +51,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   function signOut() {
     localStorage.removeItem('@nexus:token');
     localStorage.removeItem('@nexus:user');
+    // Keep theme preference on logout
     setToken(null);
     setUser(null);
   }
 
+  function updateUser(userData: Partial<User>) {
+    const updated = { ...user, ...userData } as User;
+    setUser(updated);
+    localStorage.setItem('@nexus:user', JSON.stringify(updated));
+  }
+
   return (
     <AuthContext.Provider
-      value={{ user, token, loading, signIn, signOut, isAuthenticated: !!token }}
+      value={{ user, token, loading, signIn, signOut, updateUser, isAuthenticated: !!token }}
     >
       {children}
     </AuthContext.Provider>

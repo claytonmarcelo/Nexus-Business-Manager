@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { ThemeProvider } from './contexts/ThemeContext';
 import { Layout } from './components/Layout';
 import { Login } from './pages/Login';
 import { Dashboard } from './pages/Dashboard';
@@ -9,6 +10,7 @@ import { Products } from './pages/Products';
 import { Stock } from './pages/Stock';
 import { Suppliers } from './pages/Suppliers';
 import { Purchases } from './pages/Purchases';
+import { About } from './pages/About';
 import { Sales } from './pages/Sales';
 import { Financial } from './pages/Financial';
 import { Appointments } from './pages/Appointments';
@@ -79,6 +81,7 @@ function AppRoutes() {
         <Route path="notifications" element={<Notifications />} />
         <Route path="audit" element={<Audit />} />
         <Route path="companies" element={<Companies />} />
+        <Route path="about" element={<About />} />
       </Route>
       <Route path="*" element={<Navigate to="/dashboard" replace />} />
     </Routes>
@@ -89,7 +92,9 @@ export default function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
-        <AppRoutes />
+        <ThemeProvider>
+          <AppRoutes />
+        </ThemeProvider>
       </AuthProvider>
     </BrowserRouter>
   );

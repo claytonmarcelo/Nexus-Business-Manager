@@ -27,6 +27,8 @@ export async function loginHandler(request: FastifyRequest, reply: FastifyReply)
       email: user.email,
       role: user.role,
       companyId: user.companyId,
+      avatar_url: user.avatarUrl,
+      theme_preference: user.themePreference,
     },
   });
 }
