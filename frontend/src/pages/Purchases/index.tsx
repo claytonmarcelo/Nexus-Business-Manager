@@ -89,13 +89,13 @@ export function Purchases() {
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
-              <thead className="bg-gray-50 border-b border-gray-200">
+              <thead className="bg-brand-graphiteWine text-brand-ivorySmoke">
                 <tr>
-                  <th className="text-left py-3 px-4 font-medium text-gray-600">Data</th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-600">Fornecedor</th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-600">Valor Total</th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-600">Status</th>
-                  <th className="text-right py-3 px-4 font-medium text-gray-600">Acoes</th>
+                  <th className="text-left py-3 px-4 font-medium text-brand-ivorySmoke">Data</th>
+                  <th className="text-left py-3 px-4 font-medium text-brand-ivorySmoke">Fornecedor</th>
+                  <th className="text-left py-3 px-4 font-medium text-brand-ivorySmoke">Valor Total</th>
+                  <th className="text-left py-3 px-4 font-medium text-brand-ivorySmoke">Status</th>
+                  <th className="text-right py-3 px-4 font-medium text-brand-ivorySmoke">Acoes</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
@@ -155,7 +155,7 @@ export function Purchases() {
                     )}
                   </div>
                 ))}
-                <button type="button" onClick={addItem} className="text-nexus-600 hover:text-nexus-800 text-sm font-medium">+ Adicionar item</button>
+                <button type="button" onClick={addItem} className="text-brand-roseGold hover:text-brand-champagneGold text-sm font-medium">+ Adicionar item</button>
               </div>
 
               <div>

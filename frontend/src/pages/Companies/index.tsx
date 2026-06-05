@@ -68,13 +68,13 @@ export function Companies() {
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
-              <thead className="bg-gray-50 border-b border-gray-200">
+              <thead className="bg-brand-graphiteWine text-brand-ivorySmoke">
                 <tr>
-                  <th className="text-left py-3 px-4 font-medium text-gray-600">Empresa</th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-600">Slug</th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-600">Documento</th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-600">Contato</th>
-                  <th className="text-right py-3 px-4 font-medium text-gray-600">Acoes</th>
+                  <th className="text-left py-3 px-4 font-medium text-brand-ivorySmoke">Empresa</th>
+                  <th className="text-left py-3 px-4 font-medium text-brand-ivorySmoke">Slug</th>
+                  <th className="text-left py-3 px-4 font-medium text-brand-ivorySmoke">Documento</th>
+                  <th className="text-left py-3 px-4 font-medium text-brand-ivorySmoke">Contato</th>
+                  <th className="text-right py-3 px-4 font-medium text-brand-ivorySmoke">Acoes</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
@@ -85,7 +85,7 @@ export function Companies() {
                     <td className="py-3 px-4 text-gray-500">{c.document || '-'}</td>
                     <td className="py-3 px-4 text-gray-500">{c.email || c.phone || '-'}</td>
                     <td className="py-3 px-4 text-right">
-                      <button onClick={() => openEdit(c)} className="text-nexus-600 hover:text-nexus-800 font-medium">Editar</button>
+                      <button onClick={() => openEdit(c)} className="text-brand-roseGold hover:text-brand-champagneGold font-medium">Editar</button>
                     </td>
                   </tr>
                 ))}

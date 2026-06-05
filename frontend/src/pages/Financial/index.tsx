@@ -90,14 +90,14 @@ export function Financial() {
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
-              <thead className="bg-gray-50 border-b border-gray-200">
+              <thead className="bg-brand-graphiteWine text-brand-ivorySmoke">
                 <tr>
-                  <th className="text-left py-3 px-4 font-medium text-gray-600">Data</th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-600">Tipo</th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-600">Categoria</th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-600">Descricao</th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-600">Valor</th>
-                  <th className="text-right py-3 px-4 font-medium text-gray-600">Acoes</th>
+                  <th className="text-left py-3 px-4 font-medium text-brand-ivorySmoke">Data</th>
+                  <th className="text-left py-3 px-4 font-medium text-brand-ivorySmoke">Tipo</th>
+                  <th className="text-left py-3 px-4 font-medium text-brand-ivorySmoke">Categoria</th>
+                  <th className="text-left py-3 px-4 font-medium text-brand-ivorySmoke">Descricao</th>
+                  <th className="text-left py-3 px-4 font-medium text-brand-ivorySmoke">Valor</th>
+                  <th className="text-right py-3 px-4 font-medium text-brand-ivorySmoke">Acoes</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">

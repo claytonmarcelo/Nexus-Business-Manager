@@ -116,14 +116,14 @@ export function Clients() {
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
-              <thead className="bg-gray-50 border-b border-gray-200">
+              <thead className="bg-brand-graphiteWine text-brand-ivorySmoke">
                 <tr>
-                  <th className="text-left py-3 px-4 font-medium text-gray-600">Nome</th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-600">Telefone</th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-600">Email</th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-600">Documento</th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-600">Status</th>
-                  <th className="text-right py-3 px-4 font-medium text-gray-600">Acoes</th>
+                  <th className="text-left py-3 px-4 font-medium text-brand-ivorySmoke">Nome</th>
+                  <th className="text-left py-3 px-4 font-medium text-brand-ivorySmoke">Telefone</th>
+                  <th className="text-left py-3 px-4 font-medium text-brand-ivorySmoke">Email</th>
+                  <th className="text-left py-3 px-4 font-medium text-brand-ivorySmoke">Documento</th>
+                  <th className="text-left py-3 px-4 font-medium text-brand-ivorySmoke">Status</th>
+                  <th className="text-right py-3 px-4 font-medium text-brand-ivorySmoke">Acoes</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
@@ -134,12 +134,12 @@ export function Clients() {
                     <td className="py-3 px-4 text-gray-500">{client.email || '-'}</td>
                     <td className="py-3 px-4 text-gray-500">{client.document || '-'}</td>
                     <td className="py-3 px-4">
-                      <span className={`badge ${(client as any).status === 'ATIVO' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-600'}`}>
+                      <span className={`badge ${(client as any).status === 'ATIVO' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>
                         {(client as any).status || 'ATIVO'}
                       </span>
                     </td>
                     <td className="py-3 px-4 text-right space-x-2">
-                      <button onClick={() => openEdit(client)} className="text-nexus-600 hover:text-nexus-800 font-medium">Editar</button>
+                      <button onClick={() => openEdit(client)} className="text-brand-roseGold hover:text-brand-champagneGold font-medium">Editar</button>
                       <button onClick={() => handleDelete(client.id)} className="text-red-600 hover:text-red-800 font-medium">Excluir</button>
                     </td>
                   </tr>

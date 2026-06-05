@@ -96,10 +96,10 @@ export function Sidebar() {
   const initials = user?.name?.charAt(0).toUpperCase() || '?';
 
   return (
-    <aside className="w-64 bg-nexus-900 text-white min-h-screen flex flex-col">
-      <div className="p-6 border-b border-nexus-700">
-        <h1 className="text-xl font-bold tracking-tight">Nexus</h1>
-        <p className="text-nexus-300 text-sm mt-1">Business Manager</p>
+    <aside className="w-64 bg-brand-blackCherry text-brand-ivorySmoke min-h-screen flex flex-col">
+      <div className="p-6 border-b border-brand-graphiteWine">
+        <h1 className="text-xl font-bold tracking-tight" style={{ color: '#D6B370' }}>Nexus</h1>
+        <p className="text-sm mt-1" style={{ color: '#B76E79' }}>Business Manager</p>
       </div>
 
       <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
@@ -112,13 +112,13 @@ export function Sidebar() {
               className={({ isActive }) =>
                 `flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors ${
                   isActive
-                    ? 'bg-nexus-700 text-white'
-                    : 'text-nexus-200 hover:bg-nexus-800 hover:text-white'
+                    ? 'text-brand-champagneGold font-bold'
+                    : 'text-brand-ivorySmoke/70 hover:text-brand-roseGold'
                 }`
               }
               onClick={() => {}}
             >
-              <span className="w-8 h-8 flex items-center justify-center bg-nexus-800 rounded-lg text-xs font-bold">
+              <span className="w-8 h-8 flex items-center justify-center bg-brand-graphiteWine rounded-lg text-xs font-bold">
                 {item.icon}
               </span>
               {item.label}
@@ -126,12 +126,12 @@ export function Sidebar() {
           ))}
       </nav>
 
-      <div className="p-4 border-t border-nexus-700 space-y-2">
-          <div className="flex items-center gap-3">
+      <div className="p-4 border-t border-brand-graphiteWine space-y-2">
+        <div className="flex items-center gap-3">
           <button
             onClick={handleAvatarClick}
             disabled={avatarLoading}
-            className="w-9 h-9 rounded-full bg-nexus-600 flex items-center justify-center text-sm font-bold overflow-hidden flex-shrink-0 hover:opacity-80 transition-opacity cursor-pointer"
+            className="w-9 h-9 rounded-full bg-brand-roseGold flex items-center justify-center text-sm font-bold overflow-hidden flex-shrink-0 hover:opacity-80 transition-opacity cursor-pointer"
             title="Clique para alterar avatar"
           >
             {avatarLoading ? (
@@ -151,13 +151,14 @@ export function Sidebar() {
           />
           <div className="flex-1 min-w-0">
             <p className="text-sm font-medium truncate">{user?.name}</p>
-            <p className="text-xs text-nexus-300 capitalize">{user?.role}</p>
+            <p className="text-xs capitalize" style={{ color: '#B76E79' }}>{user?.role}</p>
           </div>
         </div>
 
         <button
           onClick={toggleTheme}
-          className="w-full flex items-center gap-2 text-left text-sm text-nexus-300 hover:text-white py-1.5 transition-colors"
+          className="w-full flex items-center gap-2 text-left text-sm py-1.5 transition-colors"
+          style={{ color: '#B76E79' }}
         >
           <span className="text-base">{theme === 'dark' ? '\u2600' : '\u263E'}</span>
           {theme === 'dark' ? 'Tema Claro' : 'Tema Escuro'}
@@ -166,7 +167,8 @@ export function Sidebar() {
         <button
           onClick={handleClearCache}
           disabled={cacheLoading}
-          className="w-full flex items-center gap-2 text-left text-sm text-nexus-300 hover:text-white py-1.5 transition-colors disabled:opacity-50"
+          className="w-full flex items-center gap-2 text-left text-sm py-1.5 transition-colors disabled:opacity-50"
+          style={{ color: '#B76E79' }}
         >
           <span className={`text-base inline-block ${cacheLoading ? 'animate-spin' : ''}`}>
             {'\u21BB'}
@@ -176,14 +178,16 @@ export function Sidebar() {
 
         <button
           onClick={() => navigate('/about')}
-          className="w-full text-left text-sm text-nexus-300 hover:text-white py-1.5 transition-colors"
+          className="w-full text-left text-sm py-1.5 transition-colors"
+          style={{ color: '#B76E79' }}
         >
           Sobre
         </button>
 
         <button
           onClick={signOut}
-          className="w-full text-left text-sm text-nexus-300 hover:text-white py-1.5 transition-colors"
+          className="w-full text-left text-sm py-1.5 transition-colors"
+          style={{ color: '#B76E79' }}
         >
           Sair
         </button>

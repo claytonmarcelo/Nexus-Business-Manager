@@ -11,48 +11,25 @@
   animation: slide-in 0.3s ease-out;
 }
 
-:root {
-  --color-gray-50: #f9fafb;
-  --color-gray-100: #f3f4f6;
-  --color-gray-200: #e5e7eb;
-  --color-gray-300: #d1d5db;
-  --color-gray-400: #9ca3af;
-  --color-gray-500: #6b7280;
-  --color-gray-600: #4b5563;
-  --color-gray-700: #374151;
-  --color-gray-800: #1f2937;
-  --color-gray-900: #111827;
-}
-
-.dark {
-  --color-gray-50: #32252B;
-  --color-gray-100: #3A2A32;
-  --color-gray-200: #4A383F;
-  --color-gray-300: #5D4851;
-  --color-gray-400: #8A707B;
-  --color-gray-500: #A08A93;
-  --color-gray-600: #C0AAB2;
-  --color-gray-700: #D4C4CA;
-  --color-gray-800: #E8DDE0;
-  --color-gray-900: #F7F2EC;
-}
-
 @layer base {
   body {
-    @apply text-gray-900 bg-gray-50 transition-colors duration-200;
+    @apply bg-brand-ivorySmoke text-brand-blackCherry transition-colors duration-200;
+  }
+  .dark body, .dark {
+    @apply bg-brand-blackCherry text-brand-ivorySmoke;
   }
 }
 
 @layer components {
   .btn-primary {
-    @apply bg-nexus-600 hover:bg-nexus-700 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed;
+    @apply bg-brand-roseGold hover:bg-brand-champagneGold hover:text-brand-blackCherry text-brand-ivorySmoke font-medium py-2 px-4 rounded-lg transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed;
   }
 
   .btn-secondary {
-    @apply bg-white hover:bg-gray-50 text-gray-700 font-medium py-2 px-4 border border-gray-300 rounded-lg transition-colors duration-200;
+    @apply bg-white hover:bg-brand-ivorySmoke text-brand-blackCherry font-medium py-2 px-4 border border-brand-roseGold/40 rounded-lg transition-colors duration-200;
   }
   .dark .btn-secondary {
-    @apply bg-brand-graphiteWine hover:opacity-90 text-brand-ivorySmoke border-brand-roseGold/30;
+    @apply bg-brand-graphiteWine hover:bg-brand-roseGold/20 text-brand-ivorySmoke border-brand-roseGold/30;
   }
 
   .btn-danger {
@@ -60,14 +37,14 @@
   }
 
   .input-field {
-    @apply w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-nexus-500 focus:border-nexus-500 transition-colors duration-200;
+    @apply w-full px-3 py-2 border border-brand-roseGold/50 rounded-lg bg-white text-brand-blackCherry focus:outline-none focus:ring-2 focus:ring-brand-champagneGold focus:border-brand-champagneGold transition-colors duration-200;
   }
   .dark .input-field {
-    @apply bg-brand-graphiteWine border-brand-roseGold/30 text-brand-ivorySmoke placeholder-gray-400;
+    @apply bg-brand-graphiteWine border-brand-roseGold/30 text-brand-ivorySmoke placeholder-gray-400 focus:ring-brand-champagneGold focus:border-brand-champagneGold;
   }
 
   .card {
-    @apply bg-white rounded-xl shadow-sm border border-gray-200 p-6 transition-colors duration-200;
+    @apply bg-white rounded-xl shadow-sm border border-brand-champagneGold/40 p-6 transition-colors duration-200;
   }
   .dark .card {
     @apply bg-brand-graphiteWine border-brand-roseGold/20;
@@ -78,24 +55,24 @@
   }
 
   .badge-admin {
-    @apply badge bg-purple-100 text-purple-800;
+    @apply badge bg-brand-roseGold/20 text-brand-roseGold;
   }
   .dark .badge-admin {
-    @apply bg-purple-900 text-purple-200;
+    @apply badge bg-brand-roseGold/30 text-brand-champagneGold;
   }
 
   .badge-manager {
-    @apply badge bg-blue-100 text-blue-800;
+    @apply badge bg-brand-champagneGold/20 text-brand-champagneGold;
   }
   .dark .badge-manager {
-    @apply bg-blue-900 text-blue-200;
+    @apply bg-brand-champagneGold/30 text-brand-champagneGold;
   }
 
   .badge-operator {
-    @apply badge bg-green-100 text-green-800;
+    @apply badge bg-brand-graphiteWine/20 text-brand-graphiteWine;
   }
   .dark .badge-operator {
-    @apply bg-green-900 text-green-200;
+    @apply bg-brand-graphiteWine/60 text-brand-ivorySmoke;
   }
 
   .badge-viewer {

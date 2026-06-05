@@ -7,7 +7,7 @@ import {
   PieChart, Pie, Cell, Legend,
 } from 'recharts';
 
-const COLORS = ['#6366f1', '#8b5cf6', '#ec4899', '#f59e0b', '#10b981', '#3b82f6', '#ef4444'];
+const COLORS = ['#B76E79', '#D6B370', '#32252B', '#8B5F5F', '#C49A6C', '#4A3840', '#A0796A'];
 
 export function Dashboard() {
   const { user } = useAuth();
@@ -35,7 +35,7 @@ export function Dashboard() {
   if (error) {
     return <div className="p-8 text-center">
       <p className="text-red-500 mb-4">{error}</p>
-      <button onClick={() => { setLoading(true); setError(''); api.get('/dashboard').then(r => setData(r.data)).catch(() => setError('Erro ao carregar dashboard')).finally(() => setLoading(false)); }} className="px-4 py-2 bg-nexus-600 text-white rounded-lg hover:bg-nexus-700">Tentar novamente</button>
+      <button onClick={() => { setLoading(true); setError(''); api.get('/dashboard').then(r => setData(r.data)).catch(() => setError('Erro ao carregar dashboard')).finally(() => setLoading(false)); }} className="btn-primary">Tentar novamente</button>
     </div>;
   }
 
@@ -51,10 +51,10 @@ export function Dashboard() {
   });
 
   const cards = [
-    { label: 'Clientes', value: stats.total_clients, color: 'bg-green-500' },
-    { label: 'Produtos', value: stats.total_products, color: 'bg-purple-500' },
-    { label: 'Fornecedores', value: stats.total_suppliers, color: 'bg-indigo-500' },
-    { label: 'Vendas', value: stats.total_sales, color: 'bg-teal-500' },
+    { label: 'Clientes', value: stats.total_clients, color: 'bg-brand-graphiteWine' },
+    { label: 'Produtos', value: stats.total_products, color: 'bg-brand-roseGold' },
+    { label: 'Fornecedores', value: stats.total_suppliers, color: 'bg-brand-graphiteWine' },
+    { label: 'Vendas', value: stats.total_sales, color: 'bg-brand-roseGold' },
     { label: 'Estoque Baixo', value: stats.low_stock_count, color: stats.low_stock_count > 0 ? 'bg-red-500' : 'bg-gray-400' },
   ];
 
@@ -115,7 +115,7 @@ export function Dashboard() {
               <XAxis dataKey="label" fontSize={12} />
               <YAxis fontSize={12} />
               <Tooltip />
-              <Bar dataKey="value" fill="#6366f1" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="value" fill="#B76E79" radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>
@@ -137,7 +137,7 @@ export function Dashboard() {
 
         <div className="card">
           <h3 className="text-sm font-semibold text-gray-900 mb-4">Valor em Estoque</h3>
-          <p className="text-4xl font-bold text-nexus-600 mb-4">
+          <p className="text-4xl font-bold mb-4" style={{ color: '#B76E79' }}>
             {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(stats.stock_value)}
           </p>
           <div className="space-y-3 text-sm text-gray-600">

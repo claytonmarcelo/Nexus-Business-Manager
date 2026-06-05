@@ -51,13 +51,13 @@ export function Audit() {
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
-              <thead className="bg-gray-50 border-b border-gray-200">
+              <thead className="bg-brand-graphiteWine text-brand-ivorySmoke">
                 <tr>
-                  <th className="text-left py-3 px-4 font-medium text-gray-600">Data/Hora</th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-600">Usuario</th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-600">Acao</th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-600">Entidade</th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-600">ID</th>
+                  <th className="text-left py-3 px-4 font-medium text-brand-ivorySmoke">Data/Hora</th>
+                  <th className="text-left py-3 px-4 font-medium text-brand-ivorySmoke">Usuario</th>
+                  <th className="text-left py-3 px-4 font-medium text-brand-ivorySmoke">Acao</th>
+                  <th className="text-left py-3 px-4 font-medium text-brand-ivorySmoke">Entidade</th>
+                  <th className="text-left py-3 px-4 font-medium text-brand-ivorySmoke">ID</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">

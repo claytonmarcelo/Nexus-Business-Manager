@@ -100,13 +100,13 @@ export function Users() {
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
-              <thead className="bg-gray-50 border-b border-gray-200">
+              <thead className="bg-brand-graphiteWine text-brand-ivorySmoke">
                 <tr>
-                  <th className="text-left py-3 px-4 font-medium text-gray-600">Nome</th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-600">Email</th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-600">Perfil</th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-600">Status</th>
-                  <th className="text-right py-3 px-4 font-medium text-gray-600">Acoes</th>
+                  <th className="text-left py-3 px-4 font-medium text-brand-ivorySmoke">Nome</th>
+                  <th className="text-left py-3 px-4 font-medium text-brand-ivorySmoke">Email</th>
+                  <th className="text-left py-3 px-4 font-medium text-brand-ivorySmoke">Perfil</th>
+                  <th className="text-left py-3 px-4 font-medium text-brand-ivorySmoke">Status</th>
+                  <th className="text-right py-3 px-4 font-medium text-brand-ivorySmoke">Acoes</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
@@ -125,7 +125,7 @@ export function Users() {
                       </span>
                     </td>
                     <td className="py-3 px-4 text-right space-x-2">
-                      <button onClick={() => openEdit(user)} className="text-nexus-600 hover:text-nexus-800 font-medium">Editar</button>
+                      <button onClick={() => openEdit(user)} className="text-brand-roseGold hover:text-brand-champagneGold font-medium">Editar</button>
                       <button onClick={() => handleToggleActive(user)} className={`font-medium ${user.active ? 'text-red-600 hover:text-red-800' : 'text-green-600 hover:text-green-800'}`}>
                         {user.active ? 'Desativar' : 'Ativar'}
                       </button>

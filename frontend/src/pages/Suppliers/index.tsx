@@ -76,13 +76,13 @@ export function Suppliers() {
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
-              <thead className="bg-gray-50 border-b border-gray-200">
+              <thead className="bg-brand-graphiteWine text-brand-ivorySmoke">
                 <tr>
-                  <th className="text-left py-3 px-4 font-medium text-gray-600">Empresa</th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-600">Telefone</th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-600">Email</th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-600">Contato</th>
-                  <th className="text-right py-3 px-4 font-medium text-gray-600">Acoes</th>
+                  <th className="text-left py-3 px-4 font-medium text-brand-ivorySmoke">Empresa</th>
+                  <th className="text-left py-3 px-4 font-medium text-brand-ivorySmoke">Telefone</th>
+                  <th className="text-left py-3 px-4 font-medium text-brand-ivorySmoke">Email</th>
+                  <th className="text-left py-3 px-4 font-medium text-brand-ivorySmoke">Contato</th>
+                  <th className="text-right py-3 px-4 font-medium text-brand-ivorySmoke">Acoes</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
@@ -93,7 +93,7 @@ export function Suppliers() {
                     <td className="py-3 px-4 text-gray-500">{s.email || '-'}</td>
                     <td className="py-3 px-4 text-gray-500">{s.contact_name || '-'}</td>
                     <td className="py-3 px-4 text-right space-x-2">
-                      <button onClick={() => openEdit(s)} className="text-nexus-600 hover:text-nexus-800 font-medium">Editar</button>
+                      <button onClick={() => openEdit(s)} className="text-brand-roseGold hover:text-brand-champagneGold font-medium">Editar</button>
                       <button onClick={() => handleDelete(s.id)} className="text-red-600 hover:text-red-800 font-medium">Excluir</button>
                     </td>
                   </tr>

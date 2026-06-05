@@ -52,13 +52,13 @@ export function Stock() {
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
-              <thead className="bg-gray-50 border-b border-gray-200">
+              <thead className="bg-brand-graphiteWine text-brand-ivorySmoke">
                 <tr>
-                  <th className="text-left py-3 px-4 font-medium text-gray-600">Data</th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-600">Produto</th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-600">Tipo</th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-600">Qtd</th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-600">Descricao</th>
+                  <th className="text-left py-3 px-4 font-medium text-brand-ivorySmoke">Data</th>
+                  <th className="text-left py-3 px-4 font-medium text-brand-ivorySmoke">Produto</th>
+                  <th className="text-left py-3 px-4 font-medium text-brand-ivorySmoke">Tipo</th>
+                  <th className="text-left py-3 px-4 font-medium text-brand-ivorySmoke">Qtd</th>
+                  <th className="text-left py-3 px-4 font-medium text-brand-ivorySmoke">Descricao</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">

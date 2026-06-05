@@ -91,14 +91,14 @@ export function Products() {
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
-              <thead className="bg-gray-50 border-b border-gray-200">
+              <thead className="bg-brand-graphiteWine text-brand-ivorySmoke">
                 <tr>
-                  <th className="text-left py-3 px-4 font-medium text-gray-600">Nome</th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-600">SKU</th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-600">Categoria</th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-600">Preco</th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-600">Qtd</th>
-                  <th className="text-right py-3 px-4 font-medium text-gray-600">Acoes</th>
+                  <th className="text-left py-3 px-4 font-medium text-brand-ivorySmoke">Nome</th>
+                  <th className="text-left py-3 px-4 font-medium text-brand-ivorySmoke">SKU</th>
+                  <th className="text-left py-3 px-4 font-medium text-brand-ivorySmoke">Categoria</th>
+                  <th className="text-left py-3 px-4 font-medium text-brand-ivorySmoke">Preco</th>
+                  <th className="text-left py-3 px-4 font-medium text-brand-ivorySmoke">Qtd</th>
+                  <th className="text-right py-3 px-4 font-medium text-brand-ivorySmoke">Acoes</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
@@ -118,7 +118,7 @@ export function Products() {
                       </span>
                     </td>
                     <td className="py-3 px-4 text-right space-x-2">
-                      <button onClick={() => openEdit(product)} className="text-nexus-600 hover:text-nexus-800 font-medium">Editar</button>
+                      <button onClick={() => openEdit(product)} className="text-brand-roseGold hover:text-brand-champagneGold font-medium">Editar</button>
                       <button onClick={() => handleDelete(product.id)} className="text-red-600 hover:text-red-800 font-medium">Excluir</button>
                     </td>
                   </tr>

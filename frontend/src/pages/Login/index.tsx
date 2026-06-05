@@ -45,16 +45,23 @@ export function Login() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-nexus-900 via-nexus-800 to-nexus-950">
+    <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: '#1A0D12' }}>
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-white tracking-tight">Nexus</h1>
-          <p className="text-nexus-300 mt-2">Business Manager</p>
+          <div className="flex justify-center mb-4">
+            <img
+              src="/assets/branding/logo.png"
+              alt="Nexus Business Manager"
+              className="h-16"
+            />
+          </div>
+          <h1 className="text-4xl font-bold tracking-tight" style={{ color: '#D6B370' }}>Nexus</h1>
+          <p className="mt-2" style={{ color: '#B76E79' }}>Business Manager</p>
         </div>
 
-        <div className="bg-white rounded-2xl shadow-2xl p-8">
-          <h2 className="text-2xl font-semibold text-gray-900 mb-2">Acessar sistema</h2>
-          <p className="text-gray-500 mb-6">Informe seus dados para entrar</p>
+        <div className="rounded-2xl shadow-2xl p-8" style={{ backgroundColor: '#F7F2EC' }}>
+          <h2 className="text-2xl font-semibold mb-2" style={{ color: '#1A0D12' }}>Acessar sistema</h2>
+          <p className="mb-6" style={{ color: '#32252B' }}>Informe seus dados para entrar</p>
 
           {error && (
             <div className="bg-red-50 text-red-700 px-4 py-3 rounded-lg mb-4 text-sm">
@@ -64,7 +71,7 @@ export function Login() {
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+              <label className="block text-sm font-medium mb-1" style={{ color: '#32252B' }}>Email</label>
               <input
                 type="email"
                 value={email}
@@ -76,7 +83,7 @@ export function Login() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Senha</label>
+              <label className="block text-sm font-medium mb-1" style={{ color: '#32252B' }}>Senha</label>
               <div className="relative">
                 <input
                   type={showPassword ? 'text' : 'password'}
@@ -91,7 +98,8 @@ export function Login() {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 text-sm"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-sm"
+                  style={{ color: '#B76E79' }}
                   tabIndex={-1}
                 >
                   {showPassword ? 'Ocultar' : 'Mostrar'}
@@ -111,10 +119,14 @@ export function Login() {
                   </p>
                 </div>
               )}
-              <p className="text-xs text-gray-400 mt-1">Minimo 8 caracteres, maximo 64</p>
+              <p className="text-xs mt-1" style={{ color: '#32252B' }}>Minimo 8 caracteres, maximo 64</p>
             </div>
 
-            <button type="submit" disabled={loading} className="btn-primary w-full">
+            <button
+              type="submit"
+              disabled={loading}
+              className="btn-primary w-full"
+            >
               {loading ? 'Entrando...' : 'Entrar'}
             </button>
           </form>

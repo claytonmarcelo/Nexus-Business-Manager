@@ -70,7 +70,7 @@ export function Notifications() {
         ) : (
           <div className="divide-y divide-gray-100">
             {notifications.map((n) => (
-              <div key={n.id} className={`flex items-start gap-4 p-4 ${!n.read ? 'bg-nexus-50' : 'hover:bg-gray-50'}`}>
+              <div key={n.id} className={`flex items-start gap-4 p-4 ${!n.read ? 'bg-brand-roseGold/10' : 'hover:bg-gray-50'}`}>
                 <span className="text-xl">{iconMap[n.icon || 'info'] || 'ℹ️'}</span>
                 <div className="flex-1 min-w-0">
                   <p className={`text-sm ${!n.read ? 'font-semibold' : ''}`}>{n.title}</p>
@@ -78,7 +78,7 @@ export function Notifications() {
                   <p className="text-xs text-gray-400 mt-1">{new Date(n.created_at).toLocaleString('pt-BR')}</p>
                 </div>
                 {!n.read && (
-                  <button onClick={() => handleMarkRead(n.id)} className="text-xs text-nexus-600 hover:text-nexus-800 font-medium whitespace-nowrap">
+                  <button onClick={() => handleMarkRead(n.id)} className="text-xs text-brand-roseGold hover:text-brand-champagneGold font-medium whitespace-nowrap">
                     Marcar lida
                   </button>
                 )}
