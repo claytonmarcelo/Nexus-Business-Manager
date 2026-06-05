@@ -44,11 +44,11 @@
     @apply transition-colors duration-200;
   }
   body, .page-bg {
-    background: linear-gradient(135deg, #F7F2EC 0%, #F2EBE4 50%, #EEE6DD 100%);
+    background: linear-gradient(180deg, #F7F2EC 0%, #EFE6DC 100%);
     color: #1A0D12;
   }
   .dark body, .dark, .dark .page-bg {
-    background: #1A0D12;
+    background: linear-gradient(180deg, #1A0D12 0%, #24171C 45%, #32252B 100%);
     color: #F7F2EC;
   }
 }
@@ -57,7 +57,7 @@
   .btn-primary {
     @apply font-medium py-2 px-4 rounded-lg transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed;
     background: #B76E79;
-    color: #FFFFFF;
+    color: #F7F2EC;
   }
   .btn-primary:hover:not(:disabled) {
     background: #D6B370;
@@ -90,28 +90,28 @@
     box-shadow: 0 0 0 3px rgba(214, 179, 112, 0.18);
   }
   .dark .input-field {
-    background: #32252B;
-    border-color: rgba(183, 110, 121, 0.30);
+    background: rgba(26, 13, 18, 0.72);
+    border: 1px solid rgba(214, 179, 112, 0.35);
     color: #F7F2EC;
   }
   .dark .input-field::placeholder {
-    color: rgba(247, 242, 236, 0.50);
+    color: rgba(247, 242, 236, 0.45);
   }
   .dark .input-field:focus {
     border-color: #D6B370;
-    box-shadow: 0 0 0 3px rgba(214, 179, 112, 0.25);
+    box-shadow: 0 0 0 3px rgba(214, 179, 112, 0.16);
   }
 
   .card {
     background: #FFFFFF;
-    border: 1px solid rgba(214, 179, 112, 0.45);
-    box-shadow: 0 16px 40px rgba(26, 13, 18, 0.10);
+    border: 1px solid rgba(183, 110, 121, 0.25);
+    box-shadow: 0 18px 45px rgba(0, 0, 0, 0.10);
     @apply rounded-xl p-6 transition-colors duration-200;
   }
   .dark .card {
-    background: #32252B;
-    border-color: rgba(214, 179, 112, 0.28);
-    box-shadow: none;
+    background: rgba(50, 37, 43, 0.96);
+    border: 1px solid rgba(214, 179, 112, 0.22);
+    box-shadow: 0 18px 45px rgba(0, 0, 0, 0.35);
   }
 
   .badge {
@@ -122,38 +122,48 @@
     @apply badge bg-brand-roseGold/20 text-brand-roseGold;
   }
   .dark .badge-admin {
-    @apply badge bg-brand-roseGold/30 text-brand-champagneGold;
+    background: rgba(183, 110, 121, 0.3);
+    color: #D6B370;
   }
 
   .badge-manager {
     @apply badge bg-brand-champagneGold/20 text-brand-champagneGold;
   }
   .dark .badge-manager {
-    @apply bg-brand-champagneGold/30 text-brand-champagneGold;
+    background: rgba(214, 179, 112, 0.3);
+    color: #D6B370;
   }
 
   .badge-operator {
     @apply badge bg-brand-graphiteWine/20 text-brand-graphiteWine;
   }
   .dark .badge-operator {
-    @apply bg-brand-graphiteWine/60 text-brand-ivorySmoke;
+    background: rgba(183, 110, 121, 0.2);
+    color: #B76E79;
   }
 
   .badge-viewer {
     @apply badge bg-brand-graphiteWine/10 text-brand-graphiteWine;
   }
   .dark .badge-viewer {
-    @apply bg-brand-graphiteWine/60 text-brand-ivorySmoke;
+    background: rgba(183, 110, 121, 0.15);
+    color: #B76E79;
   }
 
   .page-title {
     @apply text-2xl font-bold;
     color: #1A0D12;
   }
+  .dark .page-title {
+    color: #F7F2EC;
+  }
 
   .section-title {
     @apply text-sm font-semibold mb-4;
     color: #1A0D12;
+  }
+  .dark .section-title {
+    color: #F7F2EC;
   }
 
   .table-header {
@@ -169,6 +179,68 @@
     background: #F7F2EC;
   }
   .table-row:hover {
-    background: rgba(214, 179, 112, 0.18);
+    background: rgba(183, 110, 121, 0.10);
+  }
+  .dark .table-row {
+    background: rgba(50, 37, 43, 0.96);
+    color: #F7F2EC;
+  }
+  .dark .table-row:nth-child(even) {
+    background: rgba(26, 13, 18, 0.4);
+  }
+  .dark .table-row:hover {
+    background: rgba(214, 179, 112, 0.12);
   }
 }
+
+.dark .text-brand-graphiteWine { color: #F7F2EC !important; }
+.dark .text-brand-graphiteWine\/60 { color: rgba(247, 242, 236, 0.72) !important; }
+.dark .text-brand-graphiteWine\/70 { color: rgba(247, 242, 236, 0.72) !important; }
+.dark .text-brand-graphiteWine\/80 { color: rgba(247, 242, 236, 0.80) !important; }
+.dark .text-brand-graphiteWine\/50 { color: rgba(247, 242, 236, 0.55) !important; }
+.dark .text-brand-graphiteWine\/40 { color: rgba(247, 242, 236, 0.45) !important; }
+.dark .text-brand-blackCherry { color: #F7F2EC !important; }
+.dark .text-brand-blackCherry\/80 { color: rgba(247, 242, 236, 0.80) !important; }
+.dark .text-brand-blackCherry\/70 { color: rgba(247, 242, 236, 0.72) !important; }
+
+.dark .divide-gray-100 > * { border-color: rgba(214, 179, 112, 0.15) !important; }
+.dark .divide-y.divide-gray-100 > * { border-color: rgba(214, 179, 112, 0.15) !important; }
+.dark .border-gray-200 { border-color: rgba(214, 179, 112, 0.2) !important; }
+.dark .bg-gray-200 { background: rgba(50, 37, 43, 0.6) !important; }
+.dark .bg-gray-50 { background: rgba(50, 37, 43, 0.4) !important; }
+.dark .bg-red-50 { background: rgba(239, 68, 68, 0.15) !important; }
+.dark .text-red-700 { color: #FCA5A5 !important; }
+.dark .text-green-600 { color: #4CAF50 !important; }
+.dark .text-red-600 { color: #E57373 !important; }
+.dark .text-green-800 { color: #4CAF50 !important; }
+.dark .text-red-800 { color: #E57373 !important; }
+.dark .bg-green-50 { background: rgba(76, 175, 80, 0.15) !important; }
+.dark .bg-green-100 { background: rgba(76, 175, 80, 0.2) !important; }
+.dark .text-green-700 { color: #4CAF50 !important; }
+.dark .text-green-300 { color: #81C784 !important; }
+.dark .bg-red-100 { background: rgba(229, 115, 115, 0.2) !important; }
+.dark .border-red-200 { border-color: rgba(229, 115, 115, 0.3) !important; }
+.dark .border-green-200 { border-color: rgba(76, 175, 80, 0.3) !important; }
+.dark .border-green-800 { border-color: rgba(76, 175, 80, 0.5) !important; }
+.dark .border-gray-200 { border-color: rgba(214, 179, 112, 0.2) !important; }
+.dark .border-brand-ivorySmoke { border-color: rgba(247, 242, 236, 0.2) !important; }
+
+.dark .fixed.inset-0 .bg-white {
+  background: rgba(50, 37, 43, 0.98) !important;
+  color: #F7F2EC;
+  border: 1px solid rgba(214, 179, 112, 0.28) !important;
+}
+
+.dark .hover\:bg-\[rgba\(214\2c 179\2c 112\2c 0\.18\)\] {
+  background: rgba(214, 179, 112, 0.12) !important;
+}
+
+.dark .bg-brand-roseGold\/10 {
+  background: rgba(183, 110, 121, 0.15) !important;
+}
+.dark .bg-brand-ivorySmoke {
+  background: #32252B !important;
+}
+
+.dark .text-yellow-600 { color: #D6B370 !important; }
+.dark .text-red-500 { color: #E57373 !important; }

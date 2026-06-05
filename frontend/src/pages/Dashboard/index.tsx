@@ -67,7 +67,7 @@ export function Dashboard() {
   return (
     <div>
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-brand-blackCherry">Dashboard</h1>
+        <h1 className="page-title">Dashboard</h1>
         <p className="text-brand-graphiteWine/60 mt-1">Bem-vindo, {user?.name}!</p>
       </div>
 
@@ -94,7 +94,7 @@ export function Dashboard() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
         <div className="card">
-            <h3 className="text-sm font-semibold text-brand-blackCherry mb-4">Receitas x Despesas por Mes</h3>
+            <h3 className="section-title">Receitas x Despesas por Mes</h3>
           <ResponsiveContainer width="100%" height={300}>
             <BarChart data={revenueExpenseData}>
               <CartesianGrid strokeDasharray="3 3" />
@@ -108,7 +108,7 @@ export function Dashboard() {
         </div>
 
         <div className="card">
-            <h3 className="text-sm font-semibold text-brand-blackCherry mb-4">Vendas por Mes</h3>
+            <h3 className="section-title">Vendas por Mes</h3>
           <ResponsiveContainer width="100%" height={300}>
             <BarChart data={charts.salesByMonth}>
               <CartesianGrid strokeDasharray="3 3" />
@@ -121,7 +121,7 @@ export function Dashboard() {
         </div>
 
         <div className="card">
-            <h3 className="text-sm font-semibold text-brand-blackCherry mb-4">Produtos por Categoria</h3>
+            <h3 className="section-title">Produtos por Categoria</h3>
           <ResponsiveContainer width="100%" height={300}>
             <PieChart>
               <Pie data={charts.productsByCategory} dataKey="value" nameKey="label" cx="50%" cy="50%" outerRadius={100} label>
@@ -136,7 +136,7 @@ export function Dashboard() {
         </div>
 
         <div className="card">
-          <h3 className="text-sm font-semibold text-brand-blackCherry mb-4">Valor em Estoque</h3>
+          <h3 className="section-title">Valor em Estoque</h3>
           <p className="text-4xl font-bold mb-4" style={{ color: '#B76E79' }}>
             {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(stats.stock_value)}
           </p>

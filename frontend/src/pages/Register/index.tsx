@@ -28,23 +28,23 @@ export function Register() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#F7F2EC] to-[#EEE6DD]">
+    <div className="min-h-screen flex items-center justify-center"
+      style={{ background: 'linear-gradient(180deg, #1A0D12 0%, #24171C 45%, #32252B 100%)' }}>
       <div className="w-full max-w-md">
         <AuthLogo />
 
-        <div className="rounded-2xl p-8 bg-white border border-brand-champagneGold/45" style={{ boxShadow: '0 16px 40px rgba(26, 13, 18, 0.12)' }}>
-          <h2 className="text-2xl font-semibold mb-2 text-brand-blackCherry">Criar conta</h2>
-          <p className="mb-6 text-brand-blackCherry/80">Preencha os dados para se cadastrar</p>
+        <div className="rounded-[18px] p-8 mx-4"
+          style={{ background: 'rgba(50, 37, 43, 0.96)', border: '1px solid rgba(214, 179, 112, 0.22)', boxShadow: '0 18px 45px rgba(0, 0, 0, 0.35)' }}>
+          <h2 className="text-2xl font-semibold mb-2" style={{ color: '#F7F2EC' }}>Criar conta</h2>
+          <p className="mb-6" style={{ color: 'rgba(247, 242, 236, 0.72)' }}>Preencha os dados para se cadastrar</p>
 
           {error && (
-            <div className="bg-red-50 text-red-700 px-4 py-3 rounded-lg mb-4 text-sm">
-              {error}
-            </div>
+            <div className="bg-red-50 text-red-700 px-4 py-3 rounded-lg mb-4 text-sm">{error}</div>
           )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium mb-1 text-brand-blackCherry">Nome</label>
+              <label className="block text-sm font-medium mb-1" style={{ color: '#F7F2EC' }}>Nome</label>
               <input
                 type="text"
                 value={name}
@@ -57,7 +57,7 @@ export function Register() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-1 text-brand-blackCherry">Email</label>
+              <label className="block text-sm font-medium mb-1" style={{ color: '#F7F2EC' }}>Email</label>
               <input
                 type="email"
                 value={email}
@@ -69,7 +69,7 @@ export function Register() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-1 text-brand-blackCherry">Senha</label>
+              <label className="block text-sm font-medium mb-1" style={{ color: '#F7F2EC' }}>Senha</label>
               <input
                 type="password"
                 value={password}
@@ -91,7 +91,7 @@ export function Register() {
             </button>
           </form>
 
-          <p className="mt-6 text-center text-sm text-brand-graphiteWine/70">
+          <p className="mt-6 text-center text-sm" style={{ color: 'rgba(247, 242, 236, 0.72)' }}>
             Ja tem conta?{' '}
             <Link to="/login" className="text-brand-roseGold hover:text-brand-champagneGold font-medium transition-colors">
               Fazer login
