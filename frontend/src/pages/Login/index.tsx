@@ -1,6 +1,6 @@
 import { useState, FormEvent } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
-import { useNavigate } from 'react-router-dom';
 
 function getPasswordStrength(password: string): { level: 'none' | 'weak' | 'medium' | 'strong'; label: string; color: string; width: string } {
   if (!password) return { level: 'none', label: '', color: '', width: '0%' };
@@ -126,6 +126,13 @@ export function Login() {
               {loading ? 'Entrando...' : 'Entrar'}
             </button>
           </form>
+
+          <p className="mt-6 text-center text-sm text-brand-graphiteWine/70">
+            Nao tem conta?{' '}
+            <Link to="/register" className="text-brand-roseGold hover:text-brand-champagneGold font-medium transition-colors">
+              Fazer cadastro
+            </Link>
+          </p>
         </div>
       </div>
     </div>

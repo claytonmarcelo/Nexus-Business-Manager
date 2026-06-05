@@ -1,6 +1,6 @@
 import { FastifyRequest, FastifyReply } from 'fastify';
-import { loginSchema } from './auth.schema';
-import { authenticateUser } from './auth.service';
+import { loginSchema, registerSchema } from './auth.schema';
+import { authenticateUser, registerUser } from './auth.service';
 import { log } from '../audit/audit.service';
 
 export async function loginHandler(request: FastifyRequest, reply: FastifyReply) {
@@ -30,6 +30,21 @@ export async function loginHandler(request: FastifyRequest, reply: FastifyReply)
       avatar_url: user.avatarUrl,
       theme_preference: user.themePreference,
     },
+  });
+}
+
+export async function registerHandler(request: FastifyRequest, reply: FastifyReply) {
+  const data = registerSchema.parse(request.body);
+
+  const user = await registerUser(data);
+
+  const token = await reply.jwtSign({
+    id: user.id, name: user.name, email: user.email, role: user.role, companyId: user.companyId,
+  });
+
+  return reply.status(201).send({
+    success: true, token,
+    user: { id: user.id, name: user.name, email: user.email, role: user.role, companyId: user.companyId },
   });
 }
 

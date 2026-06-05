@@ -7,6 +7,7 @@ interface AuthContextData {
   token: string | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<void>;
+  signUp: (name: string, email: string, password: string) => Promise<void>;
   signOut: () => void;
   updateUser: (userData: Partial<User>) => void;
   isAuthenticated: boolean;
@@ -48,6 +49,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(userData);
   }
 
+  async function signUp(name: string, email: string, password: string) {
+    const response = await api.post<AuthResponse>('/auth/register', { name, email, password });
+    const { token: newToken, user: userData } = response.data;
+
+    localStorage.setItem('@nexus:token', newToken);
+    localStorage.setItem('@nexus:user', JSON.stringify(userData));
+
+    setToken(newToken);
+    setUser(userData);
+  }
+
   function signOut() {
     localStorage.removeItem('@nexus:token');
     localStorage.removeItem('@nexus:user');
@@ -64,7 +76,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   return (
     <AuthContext.Provider
-      value={{ user, token, loading, signIn, signOut, updateUser, isAuthenticated: !!token }}
+      value={{ user, token, loading, signIn, signUp, signOut, updateUser, isAuthenticated: !!token }}
     >
       {children}
     </AuthContext.Provider>
