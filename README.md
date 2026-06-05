@@ -551,29 +551,48 @@ Acesse `http://localhost:5173` e faça login com:
 
 ---
 
-## Desenvolvedor
+## 👨‍💻 Desenvolvedor
 
 <table>
-  <tr>
-    <td rowspan="4" width="100">
-      <img src="https://github.com/claytonmarcelo.png" width="80" style="border-radius: 50%;" alt="C. Marcelo Dev.">
-    </td>
-    <td><strong>C. Marcelo Dev.</strong></td>
-  </tr>
-  <tr>
-    <td><strong>📍</strong> Brasil</td>
-  </tr>
-  <tr>
-    <td>
-      <a href="https://github.com/claytonmarcelo"><img src="https://img.shields.io/badge/GitHub-claytonmarcelo-181717?logo=github" alt="GitHub"></a>
-      <a href="https://youtube.com/@cmarcelodev"><img src="https://img.shields.io/badge/YouTube-CMarceloDev-FF0000?logo=youtube" alt="YouTube"></a>
-      <a href="https://cmarcelodev.com"><img src="https://img.shields.io/badge/Portfolio-cmarcelodev.com-000000?logo=vercel" alt="Portfolio"></a>
-      <a href="#"><img src="https://img.shields.io/badge/LinkedIn-claytonmarcelo-0A66C2?logo=linkedin" alt="LinkedIn"></a>
-    </td>
-  </tr>
-  <tr>
-    <td><em>Desenvolvedor full-stack especializado em React, Node.js e TypeScript. Apaixonado por criar soluções que simplificam a gestão de pequenas empresas.</em></td>
-  </tr>
+<tr>
+<td width="120">
+
+<img src="https://github.com/claytonmarcelo.png" width="100" alt="Clayton Marcelo">
+
+</td>
+
+<td>
+
+<h3>C. Marcelo Dev.</h3>
+
+📍 Brasil
+
+<br><br>
+
+<a href="https://github.com/claytonmarcelo" target="_blank">
+<img src="https://img.shields.io/badge/GitHub-claytonmarcelo-181717?style=for-the-badge&logo=github">
+</a>
+
+<a href="https://www.youtube.com/@c.marcelodev.brasil" target="_blank">
+<img src="https://img.shields.io/badge/YouTube-C.Marcelo.Dev-FF0000?style=for-the-badge&logo=youtube">
+</a>
+
+<a href="https://cmarcelodev.com" target="_blank">
+<img src="https://img.shields.io/badge/Portfólio-cmarcelodev.com-000000?style=for-the-badge">
+</a>
+
+<a href="https://www.linkedin.com/in/clayton-marcelo-dev/" target="_blank">
+<img src="https://img.shields.io/badge/LinkedIn-claytonmarcelo-0A66C2?style=for-the-badge&logo=linkedin">
+</a>
+
+<br><br>
+
+Desenvolvedor Full Stack especializado em React, React Native, Node.js, Fastify, TypeScript, MySQL e desenvolvimento de soluções SaaS empresariais.
+
+Criador do projeto Nexus Business Manager, plataforma ERP moderna desenvolvida para centralizar CRM, Estoque, Compras, Vendas, Financeiro, Agendamentos, Relatórios e Multiempresa em uma única solução.
+
+</td>
+</tr>
 </table>
 
 ---
