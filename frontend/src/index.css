@@ -6,26 +6,27 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  margin-bottom: 32px;
+  margin-top: 24px;
+  margin-bottom: 16px;
 }
 
 .auth-logo {
-  width: 280px !important;
-  max-width: 80%;
+  width: 380px !important;
+  max-width: 90%;
   height: auto;
   display: block;
-  filter: drop-shadow(0 8px 18px rgba(26, 13, 18, 0.12));
+  filter: drop-shadow(0 10px 22px rgba(26, 13, 18, 0.15));
 }
 
 @media (max-width: 768px) {
   .auth-logo {
-    width: 220px !important;
+    width: 320px !important;
   }
 }
 
 @media (max-width: 480px) {
   .auth-logo {
-    width: 180px !important;
+    width: 260px !important;
   }
 }
 
