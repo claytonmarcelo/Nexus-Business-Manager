@@ -61,7 +61,7 @@ export function Dashboard() {
     { label: 'Produtos', value: stats.total_products, color: 'bg-brand-roseGold/70' },
     { label: 'Fornecedores', value: stats.total_suppliers, color: 'bg-brand-champagneGold' },
     { label: 'Vendas', value: stats.total_sales, color: 'bg-brand-roseGold/70' },
-    { label: 'Estoque Baixo', value: stats.low_stock_count, color: stats.low_stock_count > 0 ? 'bg-red-500' : 'bg-gray-300' },
+    { label: 'Estoque Baixo', value: stats.low_stock_count, color: stats.low_stock_count > 0 ? 'bg-red-500' : 'bg-brand-graphiteWine' },
   ];
 
   const revenueCards = [

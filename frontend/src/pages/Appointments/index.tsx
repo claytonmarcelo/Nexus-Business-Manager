@@ -163,7 +163,7 @@ export function Appointments() {
 
       {showModal && (
         <div className="fixed inset-0 bg-brand-blackCherry/45 flex items-center justify-center z-50">
-          <div className="bg-white rounded-2xl p-8 w-full max-w-md mx-4">
+          <div className="card rounded-2xl w-full max-w-md mx-4">
             <h2 className="text-xl font-semibold mb-6">{editing ? 'Editar Agendamento' : 'Novo Agendamento'}</h2>
             {error && <div className="bg-red-50 text-red-700 px-4 py-3 rounded-lg mb-4 text-sm">{error}</div>}
             <form onSubmit={handleSubmit} className="space-y-4">

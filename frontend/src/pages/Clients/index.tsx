@@ -152,7 +152,7 @@ export function Clients() {
 
       {showModal && (
         <div className="fixed inset-0 bg-brand-blackCherry/45 flex items-center justify-center z-50">
-          <div className="bg-white rounded-2xl p-8 w-full max-w-lg mx-4">
+          <div className="card rounded-2xl w-full max-w-lg mx-4">
             <h2 className="text-xl font-semibold mb-6">
               {editingClient ? 'Editar Cliente' : 'Novo Cliente'}
             </h2>

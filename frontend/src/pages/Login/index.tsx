@@ -98,7 +98,7 @@ export function Login() {
               </div>
               {password && (
                 <div className="mt-2 space-y-1">
-                  <div className="h-1.5 rounded-full bg-gray-200 overflow-hidden">
+                  <div className="h-1.5 rounded-full overflow-hidden" style={{ background: 'rgba(183, 110, 121, 0.2)' }}>
                     <div className="h-full rounded-full transition-all duration-300" style={{ width: strength.width, background: strength.bgColor }} />
                   </div>
                   <p className="text-xs font-medium" style={{ color: strength.color }}>
