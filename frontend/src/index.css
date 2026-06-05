@@ -41,21 +41,28 @@
 
 @layer base {
   :root {
+    /* Nexus Identity Colors - Light Mode */
     --light-bg: #F7F2EC;
     --light-bg-secondary: #EFE6DC;
     --light-card: #FFFFFF;
-    --light-card-soft: #F4EEE8;
-    --light-text-primary: #1A0D12;
-    --light-text-secondary: #32252B;
-    --light-border: rgba(183, 110, 121, 0.25);
+    --light-card-soft: #F0F0F0;
+    --light-text-primary: #050505;
+    --light-text-secondary: #242424;
+    --light-border: rgba(62, 149, 143, 0.24);
+    --light-accent: #3E958F;
+    --light-accent-hover: #85D5D2;
     
+    /* Nexus Identity Colors - Dark Mode */
     --dark-bg: #050505;
     --dark-bg-secondary: #151515;
-    --dark-card: #242424;
+    --dark-card: rgba(36, 36, 36, 0.96);
     --dark-card-soft: #2E2E2E;
     --dark-text-primary: #F7F2EC;
     --dark-text-secondary: rgba(247, 242, 236, 0.72);
-    --dark-border: rgba(214, 179, 112, 0.22);
+    --dark-border: rgba(62, 149, 143, 0.24);
+    --dark-accent: #3E958F;
+    --dark-accent-hover: #85D5D2;
+    --dark-gold: #D6B370;
   }
 
   body {
@@ -66,39 +73,39 @@
     color: var(--light-text-primary);
   }
   .dark body, .dark, .dark .page-bg {
-    background: linear-gradient(180deg, var(--dark-bg) 0%, var(--dark-bg-secondary) 100%);
+    background: radial-gradient(circle at top, rgba(62, 149, 143, 0.12), transparent 34%), linear-gradient(180deg, var(--dark-bg) 0%, var(--dark-bg-secondary) 55%, #242424 100%);
     color: var(--dark-text-primary);
   }
 }
 
 @layer components {
-  /* BOTÕES */
+  /* BOTÕES - Nexus Identity Colors */
   .btn-primary {
     @apply font-medium py-2 px-4 rounded-lg transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed;
-    background: #B76E79;
+    background: var(--light-accent);
     color: #FFFFFF;
   }
   .btn-primary:hover:not(:disabled) {
-    background: #D6B370;
-    color: #1A0D12;
+    background: var(--light-accent-hover);
+    color: #050505;
   }
   .dark .btn-primary {
-    background: #B76E79;
+    background: var(--dark-accent);
     color: #F7F2EC;
   }
   .dark .btn-primary:hover:not(:disabled) {
-    background: #D6B370;
+    background: var(--dark-accent-hover);
     color: #050505;
   }
 
   .btn-secondary {
     @apply font-medium py-2 px-4 rounded-lg transition-colors duration-200;
-    background: #FFFFFF;
-    color: #1A0D12;
-    border: 1px solid rgba(183, 110, 121, 0.40);
+    background: var(--light-card);
+    color: var(--light-text-primary);
+    border: 1px solid var(--light-border);
   }
   .btn-secondary:hover {
-    background: #F4EEE8;
+    background: var(--light-bg-secondary);
   }
   .dark .btn-secondary {
     background: var(--dark-card);
@@ -113,95 +120,95 @@
     @apply bg-red-600 hover:bg-red-700 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200;
   }
 
-  /* INPUTS */
+  /* INPUTS - Nexus Identity Colors */
   .input-field {
     @apply w-full px-3 py-2 rounded-lg transition-colors duration-200;
-    background: #FFFFFF;
-    color: #1A0D12;
-    border: 1px solid rgba(183, 110, 121, 0.35);
+    background: var(--light-card);
+    color: var(--light-text-primary);
+    border: 1px solid var(--light-border);
   }
   .input-field::placeholder {
-    color: rgba(50, 37, 43, 0.55);
+    color: var(--light-text-secondary);
   }
   .input-field:focus {
     outline: none;
-    border-color: #D6B370;
-    box-shadow: 0 0 0 3px rgba(214, 179, 112, 0.18);
+    border-color: var(--light-accent);
+    box-shadow: 0 0 0 3px rgba(62, 149, 143, 0.15);
   }
   .dark .input-field {
-    background: #F7F2EC;
-    color: #050505;
-    border: 1px solid rgba(214, 179, 112, 0.35);
+    background: var(--dark-card);
+    color: var(--dark-text-primary);
+    border: 1px solid var(--dark-border);
   }
   .dark .input-field::placeholder {
-    color: rgba(26, 13, 18, 0.55);
+    color: var(--dark-text-secondary);
   }
   .dark .input-field:focus {
-    border-color: #D6B370;
-    box-shadow: 0 0 0 3px rgba(214, 179, 112, 0.16);
+    border-color: var(--dark-accent);
+    box-shadow: 0 0 0 3px rgba(62, 149, 143, 0.15);
   }
 
-  /* CARDS */
+  /* CARDS - Nexus Identity Colors */
   .card {
     @apply rounded-xl p-6 transition-colors duration-200;
     background: var(--light-card);
     border: 1px solid var(--light-border);
     color: var(--light-text-primary);
-    box-shadow: 0 18px 45px rgba(0, 0, 0, 0.10);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
   }
   .dark .card {
     background: var(--dark-card);
     border: 1px solid var(--dark-border);
     color: var(--dark-text-primary);
-    box-shadow: 0 18px 45px rgba(0, 0, 0, 0.35);
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45);
   }
 
-  /* BADGES */
+  /* BADGES - Nexus Identity Colors */
   .badge {
     @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
   }
 
   .badge-admin {
     @apply badge;
-    background: rgba(183, 110, 121, 0.20);
-    color: #B76E79;
+    background: rgba(62, 149, 143, 0.25);
+    color: var(--light-accent);
   }
   .dark .badge-admin {
-    background: rgba(183, 110, 121, 0.30);
-    color: #D6B370;
+    background: rgba(62, 149, 143, 0.25);
+    color: var(--dark-accent);
   }
 
   .badge-manager {
     @apply badge;
-    background: rgba(214, 179, 112, 0.20);
-    color: #D6B370;
+    background: rgba(62, 149, 143, 0.25);
+    color: var(--light-accent);
   }
   .dark .badge-manager {
-    background: rgba(214, 179, 112, 0.30);
-    color: #D6B370;
+    background: rgba(62, 149, 143, 0.25);
+    color: var(--dark-accent);
   }
 
   .badge-operator {
     @apply badge;
-    background: rgba(50, 37, 43, 0.20);
-    color: #32252B;
+    background: rgba(0, 0, 0, 0.10);
+    color: var(--light-text-primary);
   }
   .dark .badge-operator {
-    background: rgba(183, 110, 121, 0.20);
-    color: #B76E79;
+    background: rgba(247, 242, 236, 0.15);
+    color: var(--dark-text-primary);
   }
 
   .badge-viewer {
     @apply badge;
-    background: rgba(50, 37, 43, 0.10);
-    color: #32252B;
+    background: rgba(0, 0, 0, 0.08);
+    color: var(--light-text-secondary);
   }
   .dark .badge-viewer {
-    background: rgba(183, 110, 121, 0.15);
-    color: #B76E79;
+    background: rgba(247, 242, 236, 0.10);
+    color: var(--dark-text-secondary);
   }
 
-  /* TÍTULOS */
+  /* TÍTULOS - Nexus Identity Colors */
   .page-title {
     @apply text-2xl font-bold;
     color: var(--light-text-primary);
@@ -218,21 +225,21 @@
     color: var(--dark-text-primary);
   }
 
-  /* TABELAS */
+  /* TABELAS - Nexus Identity Colors */
   .table-header {
-    background: #1A0D12;
-    color: #F7F2EC;
+    background: var(--light-text-primary);
+    color: #FFFFFF;
   }
 
   .table-row {
-    background: #FFFFFF;
-    color: #1A0D12;
+    background: var(--light-card);
+    color: var(--light-text-primary);
   }
   .table-row:nth-child(even) {
-    background: #F7F2EC;
+    background: var(--light-bg-secondary);
   }
   .table-row:hover {
-    background: rgba(183, 110, 121, 0.10);
+    background: rgba(62, 149, 143, 0.08);
   }
   .dark .table-row {
     background: var(--dark-card);
@@ -242,11 +249,21 @@
     background: var(--dark-bg-secondary);
   }
   .dark .table-row:hover {
-    background: rgba(214, 179, 112, 0.12);
+    background: rgba(62, 149, 143, 0.12);
   }
 }
 
-/* OVERRIDES PARA TEMA ESCURO */
+/* OVERRIDES - Nexus Identity Colors */
+.text-brand-graphiteWine { color: var(--light-text-primary) !important; }
+.text-brand-graphiteWine\/60 { color: var(--light-text-secondary) !important; }
+.text-brand-graphiteWine\/70 { color: var(--light-text-secondary) !important; }
+.text-brand-graphiteWine\/80 { color: rgba(5, 5, 5, 0.80) !important; }
+.text-brand-graphiteWine\/50 { color: rgba(5, 5, 5, 0.55) !important; }
+.text-brand-graphiteWine\/40 { color: rgba(5, 5, 5, 0.45) !important; }
+.text-brand-blackCherry { color: var(--light-text-primary) !important; }
+.text-brand-blackCherry\/80 { color: rgba(5, 5, 5, 0.80) !important; }
+.text-brand-blackCherry\/70 { color: var(--light-text-secondary) !important; }
+
 .dark .text-brand-graphiteWine { color: var(--dark-text-primary) !important; }
 .dark .text-brand-graphiteWine\/60 { color: var(--dark-text-secondary) !important; }
 .dark .text-brand-graphiteWine\/70 { color: var(--dark-text-secondary) !important; }
@@ -257,64 +274,92 @@
 .dark .text-brand-blackCherry\/80 { color: rgba(247, 242, 236, 0.80) !important; }
 .dark .text-brand-blackCherry\/70 { color: var(--dark-text-secondary) !important; }
 
-/* BORDAS E DIVISORES */
+/* BORDAS E DIVISORES - Nexus Identity Colors */
+.divide-gray-100 > * { border-color: var(--light-border) !important; }
+.divide-y.divide-gray-100 > * { border-color: var(--light-border) !important; }
+.border-gray-200 { border-color: var(--light-border) !important; }
+.border-gray-600 { border-color: rgba(62, 149, 143, 0.4) !important; }
+.border-brand-ivorySmoke { border-color: rgba(62, 149, 143, 0.2) !important; }
+
 .dark .divide-gray-100 > * { border-color: var(--dark-border) !important; }
 .dark .divide-y.divide-gray-100 > * { border-color: var(--dark-border) !important; }
 .dark .border-gray-200 { border-color: var(--dark-border) !important; }
-.dark .border-gray-600 { border-color: rgba(214, 179, 112, 0.4) !important; }
-.dark .border-brand-ivorySmoke { border-color: rgba(247, 242, 236, 0.2) !important; }
+.dark .border-gray-600 { border-color: rgba(62, 149, 143, 0.4) !important; }
+.dark .border-brand-ivorySmoke { border-color: rgba(62, 149, 143, 0.2) !important; }
 
-/* FUNDOS */
+/* FUNDOS - Nexus Identity Colors */
+.bg-gray-200 { background: var(--light-card-soft) !important; }
+.bg-gray-50 { background: var(--light-card) !important; }
+.bg-brand-ivorySmoke { background: var(--light-card) !important; }
+.bg-brand-blackCherry\/50 { background: var(--light-card-soft) !important; }
+
 .dark .bg-gray-200 { background: var(--dark-card-soft) !important; }
 .dark .bg-gray-50 { background: var(--dark-card) !important; }
 .dark .bg-brand-ivorySmoke { background: var(--dark-card) !important; }
 .dark .bg-brand-blackCherry\/50 { background: var(--dark-card-soft) !important; }
 
 /* STATUS CORES - VERDE/VERMELHO */
-.dark .bg-red-50 { background: rgba(239, 68, 68, 0.15) !important; }
-.dark .bg-red-100 { background: rgba(239, 68, 68, 0.20) !important; }
-.dark .border-red-200 { border-color: rgba(239, 68, 68, 0.3) !important; }
-.dark .text-red-700 { color: #FCA5A5 !important; }
-.dark .text-red-600 { color: #E57373 !important; }
-.dark .text-red-800 { color: #E57373 !important; }
-.dark .text-red-500 { color: #E57373 !important; }
+.bg-red-50 { background: rgba(239, 68, 68, 0.15) !important; }
+.bg-red-100 { background: rgba(239, 68, 68, 0.20) !important; }
+.border-red-200 { border-color: rgba(239, 68, 68, 0.3) !important; }
+.text-red-700 { color: #FCA5A5 !important; }
+.text-red-600 { color: #E57373 !important; }
+.text-red-800 { color: #E57373 !important; }
+.text-red-500 { color: #E57373 !important; }
 
-.dark .bg-green-50 { background: rgba(76, 175, 80, 0.15) !important; }
-.dark .bg-green-100 { background: rgba(76, 175, 80, 0.20) !important; }
-.dark .bg-green-900\/20 { background: rgba(76, 175, 80, 0.15) !important; }
-.dark .border-green-200 { border-color: rgba(76, 175, 80, 0.3) !important; }
-.dark .border-green-800 { border-color: rgba(76, 175, 80, 0.5) !important; }
-.dark .text-green-600 { color: #4CAF50 !important; }
-.dark .text-green-700 { color: #4CAF50 !important; }
-.dark .text-green-800 { color: #4CAF50 !important; }
-.dark .text-green-300 { color: #81C784 !important; }
+.bg-green-50 { background: rgba(62, 149, 143, 0.15) !important; }
+.bg-green-100 { background: rgba(62, 149, 143, 0.20) !important; }
+.bg-green-900\/20 { background: rgba(62, 149, 143, 0.15) !important; }
+.border-green-200 { border-color: rgba(62, 149, 143, 0.3) !important; }
+.border-green-800 { border-color: rgba(62, 149, 143, 0.5) !important; }
+.text-green-600 { color: #3E958F !important; }
+.text-green-700 { color: #3E958F !important; }
+.text-green-800 { color: #3E958F !important; }
+.text-green-300 { color: #85D5D2 !important; }
 
-/* OUTRAS CORES */
-.dark .text-yellow-600 { color: #D6B370 !important; }
-.dark .bg-brand-roseGold\/10 { background: rgba(183, 110, 121, 0.15) !important; }
+/* OUTRAS CORES - Nexus Identity Colors */
+.text-yellow-600 { color: var(--light-accent) !important; }
+.bg-brand-primary\/10 { background: rgba(62, 149, 143, 0.15) !important; }
 
-/* MODAIS E OVERLAYS */
+.dark .text-yellow-600 { color: var(--dark-accent) !important; }
+.dark .bg-brand-primary\/10 { background: rgba(62, 149, 143, 0.15) !important; }
+
+/* MODAIS E OVERLAYS - Nexus Identity Colors */
+.fixed.inset-0 .bg-white {
+  background: var(--light-card) !important;
+  color: var(--light-text-primary) !important;
+  border: 1px solid var(--light-border) !important;
+}
+
 .dark .fixed.inset-0 .bg-white {
   background: var(--dark-card) !important;
   color: var(--dark-text-primary) !important;
   border: 1px solid var(--dark-border) !important;
 }
 
-/* HOVER STATES */
+/* HOVER STATES - Nexus Identity Colors */
+.hover\:bg-\[rgba\(214\2c 179\2c 112\2c 0\.18\)\] {
+  background: rgba(62, 149, 143, 0.12) !important;
+}
+
+.hover\:bg-brand-ivorySmoke {
+  background: var(--light-card-soft) !important;
+}
+
 .dark .hover\:bg-\[rgba\(214\2c 179\2c 112\2c 0\.18\)\] {
-  background: rgba(214, 179, 112, 0.12) !important;
+  background: rgba(62, 149, 143, 0.12) !important;
 }
 
 .dark .hover\:bg-brand-ivorySmoke {
   background: var(--dark-card-soft) !important;
 }
 
-/* CLASSES UTILITÁRIAS PARA COERÊNCIA TOTAL */
+/* CLASSES UTILITÁRIAS PARA COERÊNCIA TOTAL - Nexus Identity Colors */
 
 /* Sidebar mantém identidade escura sempre */
 .sidebar-dark {
-  background: #1A0D12 !important;
-  color: #F7F2EC !important;
+  background: var(--dark-bg) !important;
+  color: var(--dark-text-primary) !important;
 }
 
 /* Modal overlay */
@@ -327,19 +372,19 @@
 
 /* Dropdown e Select */
 .select-field {
-  background: #FFFFFF;
-  color: #1A0D12;
-  border: 1px solid rgba(183, 110, 121, 0.35);
+  background: var(--light-card);
+  color: var(--light-text-primary);
+  border: 1px solid var(--light-border);
 }
 .dark .select-field {
-  background: #F7F2EC;
-  color: #050505;
-  border: 1px solid rgba(214, 179, 112, 0.35);
+  background: var(--dark-card);
+  color: var(--dark-text-primary);
+  border: 1px solid var(--dark-border);
 }
 
 /* Toast notifications */
 .toast-success {
-  background: rgba(76, 175, 80, 0.9) !important;
+  background: rgba(62, 149, 143, 0.9) !important;
   color: #FFFFFF !important;
 }
 .toast-error {
@@ -347,68 +392,75 @@
   color: #FFFFFF !important;
 }
 .toast-warning {
-  background: rgba(214, 179, 112, 0.9) !important;
-  color: #1A0D12 !important;
+  background: rgba(62, 149, 143, 0.9) !important;
+  color: var(--light-text-primary) !important;
+}
+.dark .toast-warning {
+  color: var(--dark-text-primary) !important;
 }
 
 /* Skeleton loading */
 .skeleton {
-  background: rgba(183, 110, 121, 0.1);
+  background: rgba(0, 0, 0, 0.1);
   animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 .dark .skeleton {
-  background: rgba(214, 179, 112, 0.1);
+  background: rgba(62, 149, 143, 0.1);
 }
 
 /* Status indicators */
 .status-active {
-  background: rgba(76, 175, 80, 0.2);
-  color: #4CAF50;
+  background: rgba(62, 149, 143, 0.2);
+  color: #3E958F;
 }
 .status-inactive {
   background: rgba(239, 68, 68, 0.2);
   color: #E57373;
 }
 .dark .status-active {
-  background: rgba(76, 175, 80, 0.3);
-  color: #81C784;
+  background: rgba(62, 149, 143, 0.3);
+  color: #85D5D2;
 }
 .dark .status-inactive {
   background: rgba(239, 68, 68, 0.3);
   color: #FCA5A5;
 }
 
-/* Scrollbar styling */
+/* Scrollbar styling - Nexus Identity Colors */
 ::-webkit-scrollbar {
   width: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: rgba(183, 110, 121, 0.1);
+  background: rgba(0, 0, 0, 0.1);
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(183, 110, 121, 0.4);
+  background: rgba(0, 0, 0, 0.4);
   border-radius: 3px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(183, 110, 121, 0.6);
+  background: rgba(0, 0, 0, 0.6);
 }
 .dark ::-webkit-scrollbar-track {
-  background: rgba(214, 179, 112, 0.1);
+  background: rgba(62, 149, 143, 0.1);
 }
 .dark ::-webkit-scrollbar-thumb {
-  background: rgba(214, 179, 112, 0.4);
+  background: rgba(62, 149, 143, 0.4);
 }
 .dark ::-webkit-scrollbar-thumb:hover {
-  background: rgba(214, 179, 112, 0.6);
+  background: rgba(62, 149, 143, 0.6);
 }
 
-/* Focus states globais */
+/* Focus states globais - Nexus Identity Colors */
 *:focus {
   outline: none;
 }
 input:focus, textarea:focus, select:focus {
-  border-color: #D6B370 !important;
-  box-shadow: 0 0 0 3px rgba(214, 179, 112, 0.18) !important;
+  border-color: var(--light-accent) !important;
+  box-shadow: 0 0 0 3px rgba(62, 149, 143, 0.15) !important;
+}
+.dark input:focus, .dark textarea:focus, .dark select:focus {
+  border-color: var(--dark-accent) !important;
+  box-shadow: 0 0 0 3px rgba(62, 149, 143, 0.15) !important;
 }
 
 /* Garantir que textos tenham contraste adequado */
@@ -440,14 +492,129 @@ input:focus, textarea:focus, select:focus {
 .dark .bg-contrast-soft {
   background: var(--dark-card-soft);
 }
+
 /* Sidebar logo responsivo - Tamanho maior para melhor visualização */
 .sidebar-logo {
-  width: 200px;           /* Significativamente maior para melhor visualização */
-  max-width: 95%;
+  width: 150px;
+  max-width: 85%;
   height: auto;
   display: block;
   margin: 0 auto;
   filter: drop-shadow(0 6px 14px rgba(0, 0, 0, 0.25));
+}
+
+/* Auth logo - Login e Cadastro */
+.auth-logo {
+  width: 380px;
+  max-width: 90%;
+  height: auto;
+  display: block;
+  margin: 0 auto;
+}
+
+/* Header logo */
+.header-logo {
+  width: 120px;
+  max-width: 80%;
+  height: auto;
+}
+
+/* EFEITO DE VENTO - Nexus Identity */
+.wind-effect {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 0;
+}
+
+.wind-effect span {
+  position: absolute;
+  left: -30%;
+  width: 65%;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(133, 213, 210, 0.18),
+    rgba(214, 179, 112, 0.10),
+    transparent
+  );
+  filter: blur(0.6px);
+  animation: nexusWind 9s linear infinite;
+}
+
+.wind-effect span:nth-child(1) {
+  top: 22%;
+  animation-delay: 0s;
+}
+
+.wind-effect span:nth-child(2) {
+  top: 48%;
+  animation-delay: 3s;
+  opacity: 0.75;
+}
+
+.wind-effect span:nth-child(3) {
+  top: 72%;
+  animation-delay: 6s;
+  opacity: 0.55;
+}
+
+@keyframes nexusWind {
+  0% {
+    transform: translateX(0) skewX(-18deg);
+    opacity: 0;
+  }
+
+  12% {
+    opacity: 1;
+  }
+
+  88% {
+    opacity: 1;
+  }
+
+  100% {
+    transform: translateX(210vw) skewX(-18deg);
+    opacity: 0;
+  }
+}
+
+/* Garantir que todo conteúdo principal fique acima do efeito de vento */
+.auth-card,
+.app-layout,
+.sidebar,
+.header,
+.main-content,
+.card,
+.modal {
+  position: relative;
+  z-index: 1;
+}
+
+/* Header - Nexus Identity Colors */
+.header {
+  background: linear-gradient(180deg, #050505 0%, #151515 100%);
+  border-bottom: 1px solid rgba(62, 149, 143, 0.28);
+  padding: 1rem 2rem;
+}
+
+.header-title,
+.header-text,
+.header-user-name {
+  color: #F7F2EC;
+}
+
+.header-accent,
+.header-link,
+.header-action {
+  color: #85D5D2;
+}
+
+.header-link:hover,
+.header-action:hover {
+  color: #D6B370;
 }
 
 @media (max-width: 768px) {

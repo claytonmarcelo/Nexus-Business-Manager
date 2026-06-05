@@ -85,7 +85,7 @@ export function Companies() {
                     <td className="py-3 px-4 text-brand-graphiteWine/70">{c.document || '-'}</td>
                     <td className="py-3 px-4 text-brand-graphiteWine/70">{c.email || c.phone || '-'}</td>
                     <td className="py-3 px-4 text-right">
-                      <button onClick={() => openEdit(c)} className="text-brand-roseGold hover:text-brand-champagneGold font-medium">Editar</button>
+                      <button onClick={() => openEdit(c)} className="text-brand-primary hover:text-brand-primaryHover font-medium">Editar</button>
                     </td>
                   </tr>
                 ))}

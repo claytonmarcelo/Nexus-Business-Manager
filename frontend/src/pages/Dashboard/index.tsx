@@ -7,7 +7,7 @@ import {
   PieChart, Pie, Cell, Legend,
 } from 'recharts';
 
-const COLORS = ['#B76E79', '#D6B370', '#32252B', '#8B5F5F', '#C49A6C', '#4A3840', '#A0796A'];
+const COLORS = ['#3E958F', '#D6B370', '#32252B', '#8B5F5F', '#C49A6C', '#4A3840', '#A0796A'];
 
 export function Dashboard() {
   const { user } = useAuth();
@@ -58,9 +58,9 @@ export function Dashboard() {
 
   const cards = [
     { label: 'Clientes', value: stats.total_clients, color: 'bg-brand-champagneGold' },
-    { label: 'Produtos', value: stats.total_products, color: 'bg-brand-roseGold/70' },
-    { label: 'Fornecedores', value: stats.total_suppliers, color: 'bg-brand-champagneGold' },
-    { label: 'Vendas', value: stats.total_sales, color: 'bg-brand-roseGold/70' },
+    { label: 'Produtos', value: stats.total_products, color: 'bg-brand-primary/70' },
+    { label: 'Fornecedores', value: stats.total_suppliers, color: 'bg-brand-ivorySmoke' },
+    { label: 'Vendas', value: stats.total_sales, color: 'bg-brand-primary/70' },
     { label: 'Estoque Baixo', value: stats.low_stock_count, color: stats.low_stock_count > 0 ? 'bg-red-500' : 'bg-brand-graphiteWine' },
   ];
 
@@ -121,7 +121,7 @@ export function Dashboard() {
               <XAxis dataKey="label" fontSize={12} />
               <YAxis fontSize={12} />
               <Tooltip />
-              <Bar dataKey="value" fill="#B76E79" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="value" fill="#3E958F" radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>
@@ -143,7 +143,7 @@ export function Dashboard() {
 
         <div className="card">
           <h3 className="section-title">Valor em Estoque</h3>
-          <p className="text-4xl font-bold mb-4" style={{ color: '#B76E79' }}>
+          <p className="text-4xl font-bold mb-4" style={{ color: '#3E958F' }}>
             {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(stats.stock_value)}
           </p>
           <div className="space-y-3 text-sm text-brand-graphiteWine/70">

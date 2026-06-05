@@ -83,7 +83,7 @@ export function Appointments() {
   }
 
   const statusBadge: Record<string, string> = {
-    scheduled: 'bg-brand-roseGold/20 text-brand-roseGold',
+    scheduled: 'bg-brand-primary/20 text-brand-primary',
     completed: 'bg-green-100 text-green-800',
     cancelled: 'bg-red-100 text-red-800',
   };
@@ -150,7 +150,7 @@ export function Appointments() {
                           <button onClick={() => handleStatusChange(a.id, 'cancelled')} className="text-red-600 hover:text-red-800 font-medium">Cancelar</button>
                         </>
                       )}
-                      <button onClick={() => openEdit(a)} className="text-brand-roseGold hover:text-brand-champagneGold font-medium">Editar</button>
+                      <button onClick={() => openEdit(a)} className="text-brand-primary hover:text-brand-primaryHover font-medium">Editar</button>
                       <button onClick={() => handleDelete(a.id)} className="text-red-600 hover:text-red-800 font-medium">Excluir</button>
                     </td>
                   </tr>

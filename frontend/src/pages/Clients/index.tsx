@@ -139,7 +139,7 @@ export function Clients() {
                       </span>
                     </td>
                     <td className="py-3 px-4 text-right space-x-2">
-                      <button onClick={() => openEdit(client)} className="text-brand-roseGold hover:text-brand-champagneGold font-medium">Editar</button>
+                      <button onClick={() => openEdit(client)} className="text-brand-primary hover:text-brand-primaryHover font-medium">Editar</button>
                       <button onClick={() => handleDelete(client.id)} className="text-red-600 hover:text-red-800 font-medium">Excluir</button>
                     </td>
                   </tr>

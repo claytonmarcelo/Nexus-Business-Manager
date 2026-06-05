@@ -100,6 +100,10 @@ export async function updateUser(id: number, data: UpdateUserInput): Promise<Use
     if (currentUser.email === 'marcelolimadez@gmail.com' && data.role !== 'admin') {
       throw new AppError('Este usuario administrador e reservado para testes do sistema e nao pode ser rebaixado.', 403);
     }
+    // Prevent non-admins from promoting users to admin role
+    if (data.role === 'admin') {
+      throw new AppError('Apenas administradores podem promover usuarios ao cargo de admin.', 403);
+    }
     fields.push('role = ?'); values.push(data.role);
   }
   if (data.active !== undefined) { fields.push('active = ?'); values.push(data.active); }

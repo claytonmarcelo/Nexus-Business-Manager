@@ -90,7 +90,7 @@ export function Login() {
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-sm"
-                  style={{ color: '#B76E79' }}
+                  style={{ color: '#3E958F' }}
                   tabIndex={-1}
                 >
                   {showPassword ? 'Ocultar' : 'Mostrar'}
@@ -120,7 +120,7 @@ export function Login() {
 
           <p className="mt-6 text-center text-sm" style={{ color: 'rgba(247, 242, 236, 0.72)' }}>
             Nao tem conta?{' '}
-            <Link to="/register" className="text-brand-roseGold hover:text-brand-champagneGold font-medium transition-colors">
+            <Link to="/register" className="text-brand-primary hover:text-brand-primaryHover font-medium transition-colors">
               Fazer cadastro
             </Link>
           </p>

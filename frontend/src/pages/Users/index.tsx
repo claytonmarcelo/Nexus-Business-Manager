@@ -125,7 +125,7 @@ export function Users() {
                       </span>
                     </td>
                     <td className="py-3 px-4 text-right space-x-2">
-                      <button onClick={() => openEdit(user)} className="text-brand-roseGold hover:text-brand-champagneGold font-medium">Editar</button>
+                      <button onClick={() => openEdit(user)} className="text-brand-primary hover:text-brand-primaryHover font-medium">Editar</button>
                       <button onClick={() => handleToggleActive(user)} className={`font-medium ${user.active ? 'text-red-600 hover:text-red-800' : 'text-green-600 hover:text-green-800'}`}>
                         {user.active ? 'Desativar' : 'Ativar'}
                       </button>

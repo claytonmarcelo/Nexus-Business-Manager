@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { Layout } from './components/Layout';
+import { WindEffect } from './components/WindEffect';
 import { Login } from './pages/Login';
 import { Register } from './pages/Register';
 import { Dashboard } from './pages/Dashboard';
@@ -19,6 +20,7 @@ import { Reports } from './pages/Reports';
 import { Notifications } from './pages/Notifications';
 import { Audit } from './pages/Audit';
 import { Companies } from './pages/Companies';
+import { Profile } from './pages/Profile';
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, loading } = useAuth();
@@ -91,6 +93,7 @@ function AppRoutes() {
         <Route path="audit" element={<Audit />} />
         <Route path="companies" element={<Companies />} />
         <Route path="about" element={<About />} />
+        <Route path="profile" element={<Profile />} />
       </Route>
       <Route path="*" element={<Navigate to="/dashboard" replace />} />
     </Routes>
@@ -102,6 +105,7 @@ export default function App() {
     <BrowserRouter>
       <AuthProvider>
         <ThemeProvider>
+          <WindEffect />
           <AppRoutes />
         </ThemeProvider>
       </AuthProvider>

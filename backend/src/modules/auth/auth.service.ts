@@ -60,7 +60,7 @@ export async function registerUser(data: RegisterInput) {
       name: data.name,
       email: data.email,
       passwordHash,
-      role: 'ADMIN',
+      role: 'viewer',
       active: true,
     },
     select: {

@@ -20,6 +20,7 @@ import {
   UsersIcon,
   Cog6ToothIcon,
   InformationCircleIcon,
+  BuildingOfficeIcon,
 } from '@heroicons/react/24/solid';
 
 const navItems = [
@@ -31,6 +32,7 @@ const navItems = [
   { to: '/purchases', label: 'Compras', icon: ShoppingCartIcon },
   { to: '/sales', label: 'Vendas', icon: CurrencyDollarIcon },
   { to: '/financial', label: 'Financeiro', icon: CreditCardIcon },
+  { to: '/crm', label: 'CRM', icon: BuildingOfficeIcon },
   { to: '/appointments', label: 'Agenda', icon: CalendarDaysIcon },
   { to: '/reports', label: 'Relatórios', icon: ChartPieIcon },
   { to: '/notifications', label: 'Notificações', icon: BellIcon },
@@ -63,23 +65,22 @@ export function Sidebar() {
       showToast('Tipo de arquivo nao permitido. Use jpg, png ou webp.', 'error');
       return;
     }
-    if (file.size > 2 * 1024 * 1024) {
-      showToast('Arquivo muito grande. Maximo 2MB.', 'error');
+    if (file.size > 5 * 1024 * 1024) {
+      showToast('Arquivo muito grande. Maximo 5MB.', 'error');
       return;
     }
     setAvatarLoading(true);
     try {
       const formData = new FormData();
       formData.append('avatar', file);
-      const res = await api.post('/users/avatar', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      });
+      const res = await api.post('/users/avatar', formData);
       const avatarUrl = res.data.data?.avatar_url;
       if (avatarUrl) {
         updateUser({ avatar_url: avatarUrl, avatarUrl });
       }
       showToast('Avatar atualizado com sucesso.');
-    } catch {
+    } catch (error) {
+      console.error('Erro ao atualizar avatar:', error);
       showToast('Erro ao atualizar avatar.', 'error');
     } finally {
       setAvatarLoading(false);
@@ -113,7 +114,7 @@ export function Sidebar() {
   const initials = user?.name?.charAt(0).toUpperCase() || '?';
 
   return (
-    <aside className="w-64 bg-brand-blackCherry text-brand-ivorySmoke min-h-screen flex flex-col">
+    <aside className="w-64 bg-nexus-black text-nexus-text min-h-screen flex flex-col">
       <div className="p-8 flex items-center justify-center">
         <img 
           src="/logo.png" 
@@ -134,27 +135,27 @@ export function Sidebar() {
                 className={({ isActive }) =>
                   `flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold transition-all min-h-[44px] ${
                     isActive
-                      ? 'text-brand-champagneGold'
-                      : 'text-brand-ivorySmoke/80 hover:text-brand-ivorySmoke'
+                      ? 'text-nexus-tealLight'
+                      : 'text-nexus-textSecondary hover:text-nexus-text'
                   }`
                 }
                 style={({ isActive }: { isActive: boolean }) => 
                   isActive 
                     ? { 
-                        backgroundColor: 'rgba(214, 179, 112, 0.16)',
-                        border: '1px solid rgba(214, 179, 112, 0.28)'
+                        backgroundColor: 'rgba(62, 149, 143, 0.16)',
+                        border: '1px solid rgba(62, 149, 143, 0.28)'
                       } 
                     : { border: '1px solid transparent' }
                 }
                 onMouseEnter={(e) => {
                   const el = e.currentTarget;
-                  if (!el.classList.contains('text-brand-champagneGold')) {
-                    el.style.backgroundColor = 'rgba(183, 110, 121, 0.16)';
+                  if (!el.classList.contains('text-nexus-tealLight')) {
+                    el.style.backgroundColor = 'rgba(62, 149, 143, 0.12)';
                   }
                 }}
                 onMouseLeave={(e) => {
                   const el = e.currentTarget;
-                  if (!el.classList.contains('text-brand-champagneGold')) {
+                  if (!el.classList.contains('text-nexus-tealLight')) {
                     el.style.backgroundColor = '';
                   }
                 }}
@@ -162,7 +163,7 @@ export function Sidebar() {
                 <span 
                   className="w-9 h-9 min-w-[34px] flex items-center justify-center rounded-xl"
                   style={{
-                    background: 'linear-gradient(145deg, rgba(214, 179, 112, 0.22), rgba(183, 110, 121, 0.18))',
+                    background: 'linear-gradient(145deg, rgba(62, 149, 143, 0.22), rgba(133, 213, 210, 0.18))',
                     boxShadow: 'inset 0 1px 1px rgba(255,255,255,0.12), 0 6px 14px rgba(0,0,0,0.25)'
                   }}
                 >
@@ -173,73 +174,6 @@ export function Sidebar() {
             );
           })}
       </nav>
-
-      <div className="p-4 border-t border-brand-graphiteWine space-y-2">
-        <div className="flex items-center gap-3">
-          <button
-            onClick={handleAvatarClick}
-            disabled={avatarLoading}
-            className="w-9 h-9 rounded-full bg-brand-roseGold flex items-center justify-center text-sm font-bold overflow-hidden flex-shrink-0 hover:opacity-80 transition-opacity cursor-pointer"
-            title="Clique para alterar avatar"
-          >
-            {avatarLoading ? (
-              <span className="animate-spin text-xs">{'\u21BB'}</span>
-            ) : avatarSrc ? (
-              <img src={avatarSrc} alt={user?.name} className="w-full h-full object-cover" />
-            ) : (
-              initials
-            )}
-          </button>
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/jpeg,image/png,image/webp"
-            className="hidden"
-            onChange={handleAvatarUpload}
-          />
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium truncate">{user?.name}</p>
-            <p className="text-xs capitalize" style={{ color: '#B76E79' }}>{user?.role}</p>
-          </div>
-        </div>
-
-        <button
-          onClick={toggleTheme}
-          className="w-full flex items-center gap-2 text-left text-sm py-1.5 transition-colors"
-          style={{ color: '#B76E79' }}
-        >
-          <span className="text-base">{theme === 'dark' ? '\u2600' : '\u263E'}</span>
-          {theme === 'dark' ? 'Tema Claro' : 'Tema Escuro'}
-        </button>
-
-        <button
-          onClick={handleClearCache}
-          disabled={cacheLoading}
-          className="w-full flex items-center gap-2 text-left text-sm py-1.5 transition-colors disabled:opacity-50"
-          style={{ color: '#B76E79' }}
-        >
-          <span className={`text-base inline-block ${cacheLoading ? 'animate-spin' : ''}`}>
-            {'\u21BB'}
-          </span>
-          {cacheLoading ? 'Limpando...' : 'Limpar Cache'}
-        </button>
-
-        <button
-          onClick={() => navigate('/about')}
-          className="w-full text-left text-sm py-1.5 transition-colors"
-          style={{ color: '#B76E79' }}
-        >
-          Sobre
-        </button>
-
-        <button
-          onClick={signOut}
-          className="w-full text-left text-sm py-1.5 transition-colors"
-          style={{ color: '#B76E79' }}
-        >
-          Sair
-        </button>
-      </div>
     </aside>
   );
 }

@@ -155,7 +155,7 @@ export function Purchases() {
                     )}
                   </div>
                 ))}
-                <button type="button" onClick={addItem} className="text-brand-roseGold hover:text-brand-champagneGold text-sm font-medium">+ Adicionar item</button>
+                <button type="button" onClick={addItem} className="text-brand-primary hover:text-brand-primaryHover text-sm font-medium">+ Adicionar item</button>
               </div>
 
               <div>
