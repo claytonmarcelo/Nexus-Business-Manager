@@ -32,11 +32,11 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   primary: {
-    backgroundColor: colors.roseGold,
+    backgroundColor: colors.nexusTeal,
   },
   outline: {
     borderWidth: 1,
-    borderColor: colors.roseGold,
+    borderColor: colors.nexusTeal,
   },
   disabled: {
     opacity: 0.5,
@@ -49,6 +49,6 @@ const styles = StyleSheet.create({
     color: "#FFF",
   },
   outlineText: {
-    color: colors.roseGold,
+    color: colors.nexusTeal,
   },
 });

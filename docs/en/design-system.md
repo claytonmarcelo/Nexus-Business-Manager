@@ -5,7 +5,7 @@
 | Name           | Code       | Usage                  |
 |----------------|------------|------------------------|
 | Black Cherry   | `#1A0D12`  | Main background        |
-| Rose Gold      | `#B76E79`  | Primary actions        |
+| Nexus Teal     | `#3E958F`  | Primary actions        |
 | Champagne Gold | `#D6B370`  | Secondary highlights   |
 | Ivory Smoke    | `#F7F2EC`  | Main text              |
 | Graphite Wine  | `#32252B`  | Surfaces and cards     |

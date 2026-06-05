@@ -65,7 +65,7 @@ export const actionsStyle: React.CSSProperties = {
 
 export const confirmButtonStyle: React.CSSProperties = {
   flex: 1,
-  backgroundColor: colors.roseGold,
+  backgroundColor: colors.nexusTeal,
   borderRadius: radius.md,
   padding: "12px 16px",
   border: "none",
@@ -78,13 +78,13 @@ export const confirmButtonStyle: React.CSSProperties = {
 
 export const cancelButtonStyle: React.CSSProperties = {
   flex: 1,
-  border: `1px solid ${colors.roseGold}`,
+  border: `1px solid ${colors.nexusTeal}`,
   borderRadius: radius.md,
   padding: "12px 16px",
   cursor: "pointer",
   fontWeight: 600,
   fontSize: 15,
-  color: colors.roseGold,
+  color: colors.nexusTeal,
   backgroundColor: "transparent",
   textAlign: "center",
 };

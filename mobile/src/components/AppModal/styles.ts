@@ -64,7 +64,7 @@ export const styles = StyleSheet.create({
   },
   confirmButton: {
     flex: 1,
-    backgroundColor: colors.roseGold,
+    backgroundColor: colors.nexusTeal,
     borderRadius: radius.md,
     paddingVertical: spacing.sm + 4,
     alignItems: "center",
@@ -77,13 +77,13 @@ export const styles = StyleSheet.create({
   cancelButton: {
     flex: 1,
     borderWidth: 1,
-    borderColor: colors.roseGold,
+    borderColor: colors.nexusTeal,
     borderRadius: radius.md,
     paddingVertical: spacing.sm + 4,
     alignItems: "center",
   },
   cancelText: {
-    color: colors.roseGold,
+    color: colors.nexusTeal,
     fontWeight: "600",
     fontSize: 15,
   },
