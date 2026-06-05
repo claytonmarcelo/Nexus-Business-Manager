@@ -570,19 +570,19 @@ Access `http://localhost:5173` and log in with:
 <br><br>
 
 <a href="https://github.com/claytonmarcelo" target="_blank">
-<img src="https://img.shields.io/badge/GitHub-claytonmarcelo-181717?style=for-the-badge&logo=github">
+<img src="https://img.shields.io/badge/GitHub-claytonmarcelo-181717?style=flat-square&logo=github">
 </a>
 
 <a href="https://www.youtube.com/@c.marcelodev.brasil" target="_blank">
-<img src="https://img.shields.io/badge/YouTube-C.Marcelo.Dev-FF0000?style=for-the-badge&logo=youtube">
+<img src="https://img.shields.io/badge/YouTube-CMarceloDev-FF0000?style=flat-square&logo=youtube">
 </a>
 
 <a href="https://cmarcelodev.com" target="_blank">
-<img src="https://img.shields.io/badge/Portfolio-cmarcelodev.com-000000?style=for-the-badge">
+<img src="https://img.shields.io/badge/Portfolio-cmarcelodev.com-000000?style=flat-square">
 </a>
 
 <a href="https://www.linkedin.com/in/clayton-marcelo-dev/" target="_blank">
-<img src="https://img.shields.io/badge/LinkedIn-claytonmarcelo-0A66C2?style=for-the-badge&logo=linkedin">
+<img src="https://img.shields.io/badge/LinkedIn-claytonmarcelo-0A66C2?style=flat-square&logo=linkedin">
 </a>
 
 <br><br>
