@@ -4,23 +4,40 @@ import api from '../../services/api';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useToast } from '../../contexts/ToastContext';
+import {
+  ChartBarIcon,
+  UserGroupIcon,
+  TruckIcon,
+  CubeIcon,
+  ClipboardDocumentListIcon,
+  ShoppingCartIcon,
+  CurrencyDollarIcon,
+  CreditCardIcon,
+  CalendarDaysIcon,
+  ChartPieIcon,
+  BellIcon,
+  ShieldCheckIcon,
+  UsersIcon,
+  Cog6ToothIcon,
+  InformationCircleIcon,
+} from '@heroicons/react/24/solid';
 
 const navItems = [
-  { to: '/dashboard', label: 'Dashboard', icon: 'D' },
-  { to: '/users', label: 'Usuarios', icon: 'U', roles: ['admin', 'manager'] },
-  { to: '/clients', label: 'Clientes', icon: 'C' },
-  { to: '/suppliers', label: 'Fornecedores', icon: 'F' },
-  { to: '/products', label: 'Produtos', icon: 'P' },
-  { to: '/stock', label: 'Estoque', icon: 'E' },
-  { to: '/purchases', label: 'Compras', icon: 'C' },
-  { to: '/sales', label: 'Vendas', icon: 'V' },
-  { to: '/financial', label: 'Financeiro', icon: '$' },
-  { to: '/appointments', label: 'Agenda', icon: 'A' },
-  { to: '/reports', label: 'Relatorios', icon: 'R' },
-  { to: '/notifications', label: 'Notificacoes', icon: 'N' },
-  { to: '/audit', label: 'Auditoria', icon: 'L', roles: ['admin', 'manager'] },
-  { to: '/companies', label: 'Empresas', icon: 'M', roles: ['admin'] },
-  { to: '/about', label: 'Sobre', icon: '?' },
+  { to: '/dashboard', label: 'Dashboard', icon: ChartBarIcon },
+  { to: '/clients', label: 'Clientes', icon: UserGroupIcon },
+  { to: '/suppliers', label: 'Fornecedores', icon: TruckIcon },
+  { to: '/products', label: 'Produtos', icon: CubeIcon },
+  { to: '/stock', label: 'Estoque', icon: ClipboardDocumentListIcon },
+  { to: '/purchases', label: 'Compras', icon: ShoppingCartIcon },
+  { to: '/sales', label: 'Vendas', icon: CurrencyDollarIcon },
+  { to: '/financial', label: 'Financeiro', icon: CreditCardIcon },
+  { to: '/appointments', label: 'Agenda', icon: CalendarDaysIcon },
+  { to: '/reports', label: 'Relatórios', icon: ChartPieIcon },
+  { to: '/notifications', label: 'Notificações', icon: BellIcon },
+  { to: '/audit', label: 'Auditoria', icon: ShieldCheckIcon, roles: ['admin', 'manager'] },
+  { to: '/users', label: 'Usuários', icon: UsersIcon, roles: ['admin', 'manager'] },
+  { to: '/companies', label: 'Empresas', icon: Cog6ToothIcon, roles: ['admin'] },
+  { to: '/about', label: 'Sobre', icon: InformationCircleIcon },
 ];
 
 const STORAGE_KEYS_TO_KEEP = ['@nexus:token', '@nexus:user', '@nexus:theme'];
@@ -97,46 +114,65 @@ export function Sidebar() {
 
   return (
     <aside className="w-64 bg-brand-blackCherry text-brand-ivorySmoke min-h-screen flex flex-col">
-      <div className="p-6 border-b border-brand-graphiteWine">
-        <h1 className="text-xl font-bold tracking-tight" style={{ color: '#D6B370' }}>Nexus</h1>
-        <p className="text-sm mt-1" style={{ color: '#B76E79' }}>Business Manager</p>
+      <div className="p-6 flex items-center justify-center">
+        <img 
+          src="/logo.png" 
+          alt="Nexus Business Manager" 
+          className="w-32 h-auto max-w-[80%] block mx-auto"
+          style={{ filter: 'drop-shadow(0 6px 14px rgba(0, 0, 0, 0.25))' }}
+        />
       </div>
 
-      <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
+      <nav className="flex-1 px-4 pb-4 space-y-2 overflow-y-auto">
         {navItems
           .filter((item) => !item.roles || item.roles.includes(user?.role || ''))
-          .map((item) => (
-            <NavLink
-              key={item.to}
-              to={item.to}
-              className={({ isActive }) =>
-                `flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors ${
-                  isActive
-                    ? 'text-brand-champagneGold font-bold'
-                    : 'text-brand-ivorySmoke/70 hover:text-brand-ivorySmoke'
-                }`
-              }
-              style={({ isActive }: { isActive: boolean }) => isActive ? { backgroundColor: 'rgba(214, 179, 112, 0.18)' } : undefined}
-              onMouseEnter={(e) => {
-                const el = e.currentTarget;
-                if (!el.classList.contains('text-brand-champagneGold')) {
-                  el.style.backgroundColor = 'rgba(183, 110, 121, 0.16)';
+          .map((item) => {
+            const Icon = item.icon;
+            return (
+              <NavLink
+                key={item.to}
+                to={item.to}
+                className={({ isActive }) =>
+                  `flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold transition-all min-h-[44px] ${
+                    isActive
+                      ? 'text-brand-champagneGold'
+                      : 'text-brand-ivorySmoke/80 hover:text-brand-ivorySmoke'
+                  }`
                 }
-              }}
-              onMouseLeave={(e) => {
-                const el = e.currentTarget;
-                if (!el.classList.contains('text-brand-champagneGold')) {
-                  el.style.backgroundColor = '';
+                style={({ isActive }: { isActive: boolean }) => 
+                  isActive 
+                    ? { 
+                        backgroundColor: 'rgba(214, 179, 112, 0.16)',
+                        border: '1px solid rgba(214, 179, 112, 0.28)'
+                      } 
+                    : { border: '1px solid transparent' }
                 }
-              }}
-              onClick={() => {}}
-            >
-              <span className="w-8 h-8 flex items-center justify-center bg-brand-graphiteWine rounded-lg text-xs font-bold">
-                {item.icon}
-              </span>
-              {item.label}
-            </NavLink>
-          ))}
+                onMouseEnter={(e) => {
+                  const el = e.currentTarget;
+                  if (!el.classList.contains('text-brand-champagneGold')) {
+                    el.style.backgroundColor = 'rgba(183, 110, 121, 0.16)';
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  const el = e.currentTarget;
+                  if (!el.classList.contains('text-brand-champagneGold')) {
+                    el.style.backgroundColor = '';
+                  }
+                }}
+              >
+                <span 
+                  className="w-9 h-9 min-w-[34px] flex items-center justify-center rounded-xl"
+                  style={{
+                    background: 'linear-gradient(145deg, rgba(214, 179, 112, 0.22), rgba(183, 110, 121, 0.18))',
+                    boxShadow: 'inset 0 1px 1px rgba(255,255,255,0.12), 0 6px 14px rgba(0,0,0,0.25)'
+                  }}
+                >
+                  <Icon className="w-5 h-5" />
+                </span>
+                <span className="font-semibold">{item.label}</span>
+              </NavLink>
+            );
+          })}
       </nav>
 
       <div className="p-4 border-t border-brand-graphiteWine space-y-2">

@@ -3,26 +3,26 @@ export function About() {
     <div className="max-w-4xl mx-auto space-y-8">
       <div>
         <h1 className="text-3xl font-bold text-brand-blackCherry dark:text-brand-ivorySmoke mb-2">Sobre o Nexus Business Manager</h1>
-        <p className="text-brand-graphiteWine/60 dark:text-brand-roseGold">Sistema ERP SaaS completo para gestao empresarial</p>
+        <p className="text-brand-graphiteWine/60 dark:text-brand-roseGold">Sistema ERP SaaS completo para gestão empresarial</p>
       </div>
 
       <section className="card">
-        <h2 className="text-xl font-semibold text-brand-blackCherry dark:text-brand-ivorySmoke mb-4">O que e</h2>
+        <h2 className="text-xl font-semibold text-brand-blackCherry dark:text-brand-ivorySmoke mb-4">O que é</h2>
         <p className="text-brand-graphiteWine/80 dark:text-brand-ivorySmoke/80 mb-4">
-          O <strong>Nexus Business Manager</strong> e um sistema ERP (Enterprise Resource Planning) completo,
+          O <strong>Nexus Business Manager</strong> é um sistema ERP (Enterprise Resource Planning) completo,
           desenvolvido em plataforma moderna com React, Node.js e TypeScript.
         </p>
         <p className="text-brand-graphiteWine/80 dark:text-brand-ivorySmoke/80">
-          Ele unifica em um unico sistema todas as areas de gestao de uma empresa: CRM, Estoque,
-          Compras, Vendas, Financeiro, Agendamentos, Relatorios e muito mais.
+          Ele unifica em um único sistema todas as áreas de gestão de uma empresa: CRM, Estoque,
+          Compras, Vendas, Financeiro, Agendamentos, Relatórios e muito mais.
         </p>
       </section>
 
       <section className="card">
         <h2 className="text-xl font-semibold text-brand-blackCherry dark:text-brand-ivorySmoke mb-4">Objetivo</h2>
         <p className="text-brand-graphiteWine/80 dark:text-brand-ivorySmoke/80">
-          Oferecer uma ferramenta profissional, gratuita e de codigo aberto que permita a
-          pequenas e medias empresas centralizarem sua gestao sem depender de multiplas
+          Oferecer uma ferramenta profissional, gratuita e de código aberto que permita a
+          pequenas e médias empresas centralizarem sua gestão sem depender de múltiplas
           ferramentas pagas ou planilhas desconectadas.
         </p>
       </section>
@@ -31,11 +31,11 @@ export function About() {
         <h2 className="text-xl font-semibold text-brand-blackCherry dark:text-brand-ivorySmoke mb-4">Problemas que resolve</h2>
         <ul className="space-y-2 text-brand-graphiteWine/80 dark:text-brand-ivorySmoke/80">
           <li className="flex gap-2"><span className="text-brand-roseGold mt-1">&#8226;</span> Dados espalhados em planilhas e sistemas diferentes</li>
-          <li className="flex gap-2"><span className="text-brand-roseGold mt-1">&#8226;</span> Retrabalho ao inserir informacoes repetidas</li>
-          <li className="flex gap-2"><span className="text-brand-roseGold mt-1">&#8226;</span> Dificuldade em gerar relatorios gerenciais</li>
+          <li className="flex gap-2"><span className="text-brand-roseGold mt-1">&#8226;</span> Retrabalho ao inserir informações repetidas</li>
+          <li className="flex gap-2"><span className="text-brand-roseGold mt-1">&#8226;</span> Dificuldade em gerar relatórios gerenciais</li>
           <li className="flex gap-2"><span className="text-brand-roseGold mt-1">&#8226;</span> Falta de controle de estoque em tempo real</li>
           <li className="flex gap-2"><span className="text-brand-roseGold mt-1">&#8226;</span> Dificuldade em acompanhar fluxo de caixa</li>
-          <li className="flex gap-2"><span className="text-brand-roseGold mt-1">&#8226;</span> Ausencia de historico de auditoria</li>
+          <li className="flex gap-2"><span className="text-brand-roseGold mt-1">&#8226;</span> Ausência de histórico de auditoria</li>
         </ul>
       </section>
 
@@ -43,22 +43,22 @@ export function About() {
         <h2 className="text-xl font-semibold text-brand-blackCherry dark:text-brand-ivorySmoke mb-4">Quem pode utilizar</h2>
         <ul className="space-y-2 text-brand-graphiteWine/80 dark:text-brand-ivorySmoke/80">
           <li className="flex gap-2"><span className="text-brand-roseGold mt-1">&#8226;</span> Lojas de varejo e atacado</li>
-          <li className="flex gap-2"><span className="text-brand-roseGold mt-1">&#8226;</span> Prestadores de servicos (oficinas, consultorios, escritorios)</li>
-          <li className="flex gap-2"><span className="text-brand-roseGold mt-1">&#8226;</span> Pequenas industrias e distribuidoras</li>
-          <li className="flex gap-2"><span className="text-brand-roseGold mt-1">&#8226;</span> Profissionais autonomos</li>
-          <li className="flex gap-2"><span className="text-brand-roseGold mt-1">&#8226;</span> Escritorios de contabilidade</li>
+          <li className="flex gap-2"><span className="text-brand-roseGold mt-1">&#8226;</span> Prestadores de serviços (oficinas, consultórios, escritórios)</li>
+          <li className="flex gap-2"><span className="text-brand-roseGold mt-1">&#8226;</span> Pequenas indústrias e distribuidoras</li>
+          <li className="flex gap-2"><span className="text-brand-roseGold mt-1">&#8226;</span> Profissionais autônomos</li>
+          <li className="flex gap-2"><span className="text-brand-roseGold mt-1">&#8226;</span> Escritórios de contabilidade</li>
           <li className="flex gap-2"><span className="text-brand-roseGold mt-1">&#8226;</span> Franquias e grupos empresariais (multiempresa)</li>
         </ul>
       </section>
 
       <section className="card">
-        <h2 className="text-xl font-semibold text-brand-blackCherry dark:text-brand-ivorySmoke mb-4">Beneficios</h2>
+        <h2 className="text-xl font-semibold text-brand-blackCherry dark:text-brand-ivorySmoke mb-4">Benefícios</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-brand-graphiteWine/80 dark:text-brand-ivorySmoke/80">
           <div className="p-4 rounded-lg bg-brand-ivorySmoke dark:bg-brand-blackCherry/50">
-            <strong>Centralizacao:</strong> Todos os dados em um so lugar
+            <strong>Centralização:</strong> Todos os dados em um só lugar
           </div>
           <div className="p-4 rounded-lg bg-brand-ivorySmoke dark:bg-brand-blackCherry/50">
-            <strong>Economia:</strong> Substitui multiplas ferramentas pagas
+            <strong>Economia:</strong> Substitui múltiplas ferramentas pagas
           </div>
           <div className="p-4 rounded-lg bg-brand-ivorySmoke dark:bg-brand-blackCherry/50">
             <strong>Escalabilidade:</strong> Arquitetura preparada para crescer
@@ -67,10 +67,10 @@ export function About() {
             <strong>Multiempresa:</strong> Gerencie quantas empresas precisar
           </div>
           <div className="p-4 rounded-lg bg-brand-ivorySmoke dark:bg-brand-blackCherry/50">
-            <strong>Codigo aberto:</strong> Liberdade para customizar e estender
+            <strong>Código aberto:</strong> Liberdade para customizar e estender
           </div>
           <div className="p-4 rounded-lg bg-brand-ivorySmoke dark:bg-brand-blackCherry/50">
-            <strong>Seguranca:</strong> Auditoria, permissoes e criptografia
+            <strong>Segurança:</strong> Auditoria, permissões e criptografia
           </div>
         </div>
       </section>
@@ -78,102 +78,102 @@ export function About() {
       <section className="card">
         <h2 className="text-xl font-semibold text-brand-blackCherry dark:text-brand-ivorySmoke mb-4">Estrutura SaaS</h2>
         <p className="text-brand-graphiteWine/80 dark:text-brand-ivorySmoke/80 mb-4">
-          O Nexus e projetado como um sistema SaaS (Software as a Service) multiusuario.
-          Uma unica instalacao do sistema pode atender multiplas empresas simultaneamente,
+          O Nexus é projetado como um sistema SaaS (Software as a Service) multiusuário.
+          Uma única instalação do sistema pode atender múltiplas empresas simultaneamente,
           com isolamento completo de dados entre elas.
         </p>
         <p className="text-brand-graphiteWine/80 dark:text-brand-ivorySmoke/80 mb-4">
-          Cada empresa possui seu proprio ambiente com usuarios, clientes, produtos,
-          vendas e financas separados. Nenhuma empresa tem acesso aos dados de outra.
+          Cada empresa possui seu próprio ambiente com usuários, clientes, produtos,
+          vendas e finanças separados. Nenhuma empresa tem acesso aos dados de outra.
         </p>
         <p className="text-brand-graphiteWine/80 dark:text-brand-ivorySmoke/80">
           Isso torna o Nexus ideal para:
-          Franquias, grupos empresariais, prestadores de servico SaaS,
-          e empresas que desejam separar unidades de negocio.
+          Franquias, grupos empresariais, prestadores de serviço SaaS,
+          e empresas que desejam separar unidades de negócio.
         </p>
       </section>
 
       <section className="card">
         <h2 className="text-xl font-semibold text-brand-blackCherry dark:text-brand-ivorySmoke mb-4">Multiempresa</h2>
         <p className="text-brand-graphiteWine/80 dark:text-brand-ivorySmoke/80 mb-4">
-          O suporte a multiplas empresas e nativo na arquitetura do sistema:
+          O suporte a múltiplas empresas é nativo na arquitetura do sistema:
         </p>
         <ul className="space-y-2 text-brand-graphiteWine/80 dark:text-brand-ivorySmoke/80">
           <li className="flex gap-2"><span className="text-brand-roseGold mt-1">&#8226;</span> Cada tabela possui uma coluna <code className="text-xs bg-brand-ivorySmoke dark:bg-brand-graphiteWine px-1 rounded">company_id</code></li>
           <li className="flex gap-2"><span className="text-brand-roseGold mt-1">&#8226;</span> Todas as consultas incluem filtro por empresa</li>
-          <li className="flex gap-2"><span className="text-brand-roseGold mt-1">&#8226;</span> O token JWT contem o identificador da empresa</li>
-          <li className="flex gap-2"><span className="text-brand-roseGold mt-1">&#8226;</span> Isolamento completo: empresas nao veem dados umas das outras</li>
-          <li className="flex gap-2"><span className="text-brand-roseGold mt-1">&#8226;</span> Usuarios pertencem a uma unica empresa</li>
+          <li className="flex gap-2"><span className="text-brand-roseGold mt-1">&#8226;</span> O token JWT contém o identificador da empresa</li>
+          <li className="flex gap-2"><span className="text-brand-roseGold mt-1">&#8226;</span> Isolamento completo: empresas não veem dados umas das outras</li>
+          <li className="flex gap-2"><span className="text-brand-roseGold mt-1">&#8226;</span> Usuários pertencem a uma única empresa</li>
         </ul>
       </section>
 
       <section className="card">
-        <h2 className="text-xl font-semibold text-brand-blackCherry dark:text-brand-ivorySmoke mb-4">Seguranca</h2>
+        <h2 className="text-xl font-semibold text-brand-blackCherry dark:text-brand-ivorySmoke mb-4">Segurança</h2>
         <p className="text-brand-graphiteWine/80 dark:text-brand-ivorySmoke/80 mb-4">
-          O sistema implementa multiplas camadas de seguranca para proteger os dados:
+          O sistema implementa múltiplas camadas de segurança para proteger os dados:
         </p>
         <ul className="space-y-2 text-brand-graphiteWine/80 dark:text-brand-ivorySmoke/80">
-          <li className="flex gap-2"><span className="text-brand-roseGold mt-1">&#8226;</span> Autenticacao via JWT com tokens expiraveis</li>
+          <li className="flex gap-2"><span className="text-brand-roseGold mt-1">&#8226;</span> Autenticação via JWT com tokens expiráveis</li>
           <li className="flex gap-2"><span className="text-brand-roseGold mt-1">&#8226;</span> Senhas armazenadas com bcrypt (hash seguro com salt)</li>
-          <li className="flex gap-2"><span className="text-brand-roseGold mt-1">&#8226;</span> Rate limiting para prevenir ataques de forca bruta</li>
-          <li className="flex gap-2"><span className="text-brand-roseGold mt-1">&#8226;</span> Helmet para headers HTTP de seguranca</li>
+          <li className="flex gap-2"><span className="text-brand-roseGold mt-1">&#8226;</span> Rate limiting para prevenir ataques de força bruta</li>
+          <li className="flex gap-2"><span className="text-brand-roseGold mt-1">&#8226;</span> Helmet para headers HTTP de segurança</li>
           <li className="flex gap-2"><span className="text-brand-roseGold mt-1">&#8226;</span> CORS com controle de origens permitidas</li>
-          <li className="flex gap-2"><span className="text-brand-roseGold mt-1">&#8226;</span> Validacao rigorosa de entrada com Zod</li>
-          <li className="flex gap-2"><span className="text-brand-roseGold mt-1">&#8226;</span> Hierarquia de permissoes (admin, manager, operator, viewer)</li>
+          <li className="flex gap-2"><span className="text-brand-roseGold mt-1">&#8226;</span> Validação rigorosa de entrada com Zod</li>
+          <li className="flex gap-2"><span className="text-brand-roseGold mt-1">&#8226;</span> Hierarquia de permissões (admin, manager, operator, viewer)</li>
           <li className="flex gap-2"><span className="text-brand-roseGold mt-1">&#8226;</span> Isolamento multiempresa por company_id</li>
-          <li className="flex gap-2"><span className="text-brand-roseGold mt-1">&#8226;</span> Auditoria de todas as acoes com IP e data</li>
-          <li className="flex gap-2"><span className="text-brand-roseGold mt-1">&#8226;</span> Senhas unicas: nenhum usuario pode usar senha de outro</li>
+          <li className="flex gap-2"><span className="text-brand-roseGold mt-1">&#8226;</span> Auditoria de todas as ações com IP e data</li>
+          <li className="flex gap-2"><span className="text-brand-roseGold mt-1">&#8226;</span> Senhas únicas: nenhum usuário pode usar senha de outro</li>
         </ul>
       </section>
 
       <section className="card">
         <h2 className="text-xl font-semibold text-brand-blackCherry dark:text-brand-ivorySmoke mb-4">Auditoria</h2>
         <p className="text-brand-graphiteWine/80 dark:text-brand-ivorySmoke/80 mb-4">
-          Todas as acoes realizadas no sistema sao registradas no modulo de auditoria:
+          Todas as ações realizadas no sistema são registradas no módulo de auditoria:
         </p>
         <ul className="space-y-2 text-brand-graphiteWine/80 dark:text-brand-ivorySmoke/80">
-          <li className="flex gap-2"><span className="text-brand-roseGold mt-1">&#8226;</span> Criacao, alteracao e exclusao de registros</li>
-          <li className="flex gap-2"><span className="text-brand-roseGold mt-1">&#8226;</span> Login e logout de usuarios</li>
-          <li className="flex gap-2"><span className="text-brand-roseGold mt-1">&#8226;</span> Exportacao de relatorios</li>
-          <li className="flex gap-2"><span className="text-brand-roseGold mt-1">&#8226;</span> Valores antigos e novos de cada alteracao</li>
-          <li className="flex gap-2"><span className="text-brand-roseGold mt-1">&#8226;</span> Endereco IP do usuario</li>
-          <li className="flex gap-2"><span className="text-brand-roseGold mt-1">&#8226;</span> Data e hora precisas de cada acao</li>
+          <li className="flex gap-2"><span className="text-brand-roseGold mt-1">&#8226;</span> Criação, alteração e exclusão de registros</li>
+          <li className="flex gap-2"><span className="text-brand-roseGold mt-1">&#8226;</span> Login e logout de usuários</li>
+          <li className="flex gap-2"><span className="text-brand-roseGold mt-1">&#8226;</span> Exportação de relatórios</li>
+          <li className="flex gap-2"><span className="text-brand-roseGold mt-1">&#8226;</span> Valores antigos e novos de cada alteração</li>
+          <li className="flex gap-2"><span className="text-brand-roseGold mt-1">&#8226;</span> Endereço IP do usuário</li>
+          <li className="flex gap-2"><span className="text-brand-roseGold mt-1">&#8226;</span> Data e hora precisas de cada ação</li>
         </ul>
       </section>
 
       <section className="card">
         <h2 className="text-xl font-semibold text-brand-blackCherry dark:text-brand-ivorySmoke mb-4">Escalabilidade</h2>
         <p className="text-brand-graphiteWine/80 dark:text-brand-ivorySmoke/80 mb-4">
-          O Nexus foi construido com arquitetura modular e principios de escalabilidade:
+          O Nexus foi construído com arquitetura modular e princípios de escalabilidade:
         </p>
         <ul className="space-y-2 text-brand-graphiteWine/80 dark:text-brand-ivorySmoke/80">
-          <li className="flex gap-2"><span className="text-brand-roseGold mt-1">&#8226;</span> Modulos independentes e desacoplados</li>
-          <li className="flex gap-2"><span className="text-brand-roseGold mt-1">&#8226;</span> Separação por dominio de negocio</li>
-          <li className="flex gap-2"><span className="text-brand-roseGold mt-1">&#8226;</span> Preparado para implantacao SaaS</li>
-          <li className="flex gap-2"><span className="text-brand-roseGold mt-1">&#8226;</span> Facil integracao com servicos externos</li>
+          <li className="flex gap-2"><span className="text-brand-roseGold mt-1">&#8226;</span> Módulos independentes e desacoplados</li>
+          <li className="flex gap-2"><span className="text-brand-roseGold mt-1">&#8226;</span> Separação por domínio de negócio</li>
+          <li className="flex gap-2"><span className="text-brand-roseGold mt-1">&#8226;</span> Preparado para implantação SaaS</li>
+          <li className="flex gap-2"><span className="text-brand-roseGold mt-1">&#8226;</span> Fácil integração com serviços externos</li>
           <li className="flex gap-2"><span className="text-brand-roseGold mt-1">&#8226;</span> API REST documentada e consistente</li>
           <li className="flex gap-2"><span className="text-brand-roseGold mt-1">&#8226;</span> Testes automatizados garantindo qualidade</li>
         </ul>
       </section>
 
       <section className="card">
-        <h2 className="text-xl font-semibold text-brand-blackCherry dark:text-brand-ivorySmoke mb-4">Niveis de usuarios</h2>
+        <h2 className="text-xl font-semibold text-brand-blackCherry dark:text-brand-ivorySmoke mb-4">Níveis de usuários</h2>
         <div className="space-y-4">
           <div className="p-4 rounded-lg border border-brand-roseGold/30 dark:border-brand-roseGold/40">
             <h3 className="font-semibold text-brand-roseGold mb-2">Administrador</h3>
-            <p className="text-sm text-brand-graphiteWine/80 dark:text-brand-ivorySmoke/80">Controle total do sistema. Pode gerenciar usuarios, empresas, configuracoes e auditar todas as acoes.</p>
+            <p className="text-sm text-brand-graphiteWine/80 dark:text-brand-ivorySmoke/80">Controle total do sistema. Pode gerenciar usuários, empresas, configurações e auditar todas as ações.</p>
           </div>
           <div className="p-4 rounded-lg border border-brand-champagneGold/30 dark:border-brand-champagneGold/40">
             <h3 className="font-semibold text-brand-champagneGold mb-2">Gerente</h3>
-            <p className="text-sm text-brand-graphiteWine/80 dark:text-brand-ivorySmoke/80">Controle operacional. Pode gerenciar cadastros, operacoes e visualizar relatorios gerenciais.</p>
+            <p className="text-sm text-brand-graphiteWine/80 dark:text-brand-ivorySmoke/80">Controle operacional. Pode gerenciar cadastros, operações e visualizar relatórios gerenciais.</p>
           </div>
           <div className="p-4 rounded-lg border border-green-200 dark:border-green-800">
             <h3 className="font-semibold text-green-700 dark:text-green-300 mb-2">Operador</h3>
-            <p className="text-sm text-brand-graphiteWine/80 dark:text-brand-ivorySmoke/80">Pode realizar cadastros e operacoes do dia a dia, como registrar vendas, compras e movimentacoes.</p>
+            <p className="text-sm text-brand-graphiteWine/80 dark:text-brand-ivorySmoke/80">Pode realizar cadastros e operações do dia a dia, como registrar vendas, compras e movimentações.</p>
           </div>
           <div className="p-4 rounded-lg border border-gray-200 dark:border-gray-600">
             <h3 className="font-semibold text-brand-blackCherry dark:text-brand-ivorySmoke mb-2">Visualizador</h3>
-            <p className="text-sm text-brand-graphiteWine/80 dark:text-brand-ivorySmoke/80">Acesso somente leitura. Pode consultar dados e gerar relatorios, mas nao pode criar ou alterar registros.</p>
+            <p className="text-sm text-brand-graphiteWine/80 dark:text-brand-ivorySmoke/80">Acesso somente leitura. Pode consultar dados e gerar relatórios, mas não pode criar ou alterar registros.</p>
           </div>
         </div>
       </section>
@@ -181,13 +181,13 @@ export function About() {
       <section className="card">
         <h2 className="text-xl font-semibold text-brand-blackCherry dark:text-brand-ivorySmoke mb-4">Direitos e Deveres</h2>
 
-        <h3 className="text-lg font-medium text-brand-blackCherry dark:text-brand-ivorySmoke mt-6 mb-3">Usuario</h3>
+        <h3 className="text-lg font-medium text-brand-blackCherry dark:text-brand-ivorySmoke mt-6 mb-3">Usuário</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
           <div className="p-4 rounded-lg bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800">
             <h4 className="font-semibold text-green-700 dark:text-green-300 mb-2">Direitos</h4>
             <ul className="space-y-1 text-sm text-brand-graphiteWine/80 dark:text-brand-ivorySmoke/80">
               <li className="flex gap-2"><span className="text-green-500">&#10003;</span> Utilizar recursos autorizados</li>
-              <li className="flex gap-2"><span className="text-green-500">&#10003;</span> Atualizar o proprio perfil</li>
+              <li className="flex gap-2"><span className="text-green-500">&#10003;</span> Atualizar o próprio perfil</li>
               <li className="flex gap-2"><span className="text-green-500">&#10003;</span> Consultar dados permitidos</li>
               <li className="flex gap-2"><span className="text-green-500">&#10003;</span> Solicitar suporte</li>
             </ul>
@@ -195,8 +195,8 @@ export function About() {
           <div className="p-4 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800">
             <h4 className="font-semibold text-red-700 dark:text-red-300 mb-2">Deveres</h4>
             <ul className="space-y-1 text-sm text-brand-graphiteWine/80 dark:text-brand-ivorySmoke/80">
-              <li className="flex gap-2"><span className="text-red-500">&#8226;</span> Nao compartilhar a senha</li>
-              <li className="flex gap-2"><span className="text-red-500">&#8226;</span> Nao acessar dados indevidos</li>
+              <li className="flex gap-2"><span className="text-red-500">&#8226;</span> Não compartilhar a senha</li>
+              <li className="flex gap-2"><span className="text-red-500">&#8226;</span> Não acessar dados indevidos</li>
               <li className="flex gap-2"><span className="text-red-500">&#8226;</span> Utilizar o sistema corretamente</li>
               <li className="flex gap-2"><span className="text-red-500">&#8226;</span> Manter dados atualizados</li>
             </ul>
@@ -208,22 +208,72 @@ export function About() {
           <div className="p-4 rounded-lg bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800">
             <h4 className="font-semibold text-green-700 dark:text-green-300 mb-2">Direitos</h4>
             <ul className="space-y-1 text-sm text-brand-graphiteWine/80 dark:text-brand-ivorySmoke/80">
-              <li className="flex gap-2"><span className="text-green-500">&#10003;</span> Gerenciar usuarios</li>
+              <li className="flex gap-2"><span className="text-green-500">&#10003;</span> Gerenciar usuários</li>
               <li className="flex gap-2"><span className="text-green-500">&#10003;</span> Configurar a empresa</li>
-              <li className="flex gap-2"><span className="text-green-500">&#10003;</span> Gerenciar permissoes</li>
+              <li className="flex gap-2"><span className="text-green-500">&#10003;</span> Gerenciar permissões</li>
               <li className="flex gap-2"><span className="text-green-500">&#10003;</span> Visualizar auditoria</li>
             </ul>
           </div>
           <div className="p-4 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800">
             <h4 className="font-semibold text-red-700 dark:text-red-300 mb-2">Deveres</h4>
             <ul className="space-y-1 text-sm text-brand-graphiteWine/80 dark:text-brand-ivorySmoke/80">
-              <li className="flex gap-2"><span className="text-red-500">&#8226;</span> Garantir seguranca dos dados</li>
+              <li className="flex gap-2"><span className="text-red-500">&#8226;</span> Garantir segurança dos dados</li>
               <li className="flex gap-2"><span className="text-red-500">&#8226;</span> Gerenciar acessos corretamente</li>
               <li className="flex gap-2"><span className="text-red-500">&#8226;</span> Proteger dados da empresa</li>
-              <li className="flex gap-2"><span className="text-red-500">&#8226;</span> Manter usuarios atualizados</li>
+              <li className="flex gap-2"><span className="text-red-500">&#8226;</span> Manter usuários atualizados</li>
             </ul>
           </div>
         </div>
+      </section>
+
+      <section className="card">
+        <h2 className="text-xl font-semibold text-brand-blackCherry dark:text-brand-ivorySmoke mb-4">Tecnologias</h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-brand-graphiteWine/80 dark:text-brand-ivorySmoke/80">
+          <div className="p-4 rounded-lg bg-brand-ivorySmoke dark:bg-brand-blackCherry/50">
+            <strong>Frontend:</strong>
+            <ul className="mt-2 space-y-1 text-sm">
+              <li>• React 18</li>
+              <li>• TypeScript</li>
+              <li>• Tailwind CSS</li>
+              <li>• Vite</li>
+            </ul>
+          </div>
+          <div className="p-4 rounded-lg bg-brand-ivorySmoke dark:bg-brand-blackCherry/50">
+            <strong>Backend:</strong>
+            <ul className="mt-2 space-y-1 text-sm">
+              <li>• Node.js</li>
+              <li>• Express</li>
+              <li>• Prisma ORM</li>
+              <li>• PostgreSQL</li>
+            </ul>
+          </div>
+          <div className="p-4 rounded-lg bg-brand-ivorySmoke dark:bg-brand-blackCherry/50">
+            <strong>Segurança:</strong>
+            <ul className="mt-2 space-y-1 text-sm">
+              <li>• JWT</li>
+              <li>• bcrypt</li>
+              <li>• Helmet</li>
+              <li>• Zod</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <section className="card">
+        <h2 className="text-xl font-semibold text-brand-blackCherry dark:text-brand-ivorySmoke mb-4">Finalidade do Projeto</h2>
+        <p className="text-brand-graphiteWine/80 dark:text-brand-ivorySmoke/80 mb-4">
+          O Nexus Business Manager foi criado como um projeto de código aberto com a missão de democratizar
+          o acesso a ferramentas profissionais de gestão empresarial.
+        </p>
+        <p className="text-brand-graphiteWine/80 dark:text-brand-ivorySmoke/80 mb-4">
+          Muitas pequenas e médias empresas não conseguem investir em sistemas ERP comerciais que custam
+          milhares de reais por mês. Ao mesmo tempo, gerenciar uma empresa com planilhas dispersas e
+          ferramentas desconectadas gera ineficiência e perda de oportunidades.
+        </p>
+        <p className="text-brand-graphiteWine/80 dark:text-brand-ivorySmoke/80">
+          Este projeto oferece uma alternativa completa, profissional e gratuita, permitindo que
+          qualquer empresa, independente do seu tamanho, tenha acesso a uma gestão integrada e eficiente.
+        </p>
       </section>
     </div>
   );
