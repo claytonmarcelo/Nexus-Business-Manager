@@ -2,6 +2,33 @@
 @tailwind components;
 @tailwind utilities;
 
+.auth-logo-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 32px;
+}
+
+.auth-logo {
+  width: 280px !important;
+  max-width: 80%;
+  height: auto;
+  display: block;
+  filter: drop-shadow(0 8px 18px rgba(26, 13, 18, 0.12));
+}
+
+@media (max-width: 768px) {
+  .auth-logo {
+    width: 220px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .auth-logo {
+    width: 180px !important;
+  }
+}
+
 @keyframes slide-in {
   from { transform: translateX(100%); opacity: 0; }
   to { transform: translateX(0); opacity: 1; }

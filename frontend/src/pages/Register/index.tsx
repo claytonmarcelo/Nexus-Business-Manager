@@ -1,6 +1,7 @@
 import { useState, FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
+import { AuthLogo } from '../../components/AuthLogo';
 
 export function Register() {
   const [name, setName] = useState('');
@@ -29,14 +30,7 @@ export function Register() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#F7F2EC] to-[#EEE6DD]">
       <div className="w-full max-w-md">
-        <div className="flex justify-center mb-8">
-          <img
-            src="/logo.png"
-            alt="Nexus Business Manager"
-            className="w-[180px] sm:w-[220px] md:w-[260px] h-auto"
-            style={{ filter: 'drop-shadow(0 8px 18px rgba(26,13,18,0.12))' }}
-          />
-        </div>
+        <AuthLogo />
 
         <div className="rounded-2xl p-8 bg-white border border-brand-champagneGold/45" style={{ boxShadow: '0 16px 40px rgba(26, 13, 18, 0.12)' }}>
           <h2 className="text-2xl font-semibold mb-2 text-brand-blackCherry">Criar conta</h2>
