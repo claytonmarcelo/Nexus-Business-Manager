@@ -118,8 +118,7 @@ export function Sidebar() {
         <img 
           src="/logo.png" 
           alt="Nexus Business Manager" 
-          className="w-32 h-auto max-w-[80%] block mx-auto"
-          style={{ filter: 'drop-shadow(0 6px 14px rgba(0, 0, 0, 0.25))' }}
+          className="sidebar-logo"
         />
       </div>
 
