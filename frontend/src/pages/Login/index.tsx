@@ -47,16 +47,12 @@ export function Login() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#F7F2EC] to-[#EEE6DD]">
       <div className="w-full max-w-md">
-        <div className="text-center mb-8">
-          <div className="flex justify-center mb-6">
-            <img
-              src="/logo.png"
-              alt="Nexus Business Manager"
-              className="w-[120px] sm:w-[150px] md:w-[180px] h-auto"
-            />
-          </div>
-          <h1 className="text-4xl font-bold tracking-tight text-brand-blackCherry">Nexus</h1>
-          <p className="mt-2 text-brand-roseGold">Business Manager</p>
+        <div className="flex justify-center mb-8">
+          <img
+            src="/logo.png"
+            alt="Nexus Business Manager"
+            className="w-[110px] sm:w-[128px] md:w-[142px] h-auto"
+          />
         </div>
 
         <div className="rounded-2xl p-8 bg-white border border-brand-champagneGold/45" style={{ boxShadow: '0 16px 40px rgba(26, 13, 18, 0.12)' }}>
