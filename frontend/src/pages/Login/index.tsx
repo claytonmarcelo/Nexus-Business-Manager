@@ -48,11 +48,11 @@ export function Login() {
     <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: '#1A0D12' }}>
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <div className="flex justify-center mb-4">
+          <div className="flex justify-center mb-6">
             <img
               src="/assets/branding/logo.png"
               alt="Nexus Business Manager"
-              className="h-16"
+              className="w-[120px] sm:w-[150px] md:w-[180px] h-auto"
             />
           </div>
           <h1 className="text-4xl font-bold tracking-tight" style={{ color: '#D6B370' }}>Nexus</h1>
