@@ -51,7 +51,8 @@ export function Login() {
           <img
             src="/logo.png"
             alt="Nexus Business Manager"
-            className="w-[110px] sm:w-[128px] md:w-[142px] h-auto"
+            className="w-[180px] sm:w-[220px] md:w-[260px] h-auto"
+            style={{ filter: 'drop-shadow(0 8px 18px rgba(26,13,18,0.12))' }}
           />
         </div>
 
