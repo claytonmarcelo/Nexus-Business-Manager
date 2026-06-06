@@ -28,7 +28,6 @@ import {
 
 const navItems = [
   { to: '/dashboard', label: 'Dashboard', icon: ChartBarIcon },
-  { to: '/nexus-ai', label: 'Nexus AI', icon: SparklesIcon },
   { to: '/clients', label: 'Clientes', icon: UserGroupIcon },
   { to: '/suppliers', label: 'Fornecedores', icon: TruckIcon },
   { to: '/products', label: 'Produtos', icon: CubeIcon },
@@ -37,13 +36,14 @@ const navItems = [
   { to: '/sales', label: 'Vendas', icon: CurrencyDollarIcon },
   { to: '/financial', label: 'Financeiro', icon: CreditCardIcon },
   { to: '/crm', label: 'CRM', icon: BuildingOfficeIcon },
+  { to: '/nexus-ai', label: 'Nexus AI', icon: SparklesIcon },
   { to: '/suggestions', label: 'Sugestoes', icon: LightBulbIcon },
   { to: '/appointments', label: 'Agenda', icon: CalendarDaysIcon },
   { to: '/reports', label: 'Relatorios', icon: ChartPieIcon },
   { to: '/notifications', label: 'Notificacoes', icon: BellIcon },
   { to: '/audit', label: 'Auditoria', icon: ShieldCheckIcon, roles: ['admin', 'manager'] },
   { to: '/users', label: 'Usuarios', icon: UsersIcon, roles: ['admin', 'manager'] },
-  { to: '/companies', label: 'Empresas', icon: Cog6ToothIcon, roles: ['admin'] },
+  { to: '/companies', label: 'Configuracoes', icon: Cog6ToothIcon, roles: ['admin'] },
   { to: '/about', label: 'Sobre', icon: InformationCircleIcon },
 ];
 

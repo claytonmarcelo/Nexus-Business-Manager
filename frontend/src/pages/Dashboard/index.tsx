@@ -9,13 +9,17 @@ import {
 } from 'recharts';
 import { UserGroupIcon, CurrencyDollarIcon, ArrowTrendingUpIcon, BanknotesIcon } from '@heroicons/react/24/solid';
 import { NexusAIInsights } from '../../components/ai/NexusAIInsights';
+import { StatsCard } from '../../components/ui/StatsCard';
 
 const GOLD = '#D49556';
-const SUCCESS = '#9BE37A';
-const ROSE = '#c96f78';
-const MUTED = '#8f8580';
+const SUCCESS = '#7DDA6A';
+const ROSE = '#C65A71';
+const GRAY = '#A8A8A8';
+const WHITE = '#FFFFFF';
+const DANGER = '#D84B5F';
+const WARNING = '#D89A28';
 
-const chartColors = [GOLD, ROSE, '#60a5fa', SUCCESS, '#a78bfa', '#f472b6', MUTED];
+const chartColors = [GOLD, ROSE, '#60a5fa', SUCCESS, '#a78bfa', '#f472b6', GRAY];
 
 const mockStock = [
   { product: 'Teclado Mecanico RGB', category: 'Perifericos', qty: 45, min: 20, status: 'normal' as const },
@@ -100,15 +104,15 @@ export function Dashboard() {
     return (
       <div>
         <div className="mb-8">
-          <p className="text-sm text-nexus-muted capitalize">{dateStr}</p>
-          <h1 className="text-2xl font-bold text-nexus-text mt-1">{greeting}, {user?.name}!</h1>
+          <p className="text-sm capitalize" style={{color: 'var(--nexus-muted)'}}>{dateStr}</p>
+          <h1 className="text-2xl font-bold mt-1" style={{color: 'var(--nexus-text)'}}>{greeting}, {user?.name}!</h1>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 mb-8">
           {[1, 2, 3, 4].map(i => (
             <div key={i} className="kpi-card animate-pulse">
-              <div className="h-4 bg-nexus-card-soft rounded w-20 mb-3" />
-              <div className="h-8 bg-nexus-card-soft rounded w-28 mb-2" />
-              <div className="h-3 bg-nexus-card-soft rounded w-16" />
+              <div className="h-4 rounded w-20 mb-3" style={{background: 'var(--nexus-card-soft)'}} />
+              <div className="h-8 rounded w-28 mb-2" style={{background: 'var(--nexus-card-soft)'}} />
+              <div className="h-3 rounded w-16" style={{background: 'var(--nexus-card-soft)'}} />
             </div>
           ))}
         </div>
@@ -123,34 +127,32 @@ export function Dashboard() {
     {
       label: 'Clientes',
       value: stats ? formatNumber(stats.total_clients) : '0',
-      icon: UserGroupIcon,
-      colorClass: 'blue',
-      change: '+12.5%',
-      changeType: 'up' as const,
+      icon: <UserGroupIcon className="w-5 h-5" />,
+      color: 'blue' as const,
+      trend: { value: '+12.5%', direction: 'up' as const },
     },
     {
       label: 'Vendas',
       value: stats ? formatCurrency(stats.total_revenue) : 'R$ 0',
-      icon: CurrencyDollarIcon,
-      colorClass: 'gold',
-      change: '+8.2%',
-      changeType: 'up' as const,
+      icon: <CurrencyDollarIcon className="w-5 h-5" />,
+      color: 'gold' as const,
+      trend: { value: '+8.2%', direction: 'up' as const },
     },
     {
       label: 'Receitas',
       value: data && charts ? formatCurrency(charts.salesByMonth.reduce((s, m) => s + m.value, 0)) : 'R$ 0',
-      icon: ArrowTrendingUpIcon,
-      colorClass: 'green',
-      change: '+15.3%',
-      changeType: 'up' as const,
+      icon: <ArrowTrendingUpIcon className="w-5 h-5" />,
+      color: 'green' as const,
+      trend: { value: '+15.3%', direction: 'up' as const },
     },
     {
       label: 'Lucro',
       value: stats ? formatCurrency(stats.balance) : 'R$ 0',
-      icon: BanknotesIcon,
-      colorClass: 'rose',
-      change: stats && stats.balance < 0 ? '-3.2%' : '+5.7%',
-      changeType: stats && stats.balance < 0 ? 'down' as const : 'up' as const,
+      icon: <BanknotesIcon className="w-5 h-5" />,
+      color: 'rose' as const,
+      trend: stats && stats.balance < 0
+        ? { value: '-3.2%', direction: 'down' as const }
+        : { value: '+5.7%', direction: 'up' as const },
     },
   ];
 
@@ -164,36 +166,30 @@ export function Dashboard() {
     <div>
       <div className="mb-8 flex items-center justify-between">
         <div>
-          <p className="text-sm text-nexus-muted capitalize">{dateStr}</p>
-          <h1 className="text-2xl font-bold text-nexus-text mt-1">{greeting}, {user?.name}!</h1>
+          <p className="text-sm capitalize" style={{color: 'var(--nexus-muted)'}}>{dateStr}</p>
+          <h1 className="text-2xl font-bold mt-1" style={{color: 'var(--nexus-text)'}}>{greeting}, {user?.name}!</h1>
         </div>
         <button
           onClick={() => navigate('/nexus-ai')}
-          className="hidden sm:flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-nexus-gold border border-nexus-border hover:bg-nexus-card transition-colors"
+          className="hidden sm:flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium border transition-colors"
+          style={{color: 'var(--nexus-gold)', borderColor: 'var(--nexus-border)', background: 'var(--nexus-card)'}}
         >
-          <span className="w-2 h-2 rounded-full bg-nexus-gold animate-pulse" />
+          <span className="w-2 h-2 rounded-full animate-pulse" style={{background: 'var(--nexus-gold)'}} />
           Nexus AI Online
         </button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 mb-8">
-        {cards.map((card) => {
-          const Icon = card.icon;
-          return (
-            <div key={card.label} className={`kpi-card ${card.colorClass}`}>
-              <div className="flex items-center justify-between mb-3">
-                <span className="text-xs font-medium text-nexus-muted-2 uppercase tracking-wider">{card.label}</span>
-                <div className={`kpi-icon ${card.colorClass}`}>
-                  <Icon className="w-5 h-5" />
-                </div>
-              </div>
-              <p className="text-2xl font-bold text-nexus-text mb-1">{card.value}</p>
-              <span className={`text-xs font-medium ${card.changeType === 'up' ? 'change-up' : 'change-down'}`}>
-                {card.change} {card.changeType === 'up' ? '\u2191' : '\u2193'}
-              </span>
-            </div>
-          );
-        })}
+        {cards.map((card) => (
+          <StatsCard
+            key={card.label}
+            label={card.label}
+            value={card.value}
+            icon={card.icon}
+            color={card.color}
+            trend={card.trend}
+          />
+        ))}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
@@ -201,7 +197,7 @@ export function Dashboard() {
           <div className="flex items-center justify-between mb-4">
             <h3 className="chart-title mb-0">Vendas dos Ultimos 7 Dias</h3>
             {totalSalesRevenue > 0 && (
-              <span className="text-xs text-nexus-muted-2">
+              <span className="text-xs" style={{color: 'var(--nexus-muted-2)'}}>
                 Total: {formatCurrency(totalSalesRevenue)}
               </span>
             )}
@@ -210,8 +206,8 @@ export function Dashboard() {
             <AreaChart data={areaData}>
               <AreaChartGradient />
               <CartesianGrid strokeDasharray="3 3" stroke="rgba(212, 149, 86, 0.08)" />
-              <XAxis dataKey="name" fontSize={12} tick={{ fill: MUTED }} axisLine={false} tickLine={false} />
-              <YAxis fontSize={12} tick={{ fill: MUTED }} axisLine={false} tickLine={false} />
+              <XAxis dataKey="name" fontSize={12} tick={{ fill: GRAY }} axisLine={false} tickLine={false} />
+              <YAxis fontSize={12} tick={{ fill: GRAY }} axisLine={false} tickLine={false} />
               <Tooltip
                 contentStyle={{
                   background: 'rgba(11, 13, 16, 0.95)',
@@ -257,7 +253,7 @@ export function Dashboard() {
             {donutData.map((entry, index) => (
               <div key={entry.label} className="flex items-center gap-1.5">
                 <span className="w-2.5 h-2.5 rounded-full" style={{ background: chartColors[index % chartColors.length] }} />
-                <span className="text-xs text-nexus-muted">{entry.label}</span>
+                <span className="text-xs" style={{color: 'var(--nexus-muted)'}}>{entry.label}</span>
               </div>
             ))}
           </div>
@@ -268,7 +264,13 @@ export function Dashboard() {
         <div className="chart-card lg:col-span-2">
           <div className="flex items-center justify-between mb-4">
             <h3 className="chart-title mb-0">Estoque</h3>
-            <button onClick={() => navigate('/stock')} className="text-xs text-nexus-gold hover:text-nexus-text transition-colors font-medium">
+            <button
+              onClick={() => navigate('/stock')}
+              className="text-xs font-medium transition-colors"
+              style={{color: 'var(--nexus-gold)'}}
+              onMouseEnter={(e) => e.currentTarget.style.color = 'var(--nexus-text)'}
+              onMouseLeave={(e) => e.currentTarget.style.color = 'var(--nexus-gold)'}
+            >
               Ver todos
             </button>
           </div>
@@ -289,9 +291,9 @@ export function Dashboard() {
                   return (
                     <tr key={i}>
                       <td className="font-medium">{item.product}</td>
-                      <td className="hidden sm:table-cell text-nexus-muted">{item.category}</td>
+                      <td className="hidden sm:table-cell" style={{color: 'var(--nexus-muted)'}}>{item.category}</td>
                       <td>
-                        <span className={item.qty <= item.min ? 'text-nexus-danger' : ''}>
+                        <span style={item.qty <= item.min ? {color: DANGER} : {}}>
                           {item.qty}
                         </span>
                       </td>
@@ -312,7 +314,13 @@ export function Dashboard() {
         <div className="chart-card">
           <div className="flex items-center justify-between mb-4">
             <h3 className="chart-title mb-0">Atividades Recentes</h3>
-            <button onClick={() => navigate('/notifications')} className="text-xs text-nexus-gold hover:text-nexus-text transition-colors font-medium">
+            <button
+              onClick={() => navigate('/notifications')}
+              className="text-xs font-medium transition-colors"
+              style={{color: 'var(--nexus-gold)'}}
+              onMouseEnter={(e) => e.currentTarget.style.color = 'var(--nexus-text)'}
+              onMouseLeave={(e) => e.currentTarget.style.color = 'var(--nexus-gold)'}
+            >
               Ver todas
             </button>
           </div>
@@ -333,7 +341,13 @@ export function Dashboard() {
       <div className="card mb-6">
         <div className="flex items-center justify-between mb-4">
           <h3 className="section-title mb-0">Insights do Nexus AI</h3>
-          <button onClick={() => navigate('/nexus-ai')} className="text-xs text-nexus-gold hover:text-nexus-text transition-colors font-medium">
+          <button
+            onClick={() => navigate('/nexus-ai')}
+            className="text-xs font-medium transition-colors"
+            style={{color: 'var(--nexus-gold)'}}
+            onMouseEnter={(e) => e.currentTarget.style.color = 'var(--nexus-text)'}
+            onMouseLeave={(e) => e.currentTarget.style.color = 'var(--nexus-gold)'}
+          >
             Ver todos
           </button>
         </div>
@@ -344,7 +358,13 @@ export function Dashboard() {
         <div className="card mb-6">
           <div className="flex items-center justify-between mb-4">
             <h3 className="section-title mb-0">Sugestoes Recebidas</h3>
-            <button onClick={() => navigate('/suggestions/admin')} className="text-xs text-nexus-gold hover:text-nexus-text transition-colors font-medium">
+            <button
+              onClick={() => navigate('/suggestions/admin')}
+              className="text-xs font-medium transition-colors"
+              style={{color: 'var(--nexus-gold)'}}
+              onMouseEnter={(e) => e.currentTarget.style.color = 'var(--nexus-text)'}
+              onMouseLeave={(e) => e.currentTarget.style.color = 'var(--nexus-gold)'}
+            >
               Gerenciar
             </button>
           </div>
@@ -355,13 +375,13 @@ export function Dashboard() {
                 rejected: 'Rejeitadas', implemented: 'Implementadas',
               };
               const statusColors: Record<string, string> = {
-                pending: 'text-yellow-500', under_review: 'text-blue-500', approved: 'text-green-500',
-                rejected: 'text-nexus-danger', implemented: 'text-nexus-gold',
+                pending: WARNING, under_review: '#60a5fa', approved: SUCCESS,
+                rejected: DANGER, implemented: GOLD,
               };
               return (
                 <div key={s.status} className="text-center">
-                  <p className={`text-xl font-bold ${statusColors[s.status] || ''}`}>{s.count}</p>
-                  <p className="text-xs text-nexus-muted">{statusLabels[s.status] || s.status}</p>
+                  <p className="text-xl font-bold" style={{color: statusColors[s.status] || 'var(--nexus-text)'}}>{s.count}</p>
+                  <p className="text-xs" style={{color: 'var(--nexus-muted)'}}>{statusLabels[s.status] || s.status}</p>
                 </div>
               );
             })}
@@ -372,10 +392,13 @@ export function Dashboard() {
       {error && (
         <div className="rounded-lg p-4 mb-6" style={{ background: 'rgba(255, 107, 107, 0.1)', border: '1px solid rgba(255, 107, 107, 0.2)' }}>
           <div className="flex items-center justify-between">
-            <p className="text-sm text-nexus-danger">{error}</p>
+            <p className="text-sm" style={{color: DANGER}}>{error}</p>
             <button
               onClick={() => { setLoading(true); setError(''); window.location.reload(); }}
-              className="text-xs font-medium px-3 py-1.5 rounded-lg bg-nexus-danger/20 text-nexus-danger hover:bg-nexus-danger/30 transition-colors"
+              className="text-xs font-medium px-3 py-1.5 rounded-lg transition-colors"
+              style={{color: DANGER, background: 'rgba(216, 75, 95, 0.2)'}}
+              onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(216, 75, 95, 0.3)'}
+              onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(216, 75, 95, 0.2)'}
             >
               Tentar novamente
             </button>

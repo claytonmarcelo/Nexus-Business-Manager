@@ -1,8 +1,21 @@
 import { useState, useEffect, FormEvent } from 'react';
+import { motion } from 'framer-motion';
+import { UserGroupIcon, UserPlusIcon, CheckBadgeIcon, CurrencyDollarIcon } from '@heroicons/react/24/outline';
 import api from '../../services/api';
 import { Client } from '../../types';
+import { StatsCard } from '../../components/ui/StatsCard';
+import { PremiumTable, Column } from '../../components/ui/PremiumTable';
+import { SearchBar } from '../../components/ui/SearchBar';
+import { Pagination } from '../../components/ui/Pagination';
+import { GradientButton } from '../../components/ui/GradientButton';
+import { PremiumBadge } from '../../components/ui/PremiumBadge';
 import { EmptyState } from '../../components/ui/EmptyState';
-import { TableSkeleton } from '../../components/ui/Skeleton';
+
+function extractCity(address: string | null): string {
+  if (!address) return '-';
+  const parts = address.split(',').map(s => s.trim());
+  return parts.length > 1 ? parts[parts.length - 2] : parts[0];
+}
 
 export function Clients() {
   const [clients, setClients] = useState<Client[]>([]);
@@ -14,23 +27,40 @@ export function Clients() {
   });
   const [error, setError] = useState('');
   const [search, setSearch] = useState('');
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [total, setTotal] = useState(0);
 
   useEffect(() => { loadClients(); }, []);
 
-  async function loadClients(query = '') {
+  async function loadClients(query = '', p = 1) {
     try {
       setLoading(true);
-      const params: any = { page: 1, limit: 50 };
+      const params: any = { page: p, limit: 10 };
       if (query) params.search = query;
       const res = await api.get('/clients', { params });
-      setClients(res.data.data || res.data);
+      const data = res.data.data || res.data;
+      if (Array.isArray(data)) {
+        setClients(data);
+        setTotal(data.length);
+        setTotalPages(1);
+      } else {
+        setClients(data.data || []);
+        setTotal(data.total || 0);
+        setTotalPages(data.totalPages || 1);
+      }
     } catch { console.error('Erro ao carregar clientes'); }
     finally { setLoading(false); }
   }
 
-  function handleSearch(e: FormEvent) {
-    e.preventDefault();
-    loadClients(search);
+  function handleSearch() {
+    setPage(1);
+    loadClients(search, 1);
+  }
+
+  function handlePageChange(newPage: number) {
+    setPage(newPage);
+    loadClients(search, newPage);
   }
 
   function openCreate() {
@@ -49,7 +79,7 @@ export function Clients() {
       document: client.document || '',
       address: client.address || '',
       notes: client.notes || '',
-      status: (client as any).status || 'ATIVO',
+      status: (client as any).status || (client.active ? 'ATIVO' : 'INATIVO'),
     });
     setError('');
     setShowModal(true);
@@ -66,7 +96,7 @@ export function Clients() {
         await api.post('/clients', formData);
       }
       setShowModal(false);
-      loadClients(search);
+      loadClients(search, page);
     } catch (err: any) {
       setError(err.response?.data?.message || err.response?.data?.error || 'Erro ao salvar cliente');
     }
@@ -76,139 +106,414 @@ export function Clients() {
     if (!confirm('Tem certeza que deseja excluir este cliente?')) return;
     try {
       await api.delete(`/clients/${id}`);
-      loadClients(search);
+      loadClients(search, page);
     } catch { console.error('Erro ao excluir cliente'); }
   }
 
+  const newClientsThisMonth = clients.filter(c => {
+    if (!c.created_at) return false;
+    const d = new Date(c.created_at);
+    const now = new Date();
+    return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+  }).length;
+
+  const activeClients = clients.filter(c => c.active).length;
+
+  const columns: Column<Client>[] = [
+    {
+      key: 'name',
+      header: 'Cliente',
+      render: (client) => (
+        <span className="font-medium" style={{ color: 'var(--nexus-text)' }}>{client.name}</span>
+      ),
+    },
+    {
+      key: 'phone',
+      header: 'Contato',
+      render: (client) => (
+        <span style={{ color: 'var(--nexus-muted-2)' }}>{client.phone || '-'}</span>
+      ),
+    },
+    {
+      key: 'email',
+      header: 'Email',
+      hide: 'md',
+      render: (client) => (
+        <span style={{ color: 'var(--nexus-muted-2)' }}>{client.email || '-'}</span>
+      ),
+    },
+    {
+      key: 'city',
+      header: 'Cidade',
+      hide: 'md',
+      render: (client) => (
+        <span style={{ color: 'var(--nexus-muted-2)' }}>{extractCity(client.address)}</span>
+      ),
+    },
+    {
+      key: 'last_purchase',
+      header: 'Ultima Compra',
+      hide: 'lg',
+      render: () => (
+        <span style={{ color: 'var(--nexus-muted-2)' }}>-</span>
+      ),
+    },
+    {
+      key: 'status',
+      header: 'Status',
+      render: (client) => (
+        <PremiumBadge variant={client.active ? 'success' : 'danger'}>
+          {client.active ? 'ATIVO' : 'INATIVO'}
+        </PremiumBadge>
+      ),
+    },
+    {
+      key: 'document',
+      header: 'CPF/CNPJ',
+      hide: 'lg',
+      render: (client) => (
+        <span style={{ color: 'var(--nexus-muted-2)' }}>{client.document || '-'}</span>
+      ),
+    },
+    {
+      key: 'actions',
+      header: 'Acoes',
+      render: (client) => (
+        <div className="flex items-center gap-2 justify-end">
+          <button
+            onClick={(e) => { e.stopPropagation(); openEdit(client); }}
+            className="text-xs font-medium px-3 py-1.5 rounded-lg transition-all duration-200"
+            style={{
+              color: '#D49556',
+              background: 'rgba(212, 149, 86, 0.1)',
+              border: '1px solid rgba(212, 149, 86, 0.2)',
+            }}
+            onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(212, 149, 86, 0.2)'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(212, 149, 86, 0.1)'; }}
+          >
+            Editar
+          </button>
+          <button
+            onClick={(e) => { e.stopPropagation(); handleDelete(client.id); }}
+            className="text-xs font-medium px-3 py-1.5 rounded-lg transition-all duration-200"
+            style={{
+              color: '#D84B5F',
+              background: 'rgba(216, 75, 95, 0.1)',
+              border: '1px solid rgba(216, 75, 95, 0.2)',
+            }}
+            onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(216, 75, 95, 0.2)'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(216, 75, 95, 0.1)'; }}
+          >
+            Excluir
+          </button>
+        </div>
+      ),
+    },
+  ];
+
   return (
     <div>
-      <div className="flex justify-between items-center mb-6">
+      <motion.div
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3 }}
+        className="flex justify-between items-center mb-8"
+      >
         <div>
-          <h1 className="page-title">Clientes</h1>
-          <p className="text-brand-graphiteWine/60 mt-1">Cadastro centralizado de clientes</p>
+          <h1 className="text-2xl font-bold" style={{ color: 'var(--nexus-text)' }}>Clientes</h1>
+          <p className="text-sm mt-1" style={{ color: 'var(--nexus-muted-2)' }}>Cadastro centralizado de clientes</p>
         </div>
-        <button onClick={openCreate} className="btn-primary">Novo Cliente</button>
-      </div>
+        <GradientButton onClick={openCreate}>
+          Novo Cliente
+        </GradientButton>
+      </motion.div>
 
-      <form onSubmit={handleSearch} className="mb-4 flex gap-2">
-        <input
-          type="text"
-          placeholder="Buscar por nome, email, telefone ou documento..."
-          className="input-field flex-1"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3, delay: 0.05 }}
+        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8"
+      >
+        <StatsCard
+          label="Total de Clientes"
+          value={String(total)}
+          icon={<UserGroupIcon className="w-5 h-5" />}
+          color="gold"
         />
-        <button type="submit" className="btn-primary">Buscar</button>
-        {search && (
-          <button type="button" onClick={() => { setSearch(''); loadClients(); }} className="btn-secondary">Limpar</button>
-        )}
-      </form>
+        <StatsCard
+          label="Novos Clientes"
+          value={String(newClientsThisMonth)}
+          icon={<UserPlusIcon className="w-5 h-5" />}
+          color="rose"
+          subtitle="este mes"
+        />
+        <StatsCard
+          label="Clientes Ativos"
+          value={String(activeClients)}
+          icon={<CheckBadgeIcon className="w-5 h-5" />}
+          color="green"
+          trend={total > 0 ? { value: `${Math.round((activeClients / total) * 100)}%`, direction: 'up' } : undefined}
+        />
+        <StatsCard
+          label="Ticket Medio"
+          value="-"
+          icon={<CurrencyDollarIcon className="w-5 h-5" />}
+          color="blue"
+          subtitle="em breve"
+        />
+      </motion.div>
 
-      <div className="card overflow-hidden p-0">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3, delay: 0.1 }}
+        className="mb-6"
+      >
+        <SearchBar
+          value={search}
+          onChange={(val) => setSearch(val)}
+          onSubmit={handleSearch}
+          placeholder="Buscar por nome, email, telefone ou documento..."
+          rightContent={
+            <div className="flex items-center gap-2">
+              {search && (
+                <button
+                  onClick={() => { setSearch(''); loadClients('', 1); setPage(1); }}
+                  className="text-xs font-medium px-3 py-2 rounded-lg transition-all duration-200"
+                  style={{
+                    color: 'var(--nexus-muted-2)',
+                    background: 'rgba(0,0,0,0.4)',
+                    border: '1px solid rgba(212,149,86,0.15)',
+                  }}
+                >
+                  Limpar
+                </button>
+              )}
+            </div>
+          }
+        />
+      </motion.div>
+
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3, delay: 0.15 }}
+        className="rounded-xl overflow-hidden"
+        style={{
+          background: 'var(--nexus-card)',
+          border: '1px solid var(--nexus-border)',
+        }}
+      >
         {loading ? (
-          <TableSkeleton rows={5} cols={5} />
+          <PremiumTable columns={columns} data={[]} loading />
         ) : clients.length === 0 ? (
-          <EmptyState
-            title="Nenhum cliente encontrado"
-            message={search ? 'Nenhum resultado para a busca realizada.' : 'Cadastre seu primeiro cliente para comecar.'}
-            action={<button onClick={openCreate} className="btn-primary">Cadastrar Cliente</button>}
-          />
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead className="bg-brand-blackCherry text-brand-ivorySmoke">
-                <tr>
-                  <th className="text-left py-3 px-4 font-medium text-brand-ivorySmoke">Nome</th>
-                  <th className="text-left py-3 px-4 font-medium text-brand-ivorySmoke">Telefone</th>
-                  <th className="text-left py-3 px-4 font-medium text-brand-ivorySmoke">Email</th>
-                  <th className="text-left py-3 px-4 font-medium text-brand-ivorySmoke">Documento</th>
-                  <th className="text-left py-3 px-4 font-medium text-brand-ivorySmoke">Status</th>
-                  <th className="text-right py-3 px-4 font-medium text-brand-ivorySmoke">Acoes</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100">
-                {clients.map((client) => (
-                  <tr key={client.id} className="hover:bg-[rgba(214,179,112,0.18)]">
-                    <td className="py-3 px-4 font-medium">{client.name}</td>
-                    <td className="py-3 px-4 text-brand-graphiteWine/70">{client.phone || '-'}</td>
-                    <td className="py-3 px-4 text-brand-graphiteWine/70">{client.email || '-'}</td>
-                    <td className="py-3 px-4 text-brand-graphiteWine/70">{client.document || '-'}</td>
-                    <td className="py-3 px-4">
-                      <span className={`badge ${(client as any).status === 'ATIVO' ? 'bg-green-100 text-green-800' : 'bg-brand-graphiteWine/10 text-brand-graphiteWine'}`}>
-                        {(client as any).status || 'ATIVO'}
-                      </span>
-                    </td>
-                    <td className="py-3 px-4 text-right space-x-2">
-                      <button onClick={() => openEdit(client)} className="text-brand-primary hover:text-brand-primaryHover font-medium">Editar</button>
-                      <button onClick={() => handleDelete(client.id)} className="text-red-600 hover:text-red-800 font-medium">Excluir</button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div className="p-8">
+            <EmptyState
+              title="Nenhum cliente encontrado"
+              message={search ? 'Nenhum resultado para a busca realizada.' : 'Cadastre seu primeiro cliente para comecar.'}
+              action={<GradientButton onClick={openCreate}>Cadastrar Cliente</GradientButton>}
+            />
           </div>
+        ) : (
+          <>
+            <PremiumTable columns={columns} data={clients} />
+            <div className="px-6 pb-4">
+              <Pagination
+                page={page}
+                totalPages={totalPages}
+                onPageChange={handlePageChange}
+              />
+            </div>
+          </>
         )}
-      </div>
+      </motion.div>
 
       {showModal && (
-        <div className="fixed inset-0 bg-brand-blackCherry/45 flex items-center justify-center z-50">
-          <div className="card rounded-2xl w-full max-w-lg mx-4">
-            <h2 className="text-xl font-semibold mb-6">
-              {editingClient ? 'Editar Cliente' : 'Novo Cliente'}
-            </h2>
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          style={{ background: 'rgba(5, 7, 10, 0.8)' }}
+          onClick={() => setShowModal(false)}
+        >
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95, y: 10 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            transition={{ duration: 0.2 }}
+            onClick={(e) => e.stopPropagation()}
+            className="w-full max-w-lg rounded-xl p-6"
+            style={{
+              background: 'var(--nexus-card)',
+              border: '1px solid var(--nexus-border)',
+            }}
+          >
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-lg font-bold" style={{ color: 'var(--nexus-text)' }}>
+                {editingClient ? 'Editar Cliente' : 'Novo Cliente'}
+              </h2>
+              <button
+                onClick={() => setShowModal(false)}
+                className="w-8 h-8 flex items-center justify-center rounded-lg transition-colors"
+                style={{ color: 'var(--nexus-muted-2)', background: 'rgba(0,0,0,0.3)' }}
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
 
             {error && (
-              <div className="bg-red-50 text-red-700 px-4 py-3 rounded-lg mb-4 text-sm">{error}</div>
+              <div
+                className="px-4 py-3 rounded-lg mb-4 text-sm"
+                style={{
+                  background: 'rgba(216, 75, 95, 0.12)',
+                  color: '#D84B5F',
+                  border: '1px solid rgba(216, 75, 95, 0.2)',
+                }}
+              >
+                {error}
+              </div>
             )}
 
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-brand-blackCherry mb-1">Nome *</label>
-                <input type="text" className="input-field" required value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })} />
+                <label className="block text-sm font-medium mb-1" style={{ color: 'var(--nexus-muted-2)' }}>Nome *</label>
+                <input
+                  type="text"
+                  required
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  className="w-full rounded-lg px-4 py-2.5 text-sm outline-none transition-all duration-200"
+                  style={{
+                    background: 'rgba(0,0,0,0.4)',
+                    border: '1px solid rgba(212,149,86,0.15)',
+                    color: 'var(--nexus-text)',
+                  }}
+                  onFocus={(e) => e.target.style.borderColor = 'rgba(212,149,86,0.4)'}
+                  onBlur={(e) => e.target.style.borderColor = 'rgba(212,149,86,0.15)'}
+                />
               </div>
+
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-brand-blackCherry mb-1">Telefone</label>
-                  <input type="text" className="input-field" value={formData.phone}
-                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })} />
+                  <label className="block text-sm font-medium mb-1" style={{ color: 'var(--nexus-muted-2)' }}>Telefone</label>
+                  <input
+                    type="text"
+                    value={formData.phone}
+                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                    className="w-full rounded-lg px-4 py-2.5 text-sm outline-none transition-all duration-200"
+                    style={{
+                      background: 'rgba(0,0,0,0.4)',
+                      border: '1px solid rgba(212,149,86,0.15)',
+                      color: 'var(--nexus-text)',
+                    }}
+                    onFocus={(e) => e.target.style.borderColor = 'rgba(212,149,86,0.4)'}
+                    onBlur={(e) => e.target.style.borderColor = 'rgba(212,149,86,0.15)'}
+                  />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-brand-blackCherry mb-1">Email</label>
-                  <input type="email" className="input-field" value={formData.email}
-                    onChange={(e) => setFormData({ ...formData, email: e.target.value })} />
+                  <label className="block text-sm font-medium mb-1" style={{ color: 'var(--nexus-muted-2)' }}>Email</label>
+                  <input
+                    type="email"
+                    value={formData.email}
+                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                    className="w-full rounded-lg px-4 py-2.5 text-sm outline-none transition-all duration-200"
+                    style={{
+                      background: 'rgba(0,0,0,0.4)',
+                      border: '1px solid rgba(212,149,86,0.15)',
+                      color: 'var(--nexus-text)',
+                    }}
+                    onFocus={(e) => e.target.style.borderColor = 'rgba(212,149,86,0.4)'}
+                    onBlur={(e) => e.target.style.borderColor = 'rgba(212,149,86,0.15)'}
+                  />
                 </div>
               </div>
+
               <div>
-                <label className="block text-sm font-medium text-brand-blackCherry mb-1">CPF/CNPJ</label>
-                <input type="text" className="input-field" value={formData.document}
-                  onChange={(e) => setFormData({ ...formData, document: e.target.value })} />
+                <label className="block text-sm font-medium mb-1" style={{ color: 'var(--nexus-muted-2)' }}>CPF/CNPJ</label>
+                <input
+                  type="text"
+                  value={formData.document}
+                  onChange={(e) => setFormData({ ...formData, document: e.target.value })}
+                  className="w-full rounded-lg px-4 py-2.5 text-sm outline-none transition-all duration-200"
+                  style={{
+                    background: 'rgba(0,0,0,0.4)',
+                    border: '1px solid rgba(212,149,86,0.15)',
+                    color: 'var(--nexus-text)',
+                  }}
+                  onFocus={(e) => e.target.style.borderColor = 'rgba(212,149,86,0.4)'}
+                  onBlur={(e) => e.target.style.borderColor = 'rgba(212,149,86,0.15)'}
+                />
               </div>
+
               <div>
-                <label className="block text-sm font-medium text-brand-blackCherry mb-1">Endereco</label>
-                <input type="text" className="input-field" value={formData.address}
-                  onChange={(e) => setFormData({ ...formData, address: e.target.value })} />
+                <label className="block text-sm font-medium mb-1" style={{ color: 'var(--nexus-muted-2)' }}>Endereco</label>
+                <input
+                  type="text"
+                  value={formData.address}
+                  onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                  className="w-full rounded-lg px-4 py-2.5 text-sm outline-none transition-all duration-200"
+                  style={{
+                    background: 'rgba(0,0,0,0.4)',
+                    border: '1px solid rgba(212,149,86,0.15)',
+                    color: 'var(--nexus-text)',
+                  }}
+                  onFocus={(e) => e.target.style.borderColor = 'rgba(212,149,86,0.4)'}
+                  onBlur={(e) => e.target.style.borderColor = 'rgba(212,149,86,0.15)'}
+                />
               </div>
+
               <div>
-                <label className="block text-sm font-medium text-brand-blackCherry mb-1">Status</label>
-                <select className="input-field" value={formData.status}
-                  onChange={(e) => setFormData({ ...formData, status: e.target.value })}>
+                <label className="block text-sm font-medium mb-1" style={{ color: 'var(--nexus-muted-2)' }}>Status</label>
+                <select
+                  value={formData.status}
+                  onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+                  className="w-full rounded-lg px-4 py-2.5 text-sm outline-none transition-all duration-200"
+                  style={{
+                    background: 'rgba(0,0,0,0.4)',
+                    border: '1px solid rgba(212,149,86,0.15)',
+                    color: 'var(--nexus-text)',
+                  }}
+                  onFocus={(e) => e.target.style.borderColor = 'rgba(212,149,86,0.4)'}
+                  onBlur={(e) => e.target.style.borderColor = 'rgba(212,149,86,0.15)'}
+                >
                   <option value="ATIVO">ATIVO</option>
                   <option value="INATIVO">INATIVO</option>
                 </select>
               </div>
+
               <div>
-                <label className="block text-sm font-medium text-brand-blackCherry mb-1">Observacoes</label>
-                <textarea className="input-field" rows={3} value={formData.notes}
-                  onChange={(e) => setFormData({ ...formData, notes: e.target.value })} />
+                <label className="block text-sm font-medium mb-1" style={{ color: 'var(--nexus-muted-2)' }}>Observacoes</label>
+                <textarea
+                  rows={3}
+                  value={formData.notes}
+                  onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                  className="w-full rounded-lg px-4 py-2.5 text-sm outline-none transition-all duration-200 resize-none"
+                  style={{
+                    background: 'rgba(0,0,0,0.4)',
+                    border: '1px solid rgba(212,149,86,0.15)',
+                    color: 'var(--nexus-text)',
+                  }}
+                  onFocus={(e) => e.target.style.borderColor = 'rgba(212,149,86,0.4)'}
+                  onBlur={(e) => e.target.style.borderColor = 'rgba(212,149,86,0.15)'}
+                />
               </div>
+
               <div className="flex justify-end gap-3 pt-2">
-                <button type="button" onClick={() => setShowModal(false)} className="btn-secondary">Cancelar</button>
-                <button type="submit" className="btn-primary">Salvar</button>
+                <GradientButton
+                  variant="secondary"
+                  type="button"
+                  onClick={() => setShowModal(false)}
+                >
+                  Cancelar
+                </GradientButton>
+                <GradientButton type="submit">
+                  Salvar
+                </GradientButton>
               </div>
             </form>
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
       )}
     </div>
   );
