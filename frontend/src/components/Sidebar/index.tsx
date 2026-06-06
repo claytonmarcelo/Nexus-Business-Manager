@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef } from 'react';
-import { NavLink, useNavigate } from 'react-router-dom';
+import { NavLink } from 'react-router-dom';
 import { ArrowLeftOnRectangleIcon } from '@heroicons/react/24/solid';
 import api from '../../services/api';
 import { useAuth } from '../../contexts/AuthContext';
@@ -56,7 +56,6 @@ export function Sidebar({ open, onClose }: SidebarProps) {
   const { user, signOut, updateUser } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const { showToast } = useToast();
-  const navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [cacheLoading, setCacheLoading] = useState(false);
   const [avatarLoading, setAvatarLoading] = useState(false);
@@ -97,9 +96,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
     }
   }, [showToast, updateUser]);
 
-  const handleLogout = useCallback(() => {
-    signOut();
-  }, [signOut]);
+  const handleLogout = () => signOut();
 
   const avatarSrc = user?.avatar_url || user?.avatarUrl || null;
   const initials = user?.name?.charAt(0).toUpperCase() || '?';

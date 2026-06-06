@@ -61,12 +61,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   function signOut() {
+    // Fire-and-forget: tenta notificar backend, ignora falha
+    api.post('/auth/logout').catch(() => {});
+
     localStorage.removeItem('@nexus:token');
     localStorage.removeItem('@nexus:user');
-    // Keep theme preference on logout
+    localStorage.removeItem('@nexus:theme');
+    sessionStorage.clear();
+
     setToken(null);
     setUser(null);
-    // Hard redirect to ensure clean state reset
+
     window.location.href = '/login';
   }
 
