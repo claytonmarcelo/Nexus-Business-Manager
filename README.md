@@ -473,6 +473,12 @@ A documentação completa está disponível na pasta `docs/`:
 
 ---
 
+## Histórico de Versões
+
+Consulte o arquivo [CHANGELOG.md](CHANGELOG.md) para visualizar todas as alterações do projeto.
+
+---
+
 ## Roadmap
 
 ### Concluído

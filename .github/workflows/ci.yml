@@ -1,78 +1,93 @@
 name: CI
 
 on:
-push:
-branches:
-- main
-- develop
-
-pull_request:
-branches:
-- main
+  push:
+    branches:
+      - main
+      - develop
+  pull_request:
+    branches:
+      - main
 
 jobs:
-backend:
-name: Backend
-runs-on: ubuntu-latest
+  changelog:
+    name: Changelog Validation
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
 
-```
-defaults:
-  run:
-    working-directory: ./backend
+      - name: Check CHANGELOG Modified
+        run: |
+          if git diff --name-only HEAD~1 HEAD | grep -q 'CHANGELOG.md'; then
+            echo "✅ CHANGELOG.md foi modificado"
+          else
+            echo "⚠️  AVISO: CHANGELOG.md não foi modificado neste commit"
+            echo "Por favor, atualize o CHANGELOG.md antes de fazer release"
+            exit 1
+          fi
 
-steps:
-  - name: Checkout
-    uses: actions/checkout@v4
+  backend:
+    name: Backend
+    runs-on: ubuntu-latest
 
-  - name: Setup Node.js
-    uses: actions/setup-node@v4
-    with:
-      node-version: 20
-      cache: npm
-      cache-dependency-path: ./backend/package-lock.json
+    defaults:
+      run:
+        working-directory: ./backend
 
-  - name: Install Dependencies
-    run: npm ci
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
 
-  - name: Generate Prisma Client
-    run: npx prisma generate
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: ./backend/package-lock.json
 
-  - name: Type Check
-    run: npx tsc --noEmit
+      - name: Install Dependencies
+        run: npm ci
 
-  - name: Run Tests
-    run: npx vitest run --reporter=verbose 2>/dev/null || echo "No tests configured yet"
+      - name: Generate Prisma Client
+        run: npx prisma generate
 
-  - name: Build Backend
-    run: npm run build
-```
+      - name: Type Check
+        run: npx tsc --noEmit
 
-frontend:
-name: Frontend
-runs-on: ubuntu-latest
+      - name: Run Tests
+        run: npx vitest run --reporter=verbose 2>/dev/null || echo "No tests configured yet"
 
-```
-defaults:
-  run:
-    working-directory: ./frontend
+      - name: Build Backend
+        run: npm run build
 
-steps:
-  - name: Checkout
-    uses: actions/checkout@v4
+  frontend:
+    name: Frontend
+    runs-on: ubuntu-latest
 
-  - name: Setup Node.js
-    uses: actions/setup-node@v4
-    with:
-      node-version: 20
-      cache: npm
-      cache-dependency-path: ./frontend/package-lock.json
+    defaults:
+      run:
+        working-directory: ./frontend
 
-  - name: Install Dependencies
-    run: npm ci
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
 
-  - name: Type Check
-    run: npx tsc --noEmit
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: ./frontend/package-lock.json
 
-  - name: Build Frontend
-    run: npm run build
-```
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Type Check
+        run: npx tsc --noEmit
+
+      - name: Build Frontend
+        run: npm run build
