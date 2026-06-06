@@ -1,5 +1,6 @@
 import { useState, useCallback, useRef } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
+import { ArrowLeftOnRectangleIcon } from '@heroicons/react/24/solid';
 import api from '../../services/api';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTheme } from '../../contexts/ThemeContext';
@@ -38,17 +39,20 @@ const navItems = [
   { to: '/crm', label: 'CRM', icon: BuildingOfficeIcon },
   { to: '/suggestions', label: 'Sugestoes', icon: LightBulbIcon },
   { to: '/appointments', label: 'Agenda', icon: CalendarDaysIcon },
-  { to: '/reports', label: 'Relatórios', icon: ChartPieIcon },
-  { to: '/notifications', label: 'Notificações', icon: BellIcon },
+  { to: '/reports', label: 'Relatorios', icon: ChartPieIcon },
+  { to: '/notifications', label: 'Notificacoes', icon: BellIcon },
   { to: '/audit', label: 'Auditoria', icon: ShieldCheckIcon, roles: ['admin', 'manager'] },
-  { to: '/users', label: 'Usuários', icon: UsersIcon, roles: ['admin', 'manager'] },
+  { to: '/users', label: 'Usuarios', icon: UsersIcon, roles: ['admin', 'manager'] },
   { to: '/companies', label: 'Empresas', icon: Cog6ToothIcon, roles: ['admin'] },
   { to: '/about', label: 'Sobre', icon: InformationCircleIcon },
 ];
 
-const STORAGE_KEYS_TO_KEEP = ['@nexus:token', '@nexus:user', '@nexus:theme'];
+interface SidebarProps {
+  open?: boolean;
+  onClose?: () => void;
+}
 
-export function Sidebar() {
+export function Sidebar({ open, onClose }: SidebarProps) {
   const { user, signOut, updateUser } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const { showToast } = useToast();
@@ -56,6 +60,7 @@ export function Sidebar() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [cacheLoading, setCacheLoading] = useState(false);
   const [avatarLoading, setAvatarLoading] = useState(false);
+  const [confirmLogout, setConfirmLogout] = useState(false);
 
   const handleAvatarClick = useCallback(() => {
     fileInputRef.current?.click();
@@ -92,37 +97,20 @@ export function Sidebar() {
     }
   }, [showToast, updateUser]);
 
-  const handleClearCache = useCallback(async () => {
-    setCacheLoading(true);
-    await new Promise(r => setTimeout(r, 300));
-    try {
-      const kept: Record<string, string | null> = {};
-      for (const key of STORAGE_KEYS_TO_KEEP) {
-        kept[key] = localStorage.getItem(key);
-      }
-      localStorage.clear();
-      for (const key of STORAGE_KEYS_TO_KEEP) {
-        if (kept[key] !== null) {
-          localStorage.setItem(key, kept[key]!);
-        }
-      }
-      showToast('Cache limpo com sucesso.');
-    } catch {
-      showToast('Nao foi possivel limpar o cache. O sistema continuara funcionando normalmente.', 'error');
-    } finally {
-      setCacheLoading(false);
-    }
-  }, [showToast]);
+  const handleLogout = useCallback(() => {
+    signOut();
+    navigate('/login');
+  }, [signOut, navigate]);
 
   const avatarSrc = user?.avatar_url || user?.avatarUrl || null;
   const initials = user?.name?.charAt(0).toUpperCase() || '?';
 
-  return (
-    <aside className="nexus-sidebar w-64 min-h-screen flex flex-col">
-      <div className="p-6 flex items-center justify-center border-b" style={{ borderColor: 'rgba(214, 168, 93, 0.15)' }}>
-        <img 
-          src="/logo.png" 
-          alt="Nexus Business Manager" 
+  const sidebarContent = (
+    <>
+      <div className="p-6 flex items-center justify-center border-b" style={{ borderColor: 'rgba(212, 149, 86, 0.15)' }}>
+        <img
+          src="/logo.png"
+          alt="Nexus Business Manager"
           className="sidebar-logo"
         />
       </div>
@@ -136,6 +124,7 @@ export function Sidebar() {
               <NavLink
                 key={item.to}
                 to={item.to}
+                onClick={onClose}
                 className={({ isActive }) =>
                   `nexus-sidebar-item ${isActive ? 'active' : ''}`
                 }
@@ -148,6 +137,59 @@ export function Sidebar() {
             );
           })}
       </nav>
+
+      <div className="px-3 pb-4">
+        {confirmLogout ? (
+          <div className="nexus-sidebar-item flex-col items-stretch gap-2">
+            <p className="text-xs text-nexus-muted text-center">Sair do sistema?</p>
+            <div className="flex gap-2">
+              <button
+                onClick={handleLogout}
+                className="flex-1 text-xs font-medium py-1.5 px-3 rounded-lg bg-red-500/20 text-red-400 hover:bg-red-500/30 transition-colors"
+              >
+                Sim, sair
+              </button>
+              <button
+                onClick={() => setConfirmLogout(false)}
+                className="flex-1 text-xs font-medium py-1.5 px-3 rounded-lg bg-nexus-card text-nexus-muted hover:text-nexus-text transition-colors"
+              >
+                Cancelar
+              </button>
+            </div>
+          </div>
+        ) : (
+          <button
+            onClick={() => setConfirmLogout(true)}
+            className="sidebar-logout-btn w-full"
+          >
+            <span className="w-[42px] h-[42px] flex items-center justify-center bg-red-500/10 border border-red-500/20 rounded-lg flex-shrink-0">
+              <ArrowLeftOnRectangleIcon className="w-5 h-5" />
+            </span>
+            <span className="text-sm font-medium">Sair do sistema</span>
+          </button>
+        )}
+      </div>
+    </>
+  );
+
+  if (onClose) {
+    return (
+      <>
+        {open && (
+          <div className="nexus-sidebar-overlay" onClick={onClose} />
+        )}
+        <aside
+          className={`nexus-sidebar w-64 min-h-screen flex flex-col ${open ? 'nexus-sidebar-mobile open' : 'nexus-sidebar-mobile'}`}
+        >
+          {sidebarContent}
+        </aside>
+      </>
+    );
+  }
+
+  return (
+    <aside className="nexus-sidebar w-64 min-h-screen flex-col hidden md:flex">
+      {sidebarContent}
     </aside>
   );
 }

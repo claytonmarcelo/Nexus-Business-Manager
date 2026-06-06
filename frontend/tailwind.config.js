@@ -6,29 +6,32 @@ export default {
     extend: {
       colors: {
         nexus: {
-          // Nova cor principal de destaque - teal corporativa
-          teal: '#3E958F',
-          // Cor secundária para hover, gráficos e brilho
-          tealLight: '#85D5D2',
-          // Dourado da logo como destaque premium
-          gold: '#D6B370',
-          // Preto e cinza do projeto
-          black: '#050505',
-          deepBlack: '#0A0A0A',
-          darkGray: '#151515',
-          graphite: '#242424',
-          softGray: '#2E2E2E',
+          // Fundo e Superficies
+          bg: '#05070A',
+          'bg-soft': '#0B0D10',
+          'bg-panel': '#0B0D10',
+          card: 'rgba(11, 13, 16, 0.86)',
+          'card-strong': 'rgba(11, 13, 16, 0.94)',
+          'card-soft': 'rgba(17, 20, 25, 0.74)',
+          sidebar: '#07090D',
+          // Dourado e Bronze
+          gold: '#D49556',
+          bronze: '#9a6a42',
+          // Rose
+          rose: '#c96f78',
+          'rose-light': '#e89aa2',
+          'rose-dark': '#9d4e58',
           // Textos
-          text: '#F7F2EC',
-          textSecondary: 'rgba(247, 242, 236, 0.72)',
-          // Tema claro
-          lightBg: '#F7F2EC',
-          lightBgSecondary: '#EFE6DC',
-          lightText: '#050505',
-          lightTextSecondary: '#242424',
-          // Border colors
-          border: 'rgba(62, 149, 143, 0.24)',
-          borderLight: 'rgba(62, 149, 143, 0.24)',
+          text: '#f5f1ec',
+          muted: '#b8afa7',
+          'muted-2': '#8f8580',
+          // Status
+          success: '#9BE37A',
+          danger: '#FF6B6B',
+          warning: '#D49556',
+          // Bordas
+          border: 'rgba(212, 149, 86, 0.24)',
+          'border-strong': 'rgba(212, 149, 86, 0.38)',
         },
         brand: {
           // Dashboard Image Colors (mantidos para compatibilidade)
