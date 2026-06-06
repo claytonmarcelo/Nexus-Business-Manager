@@ -1,4 +1,5 @@
 import { useState, useEffect, FormEvent } from 'react';
+import { motion } from 'framer-motion';
 import api from '../../services/api';
 import { Purchase, Supplier, Product } from '../../types';
 import { useToast } from '../../contexts/ToastContext';
@@ -71,10 +72,10 @@ export function Purchases() {
     } catch { showToast('Erro ao excluir.', 'error'); }
   }
 
-  const statusBadge: Record<string, string> = {
-    pending: 'bg-yellow-500/20 text-yellow-500 border-yellow-500/30',
-    received: 'bg-green-500/20 text-green-500 border-green-500/30',
-    cancelled: 'bg-red-500/20 text-red-500 border-red-500/30',
+  const statusBadge: Record<string, React.CSSProperties> = {
+    pending: { display: 'inline-flex', alignItems: 'center', gap: '0.375rem', padding: '0.25rem 0.75rem', borderRadius: '9999px', fontSize: '0.75rem', fontWeight: 500, background: 'rgba(212,149,86,0.12)', color: '#D49556' },
+    received: { display: 'inline-flex', alignItems: 'center', gap: '0.375rem', padding: '0.25rem 0.75rem', borderRadius: '9999px', fontSize: '0.75rem', fontWeight: 500, background: 'rgba(125,218,106,0.12)', color: '#7DDA6A' },
+    cancelled: { display: 'inline-flex', alignItems: 'center', gap: '0.375rem', padding: '0.25rem 0.75rem', borderRadius: '9999px', fontSize: '0.75rem', fontWeight: 500, background: 'rgba(216,75,95,0.12)', color: '#D84B5F' },
   };
 
   const statusLabel: Record<string, string> = {
@@ -82,48 +83,53 @@ export function Purchases() {
   };
 
   return (
-    <div>
-      <div className="flex justify-between items-center mb-8">
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+      <div className="page-header">
         <div>
-          <h1 className="page-title">Compras</h1>
-          <p className="text-brand-muted text-sm mt-0.5">Pedidos de compra</p>
+          <h1 style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--nexus-text)' }}>Compras</h1>
+          <p style={{ fontSize: '0.875rem', color: 'var(--nexus-muted-2)', marginTop: '0.25rem' }}>Pedidos de compra</p>
         </div>
-        <button onClick={() => { setShowModal(true); setError(''); }} className="btn-primary">Nova Compra</button>
+        <button onClick={() => { setShowModal(true); setError(''); }} style={{ background: 'linear-gradient(135deg, #C65A71, #9d4e58)', color: '#fff', border: 'none', borderRadius: '10px', padding: '0.75rem 1.5rem', fontWeight: 500, cursor: 'pointer' }}>
+          Nova Compra
+        </button>
       </div>
 
-      <div className="card overflow-hidden p-0">
+      <div style={{ background: 'var(--nexus-card)', border: '1px solid var(--nexus-border)', borderRadius: '14px', overflow: 'hidden' }}>
         {loading ? (
-          <div className="p-8 text-center text-brand-muted">Carregando...</div>
+          <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--nexus-muted-2)' }}>Carregando...</div>
         ) : purchases.length === 0 ? (
-          <div className="p-8 text-center text-brand-muted">Nenhuma compra encontrada</div>
+          <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--nexus-muted-2)' }}>Nenhuma compra encontrada</div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead className="bg-brand-blackCherry text-brand-ivorySmoke">
+          <div style={{ overflowX: 'auto' }}>
+            <table style={{ width: '100%', fontSize: '0.875rem' }}>
+              <thead>
                 <tr>
-                  <th className="text-left py-3 px-4 font-medium text-brand-ivorySmoke">Data</th>
-                  <th className="text-left py-3 px-4 font-medium text-brand-ivorySmoke">Fornecedor</th>
-                  <th className="text-left py-3 px-4 font-medium text-brand-ivorySmoke">Valor Total</th>
-                  <th className="text-left py-3 px-4 font-medium text-brand-ivorySmoke">Status</th>
-                  <th className="text-center py-3 px-4 font-medium text-brand-ivorySmoke">Acoes</th>
+                  <th style={{ textAlign: 'left', padding: '0.75rem 1rem', fontSize: '0.75rem', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--nexus-muted-2)', borderBottom: '1px solid rgba(212,149,86,0.1)' }}>Data</th>
+                  <th style={{ textAlign: 'left', padding: '0.75rem 1rem', fontSize: '0.75rem', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--nexus-muted-2)', borderBottom: '1px solid rgba(212,149,86,0.1)' }}>Fornecedor</th>
+                  <th style={{ textAlign: 'left', padding: '0.75rem 1rem', fontSize: '0.75rem', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--nexus-muted-2)', borderBottom: '1px solid rgba(212,149,86,0.1)' }}>Valor Total</th>
+                  <th style={{ textAlign: 'left', padding: '0.75rem 1rem', fontSize: '0.75rem', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--nexus-muted-2)', borderBottom: '1px solid rgba(212,149,86,0.1)' }}>Status</th>
+                  <th style={{ textAlign: 'center', padding: '0.75rem 1rem', fontSize: '0.75rem', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--nexus-muted-2)', borderBottom: '1px solid rgba(212,149,86,0.1)' }}>Acoes</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100">
+              <tbody>
                 {purchases.map((p) => (
-                  <tr key={p.id} className="hover:bg-[rgba(214,179,112,0.18)]">
-                    <td className="py-3 px-4 text-brand-muted">{new Date(p.created_at).toLocaleDateString('pt-BR')}</td>
-                    <td className="py-3 px-4 font-medium">{p.supplier_name || '-'}</td>
-                    <td className="py-3 px-4 font-medium">
+                  <tr key={p.id}
+                    onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'rgba(212,149,86,0.04)'; }}
+                    onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = ''; }}
+                  >
+                    <td style={{ padding: '0.75rem 1rem', borderBottom: '1px solid rgba(212,149,86,0.05)', color: 'var(--nexus-text)', fontSize: '0.875rem' }}>{new Date(p.created_at).toLocaleDateString('pt-BR')}</td>
+                    <td style={{ padding: '0.75rem 1rem', borderBottom: '1px solid rgba(212,149,86,0.05)', color: 'var(--nexus-text)', fontSize: '0.875rem', fontWeight: 500 }}>{p.supplier_name || '-'}</td>
+                    <td style={{ padding: '0.75rem 1rem', borderBottom: '1px solid rgba(212,149,86,0.05)', color: 'var(--nexus-text)', fontSize: '0.875rem', fontWeight: 500 }}>
                       {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(p.total_value)}
                     </td>
-                    <td className="py-3 px-4">
-                      <span className={`badge ${statusBadge[p.status] || 'bg-gray-500/20 text-gray-400'}`}>{statusLabel[p.status] || p.status}</span>
+                    <td style={{ padding: '0.75rem 1rem', borderBottom: '1px solid rgba(212,149,86,0.05)', color: 'var(--nexus-text)', fontSize: '0.875rem' }}>
+                      <span style={statusBadge[p.status] || { display: 'inline-flex', alignItems: 'center', gap: '0.375rem', padding: '0.25rem 0.75rem', borderRadius: '9999px', fontSize: '0.75rem', fontWeight: 500, background: 'rgba(128,128,128,0.12)', color: '#999' }}>{statusLabel[p.status] || p.status}</span>
                     </td>
-                    <td className="py-3 px-4 text-center">
+                    <td style={{ padding: '0.75rem 1rem', borderBottom: '1px solid rgba(212,149,86,0.05)', color: 'var(--nexus-text)', fontSize: '0.875rem', textAlign: 'center' }}>
                       {p.status === 'pending' && (
-                        <button onClick={() => handleReceive(p.id)} className="text-green-500 hover:text-green-400 text-xs font-medium mr-3">Receber</button>
+                        <button onClick={() => handleReceive(p.id)} style={{ color: '#7DDA6A', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 500 }}>Receber</button>
                       )}
-                      <button onClick={() => handleDelete(p.id)} className="text-brand-danger hover:text-brand-danger/80 text-xs font-medium">Excluir</button>
+                      <button onClick={() => handleDelete(p.id)} style={{ color: '#D84B5F', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 500, marginLeft: '0.75rem' }}>Excluir</button>
                     </td>
                   </tr>
                 ))}
@@ -134,55 +140,55 @@ export function Purchases() {
       </div>
 
       {showModal && (
-        <div className="fixed inset-0 bg-brand-blackCherry/45 flex items-center justify-center z-50">
-          <div className="card rounded-2xl w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
-            <h2 className="text-xl font-semibold mb-6">Nova Compra</h2>
-            {error && <div className="bg-red-500/20 text-red-500 px-4 py-3 rounded-lg mb-4 text-sm">{error}</div>}
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-brand-muted mb-1">Fornecedor</label>
-                <select className="input-field" value={formData.supplier_id}
+        <div style={{ position: 'fixed', inset: 0, zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem', background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }}>
+          <div style={{ background: 'var(--nexus-card-strong)', border: '1px solid var(--nexus-border)', borderRadius: '18px', padding: '2rem', width: '100%', maxWidth: '32rem', maxHeight: '90vh', overflow: 'auto' }}>
+            <h2 style={{ fontSize: '1.25rem', fontWeight: 600, color: 'var(--nexus-text)', marginBottom: '1.5rem' }}>Nova Compra</h2>
+            {error && <div style={{ background: 'rgba(216,75,95,0.12)', color: '#D84B5F', border: '1px solid rgba(216,75,95,0.2)', borderRadius: '10px', padding: '0.75rem 1rem', fontSize: '0.875rem', marginBottom: '1rem' }}>{error}</div>}
+            <form onSubmit={handleSubmit}>
+              <div style={{ marginBottom: '1rem' }}>
+                <label style={{ color: 'var(--nexus-text)', fontSize: '0.875rem', fontWeight: 500, marginBottom: '0.375rem', display: 'block' }}>Fornecedor</label>
+                <select style={{ width: '100%', padding: '0.625rem 1rem', background: 'rgba(0,0,0,0.5)', color: 'var(--nexus-text)', border: '1px solid var(--nexus-border)', borderRadius: '10px', fontSize: '0.875rem' }} value={formData.supplier_id}
                   onChange={(e) => setFormData({ ...formData, supplier_id: Number(e.target.value) })}>
                   <option value={0}>Selecione...</option>
                   {suppliers.map((s) => <option key={s.id} value={s.id}>{s.company_name}</option>)}
                 </select>
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-brand-muted mb-2">Itens</label>
+              <div style={{ marginBottom: '1rem' }}>
+                <label style={{ color: 'var(--nexus-text)', fontSize: '0.875rem', fontWeight: 500, marginBottom: '0.375rem', display: 'block' }}>Itens</label>
                 {formData.items.map((item, index) => (
-                  <div key={index} className="flex gap-2 mb-2 items-end">
-                    <select className="input-field flex-1" value={item.product_id}
+                  <div key={index} style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.5rem', alignItems: 'end' }}>
+                    <select style={{ flex: 1, padding: '0.625rem 1rem', background: 'rgba(0,0,0,0.5)', color: 'var(--nexus-text)', border: '1px solid var(--nexus-border)', borderRadius: '10px', fontSize: '0.875rem' }} value={item.product_id}
                       onChange={(e) => updateItem(index, 'product_id', Number(e.target.value))} required>
                       <option value={0}>Produto...</option>
                       {products.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
                     </select>
-                    <input type="number" min="1" className="input-field w-20" placeholder="Qtd" value={item.quantity}
+                    <input type="number" min="1" style={{ width: '5rem', padding: '0.625rem 1rem', background: 'rgba(0,0,0,0.5)', color: 'var(--nexus-text)', border: '1px solid var(--nexus-border)', borderRadius: '10px', fontSize: '0.875rem' }} placeholder="Qtd" value={item.quantity}
                       onChange={(e) => updateItem(index, 'quantity', Number(e.target.value))} required />
-                    <input type="number" step="0.01" min="0" className="input-field w-28" placeholder="Preco" value={item.unit_price}
+                    <input type="number" step="0.01" min="0" style={{ width: '7rem', padding: '0.625rem 1rem', background: 'rgba(0,0,0,0.5)', color: 'var(--nexus-text)', border: '1px solid var(--nexus-border)', borderRadius: '10px', fontSize: '0.875rem' }} placeholder="Preco" value={item.unit_price}
                       onChange={(e) => updateItem(index, 'unit_price', Number(e.target.value))} required />
                     {formData.items.length > 1 && (
-                      <button type="button" onClick={() => removeItem(index)} className="text-brand-danger hover:text-brand-danger/80 px-2">X</button>
+                      <button type="button" onClick={() => removeItem(index)} style={{ color: '#D84B5F', background: 'none', border: 'none', cursor: 'pointer', padding: '0 0.5rem' }}>X</button>
                     )}
                   </div>
                 ))}
-                <button type="button" onClick={addItem} className="text-brand-gold hover:text-brand-gold/80 text-sm font-medium">+ Adicionar item</button>
+                <button type="button" onClick={addItem} style={{ color: '#D49556', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 500, fontSize: '0.875rem' }}>+ Adicionar item</button>
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-brand-muted mb-1">Observacoes</label>
-                <input type="text" className="input-field" value={formData.notes}
+              <div style={{ marginBottom: '1rem' }}>
+                <label style={{ color: 'var(--nexus-text)', fontSize: '0.875rem', fontWeight: 500, marginBottom: '0.375rem', display: 'block' }}>Observacoes</label>
+                <input type="text" style={{ width: '100%', padding: '0.625rem 1rem', background: 'rgba(0,0,0,0.5)', color: 'var(--nexus-text)', border: '1px solid var(--nexus-border)', borderRadius: '10px', fontSize: '0.875rem' }} value={formData.notes}
                   onChange={(e) => setFormData({ ...formData, notes: e.target.value })} />
               </div>
 
-              <div className="flex justify-end gap-3 pt-2">
-                <button type="button" onClick={() => setShowModal(false)} className="btn-secondary">Cancelar</button>
-                <button type="submit" className="btn-primary">Criar Compra</button>
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', paddingTop: '0.5rem' }}>
+                <button type="button" onClick={() => setShowModal(false)} style={{ background: 'none', border: '1px solid var(--nexus-border)', color: 'var(--nexus-muted-2)', borderRadius: '10px', padding: '0.625rem 1.25rem', fontWeight: 500, cursor: 'pointer' }}>Cancelar</button>
+                <button type="submit" style={{ background: 'linear-gradient(135deg, #C65A71, #9d4e58)', color: '#fff', border: 'none', borderRadius: '10px', padding: '0.625rem 1.25rem', fontWeight: 500, cursor: 'pointer' }}>Criar Compra</button>
               </div>
             </form>
           </div>
         </div>
       )}
-    </div>
+    </motion.div>
   );
 }

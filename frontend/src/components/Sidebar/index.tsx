@@ -99,8 +99,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
 
   const handleLogout = useCallback(() => {
     signOut();
-    navigate('/login');
-  }, [signOut, navigate]);
+  }, [signOut]);
 
   const avatarSrc = user?.avatar_url || user?.avatarUrl || null;
   const initials = user?.name?.charAt(0).toUpperCase() || '?';
@@ -117,7 +116,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
 
       <nav className="flex-1 px-3 py-3 space-y-1 overflow-y-auto">
         {navItems
-          .filter((item) => !item.roles || item.roles.includes(user?.role || ''))
+          .filter((item) => !item.roles || item.roles.includes((user?.role || '').toLowerCase()))
           .map((item) => {
             const Icon = item.icon;
             return (

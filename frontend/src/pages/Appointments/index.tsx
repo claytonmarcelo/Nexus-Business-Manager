@@ -1,4 +1,5 @@
 import { useState, useEffect, FormEvent } from 'react';
+import { motion } from 'framer-motion';
 import api from '../../services/api';
 import { Appointment, Client } from '../../types';
 
@@ -9,6 +10,7 @@ export function Appointments() {
   const [showModal, setShowModal] = useState(false);
   const [editing, setEditing] = useState<Appointment | null>(null);
   const [filterDate, setFilterDate] = useState('');
+  const [hoveredRowId, setHoveredRowId] = useState<number | null>(null);
   const [formData, setFormData] = useState({
     title: '', description: '', appointment_date: new Date().toISOString().split('T')[0],
     appointment_time: '', client_id: 0,
@@ -82,76 +84,88 @@ export function Appointments() {
     loadData(date || undefined);
   }
 
-  const statusBadge: Record<string, string> = {
-    scheduled: 'bg-brand-primary/20 text-brand-primary',
-    completed: 'bg-green-100 text-green-800',
-    cancelled: 'bg-red-100 text-red-800',
-  };
-
   const statusLabel: Record<string, string> = {
     scheduled: 'Agendado',
     completed: 'Concluido',
     cancelled: 'Cancelado',
   };
 
+  const badge = (bg: string, color: string) => ({
+    display: 'inline-flex', alignItems: 'center', gap: '0.375rem', padding: '0.25rem 0.75rem',
+    borderRadius: '9999px', fontSize: '0.75rem', fontWeight: 500, background: bg, color,
+  });
+
+  const statusBadgeStyle: Record<string, ReturnType<typeof badge>> = {
+    scheduled: badge('rgba(212,149,86,0.12)', '#D49556'),
+    completed: badge('rgba(125,218,106,0.12)', '#7DDA6A'),
+    cancelled: badge('rgba(216,75,95,0.12)', '#D84B5F'),
+  };
+
   return (
-    <div>
-      <div className="flex justify-between items-center mb-8">
+    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.5rem' }}>
         <div>
-          <h1 className="page-title">Agenda</h1>
-          <p className="text-brand-graphiteWine/60 mt-1">Compromissos e agendamentos</p>
+          <h1 style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--nexus-text)' }}>Agenda</h1>
+          <p style={{ fontSize: '0.875rem', color: 'var(--nexus-muted-2)', marginTop: '0.25rem' }}>Compromissos e agendamentos</p>
         </div>
-        <button onClick={openCreate} className="btn-primary">Novo Agendamento</button>
+        <button onClick={openCreate} style={{ background: 'linear-gradient(135deg, #C65A71, #9d4e58)', color: '#fff', border: 'none', borderRadius: '10px', padding: '0.75rem 1.5rem', fontWeight: 500, cursor: 'pointer' }}>Novo Agendamento</button>
       </div>
 
-      <div className="mb-6 flex gap-4 items-center">
+      <div style={{ marginBottom: '1.5rem', display: 'flex', gap: '1rem', alignItems: 'center' }}>
         <div>
-          <label className="block text-sm font-medium text-brand-blackCherry mb-1">Filtrar por data</label>
-          <input type="date" className="input-field" value={filterDate}
+          <label style={{ color: 'var(--nexus-text)', fontSize: '0.875rem', fontWeight: 500, marginBottom: '0.375rem', display: 'block' }}>Filtrar por data</label>
+          <input type="date" value={filterDate}
+            style={{ padding: '0.625rem 1rem', background: 'rgba(0,0,0,0.5)', color: 'var(--nexus-text)', border: '1px solid var(--nexus-border)', borderRadius: '10px', fontSize: '0.875rem' }}
             onChange={(e) => handleFilter(e.target.value)} />
         </div>
         {filterDate && (
-          <button onClick={() => handleFilter('')} className="btn-secondary mt-6">Limpar filtro</button>
+          <button onClick={() => handleFilter('')} style={{ background: 'var(--nexus-card)', color: 'var(--nexus-text)', border: '1px solid var(--nexus-border)', borderRadius: '10px', padding: '0.5rem 1rem', cursor: 'pointer', fontSize: '0.875rem', marginTop: '1.5rem' }}>Limpar filtro</button>
         )}
       </div>
 
-      <div className="card overflow-hidden p-0">
+      <div style={{ background: 'var(--nexus-card)', border: '1px solid var(--nexus-border)', borderRadius: '14px', overflow: 'hidden' }}>
         {loading ? (
-          <div className="p-8 text-center text-brand-graphiteWine/70">Carregando...</div>
+          <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--nexus-muted-2)', fontSize: '0.875rem' }}>Carregando...</div>
         ) : appointments.length === 0 ? (
-          <div className="p-8 text-center text-brand-graphiteWine/70">Nenhum agendamento encontrado</div>
+          <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--nexus-muted-2)' }}>Nenhum registro encontrado</div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead className="bg-brand-blackCherry text-brand-ivorySmoke">
+          <div style={{ overflowX: 'auto' }}>
+            <table style={{ width: '100%', fontSize: '0.875rem', borderCollapse: 'collapse' }}>
+              <thead>
                 <tr>
-                  <th className="text-left py-3 px-4 font-medium text-brand-ivorySmoke">Data</th>
-                  <th className="text-left py-3 px-4 font-medium text-brand-ivorySmoke">Hora</th>
-                  <th className="text-left py-3 px-4 font-medium text-brand-ivorySmoke">Titulo</th>
-                  <th className="text-left py-3 px-4 font-medium text-brand-ivorySmoke">Cliente</th>
-                  <th className="text-left py-3 px-4 font-medium text-brand-ivorySmoke">Status</th>
-                  <th className="text-right py-3 px-4 font-medium text-brand-ivorySmoke">Acoes</th>
+                  <th style={{ textAlign: 'left', padding: '0.75rem 1rem', fontSize: '0.75rem', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--nexus-muted-2)', borderBottom: '1px solid rgba(212,149,86,0.1)' }}>Data</th>
+                  <th style={{ textAlign: 'left', padding: '0.75rem 1rem', fontSize: '0.75rem', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--nexus-muted-2)', borderBottom: '1px solid rgba(212,149,86,0.1)' }}>Hora</th>
+                  <th style={{ textAlign: 'left', padding: '0.75rem 1rem', fontSize: '0.75rem', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--nexus-muted-2)', borderBottom: '1px solid rgba(212,149,86,0.1)' }}>Titulo</th>
+                  <th style={{ textAlign: 'left', padding: '0.75rem 1rem', fontSize: '0.75rem', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--nexus-muted-2)', borderBottom: '1px solid rgba(212,149,86,0.1)' }}>Cliente</th>
+                  <th style={{ textAlign: 'left', padding: '0.75rem 1rem', fontSize: '0.75rem', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--nexus-muted-2)', borderBottom: '1px solid rgba(212,149,86,0.1)' }}>Status</th>
+                  <th style={{ textAlign: 'right', padding: '0.75rem 1rem', fontSize: '0.75rem', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--nexus-muted-2)', borderBottom: '1px solid rgba(212,149,86,0.1)' }}>Acoes</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100">
+              <tbody>
                 {appointments.map((a) => (
-                  <tr key={a.id} className="hover:bg-[rgba(214,179,112,0.18)]">
-                    <td className="py-3 px-4">{new Date(a.appointment_date).toLocaleDateString('pt-BR')}</td>
-                    <td className="py-3 px-4 text-brand-graphiteWine/70">{a.appointment_time || '-'}</td>
-                    <td className="py-3 px-4 font-medium">{a.title}</td>
-                    <td className="py-3 px-4 text-brand-graphiteWine/70">{a.client_name || '-'}</td>
-                    <td className="py-3 px-4">
-                      <span className={`badge ${statusBadge[a.status]}`}>{statusLabel[a.status]}</span>
+                  <tr key={a.id}
+                    style={{ background: hoveredRowId === a.id ? 'rgba(212,149,86,0.08)' : 'transparent' }}
+                    onMouseEnter={() => setHoveredRowId(a.id)}
+                    onMouseLeave={() => setHoveredRowId(null)}
+                  >
+                    <td style={{ padding: '0.75rem 1rem', borderBottom: '1px solid rgba(212,149,86,0.05)', color: 'var(--nexus-text)', fontSize: '0.875rem' }}>{new Date(a.appointment_date).toLocaleDateString('pt-BR')}</td>
+                    <td style={{ padding: '0.75rem 1rem', borderBottom: '1px solid rgba(212,149,86,0.05)', color: 'var(--nexus-text)', fontSize: '0.875rem' }}>{a.appointment_time || '-'}</td>
+                    <td style={{ padding: '0.75rem 1rem', borderBottom: '1px solid rgba(212,149,86,0.05)', color: 'var(--nexus-text)', fontSize: '0.875rem', fontWeight: 500 }}>{a.title}</td>
+                    <td style={{ padding: '0.75rem 1rem', borderBottom: '1px solid rgba(212,149,86,0.05)', color: 'var(--nexus-text)', fontSize: '0.875rem' }}>{a.client_name || '-'}</td>
+                    <td style={{ padding: '0.75rem 1rem', borderBottom: '1px solid rgba(212,149,86,0.05)', color: 'var(--nexus-text)', fontSize: '0.875rem' }}>
+                      <span style={statusBadgeStyle[a.status]}>{statusLabel[a.status]}</span>
                     </td>
-                    <td className="py-3 px-4 text-right space-x-2">
-                      {a.status === 'scheduled' && (
-                        <>
-                          <button onClick={() => handleStatusChange(a.id, 'completed')} className="text-green-600 hover:text-green-800 font-medium">Concluir</button>
-                          <button onClick={() => handleStatusChange(a.id, 'cancelled')} className="text-red-600 hover:text-red-800 font-medium">Cancelar</button>
-                        </>
-                      )}
-                      <button onClick={() => openEdit(a)} className="text-brand-primary hover:text-brand-primaryHover font-medium">Editar</button>
-                      <button onClick={() => handleDelete(a.id)} className="text-red-600 hover:text-red-800 font-medium">Excluir</button>
+                    <td style={{ padding: '0.75rem 1rem', borderBottom: '1px solid rgba(212,149,86,0.05)', color: 'var(--nexus-text)', fontSize: '0.875rem', textAlign: 'right' }}>
+                      <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end' }}>
+                        {a.status === 'scheduled' && (
+                          <>
+                            <button onClick={() => handleStatusChange(a.id, 'completed')} style={{ color: '#D49556', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 500, fontSize: '0.875rem' }}>Concluir</button>
+                            <button onClick={() => handleStatusChange(a.id, 'cancelled')} style={{ color: '#D84B5F', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 500, fontSize: '0.875rem' }}>Cancelar</button>
+                          </>
+                        )}
+                        <button onClick={() => openEdit(a)} style={{ color: '#D49556', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 500, fontSize: '0.875rem' }}>Editar</button>
+                        <button onClick={() => handleDelete(a.id)} style={{ color: '#D84B5F', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 500, fontSize: '0.875rem' }}>Excluir</button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -162,49 +176,54 @@ export function Appointments() {
       </div>
 
       {showModal && (
-        <div className="fixed inset-0 bg-brand-blackCherry/45 flex items-center justify-center z-50">
-          <div className="card rounded-2xl w-full max-w-md mx-4">
-            <h2 className="text-xl font-semibold mb-6">{editing ? 'Editar Agendamento' : 'Novo Agendamento'}</h2>
-            {error && <div className="bg-red-50 text-red-700 px-4 py-3 rounded-lg mb-4 text-sm">{error}</div>}
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-brand-blackCherry mb-1">Titulo</label>
-                <input type="text" className="input-field" required value={formData.title}
+        <div style={{ position: 'fixed', inset: 0, zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem', background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }}>
+          <div style={{ background: 'var(--nexus-card-strong)', border: '1px solid var(--nexus-border)', borderRadius: '18px', padding: '2rem', width: '100%', maxWidth: '32rem' }}>
+            <h2 style={{ fontSize: '1.25rem', fontWeight: 600, color: 'var(--nexus-text)', marginBottom: '1.5rem' }}>{editing ? 'Editar Agendamento' : 'Novo Agendamento'}</h2>
+            {error && <div style={{ background: 'rgba(216,75,95,0.12)', color: '#D84B5F', border: '1px solid rgba(216,75,95,0.2)', borderRadius: '10px', padding: '0.75rem 1rem', fontSize: '0.875rem', marginBottom: '1rem' }}>{error}</div>}
+            <form onSubmit={handleSubmit}>
+              <div style={{ marginBottom: '1rem' }}>
+                <label style={{ color: 'var(--nexus-text)', fontSize: '0.875rem', fontWeight: 500, marginBottom: '0.375rem', display: 'block' }}>Titulo</label>
+                <input type="text" required value={formData.title}
+                  style={{ padding: '0.625rem 1rem', background: 'rgba(0,0,0,0.5)', color: 'var(--nexus-text)', border: '1px solid var(--nexus-border)', borderRadius: '10px', fontSize: '0.875rem', width: '100%', boxSizing: 'border-box' }}
                   onChange={(e) => setFormData({ ...formData, title: e.target.value })} />
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
                 <div>
-                  <label className="block text-sm font-medium text-brand-blackCherry mb-1">Data</label>
-                  <input type="date" className="input-field" required value={formData.appointment_date}
+                  <label style={{ color: 'var(--nexus-text)', fontSize: '0.875rem', fontWeight: 500, marginBottom: '0.375rem', display: 'block' }}>Data</label>
+                  <input type="date" required value={formData.appointment_date}
+                    style={{ padding: '0.625rem 1rem', background: 'rgba(0,0,0,0.5)', color: 'var(--nexus-text)', border: '1px solid var(--nexus-border)', borderRadius: '10px', fontSize: '0.875rem', width: '100%', boxSizing: 'border-box' }}
                     onChange={(e) => setFormData({ ...formData, appointment_date: e.target.value })} />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-brand-blackCherry mb-1">Horario</label>
-                  <input type="time" className="input-field" value={formData.appointment_time}
+                  <label style={{ color: 'var(--nexus-text)', fontSize: '0.875rem', fontWeight: 500, marginBottom: '0.375rem', display: 'block' }}>Horario</label>
+                  <input type="time" value={formData.appointment_time}
+                    style={{ padding: '0.625rem 1rem', background: 'rgba(0,0,0,0.5)', color: 'var(--nexus-text)', border: '1px solid var(--nexus-border)', borderRadius: '10px', fontSize: '0.875rem', width: '100%', boxSizing: 'border-box' }}
                     onChange={(e) => setFormData({ ...formData, appointment_time: e.target.value })} />
                 </div>
               </div>
-              <div>
-                <label className="block text-sm font-medium text-brand-blackCherry mb-1">Cliente</label>
-                <select className="input-field" value={formData.client_id}
+              <div style={{ marginBottom: '1rem' }}>
+                <label style={{ color: 'var(--nexus-text)', fontSize: '0.875rem', fontWeight: 500, marginBottom: '0.375rem', display: 'block' }}>Cliente</label>
+                <select value={formData.client_id}
+                  style={{ padding: '0.625rem 1rem', background: 'rgba(0,0,0,0.5)', color: 'var(--nexus-text)', border: '1px solid var(--nexus-border)', borderRadius: '10px', fontSize: '0.875rem', width: '100%', boxSizing: 'border-box' }}
                   onChange={(e) => setFormData({ ...formData, client_id: Number(e.target.value) })}>
                   <option value={0}>Nenhum</option>
                   {clients.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
                 </select>
               </div>
-              <div>
-                <label className="block text-sm font-medium text-brand-blackCherry mb-1">Descricao</label>
-                <textarea className="input-field" rows={3} value={formData.description}
+              <div style={{ marginBottom: '1rem' }}>
+                <label style={{ color: 'var(--nexus-text)', fontSize: '0.875rem', fontWeight: 500, marginBottom: '0.375rem', display: 'block' }}>Descricao</label>
+                <textarea rows={3} value={formData.description}
+                  style={{ padding: '0.625rem 1rem', background: 'rgba(0,0,0,0.5)', color: 'var(--nexus-text)', border: '1px solid var(--nexus-border)', borderRadius: '10px', fontSize: '0.875rem', width: '100%', boxSizing: 'border-box', resize: 'vertical' }}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })} />
               </div>
-              <div className="flex justify-end gap-3 pt-2">
-                <button type="button" onClick={() => setShowModal(false)} className="btn-secondary">Cancelar</button>
-                <button type="submit" className="btn-primary">Salvar</button>
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', paddingTop: '0.5rem' }}>
+                <button type="button" onClick={() => setShowModal(false)} style={{ background: 'var(--nexus-card)', color: 'var(--nexus-text)', border: '1px solid var(--nexus-border)', borderRadius: '10px', padding: '0.5rem 1rem', cursor: 'pointer', fontSize: '0.875rem' }}>Cancelar</button>
+                <button type="submit" style={{ background: 'linear-gradient(135deg, #C65A71, #9d4e58)', color: '#fff', border: 'none', borderRadius: '10px', padding: '0.5rem 1rem', fontWeight: 500, cursor: 'pointer', fontSize: '0.875rem' }}>Salvar</button>
               </div>
             </form>
           </div>
         </div>
       )}
-    </div>
+    </motion.div>
   );
 }

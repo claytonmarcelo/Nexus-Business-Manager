@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { createSuggestion } from '../../services/suggestions.service';
 import { useToast } from '../../contexts/ToastContext';
 
@@ -44,21 +45,26 @@ export function CreateSuggestion() {
   }
 
   return (
-    <div className="max-w-2xl mx-auto">
-      <div className="mb-8">
-        <h1 className="page-title">Enviar Sugestao</h1>
-        <p className="text-brand-graphiteWine/60 mt-1">
+    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
+      <div style={{ marginBottom: '1.5rem' }}>
+        <h1 style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--nexus-text)' }}>
+          Enviar <span style={{ color: 'var(--nexus-gold)' }}>Sugestao</span>
+        </h1>
+        <p style={{ fontSize: '0.875rem', color: 'var(--nexus-muted-2)', marginTop: '0.25rem' }}>
           Compartilhe sua ideia, melhoria ou feedback conosco.
         </p>
       </div>
 
-      <form onSubmit={handleSubmit} className="card space-y-6">
-        <div>
-          <label className="block text-sm font-medium text-brand-graphiteWine/80 mb-1">Categoria</label>
+      <form
+        onSubmit={handleSubmit}
+        style={{ background: 'var(--nexus-card-strong)', border: '1px solid var(--nexus-border)', borderRadius: '18px', padding: '2rem', maxWidth: '640px', margin: '0 auto' }}
+      >
+        <div style={{ marginBottom: '1.25rem' }}>
+          <label style={{ color: 'var(--nexus-text)', fontSize: '0.875rem', fontWeight: 500, marginBottom: '0.375rem', display: 'block' }}>Categoria</label>
           <select
             value={category}
             onChange={(e) => setCategory(e.target.value)}
-            className="input-field"
+            style={{ width: '100%', padding: '0.75rem 1rem', background: 'rgba(0,0,0,0.5)', color: 'var(--nexus-text)', border: '1px solid var(--nexus-border)', borderRadius: '10px', fontSize: '0.875rem' }}
           >
             {categories.map((c) => (
               <option key={c.value} value={c.value}>{c.label}</option>
@@ -66,39 +72,39 @@ export function CreateSuggestion() {
           </select>
         </div>
 
-        <div>
-          <label className="block text-sm font-medium text-brand-graphiteWine/80 mb-1">Titulo</label>
+        <div style={{ marginBottom: '1.25rem' }}>
+          <label style={{ color: 'var(--nexus-text)', fontSize: '0.875rem', fontWeight: 500, marginBottom: '0.375rem', display: 'block' }}>Titulo</label>
           <input
             type="text"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            className="input-field"
+            style={{ width: '100%', padding: '0.75rem 1rem', background: 'rgba(0,0,0,0.5)', color: 'var(--nexus-text)', border: '1px solid var(--nexus-border)', borderRadius: '10px', fontSize: '0.875rem' }}
             placeholder="Ex: Melhorar relatorio de vendas"
             required
             minLength={5}
           />
         </div>
 
-        <div>
-          <label className="block text-sm font-medium text-brand-graphiteWine/80 mb-1">Descricao</label>
+        <div style={{ marginBottom: '1.25rem' }}>
+          <label style={{ color: 'var(--nexus-text)', fontSize: '0.875rem', fontWeight: 500, marginBottom: '0.375rem', display: 'block' }}>Descricao</label>
           <textarea
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            className="input-field min-h-[160px] resize-y"
+            style={{ width: '100%', padding: '0.75rem 1rem', background: 'rgba(0,0,0,0.5)', color: 'var(--nexus-text)', border: '1px solid var(--nexus-border)', borderRadius: '10px', fontSize: '0.875rem', resize: 'vertical', minHeight: '100px' }}
             placeholder="Descreva sua sugestao em detalhes (minimo 20 caracteres)..."
             required
             minLength={20}
           />
         </div>
 
-        <div className="bg-brand-ivorySmoke/30 rounded-lg p-4 text-sm text-brand-graphiteWine/70 space-y-2 border border-brand-ivorySmoke/50">
-          <p className="font-semibold text-brand-graphiteWine/90">Aviso Legal</p>
-          <p>
-            Ao enviar esta sugestao, voce concede ao Nexus Business Manager o direito de 
-            analisar, implementar ou recusar a sugestao conforme seu criterio. 
+        <div style={{ background: 'rgba(0,0,0,0.3)', borderRadius: '12px', padding: '1rem', marginBottom: '1.25rem', border: '1px solid var(--nexus-border)', fontSize: '0.875rem', color: 'var(--nexus-muted-2)', lineHeight: 1.6 }}>
+          <p style={{ fontWeight: 600, color: 'var(--nexus-text)', marginBottom: '0.5rem' }}>Aviso Legal</p>
+          <p style={{ marginBottom: '0.5rem' }}>
+            Ao enviar esta sugestao, voce concede ao Nexus Business Manager o direito de
+            analisar, implementar ou recusar a sugestao conforme seu criterio.
           </p>
-          <p>
-            Conteudos ofensivos, difamatorios ou inapropriados serao automaticamente 
+          <p style={{ marginBottom: '0.5rem' }}>
+            Conteudos ofensivos, difamatorios ou inapropriados serao automaticamente
             bloqueados e podem resultar em restricoes na sua conta.
           </p>
           <p>
@@ -106,27 +112,35 @@ export function CreateSuggestion() {
           </p>
         </div>
 
-        <label className="flex items-start gap-3 cursor-pointer">
+        <label style={{ display: 'flex', alignItems: 'flex-start', gap: '0.75rem', cursor: 'pointer', marginBottom: '1.25rem' }}>
           <input
             type="checkbox"
             checked={acceptedTerms}
             onChange={(e) => setAcceptedTerms(e.target.checked)}
-            className="mt-1 w-4 h-4 rounded border-brand-ivorySmoke text-brand-primary focus:ring-brand-primary"
+            style={{ marginTop: '0.25rem', width: '1rem', height: '1rem', accentColor: 'var(--nexus-gold)' }}
           />
-          <span className="text-sm text-brand-graphiteWine/70">
+          <span style={{ fontSize: '0.875rem', color: 'var(--nexus-muted-2)', lineHeight: 1.5 }}>
             Eu li e aceito os termos legais acima e concordo com o tratamento dos meus dados
           </span>
         </label>
 
-        <div className="flex gap-3 pt-2">
-          <button type="submit" disabled={submitting} className="btn-primary">
+        <div style={{ display: 'flex', gap: '0.75rem', paddingTop: '0.5rem' }}>
+          <button
+            type="submit"
+            disabled={submitting}
+            style={{ background: 'linear-gradient(135deg, #C65A71, #9d4e58)', color: '#fff', border: 'none', borderRadius: '10px', padding: '0.75rem 1.5rem', fontWeight: 500, cursor: submitting ? 'not-allowed' : 'pointer', opacity: submitting ? 0.6 : 1 }}
+          >
             {submitting ? 'Enviando...' : 'Enviar Sugestao'}
           </button>
-          <button type="button" onClick={() => navigate('/suggestions')} className="btn-secondary">
+          <button
+            type="button"
+            onClick={() => navigate('/suggestions')}
+            style={{ background: 'var(--nexus-card)', color: 'var(--nexus-text)', border: '1px solid var(--nexus-border)', borderRadius: '10px', padding: '0.5rem 1rem', cursor: 'pointer' }}
+          >
             Cancelar
           </button>
         </div>
       </form>
-    </div>
+    </motion.div>
   );
 }

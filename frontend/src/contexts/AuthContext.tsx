@@ -66,6 +66,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Keep theme preference on logout
     setToken(null);
     setUser(null);
+    // Hard redirect to ensure clean state reset
+    window.location.href = '/login';
   }
 
   function updateUser(userData: Partial<User>) {

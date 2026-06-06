@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
 import { listSuggestions, updateSuggestion, deleteSuggestion } from '../../services/suggestions.service';
 import { Suggestion } from '../../types';
 import { useAuth } from '../../contexts/AuthContext';
@@ -12,12 +13,12 @@ const statusLabels: Record<string, string> = {
   implemented: 'Implementada',
 };
 
-const statusColors: Record<string, string> = {
-  pending: 'text-yellow-500',
-  under_review: 'text-blue-500',
-  approved: 'text-green-500',
-  rejected: 'text-red-500',
-  implemented: 'text-brand-primary',
+const statusBadgeStyles: Record<string, React.CSSProperties> = {
+  pending: { background: 'rgba(212,149,86,0.12)', color: '#D49556' },
+  under_review: { background: 'rgba(96,165,250,0.12)', color: '#60a5fa' },
+  approved: { background: 'rgba(125,218,106,0.12)', color: '#7DDA6A' },
+  rejected: { background: 'rgba(216,75,95,0.12)', color: '#D84B5F' },
+  implemented: { background: 'rgba(125,218,106,0.12)', color: '#7DDA6A' },
 };
 
 const categoryLabels: Record<string, string> = {
@@ -100,97 +101,117 @@ export function AdminSuggestions() {
   const canManage = user?.role === 'admin' || user?.role === 'manager';
 
   return (
-    <div>
-      <div className="flex justify-between items-center mb-8">
-        <div>
-          <h1 className="page-title">Gerenciar Sugestoes</h1>
-          <p className="text-brand-graphiteWine/60 mt-1">{total} sugestao(oes) encontrada(s)</p>
-        </div>
+    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
+      <div style={{ marginBottom: '1.5rem' }}>
+        <h1 style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--nexus-text)' }}>
+          Gerenciar <span style={{ color: 'var(--nexus-gold)' }}>Sugestoes</span>
+        </h1>
+        <p style={{ fontSize: '0.875rem', color: 'var(--nexus-muted-2)', marginTop: '0.25rem' }}>{total} sugestao(oes) encontrada(s)</p>
+      </div>
 
-        <div className="flex gap-2">
-          {statusFilterOptions.map((opt) => (
-            <button
-              key={opt.value}
-              onClick={() => { setStatusFilter(opt.value); setPage(1); }}
-              className={`px-3 py-1.5 text-xs rounded-lg border transition-colors ${
-                statusFilter === opt.value
-                  ? 'bg-brand-primary text-white border-brand-primary'
-                  : 'border-brand-ivorySmoke text-brand-graphiteWine/70 hover:border-brand-primary/50'
-              }`}
-            >
-              {opt.label}
-            </button>
-          ))}
-        </div>
+      <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginBottom: '1.5rem' }}>
+        {statusFilterOptions.map((opt) => (
+          <button
+            key={opt.value}
+            onClick={() => { setStatusFilter(opt.value); setPage(1); }}
+            style={{
+              padding: '0.375rem 0.875rem',
+              fontSize: '0.75rem',
+              borderRadius: '8px',
+              border: '1px solid',
+              background: statusFilter === opt.value ? 'linear-gradient(135deg, #C65A71, #9d4e58)' : 'var(--nexus-card)',
+              color: statusFilter === opt.value ? '#fff' : 'var(--nexus-text)',
+              borderColor: statusFilter === opt.value ? 'transparent' : 'var(--nexus-border)',
+              cursor: 'pointer',
+              fontWeight: 500,
+            }}
+          >
+            {opt.label}
+          </button>
+        ))}
       </div>
 
       {loading ? (
-        <div className="card p-8 text-center text-brand-graphiteWine/70">Carregando...</div>
+        <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--nexus-muted-2)' }}>Carregando...</div>
       ) : suggestions.length === 0 ? (
-        <div className="card p-8 text-center text-brand-graphiteWine/70">Nenhuma sugestao encontrada.</div>
+        <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--nexus-muted-2)' }}>Nenhuma sugestao encontrada.</div>
       ) : (
-        <div className="space-y-4">
+        <div style={{ background: 'var(--nexus-card)', border: '1px solid var(--nexus-border)', borderRadius: '14px', overflow: 'hidden' }}>
           {suggestions.map((s) => (
-            <div key={s.id} className="card">
-              <div className="flex items-start justify-between gap-4">
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="text-xs px-2 py-0.5 rounded-full bg-brand-ivorySmoke/50 text-brand-graphiteWine/70">
-                      {categoryLabels[s.category] || s.category}
+            <div
+              key={s.id}
+              style={{
+                padding: '1rem 1.25rem',
+                borderBottom: '1px solid var(--nexus-border)',
+                display: 'flex',
+                alignItems: 'flex-start',
+                justifyContent: 'space-between',
+                gap: '1rem',
+              }}
+            >
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.375rem', padding: '0.25rem 0.75rem', borderRadius: '9999px', fontSize: '0.75rem', fontWeight: 500, background: 'rgba(0,0,0,0.3)', color: 'var(--nexus-muted-2)' }}>
+                    {categoryLabels[s.category] || s.category}
+                  </span>
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.375rem', padding: '0.25rem 0.75rem', borderRadius: '9999px', fontSize: '0.75rem', fontWeight: 500, ...(statusBadgeStyles[s.status] || statusBadgeStyles.pending) }}>
+                    {statusLabels[s.status] || s.status}
+                  </span>
+                  {s.is_offensive === 1 && (
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.375rem', padding: '0.25rem 0.75rem', borderRadius: '9999px', fontSize: '0.75rem', fontWeight: 500, background: 'rgba(216,75,95,0.12)', color: '#D84B5F' }}>
+                      Ofensivo
                     </span>
-                    <span className={`text-xs font-medium ${statusColors[s.status] || ''}`}>
-                      {statusLabels[s.status] || s.status}
-                    </span>
-                    {s.is_offensive === 1 && (
-                      <span className="text-xs px-2 py-0.5 rounded-full bg-red-100 text-red-600 font-medium">
-                        Ofensivo
-                      </span>
-                    )}
-                  </div>
-                  <h3 className="text-base font-semibold text-brand-graphiteWine/90 truncate">{s.title}</h3>
-                  <p className="text-sm text-brand-graphiteWine/70 mt-1 line-clamp-2">{s.description}</p>
-                  <div className="flex items-center gap-3 mt-2 text-xs text-brand-graphiteWine/50">
-                    <span>Por {s.user_name}</span>
-                    <span>{new Date(s.created_at).toLocaleString('pt-BR')}</span>
-                  </div>
-                  {s.admin_notes && (
-                    <div className="mt-2 p-2 bg-brand-ivorySmoke/30 rounded text-xs text-brand-graphiteWine/70 italic">
-                      Nota: {s.admin_notes}
-                    </div>
                   )}
                 </div>
-                {canManage && (
-                  <div className="flex gap-2 shrink-0">
-                    <button onClick={() => openEdit(s)} className="btn-secondary text-xs px-3 py-1.5">
-                      Editar
-                    </button>
-                    <button onClick={() => handleDelete(s.id)} className="text-xs px-3 py-1.5 border border-red-300 text-red-500 rounded-lg hover:bg-red-50 transition-colors">
-                      Excluir
-                    </button>
+                <h3 style={{ fontSize: '0.9375rem', fontWeight: 600, color: 'var(--nexus-text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.title}</h3>
+                <p style={{ fontSize: '0.8125rem', color: 'var(--nexus-muted-2)', marginTop: '0.25rem', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{s.description}</p>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginTop: '0.5rem', fontSize: '0.75rem', color: 'var(--nexus-muted-2)' }}>
+                  <span>Por {s.user_name}</span>
+                  <span>{new Date(s.created_at).toLocaleString('pt-BR')}</span>
+                </div>
+                {s.admin_notes && (
+                  <div style={{ marginTop: '0.5rem', padding: '0.5rem', background: 'rgba(0,0,0,0.3)', borderRadius: '8px', fontSize: '0.75rem', color: 'var(--nexus-muted-2)', fontStyle: 'italic' }}>
+                    Nota: {s.admin_notes}
                   </div>
                 )}
               </div>
+              {canManage && (
+                <div style={{ display: 'flex', gap: '0.5rem', flexShrink: 0 }}>
+                  <button
+                    onClick={() => openEdit(s)}
+                    style={{ color: '#D49556', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 500, fontSize: '0.8125rem' }}
+                  >
+                    Editar
+                  </button>
+                  <button
+                    onClick={() => handleDelete(s.id)}
+                    style={{ color: '#D84B5F', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 500, fontSize: '0.8125rem' }}
+                  >
+                    Excluir
+                  </button>
+                </div>
+              )}
             </div>
           ))}
         </div>
       )}
 
       {totalPages > 1 && (
-        <div className="flex justify-center gap-2 mt-6">
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.75rem', marginTop: '1.5rem' }}>
           <button
             disabled={page <= 1}
             onClick={() => setPage(page - 1)}
-            className="btn-secondary text-sm disabled:opacity-50"
+            style={{ background: page <= 1 ? 'var(--nexus-card)' : 'var(--nexus-card)', color: 'var(--nexus-text)', border: '1px solid var(--nexus-border)', borderRadius: '10px', padding: '0.5rem 1rem', cursor: page <= 1 ? 'not-allowed' : 'pointer', fontSize: '0.875rem', opacity: page <= 1 ? 0.5 : 1 }}
           >
             Anterior
           </button>
-          <span className="flex items-center text-sm text-brand-graphiteWine/70">
+          <span style={{ fontSize: '0.875rem', color: 'var(--nexus-gold)', fontWeight: 600 }}>
             Pagina {page} de {totalPages}
           </span>
           <button
             disabled={page >= totalPages}
             onClick={() => setPage(page + 1)}
-            className="btn-secondary text-sm disabled:opacity-50"
+            style={{ background: 'var(--nexus-card)', color: 'var(--nexus-text)', border: '1px solid var(--nexus-border)', borderRadius: '10px', padding: '0.5rem 1rem', cursor: page >= totalPages ? 'not-allowed' : 'pointer', fontSize: '0.875rem', opacity: page >= totalPages ? 0.5 : 1 }}
           >
             Proxima
           </button>
@@ -198,38 +219,58 @@ export function AdminSuggestions() {
       )}
 
       {selected && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60" onClick={() => setSelected(null)}>
-          <div className="card max-w-lg w-full mx-4 max-h-[80vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
-            <h2 className="text-lg font-semibold mb-4">Editar Sugestao #{selected.id}</h2>
+        <div
+          style={{ position: 'fixed', inset: 0, zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem', background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }}
+          onClick={() => setSelected(null)}
+        >
+          <div
+            style={{ background: 'var(--nexus-card-strong)', border: '1px solid var(--nexus-border)', borderRadius: '18px', padding: '2rem', width: '100%', maxWidth: '32rem', maxHeight: '80vh', overflowY: 'auto' }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h2 style={{ fontSize: '1.125rem', fontWeight: 600, color: 'var(--nexus-text)', marginBottom: '1rem' }}>
+              Editar Sugestao <span style={{ color: 'var(--nexus-gold)' }}>#{selected.id}</span>
+            </h2>
 
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-brand-graphiteWine/80 mb-1">Status</label>
-                <select value={newStatus} onChange={(e) => setNewStatus(e.target.value)} className="input-field">
-                  {Object.entries(statusLabels).map(([key, label]) => (
-                    <option key={key} value={key}>{label}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-brand-graphiteWine/80 mb-1">Notas do Administrador</label>
-                <textarea
-                  value={adminNotes}
-                  onChange={(e) => setAdminNotes(e.target.value)}
-                  className="input-field min-h-[100px] resize-y"
-                  placeholder="Adicione uma observacao sobre esta sugestao..."
-                />
-              </div>
+            <div style={{ marginBottom: '1rem' }}>
+              <label style={{ color: 'var(--nexus-text)', fontSize: '0.875rem', fontWeight: 500, marginBottom: '0.375rem', display: 'block' }}>Status</label>
+              <select
+                value={newStatus}
+                onChange={(e) => setNewStatus(e.target.value)}
+                style={{ width: '100%', padding: '0.75rem 1rem', background: 'rgba(0,0,0,0.5)', color: 'var(--nexus-text)', border: '1px solid var(--nexus-border)', borderRadius: '10px', fontSize: '0.875rem' }}
+              >
+                {Object.entries(statusLabels).map(([key, label]) => (
+                  <option key={key} value={key}>{label}</option>
+                ))}
+              </select>
             </div>
 
-            <div className="flex gap-3 mt-6">
-              <button onClick={handleUpdate} className="btn-primary">Salvar</button>
-              <button onClick={() => setSelected(null)} className="btn-secondary">Cancelar</button>
+            <div style={{ marginBottom: '1rem' }}>
+              <label style={{ color: 'var(--nexus-text)', fontSize: '0.875rem', fontWeight: 500, marginBottom: '0.375rem', display: 'block' }}>Notas do Administrador</label>
+              <textarea
+                value={adminNotes}
+                onChange={(e) => setAdminNotes(e.target.value)}
+                style={{ width: '100%', padding: '0.75rem 1rem', background: 'rgba(0,0,0,0.5)', color: 'var(--nexus-text)', border: '1px solid var(--nexus-border)', borderRadius: '10px', fontSize: '0.875rem', resize: 'vertical', minHeight: '100px' }}
+                placeholder="Adicione uma observacao sobre esta sugestao..."
+              />
+            </div>
+
+            <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.5rem' }}>
+              <button
+                onClick={handleUpdate}
+                style={{ background: 'linear-gradient(135deg, #C65A71, #9d4e58)', color: '#fff', border: 'none', borderRadius: '10px', padding: '0.75rem 1.5rem', fontWeight: 500, cursor: 'pointer' }}
+              >
+                Salvar
+              </button>
+              <button
+                onClick={() => setSelected(null)}
+                style={{ background: 'var(--nexus-card)', color: 'var(--nexus-text)', border: '1px solid var(--nexus-border)', borderRadius: '10px', padding: '0.5rem 1rem', cursor: 'pointer' }}
+              >
+                Cancelar
+              </button>
             </div>
           </div>
         </div>
       )}
-    </div>
+    </motion.div>
   );
 }

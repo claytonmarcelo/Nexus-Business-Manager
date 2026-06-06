@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { listSuggestions } from '../../services/suggestions.service';
 import { Suggestion } from '../../types';
 import { useAuth } from '../../contexts/AuthContext';
@@ -9,9 +10,12 @@ const statusLabels: Record<string, string> = {
   rejected: 'Rejeitada', implemented: 'Implementada',
 };
 
-const statusColors: Record<string, string> = {
-  pending: 'text-yellow-500', under_review: 'text-blue-500', approved: 'text-green-500',
-  rejected: 'text-red-500', implemented: 'text-brand-gold',
+const statusBadgeStyles: Record<string, React.CSSProperties> = {
+  pending: { background: 'rgba(212,149,86,0.12)', color: '#D49556' },
+  under_review: { background: 'rgba(96,165,250,0.12)', color: '#60a5fa' },
+  approved: { background: 'rgba(125,218,106,0.12)', color: '#7DDA6A' },
+  rejected: { background: 'rgba(216,75,95,0.12)', color: '#D84B5F' },
+  implemented: { background: 'rgba(125,218,106,0.12)', color: '#7DDA6A' },
 };
 
 const categoryLabels: Record<string, string> = {
@@ -41,54 +45,73 @@ export function SuggestionsList() {
   const displaySuggestions = isAdminOrManager ? suggestions : userSuggestions;
 
   return (
-    <div>
-      <div className="flex justify-between items-center mb-8">
+    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
+      <div style={{ marginBottom: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>
-          <h1 className="page-title">Sugestoes</h1>
-          <p className="text-brand-muted text-sm mt-0.5">
+          <h1 style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--nexus-text)' }}>
+            <span style={{ color: 'var(--nexus-gold)' }}>Sugestoes</span>
+          </h1>
+          <p style={{ fontSize: '0.875rem', color: 'var(--nexus-muted-2)', marginTop: '0.25rem' }}>
             {isAdminOrManager ? 'Todas as sugestoes recebidas' : 'Minhas sugestoes'}
           </p>
         </div>
-        <div className="flex gap-3">
+        <div style={{ display: 'flex', gap: '0.75rem' }}>
           {isAdminOrManager && (
-            <button onClick={() => navigate('/suggestions/admin')} className="btn-secondary">
+            <button
+              onClick={() => navigate('/suggestions/admin')}
+              style={{ background: 'var(--nexus-card)', color: 'var(--nexus-text)', border: '1px solid var(--nexus-border)', borderRadius: '10px', padding: '0.5rem 1rem', cursor: 'pointer' }}
+            >
               Gerenciar
             </button>
           )}
-          <button onClick={() => navigate('/suggestions/new')} className="btn-primary">
+          <button
+            onClick={() => navigate('/suggestions/new')}
+            style={{ background: 'linear-gradient(135deg, #C65A71, #9d4e58)', color: '#fff', border: 'none', borderRadius: '10px', padding: '0.75rem 1.5rem', fontWeight: 500, cursor: 'pointer' }}
+          >
             Nova Sugestao
           </button>
         </div>
       </div>
 
-      <div className="card overflow-hidden p-0">
+      <div style={{ background: 'var(--nexus-card)', border: '1px solid var(--nexus-border)', borderRadius: '14px', overflow: 'hidden' }}>
         {loading ? (
-          <div className="p-8 text-center text-brand-muted">Carregando...</div>
+          <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--nexus-muted-2)' }}>Carregando...</div>
         ) : displaySuggestions.length === 0 ? (
-          <div className="p-8 text-center text-brand-muted">
+          <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--nexus-muted-2)' }}>
             <p>Nenhuma sugestao encontrada.</p>
-            <button onClick={() => navigate('/suggestions/new')} className="btn-primary mt-4">
+            <button
+              onClick={() => navigate('/suggestions/new')}
+              style={{ background: 'linear-gradient(135deg, #C65A71, #9d4e58)', color: '#fff', border: 'none', borderRadius: '10px', padding: '0.75rem 1.5rem', fontWeight: 500, cursor: 'pointer', marginTop: '1rem' }}
+            >
               Enviar primeira sugestao
             </button>
           </div>
         ) : (
-          <div className="divide-y divide-brand-border/50">
+          <div>
             {displaySuggestions.map((s) => (
-              <div key={s.id} className="p-4 hover:bg-brand-primary/5 transition-colors">
-                <div className="flex items-center gap-2 mb-1">
-                  <span className="text-xs px-2 py-0.5 rounded-full bg-brand-card/50 text-brand-muted">
+              <div
+                key={s.id}
+                style={{
+                  padding: '1rem 1.25rem',
+                  borderBottom: '1px solid var(--nexus-border)',
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.375rem', padding: '0.25rem 0.75rem', borderRadius: '9999px', fontSize: '0.75rem', fontWeight: 500, background: 'rgba(0,0,0,0.3)', color: 'var(--nexus-muted-2)' }}>
                     {categoryLabels[s.category] || s.category}
                   </span>
-                  <span className={`text-xs font-medium ${statusColors[s.status] || ''}`}>
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.375rem', padding: '0.25rem 0.75rem', borderRadius: '9999px', fontSize: '0.75rem', fontWeight: 500, ...(statusBadgeStyles[s.status] || statusBadgeStyles.pending) }}>
                     {statusLabels[s.status] || s.status}
                   </span>
                   {s.is_offensive === 1 && (
-                    <span className="text-xs px-2 py-0.5 rounded-full bg-red-500/20 text-red-500 font-medium">Ofensivo</span>
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.375rem', padding: '0.25rem 0.75rem', borderRadius: '9999px', fontSize: '0.75rem', fontWeight: 500, background: 'rgba(216,75,95,0.12)', color: '#D84B5F' }}>
+                      Ofensivo
+                    </span>
                   )}
                 </div>
-                <h3 className="text-sm font-semibold">{s.title}</h3>
-                <p className="text-xs text-brand-muted mt-1 line-clamp-2">{s.description}</p>
-                <p className="text-xs text-brand-muted-2 mt-1">
+                <h3 style={{ fontSize: '0.9375rem', fontWeight: 600, color: 'var(--nexus-text)' }}>{s.title}</h3>
+                <p style={{ fontSize: '0.8125rem', color: 'var(--nexus-muted-2)', marginTop: '0.25rem', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{s.description}</p>
+                <p style={{ fontSize: '0.75rem', color: 'var(--nexus-muted-2)', marginTop: '0.5rem' }}>
                   {new Date(s.created_at).toLocaleString('pt-BR')}
                   {!isAdminOrManager && s.admin_notes && ` — Nota: ${s.admin_notes}`}
                 </p>
@@ -97,6 +120,6 @@ export function SuggestionsList() {
           </div>
         )}
       </div>
-    </div>
+    </motion.div>
   );
 }

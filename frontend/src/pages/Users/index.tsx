@@ -1,4 +1,5 @@
 import { useState, useEffect, FormEvent } from 'react';
+import { motion } from 'framer-motion';
 import api from '../../services/api';
 import { User } from '../../types';
 
@@ -82,51 +83,83 @@ export function Users() {
     return classes[role] || 'badge';
   }
 
+  const inputStyle: React.CSSProperties = {
+    width: '100%', padding: '0.625rem 1rem', background: 'rgba(0,0,0,0.5)', color: 'var(--nexus-text)',
+    border: '1px solid var(--nexus-border)', borderRadius: '10px', fontSize: '0.875rem', outline: 'none',
+  };
+
   return (
-    <div>
-      <div className="flex justify-between items-center mb-8">
+    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
+      <div className="page-header">
         <div>
-          <h1 className="page-title">Usuarios</h1>
-          <p className="text-brand-graphiteWine/60 mt-1">Gerenciar usuarios do sistema</p>
+          <h1 style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--nexus-text)' }}>Usuarios</h1>
+          <p style={{ fontSize: '0.875rem', color: 'var(--nexus-muted-2)', marginTop: '0.25rem' }}>Gerenciar usuarios do sistema</p>
         </div>
-        <button onClick={openCreate} className="btn-primary">Novo Usuario</button>
+        <button
+          onClick={openCreate}
+          style={{
+            background: 'linear-gradient(135deg, #C65A71, #9d4e58)', color: '#fff', border: 'none',
+            borderRadius: '10px', padding: '0.625rem 1.25rem', fontWeight: 500, cursor: 'pointer',
+          }}
+        >
+          Novo Usuario
+        </button>
       </div>
 
-      <div className="card overflow-hidden p-0">
+      <div style={{ background: 'var(--nexus-card)', border: '1px solid var(--nexus-border)', borderRadius: '14px', overflow: 'hidden' }}>
         {loading ? (
-          <div className="p-8 text-center text-brand-graphiteWine/70">Carregando...</div>
+          <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--nexus-muted-2)' }}>Carregando...</div>
         ) : users.length === 0 ? (
-          <div className="p-8 text-center text-brand-graphiteWine/70">Nenhum usuario encontrado</div>
+          <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--nexus-muted-2)' }}>Nenhum usuario encontrado</div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead className="bg-brand-blackCherry text-brand-ivorySmoke">
+          <div style={{ overflowX: 'auto' }}>
+            <table style={{ width: '100%', fontSize: '0.875rem', borderCollapse: 'collapse' }}>
+              <thead>
                 <tr>
-                  <th className="text-left py-3 px-4 font-medium text-brand-ivorySmoke">Nome</th>
-                  <th className="text-left py-3 px-4 font-medium text-brand-ivorySmoke">Email</th>
-                  <th className="text-left py-3 px-4 font-medium text-brand-ivorySmoke">Perfil</th>
-                  <th className="text-left py-3 px-4 font-medium text-brand-ivorySmoke">Status</th>
-                  <th className="text-right py-3 px-4 font-medium text-brand-ivorySmoke">Acoes</th>
+                  <th style={{ textAlign: 'left', padding: '0.75rem 1rem', fontSize: '0.75rem', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--nexus-muted-2)', borderBottom: '1px solid rgba(212, 149, 86, 0.1)' }}>Nome</th>
+                  <th style={{ textAlign: 'left', padding: '0.75rem 1rem', fontSize: '0.75rem', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--nexus-muted-2)', borderBottom: '1px solid rgba(212, 149, 86, 0.1)' }}>Email</th>
+                  <th style={{ textAlign: 'left', padding: '0.75rem 1rem', fontSize: '0.75rem', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--nexus-muted-2)', borderBottom: '1px solid rgba(212, 149, 86, 0.1)' }}>Perfil</th>
+                  <th style={{ textAlign: 'left', padding: '0.75rem 1rem', fontSize: '0.75rem', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--nexus-muted-2)', borderBottom: '1px solid rgba(212, 149, 86, 0.1)' }}>Status</th>
+                  <th style={{ textAlign: 'right', padding: '0.75rem 1rem', fontSize: '0.75rem', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--nexus-muted-2)', borderBottom: '1px solid rgba(212, 149, 86, 0.1)' }}>Acoes</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100">
+              <tbody>
                 {users.map((user) => (
-                  <tr key={user.id} className="hover:bg-[rgba(214,179,112,0.18)]">
-                    <td className="py-3 px-4 font-medium">{user.name}</td>
-                    <td className="py-3 px-4 text-brand-graphiteWine/70">{user.email}</td>
-                    <td className="py-3 px-4">
-                      <span className={getRoleBadge(user.role)}>
-                        {roleLabels[user.role]}
-                      </span>
+                  <tr
+                    key={user.id}
+                    onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(212,149,86,0.04)'}
+                    onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                  >
+                    <td style={{ padding: '0.75rem 1rem', borderBottom: '1px solid rgba(212,149,86,0.05)', color: 'var(--nexus-text)', fontSize: '0.875rem', fontWeight: 500 }}>{user.name}</td>
+                    <td style={{ padding: '0.75rem 1rem', borderBottom: '1px solid rgba(212,149,86,0.05)', color: 'var(--nexus-text)', fontSize: '0.875rem' }}>{user.email}</td>
+                    <td style={{ padding: '0.75rem 1rem', borderBottom: '1px solid rgba(212,149,86,0.05)', color: 'var(--nexus-text)', fontSize: '0.875rem' }}>
+                      <span className={getRoleBadge(user.role)}>{roleLabels[user.role]}</span>
                     </td>
-                    <td className="py-3 px-4">
-                      <span className={`badge ${user.active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                    <td style={{ padding: '0.75rem 1rem', borderBottom: '1px solid rgba(212,149,86,0.05)', color: 'var(--nexus-text)', fontSize: '0.875rem' }}>
+                      <span style={{
+                        display: 'inline-flex', alignItems: 'center', gap: '0.375rem',
+                        padding: '0.25rem 0.75rem', borderRadius: '9999px', fontSize: '0.75rem', fontWeight: 500,
+                        background: user.active ? 'rgba(34,197,94,0.12)' : 'rgba(216,75,95,0.12)',
+                        color: user.active ? '#22C55E' : '#D84B5F',
+                      }}>
                         {user.active ? 'Ativo' : 'Inativo'}
                       </span>
                     </td>
-                    <td className="py-3 px-4 text-right space-x-2">
-                      <button onClick={() => openEdit(user)} className="text-brand-primary hover:text-brand-primaryHover font-medium">Editar</button>
-                      <button onClick={() => handleToggleActive(user)} className={`font-medium ${user.active ? 'text-red-600 hover:text-red-800' : 'text-green-600 hover:text-green-800'}`}>
+                    <td style={{ padding: '0.75rem 1rem', borderBottom: '1px solid rgba(212,149,86,0.05)', color: 'var(--nexus-text)', fontSize: '0.875rem', textAlign: 'right' }}>
+                      <button
+                        onClick={() => openEdit(user)}
+                        style={{ color: '#D49556', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 500, fontSize: '0.875rem' }}
+                      >
+                        Editar
+                      </button>
+                      <span style={{ color: 'var(--nexus-border)', margin: '0 0.5rem' }}>|</span>
+                      <button
+                        onClick={() => handleToggleActive(user)}
+                        style={{
+                          color: user.active ? '#D84B5F' : '#22C55E', background: 'none', border: 'none',
+                          cursor: 'pointer', fontWeight: 500, fontSize: '0.875rem',
+                        }}
+                      >
                         {user.active ? 'Desativar' : 'Ativar'}
                       </button>
                     </td>
@@ -139,48 +172,48 @@ export function Users() {
       </div>
 
       {showModal && (
-        <div className="fixed inset-0 bg-brand-blackCherry/45 flex items-center justify-center z-50">
-          <div className="card rounded-2xl w-full max-w-md mx-4">
-            <h2 className="text-xl font-semibold mb-6">
+        <div style={{ position: 'fixed', inset: 0, zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem', background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }}>
+          <div style={{ background: 'var(--nexus-card-strong)', border: '1px solid var(--nexus-border)', borderRadius: '18px', padding: '2rem', width: '100%', maxWidth: '32rem' }}>
+            <h2 style={{ fontSize: '1.25rem', fontWeight: 600, color: 'var(--nexus-text)', marginBottom: '1.5rem' }}>
               {editingUser ? 'Editar Usuario' : 'Novo Usuario'}
             </h2>
 
             {error && (
-              <div className="bg-red-50 text-red-700 px-4 py-3 rounded-lg mb-4 text-sm">{error}</div>
+              <div style={{ background: 'rgba(216, 75, 95, 0.12)', color: '#D84B5F', border: '1px solid rgba(216, 75, 95, 0.2)', borderRadius: '10px', padding: '0.75rem 1rem', fontSize: '0.875rem', marginBottom: '1rem' }}>{error}</div>
             )}
 
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
               <div>
-                <label className="block text-sm font-medium text-brand-blackCherry mb-1">Nome</label>
+                <label style={{ color: 'var(--nexus-text)', fontSize: '0.875rem', fontWeight: 500, marginBottom: '0.375rem', display: 'block' }}>Nome</label>
                 <input
-                  type="text" className="input-field" required
+                  type="text" style={inputStyle} required
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-brand-blackCherry mb-1">Email</label>
+                <label style={{ color: 'var(--nexus-text)', fontSize: '0.875rem', fontWeight: 500, marginBottom: '0.375rem', display: 'block' }}>Email</label>
                 <input
-                  type="email" className="input-field" required
+                  type="email" style={inputStyle} required
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-brand-blackCherry mb-1">
+                <label style={{ color: 'var(--nexus-text)', fontSize: '0.875rem', fontWeight: 500, marginBottom: '0.375rem', display: 'block' }}>
                   {editingUser ? 'Nova Senha (deixe em branco para manter)' : 'Senha'}
                 </label>
                 <input
-                  type="password" className="input-field"
+                  type="password" style={inputStyle}
                   required={!editingUser}
                   value={formData.password}
                   onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-brand-blackCherry mb-1">Perfil</label>
+                <label style={{ color: 'var(--nexus-text)', fontSize: '0.875rem', fontWeight: 500, marginBottom: '0.375rem', display: 'block' }}>Perfil</label>
                 <select
-                  className="input-field"
+                  style={inputStyle}
                   value={formData.role}
                   onChange={(e) => setFormData({ ...formData, role: e.target.value as User['role'] })}
                 >
@@ -190,14 +223,24 @@ export function Users() {
                   <option value="viewer">Visualizador</option>
                 </select>
               </div>
-              <div className="flex justify-end gap-3 pt-2">
-                <button type="button" onClick={() => setShowModal(false)} className="btn-secondary">Cancelar</button>
-                <button type="submit" className="btn-primary">Salvar</button>
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', paddingTop: '0.5rem' }}>
+                <button
+                  type="button" onClick={() => setShowModal(false)}
+                  style={{ background: 'var(--nexus-card)', color: 'var(--nexus-text)', border: '1px solid var(--nexus-border)', borderRadius: '10px', padding: '0.625rem 1.25rem', cursor: 'pointer' }}
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  style={{ background: 'linear-gradient(135deg, #C65A71, #9d4e58)', color: '#fff', border: 'none', borderRadius: '10px', padding: '0.625rem 1.25rem', fontWeight: 500, cursor: 'pointer' }}
+                >
+                  Salvar
+                </button>
               </div>
             </form>
           </div>
         </div>
       )}
-    </div>
+    </motion.div>
   );
 }

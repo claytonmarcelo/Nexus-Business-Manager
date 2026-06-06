@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
 import api from '../../services/api';
 import { AuditLog } from '../../types';
 
 export function Audit() {
   const [logs, setLogs] = useState<AuditLog[]>([]);
   const [loading, setLoading] = useState(true);
+  const [hoveredRowId, setHoveredRowId] = useState<number | null>(null);
 
   useEffect(() => { load(); }, []);
 
@@ -26,50 +28,58 @@ export function Audit() {
     return map[action] || action;
   }
 
-  function actionColor(action: string) {
-    const map: Record<string, string> = {
-      create: 'bg-green-100 text-green-800',
-      update: 'bg-brand-champagneGold/20 text-brand-champagneGold',
-      delete: 'bg-red-100 text-red-800',
-      login: 'bg-brand-graphiteWine/10 text-brand-graphiteWine',
-    };
-    return map[action] || 'bg-brand-graphiteWine/10 text-brand-graphiteWine';
-  }
+  const badge = (bg: string, color: string) => ({
+    display: 'inline-flex', alignItems: 'center', gap: '0.375rem', padding: '0.25rem 0.75rem',
+    borderRadius: '9999px', fontSize: '0.75rem', fontWeight: 500, background: bg, color,
+  });
+
+  const actionBadgeStyle: Record<string, ReturnType<typeof badge>> = {
+    create: badge('rgba(125,218,106,0.12)', '#7DDA6A'),
+    update: badge('rgba(212,149,86,0.12)', '#D49556'),
+    delete: badge('rgba(216,75,95,0.12)', '#D84B5F'),
+    login: badge('rgba(148,163,184,0.12)', '#94A3B8'),
+  };
 
   return (
-    <div>
-      <div className="mb-8">
-        <h1 className="page-title">Auditoria</h1>
-        <p className="text-brand-graphiteWine/60 mt-1">Historico de acoes no sistema</p>
+    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.5rem' }}>
+        <div>
+          <h1 style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--nexus-text)' }}>Auditoria</h1>
+          <p style={{ fontSize: '0.875rem', color: 'var(--nexus-muted-2)', marginTop: '0.25rem' }}>Historico de acoes no sistema</p>
+        </div>
       </div>
 
-      <div className="card overflow-hidden p-0">
+      <div style={{ background: 'var(--nexus-card)', border: '1px solid var(--nexus-border)', borderRadius: '14px', overflow: 'hidden' }}>
         {loading ? (
-          <div className="p-8 text-center text-brand-graphiteWine/70">Carregando...</div>
+          <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--nexus-muted-2)', fontSize: '0.875rem' }}>Carregando...</div>
         ) : logs.length === 0 ? (
-          <div className="p-8 text-center text-brand-graphiteWine/70">Nenhum registro de auditoria</div>
+          <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--nexus-muted-2)' }}>Nenhum registro encontrado</div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead className="bg-brand-blackCherry text-brand-ivorySmoke">
+          <div style={{ overflowX: 'auto' }}>
+            <table style={{ width: '100%', fontSize: '0.875rem', borderCollapse: 'collapse' }}>
+              <thead>
                 <tr>
-                  <th className="text-left py-3 px-4 font-medium text-brand-ivorySmoke">Data/Hora</th>
-                  <th className="text-left py-3 px-4 font-medium text-brand-ivorySmoke">Usuario</th>
-                  <th className="text-left py-3 px-4 font-medium text-brand-ivorySmoke">Acao</th>
-                  <th className="text-left py-3 px-4 font-medium text-brand-ivorySmoke">Entidade</th>
-                  <th className="text-left py-3 px-4 font-medium text-brand-ivorySmoke">ID</th>
+                  <th style={{ textAlign: 'left', padding: '0.75rem 1rem', fontSize: '0.75rem', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--nexus-muted-2)', borderBottom: '1px solid rgba(212,149,86,0.1)' }}>Data/Hora</th>
+                  <th style={{ textAlign: 'left', padding: '0.75rem 1rem', fontSize: '0.75rem', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--nexus-muted-2)', borderBottom: '1px solid rgba(212,149,86,0.1)' }}>Usuario</th>
+                  <th style={{ textAlign: 'left', padding: '0.75rem 1rem', fontSize: '0.75rem', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--nexus-muted-2)', borderBottom: '1px solid rgba(212,149,86,0.1)' }}>Acao</th>
+                  <th style={{ textAlign: 'left', padding: '0.75rem 1rem', fontSize: '0.75rem', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--nexus-muted-2)', borderBottom: '1px solid rgba(212,149,86,0.1)' }}>Entidade</th>
+                  <th style={{ textAlign: 'left', padding: '0.75rem 1rem', fontSize: '0.75rem', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--nexus-muted-2)', borderBottom: '1px solid rgba(212,149,86,0.1)' }}>ID</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100">
+              <tbody>
                 {logs.map((log) => (
-                  <tr key={log.id} className="hover:bg-[rgba(214,179,112,0.18)]">
-                    <td className="py-3 px-4 text-brand-graphiteWine/70">{new Date(log.created_at).toLocaleString('pt-BR')}</td>
-                    <td className="py-3 px-4 font-medium">{log.user_name}</td>
-                    <td className="py-3 px-4">
-                      <span className={`badge ${actionColor(log.action)}`}>{actionLabel(log.action)}</span>
+                  <tr key={log.id}
+                    style={{ background: hoveredRowId === log.id ? 'rgba(212,149,86,0.08)' : 'transparent' }}
+                    onMouseEnter={() => setHoveredRowId(log.id)}
+                    onMouseLeave={() => setHoveredRowId(null)}
+                  >
+                    <td style={{ padding: '0.75rem 1rem', borderBottom: '1px solid rgba(212,149,86,0.05)', color: 'var(--nexus-text)', fontSize: '0.875rem' }}>{new Date(log.created_at).toLocaleString('pt-BR')}</td>
+                    <td style={{ padding: '0.75rem 1rem', borderBottom: '1px solid rgba(212,149,86,0.05)', color: 'var(--nexus-text)', fontSize: '0.875rem', fontWeight: 500 }}>{log.user_name}</td>
+                    <td style={{ padding: '0.75rem 1rem', borderBottom: '1px solid rgba(212,149,86,0.05)', color: 'var(--nexus-text)', fontSize: '0.875rem' }}>
+                      <span style={actionBadgeStyle[log.action] || actionBadgeStyle['login']}>{actionLabel(log.action)}</span>
                     </td>
-                    <td className="py-3 px-4 capitalize">{log.entity_type}</td>
-                    <td className="py-3 px-4 text-brand-graphiteWine/70">{log.entity_id || '-'}</td>
+                    <td style={{ padding: '0.75rem 1rem', borderBottom: '1px solid rgba(212,149,86,0.05)', color: 'var(--nexus-text)', fontSize: '0.875rem', textTransform: 'capitalize' }}>{log.entity_type}</td>
+                    <td style={{ padding: '0.75rem 1rem', borderBottom: '1px solid rgba(212,149,86,0.05)', color: 'var(--nexus-text)', fontSize: '0.875rem' }}>{log.entity_id || '-'}</td>
                   </tr>
                 ))}
               </tbody>
@@ -77,6 +87,6 @@ export function Audit() {
           </div>
         )}
       </div>
-    </div>
+    </motion.div>
   );
 }
