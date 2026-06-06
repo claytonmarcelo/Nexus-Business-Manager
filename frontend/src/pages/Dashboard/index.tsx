@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import api from '../../services/api';
 import { useAuth } from '../../contexts/AuthContext';
 import { DashboardData } from '../../types';
+import { useNavigate } from 'react-router-dom';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell, Legend,
@@ -11,9 +12,11 @@ const COLORS = ['#d6a85d', '#c96f78', '#9a6a42', '#e89aa2', '#8f8580', '#9d4e58'
 
 export function Dashboard() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [suggestionStats, setSuggestionStats] = useState<{ status: string; count: number }[]>([]);
 
   useEffect(() => {
     async function load() {
@@ -29,6 +32,10 @@ export function Dashboard() {
         const errorMsg = err?.response?.data?.message || err?.message || 'Erro ao carregar dashboard. Verifique a conexão com o servidor.';
         setError(errorMsg);
       }
+      try {
+        const sug = await api.get('/suggestions/stats');
+        if (sug.data?.data) setSuggestionStats(sug.data.data);
+      } catch { /* suggestions table may not exist yet */ }
       finally { setLoading(false); }
     }
     load();
@@ -97,6 +104,35 @@ export function Dashboard() {
           </div>
         ))}
       </div>
+
+      {suggestionStats.length > 0 && (
+        <div className="card mb-8">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="section-title">Sugestoes Recebidas</h3>
+            <button onClick={() => navigate('/suggestions/admin')} className="text-xs text-brand-primary hover:text-brand-primaryHover font-medium">
+              Gerenciar
+            </button>
+          </div>
+          <div className="grid grid-cols-5 gap-4">
+            {suggestionStats.map((s) => {
+              const statusLabels: Record<string, string> = {
+                pending: 'Pendentes', under_review: 'Analise', approved: 'Aprovadas',
+                rejected: 'Rejeitadas', implemented: 'Implementadas',
+              };
+              const statusColors: Record<string, string> = {
+                pending: 'text-yellow-500', under_review: 'text-blue-500', approved: 'text-green-500',
+                rejected: 'text-red-500', implemented: 'text-brand-primary',
+              };
+              return (
+                <div key={s.status} className="text-center">
+                  <p className={`text-xl font-bold ${statusColors[s.status] || ''}`}>{s.count}</p>
+                  <p className="text-xs text-brand-graphiteWine/60">{statusLabels[s.status] || s.status}</p>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
         <div className="card">

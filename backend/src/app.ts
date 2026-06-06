@@ -24,6 +24,7 @@ import { reportRoutes } from './modules/reports/reports.routes';
 import { notificationRoutes } from './modules/notifications/notifications.routes';
 import { auditRoutes } from './modules/audit/audit.routes';
 import { companyRoutes } from './modules/companies/companies.routes';
+import { suggestionRoutes } from './modules/suggestions/suggestions.routes';
 import { AppError } from './shared/errors/app-error';
 import { ZodError } from 'zod';
 import { checkDatabaseHealth } from './shared/health-check';
@@ -165,6 +166,7 @@ export async function buildApp() {
   await app.register(notificationRoutes, { prefix: '/api' });
   await app.register(auditRoutes, { prefix: '/api' });
   await app.register(companyRoutes, { prefix: '/api' });
+  await app.register(suggestionRoutes, { prefix: '/api' });
 
   app.get('/api/health', async () => {
     const db = await checkDatabaseHealth();

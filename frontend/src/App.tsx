@@ -20,6 +20,8 @@ import { Reports } from './pages/Reports';
 import { Notifications } from './pages/Notifications';
 import { Audit } from './pages/Audit';
 import { Companies } from './pages/Companies';
+import { CreateSuggestion } from './pages/Suggestions/Create';
+import { AdminSuggestions } from './pages/Suggestions/Admin';
 import { Profile } from './pages/Profile';
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
@@ -90,7 +92,9 @@ function AppRoutes() {
         <Route path="appointments" element={<Appointments />} />
         <Route path="reports" element={<Reports />} />
         <Route path="notifications" element={<Notifications />} />
-        <Route path="audit" element={<Audit />} />
+        <Route path="suggestions" element={<CreateSuggestion />} />
+        <Route path="suggestions/admin" element={<AdminSuggestions />} />
+        <Route path="audit"        element={<Audit />} />
         <Route path="companies" element={<Companies />} />
         <Route path="about" element={<About />} />
         <Route path="profile" element={<Profile />} />

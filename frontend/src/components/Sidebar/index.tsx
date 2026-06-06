@@ -21,6 +21,7 @@ import {
   Cog6ToothIcon,
   InformationCircleIcon,
   BuildingOfficeIcon,
+  LightBulbIcon,
 } from '@heroicons/react/24/solid';
 
 const navItems = [
@@ -33,6 +34,7 @@ const navItems = [
   { to: '/sales', label: 'Vendas', icon: CurrencyDollarIcon },
   { to: '/financial', label: 'Financeiro', icon: CreditCardIcon },
   { to: '/crm', label: 'CRM', icon: BuildingOfficeIcon },
+  { to: '/suggestions', label: 'Sugestoes', icon: LightBulbIcon },
   { to: '/appointments', label: 'Agenda', icon: CalendarDaysIcon },
   { to: '/reports', label: 'Relatórios', icon: ChartPieIcon },
   { to: '/notifications', label: 'Notificações', icon: BellIcon },

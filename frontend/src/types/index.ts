@@ -181,6 +181,23 @@ export interface Notification {
   created_at: string;
 }
 
+export interface Suggestion {
+  id: number;
+  company_id: number;
+  user_id: number;
+  user_name: string;
+  title: string;
+  description: string;
+  category: 'general' | 'improvement' | 'feature' | 'complaint' | 'praise';
+  status: 'pending' | 'under_review' | 'approved' | 'rejected' | 'implemented';
+  admin_notes: string | null;
+  is_offensive: number;
+  offensive_reason: string | null;
+  accepted_terms: number;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface AuditLog {
   id: number;
   company_id: number;
