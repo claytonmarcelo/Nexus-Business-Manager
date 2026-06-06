@@ -41,459 +41,337 @@
 
 @layer base {
   :root {
-    /* Nexus Identity Colors - Light Mode */
-    --light-bg: #F7F2EC;
-    --light-bg-secondary: #EFE6DC;
-    --light-card: #FFFFFF;
-    --light-card-soft: #F0F0F0;
-    --light-text-primary: #050505;
-    --light-text-secondary: #242424;
-    --light-border: rgba(62, 149, 143, 0.24);
-    --light-accent: #3E958F;
-    --light-accent-hover: #85D5D2;
-    
-    /* Nexus Identity Colors - Dark Mode */
-    --dark-bg: #050505;
-    --dark-bg-secondary: #151515;
-    --dark-card: rgba(36, 36, 36, 0.96);
-    --dark-card-soft: #2E2E2E;
-    --dark-text-primary: #F7F2EC;
-    --dark-text-secondary: rgba(247, 242, 236, 0.72);
-    --dark-border: rgba(62, 149, 143, 0.24);
-    --dark-accent: #3E958F;
-    --dark-accent-hover: #85D5D2;
-    --dark-gold: #D6B370;
+    --nexus-bg: #050505;
+    --nexus-bg-soft: #0b0b0b;
+    --nexus-bg-panel: #101010;
+    --nexus-card: rgba(18, 17, 17, 0.86);
+    --nexus-card-strong: rgba(24, 22, 22, 0.94);
+    --nexus-card-soft: rgba(35, 31, 30, 0.74);
+    --nexus-border: rgba(214, 168, 93, 0.24);
+    --nexus-border-strong: rgba(214, 168, 93, 0.38);
+    --nexus-gold: #d6a85d;
+    --nexus-bronze: #9a6a42;
+    --nexus-rose: #c96f78;
+    --nexus-rose-light: #e89aa2;
+    --nexus-rose-dark: #9d4e58;
+    --nexus-text: #f5f1ec;
+    --nexus-muted: #b8afa7;
+    --nexus-muted-2: #8f8580;
+    --nexus-success: #8fd6a3;
+    --nexus-danger: #ef6f7a;
+    --nexus-warning: #d6a85d;
+    --nexus-radius-sm: 10px;
+    --nexus-radius-md: 14px;
+    --nexus-radius-lg: 18px;
+    --nexus-radius-xl: 24px;
+    --nexus-shadow: 0 22px 70px rgba(0, 0, 0, 0.62);
+    --nexus-glow: 0 0 34px rgba(214, 168, 93, 0.16);
   }
 
   body {
     @apply transition-colors duration-200;
   }
   body, .page-bg {
-    background: linear-gradient(180deg, var(--light-bg) 0%, var(--light-bg-secondary) 100%);
-    color: var(--light-text-primary);
+    min-height: 100vh;
+    color: var(--nexus-text);
+    background:
+      radial-gradient(circle at 82% 18%, rgba(214, 168, 93, 0.12), transparent 34%),
+      radial-gradient(circle at 18% 82%, rgba(201, 111, 120, 0.10), transparent 32%),
+      linear-gradient(135deg, #050505 0%, #0b0b0b 48%, #050505 100%);
   }
   .dark body, .dark, .dark .page-bg {
-    background: radial-gradient(circle at top, rgba(62, 149, 143, 0.12), transparent 34%), linear-gradient(180deg, var(--dark-bg) 0%, var(--dark-bg-secondary) 55%, #242424 100%);
-    color: var(--dark-text-primary);
+    min-height: 100vh;
+    color: var(--nexus-text);
+    background:
+      radial-gradient(circle at 82% 18%, rgba(214, 168, 93, 0.12), transparent 34%),
+      radial-gradient(circle at 18% 82%, rgba(201, 111, 120, 0.10), transparent 32%),
+      linear-gradient(135deg, #050505 0%, #0b0b0b 48%, #050505 100%);
   }
 }
 
 @layer components {
-  /* BOTÕES - Nexus Identity Colors */
   .btn-primary {
     @apply font-medium py-2 px-4 rounded-lg transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed;
-    background: var(--light-accent);
-    color: #FFFFFF;
+    background: linear-gradient(135deg, var(--nexus-rose), var(--nexus-rose-dark));
+    color: var(--nexus-text);
   }
   .btn-primary:hover:not(:disabled) {
-    background: var(--light-accent-hover);
-    color: #050505;
-  }
-  .dark .btn-primary {
-    background: var(--dark-accent);
-    color: #F7F2EC;
-  }
-  .dark .btn-primary:hover:not(:disabled) {
-    background: var(--dark-accent-hover);
+    background: linear-gradient(135deg, var(--nexus-gold), var(--nexus-bronze));
     color: #050505;
   }
 
   .btn-secondary {
     @apply font-medium py-2 px-4 rounded-lg transition-colors duration-200;
-    background: var(--light-card);
-    color: var(--light-text-primary);
-    border: 1px solid var(--light-border);
+    background: var(--nexus-card);
+    color: var(--nexus-text);
+    border: 1px solid var(--nexus-border);
   }
   .btn-secondary:hover {
-    background: var(--light-bg-secondary);
-  }
-  .dark .btn-secondary {
-    background: var(--dark-card);
-    color: var(--dark-text-primary);
-    border: 1px solid var(--dark-border);
-  }
-  .dark .btn-secondary:hover {
-    background: var(--dark-card-soft);
+    background: var(--nexus-card-strong);
   }
 
   .btn-danger {
     @apply bg-red-600 hover:bg-red-700 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200;
   }
 
-  /* INPUTS - Nexus Identity Colors */
   .input-field {
     @apply w-full px-3 py-2 rounded-lg transition-colors duration-200;
-    background: var(--light-card);
-    color: var(--light-text-primary);
-    border: 1px solid var(--light-border);
+    background: rgba(0, 0, 0, 0.5);
+    color: var(--nexus-text);
+    border: 1px solid var(--nexus-border);
   }
   .input-field::placeholder {
-    color: var(--light-text-secondary);
+    color: var(--nexus-muted-2);
   }
   .input-field:focus {
     outline: none;
-    border-color: var(--light-accent);
-    box-shadow: 0 0 0 3px rgba(62, 149, 143, 0.15);
-  }
-  .dark .input-field {
-    background: var(--dark-card);
-    color: var(--dark-text-primary);
-    border: 1px solid var(--dark-border);
-  }
-  .dark .input-field::placeholder {
-    color: var(--dark-text-secondary);
-  }
-  .dark .input-field:focus {
-    border-color: var(--dark-accent);
-    box-shadow: 0 0 0 3px rgba(62, 149, 143, 0.15);
+    border-color: var(--nexus-gold);
+    box-shadow: var(--nexus-glow);
   }
 
-  /* CARDS - Nexus Identity Colors */
   .card {
     @apply rounded-xl p-6 transition-colors duration-200;
-    background: var(--light-card);
-    border: 1px solid var(--light-border);
-    color: var(--light-text-primary);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-  }
-  .dark .card {
-    background: var(--dark-card);
-    border: 1px solid var(--dark-border);
-    color: var(--dark-text-primary);
-    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45);
+    background: var(--nexus-card);
+    border: 1px solid var(--nexus-border);
+    color: var(--nexus-text);
+    box-shadow: var(--nexus-shadow);
   }
 
-  /* BADGES - Nexus Identity Colors */
   .badge {
     @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
   }
 
   .badge-admin {
     @apply badge;
-    background: rgba(62, 149, 143, 0.25);
-    color: var(--light-accent);
-  }
-  .dark .badge-admin {
-    background: rgba(62, 149, 143, 0.25);
-    color: var(--dark-accent);
+    background: rgba(214, 168, 93, 0.25);
+    color: var(--nexus-gold);
   }
 
   .badge-manager {
     @apply badge;
-    background: rgba(62, 149, 143, 0.25);
-    color: var(--light-accent);
-  }
-  .dark .badge-manager {
-    background: rgba(62, 149, 143, 0.25);
-    color: var(--dark-accent);
+    background: rgba(201, 111, 120, 0.25);
+    color: var(--nexus-rose-light);
   }
 
   .badge-operator {
     @apply badge;
-    background: rgba(0, 0, 0, 0.10);
-    color: var(--light-text-primary);
-  }
-  .dark .badge-operator {
-    background: rgba(247, 242, 236, 0.15);
-    color: var(--dark-text-primary);
+    background: rgba(247, 242, 236, 0.10);
+    color: var(--nexus-text);
   }
 
   .badge-viewer {
     @apply badge;
-    background: rgba(0, 0, 0, 0.08);
-    color: var(--light-text-secondary);
-  }
-  .dark .badge-viewer {
-    background: rgba(247, 242, 236, 0.10);
-    color: var(--dark-text-secondary);
+    background: rgba(247, 242, 236, 0.08);
+    color: var(--nexus-muted);
   }
 
-  /* TÍTULOS - Nexus Identity Colors */
   .page-title {
     @apply text-2xl font-bold;
-    color: var(--light-text-primary);
-  }
-  .dark .page-title {
-    color: var(--dark-text-primary);
+    color: var(--nexus-text);
   }
 
   .section-title {
     @apply text-sm font-semibold mb-4;
-    color: var(--light-text-primary);
-  }
-  .dark .section-title {
-    color: var(--dark-text-primary);
+    color: var(--nexus-text);
   }
 
-  /* TABELAS - Nexus Identity Colors */
   .table-header {
-    background: var(--light-text-primary);
-    color: #FFFFFF;
+    background: var(--nexus-bg);
+    color: var(--nexus-text);
   }
 
   .table-row {
-    background: var(--light-card);
-    color: var(--light-text-primary);
+    background: var(--nexus-card);
+    color: var(--nexus-text);
   }
   .table-row:nth-child(even) {
-    background: var(--light-bg-secondary);
+    background: var(--nexus-card-soft);
   }
   .table-row:hover {
-    background: rgba(62, 149, 143, 0.08);
-  }
-  .dark .table-row {
-    background: var(--dark-card);
-    color: var(--dark-text-primary);
-  }
-  .dark .table-row:nth-child(even) {
-    background: var(--dark-bg-secondary);
-  }
-  .dark .table-row:hover {
-    background: rgba(62, 149, 143, 0.12);
+    background: rgba(214, 168, 93, 0.10);
   }
 }
 
-/* OVERRIDES - Nexus Identity Colors */
-.text-brand-graphiteWine { color: var(--light-text-primary) !important; }
-.text-brand-graphiteWine\/60 { color: var(--light-text-secondary) !important; }
-.text-brand-graphiteWine\/70 { color: var(--light-text-secondary) !important; }
-.text-brand-graphiteWine\/80 { color: rgba(5, 5, 5, 0.80) !important; }
-.text-brand-graphiteWine\/50 { color: rgba(5, 5, 5, 0.55) !important; }
-.text-brand-graphiteWine\/40 { color: rgba(5, 5, 5, 0.45) !important; }
-.text-brand-blackCherry { color: var(--light-text-primary) !important; }
-.text-brand-blackCherry\/80 { color: rgba(5, 5, 5, 0.80) !important; }
-.text-brand-blackCherry\/70 { color: var(--light-text-secondary) !important; }
-
-.dark .text-brand-graphiteWine { color: var(--dark-text-primary) !important; }
-.dark .text-brand-graphiteWine\/60 { color: var(--dark-text-secondary) !important; }
-.dark .text-brand-graphiteWine\/70 { color: var(--dark-text-secondary) !important; }
-.dark .text-brand-graphiteWine\/80 { color: rgba(247, 242, 236, 0.80) !important; }
-.dark .text-brand-graphiteWine\/50 { color: rgba(247, 242, 236, 0.55) !important; }
-.dark .text-brand-graphiteWine\/40 { color: rgba(247, 242, 236, 0.45) !important; }
-.dark .text-brand-blackCherry { color: var(--dark-text-primary) !important; }
-.dark .text-brand-blackCherry\/80 { color: rgba(247, 242, 236, 0.80) !important; }
-.dark .text-brand-blackCherry\/70 { color: var(--dark-text-secondary) !important; }
-
-/* BORDAS E DIVISORES - Nexus Identity Colors */
-.divide-gray-100 > * { border-color: var(--light-border) !important; }
-.divide-y.divide-gray-100 > * { border-color: var(--light-border) !important; }
-.border-gray-200 { border-color: var(--light-border) !important; }
-.border-gray-600 { border-color: rgba(62, 149, 143, 0.4) !important; }
-.border-brand-ivorySmoke { border-color: rgba(62, 149, 143, 0.2) !important; }
-
-.dark .divide-gray-100 > * { border-color: var(--dark-border) !important; }
-.dark .divide-y.divide-gray-100 > * { border-color: var(--dark-border) !important; }
-.dark .border-gray-200 { border-color: var(--dark-border) !important; }
-.dark .border-gray-600 { border-color: rgba(62, 149, 143, 0.4) !important; }
-.dark .border-brand-ivorySmoke { border-color: rgba(62, 149, 143, 0.2) !important; }
-
-/* FUNDOS - Nexus Identity Colors */
-.bg-gray-200 { background: var(--light-card-soft) !important; }
-.bg-gray-50 { background: var(--light-card) !important; }
-.bg-brand-ivorySmoke { background: var(--light-card) !important; }
-.bg-brand-blackCherry\/50 { background: var(--light-card-soft) !important; }
-
-.dark .bg-gray-200 { background: var(--dark-card-soft) !important; }
-.dark .bg-gray-50 { background: var(--dark-card) !important; }
-.dark .bg-brand-ivorySmoke { background: var(--dark-card) !important; }
-.dark .bg-brand-blackCherry\/50 { background: var(--dark-card-soft) !important; }
-
-/* STATUS CORES - VERDE/VERMELHO */
-.bg-red-50 { background: rgba(239, 68, 68, 0.15) !important; }
-.bg-red-100 { background: rgba(239, 68, 68, 0.20) !important; }
-.border-red-200 { border-color: rgba(239, 68, 68, 0.3) !important; }
-.text-red-700 { color: #FCA5A5 !important; }
-.text-red-600 { color: #E57373 !important; }
-.text-red-800 { color: #E57373 !important; }
-.text-red-500 { color: #E57373 !important; }
-
-.bg-green-50 { background: rgba(62, 149, 143, 0.15) !important; }
-.bg-green-100 { background: rgba(62, 149, 143, 0.20) !important; }
-.bg-green-900\/20 { background: rgba(62, 149, 143, 0.15) !important; }
-.border-green-200 { border-color: rgba(62, 149, 143, 0.3) !important; }
-.border-green-800 { border-color: rgba(62, 149, 143, 0.5) !important; }
-.text-green-600 { color: #3E958F !important; }
-.text-green-700 { color: #3E958F !important; }
-.text-green-800 { color: #3E958F !important; }
-.text-green-300 { color: #85D5D2 !important; }
-
-/* OUTRAS CORES - Nexus Identity Colors */
-.text-yellow-600 { color: var(--light-accent) !important; }
-.bg-brand-primary\/10 { background: rgba(62, 149, 143, 0.15) !important; }
-
-.dark .text-yellow-600 { color: var(--dark-accent) !important; }
-.dark .bg-brand-primary\/10 { background: rgba(62, 149, 143, 0.15) !important; }
-
-/* MODAIS E OVERLAYS - Nexus Identity Colors */
-.fixed.inset-0 .bg-white {
-  background: var(--light-card) !important;
-  color: var(--light-text-primary) !important;
-  border: 1px solid var(--light-border) !important;
+.nexus-page {
+  min-height: 100vh;
+  color: var(--nexus-text);
+  background:
+    radial-gradient(circle at 82% 18%, rgba(214, 168, 93, 0.12), transparent 34%),
+    radial-gradient(circle at 18% 82%, rgba(201, 111, 120, 0.10), transparent 32%),
+    linear-gradient(135deg, #050505 0%, #0b0b0b 48%, #050505 100%);
 }
+
+.nexus-card {
+  background: var(--nexus-card);
+  border: 1px solid var(--nexus-border);
+  border-radius: var(--nexus-radius-md);
+  color: var(--nexus-text);
+  box-shadow: var(--nexus-shadow);
+}
+
+.nexus-input {
+  background: rgba(0, 0, 0, 0.5);
+  color: var(--nexus-text);
+  border: 1px solid var(--nexus-border);
+  border-radius: var(--nexus-radius-sm);
+  padding: 0.75rem 1rem;
+  width: 100%;
+}
+.nexus-input::placeholder {
+  color: var(--nexus-muted-2);
+}
+.nexus-input:focus {
+  outline: none;
+  border-color: var(--nexus-gold);
+  box-shadow: var(--nexus-glow);
+}
+
+.nexus-button-primary {
+  background: linear-gradient(135deg, var(--nexus-rose), var(--nexus-rose-dark));
+  color: var(--nexus-text);
+  border-radius: var(--nexus-radius-sm);
+  padding: 0.75rem 1.5rem;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+.nexus-button-primary:hover {
+  background: linear-gradient(135deg, var(--nexus-gold), var(--nexus-bronze));
+  color: #050505;
+}
+
+.nexus-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.nexus-table th {
+  background: var(--nexus-bg);
+  color: var(--nexus-text);
+  padding: 0.75rem 1rem;
+  text-align: left;
+  font-weight: 500;
+}
+.nexus-table td {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid rgba(214, 168, 93, 0.10);
+}
+.nexus-table tr:hover td {
+  background: rgba(214, 168, 93, 0.06);
+}
+
+.dark .nexus-page { background: inherit; }
+
+.dark .text-brand-graphiteWine { color: var(--nexus-text) !important; }
+.dark .text-brand-graphiteWine\/60 { color: var(--nexus-muted) !important; }
+.dark .text-brand-graphiteWine\/70 { color: var(--nexus-muted) !important; }
+.dark .text-brand-graphiteWine\/80 { color: var(--nexus-text) !important; }
+.dark .text-brand-graphiteWine\/50 { color: var(--nexus-muted-2) !important; }
+.dark .text-brand-graphiteWine\/40 { color: var(--nexus-muted-2) !important; }
+.dark .text-brand-blackCherry { color: var(--nexus-text) !important; }
+.dark .text-brand-blackCherry\/80 { color: var(--nexus-text) !important; }
+.dark .text-brand-blackCherry\/70 { color: var(--nexus-muted) !important; }
+
+.dark .divide-gray-100 > * { border-color: rgba(214, 168, 93, 0.12) !important; }
+.dark .divide-y.divide-gray-100 > * { border-color: rgba(214, 168, 93, 0.12) !important; }
+.dark .border-gray-200 { border-color: rgba(214, 168, 93, 0.18) !important; }
+.dark .border-brand-ivorySmoke { border-color: rgba(214, 168, 93, 0.12) !important; }
+
+.dark .bg-gray-200 { background: var(--nexus-card-soft) !important; }
+.dark .bg-gray-50 { background: var(--nexus-card) !important; }
+.dark .bg-brand-ivorySmoke { background: var(--nexus-card) !important; }
+.dark .bg-brand-blackCherry\/50 { background: var(--nexus-card-strong) !important; }
+.dark .bg-brand-roseGold\/10 { background: rgba(201, 111, 120, 0.12) !important; }
+
+.dark .bg-red-50 { background: rgba(239, 68, 68, 0.15) !important; }
+.dark .bg-red-100 { background: rgba(239, 68, 68, 0.20) !important; }
+.dark .border-red-200 { border-color: rgba(239, 68, 68, 0.3) !important; }
+.dark .text-red-700 { color: #FCA5A5 !important; }
+.dark .text-red-600 { color: var(--nexus-danger) !important; }
+.dark .text-red-800 { color: var(--nexus-danger) !important; }
+.dark .text-red-500 { color: var(--nexus-danger) !important; }
+
+.dark .bg-green-50 { background: rgba(143, 214, 163, 0.15) !important; }
+.dark .bg-green-100 { background: rgba(143, 214, 163, 0.20) !important; }
+.dark .border-green-200 { border-color: rgba(143, 214, 163, 0.3) !important; }
+.dark .border-green-800 { border-color: rgba(143, 214, 163, 0.5) !important; }
+.dark .text-green-600 { color: var(--nexus-success) !important; }
+.dark .text-green-700 { color: var(--nexus-success) !important; }
+.dark .text-green-800 { color: var(--nexus-success) !important; }
+.dark .text-green-300 { color: var(--nexus-success) !important; }
+
+.dark .text-yellow-600 { color: var(--nexus-gold) !important; }
 
 .dark .fixed.inset-0 .bg-white {
-  background: var(--dark-card) !important;
-  color: var(--dark-text-primary) !important;
-  border: 1px solid var(--dark-border) !important;
-}
-
-/* HOVER STATES - Nexus Identity Colors */
-.hover\:bg-\[rgba\(214\2c 179\2c 112\2c 0\.18\)\] {
-  background: rgba(62, 149, 143, 0.12) !important;
-}
-
-.hover\:bg-brand-ivorySmoke {
-  background: var(--light-card-soft) !important;
+  background: var(--nexus-card-strong) !important;
+  color: var(--nexus-text) !important;
+  border: 1px solid var(--nexus-border) !important;
+  border-radius: var(--nexus-radius-lg) !important;
 }
 
 .dark .hover\:bg-\[rgba\(214\2c 179\2c 112\2c 0\.18\)\] {
-  background: rgba(62, 149, 143, 0.12) !important;
+  background: rgba(214, 168, 93, 0.10) !important;
 }
 
 .dark .hover\:bg-brand-ivorySmoke {
-  background: var(--dark-card-soft) !important;
+  background: var(--nexus-card-strong) !important;
 }
 
-/* CLASSES UTILITÁRIAS PARA COERÊNCIA TOTAL - Nexus Identity Colors */
-
-/* Sidebar mantém identidade escura sempre */
 .sidebar-dark {
-  background: var(--dark-bg) !important;
-  color: var(--dark-text-primary) !important;
+  background: var(--nexus-bg) !important;
+  color: var(--nexus-text) !important;
+  border-right: 1px solid var(--nexus-border);
 }
 
-/* Modal overlay */
 .modal-overlay {
-  background: rgba(0, 0, 0, 0.5) !important;
-}
-.dark .modal-overlay {
   background: rgba(0, 0, 0, 0.7) !important;
+  backdrop-filter: blur(4px);
 }
 
-/* Dropdown e Select */
 .select-field {
-  background: var(--light-card);
-  color: var(--light-text-primary);
-  border: 1px solid var(--light-border);
-}
-.dark .select-field {
-  background: var(--dark-card);
-  color: var(--dark-text-primary);
-  border: 1px solid var(--dark-border);
+  background: rgba(0, 0, 0, 0.5);
+  color: var(--nexus-text);
+  border: 1px solid var(--nexus-border);
+  border-radius: var(--nexus-radius-sm);
+  padding: 0.5rem 0.75rem;
 }
 
-/* Toast notifications */
 .toast-success {
-  background: rgba(62, 149, 143, 0.9) !important;
-  color: #FFFFFF !important;
+  background: rgba(143, 214, 163, 0.9) !important;
+  color: #050505 !important;
 }
 .toast-error {
-  background: rgba(239, 68, 68, 0.9) !important;
+  background: rgba(239, 111, 122, 0.9) !important;
   color: #FFFFFF !important;
 }
 .toast-warning {
-  background: rgba(62, 149, 143, 0.9) !important;
-  color: var(--light-text-primary) !important;
-}
-.dark .toast-warning {
-  color: var(--dark-text-primary) !important;
+  background: rgba(214, 168, 93, 0.9) !important;
+  color: #050505 !important;
 }
 
-/* Skeleton loading */
 .skeleton {
-  background: rgba(0, 0, 0, 0.1);
+  background: rgba(214, 168, 93, 0.08);
   animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
-.dark .skeleton {
-  background: rgba(62, 149, 143, 0.1);
-}
 
-/* Status indicators */
 .status-active {
-  background: rgba(62, 149, 143, 0.2);
-  color: #3E958F;
+  background: rgba(143, 214, 163, 0.2);
+  color: var(--nexus-success);
 }
 .status-inactive {
-  background: rgba(239, 68, 68, 0.2);
-  color: #E57373;
-}
-.dark .status-active {
-  background: rgba(62, 149, 143, 0.3);
-  color: #85D5D2;
-}
-.dark .status-inactive {
-  background: rgba(239, 68, 68, 0.3);
-  color: #FCA5A5;
+  background: rgba(239, 111, 122, 0.2);
+  color: var(--nexus-danger);
 }
 
-/* Scrollbar styling - Nexus Identity Colors */
-::-webkit-scrollbar {
-  width: 6px;
-}
-::-webkit-scrollbar-track {
-  background: rgba(0, 0, 0, 0.1);
-}
-::-webkit-scrollbar-thumb {
-  background: rgba(0, 0, 0, 0.4);
-  border-radius: 3px;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: rgba(0, 0, 0, 0.6);
-}
-.dark ::-webkit-scrollbar-track {
-  background: rgba(62, 149, 143, 0.1);
-}
-.dark ::-webkit-scrollbar-thumb {
-  background: rgba(62, 149, 143, 0.4);
-}
-.dark ::-webkit-scrollbar-thumb:hover {
-  background: rgba(62, 149, 143, 0.6);
-}
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: rgba(0, 0, 0, 0.2); }
+::-webkit-scrollbar-thumb { background: rgba(214, 168, 93, 0.3); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(214, 168, 93, 0.5); }
 
-/* Focus states globais - Nexus Identity Colors */
-*:focus {
-  outline: none;
-}
+*:focus { outline: none; }
 input:focus, textarea:focus, select:focus {
-  border-color: var(--light-accent) !important;
-  box-shadow: 0 0 0 3px rgba(62, 149, 143, 0.15) !important;
-}
-.dark input:focus, .dark textarea:focus, .dark select:focus {
-  border-color: var(--dark-accent) !important;
-  box-shadow: 0 0 0 3px rgba(62, 149, 143, 0.15) !important;
+  border-color: var(--nexus-gold) !important;
+  box-shadow: var(--nexus-glow) !important;
 }
 
-/* Garantir que textos tenham contraste adequado */
-.text-contrast {
-  color: var(--light-text-primary);
-}
-.dark .text-contrast {
-  color: var(--dark-text-primary);
-}
-
-.text-contrast-secondary {
-  color: var(--light-text-secondary);
-}
-.dark .text-contrast-secondary {
-  color: var(--dark-text-secondary);
-}
-
-/* Garantir que backgrounds sejam consistentes */
-.bg-contrast {
-  background: var(--light-card);
-}
-.dark .bg-contrast {
-  background: var(--dark-card);
-}
-
-.bg-contrast-soft {
-  background: var(--light-card-soft);
-}
-.dark .bg-contrast-soft {
-  background: var(--dark-card-soft);
-}
-
-/* Sidebar logo responsivo - Tamanho maior para melhor visualização */
 .sidebar-logo {
   width: 150px;
   max-width: 85%;
@@ -503,128 +381,92 @@ input:focus, textarea:focus, select:focus {
   filter: drop-shadow(0 6px 14px rgba(0, 0, 0, 0.25));
 }
 
-/* Auth logo - Login e Cadastro */
-.auth-logo {
-  width: 380px;
-  max-width: 90%;
-  height: auto;
-  display: block;
-  margin: 0 auto;
-}
-
-/* Header logo */
 .header-logo {
   width: 120px;
   max-width: 80%;
   height: auto;
 }
 
-/* EFEITO DE VENTO - Nexus Identity */
-.wind-effect {
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  overflow: hidden;
-  z-index: 0;
+.nexus-auth-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background:
+    radial-gradient(circle at 82% 18%, rgba(214, 168, 93, 0.15), transparent 34%),
+    radial-gradient(circle at 18% 82%, rgba(201, 111, 120, 0.12), transparent 32%),
+    linear-gradient(135deg, #050505 0%, #0b0b0b 48%, #050505 100%);
 }
 
-.wind-effect span {
-  position: absolute;
-  left: -30%;
-  width: 65%;
-  height: 1px;
-  background: linear-gradient(
-    90deg,
-    transparent,
-    rgba(133, 213, 210, 0.18),
-    rgba(214, 179, 112, 0.10),
-    transparent
-  );
-  filter: blur(0.6px);
-  animation: nexusWind 9s linear infinite;
+.nexus-auth-card {
+  background: var(--nexus-card-strong);
+  border: 1px solid var(--nexus-border);
+  border-radius: var(--nexus-radius-lg);
+  color: var(--nexus-text);
+  box-shadow: var(--nexus-shadow);
+  padding: 2.5rem;
+  width: 100%;
+  max-width: 680px;
 }
 
-.wind-effect span:nth-child(1) {
-  top: 22%;
-  animation-delay: 0s;
+.nexus-sidebar {
+  background: var(--nexus-bg);
+  border-right: 1px solid var(--nexus-border);
+  color: var(--nexus-text);
 }
 
-.wind-effect span:nth-child(2) {
-  top: 48%;
-  animation-delay: 3s;
-  opacity: 0.75;
+.nexus-sidebar-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.625rem 1rem;
+  border-radius: var(--nexus-radius-sm);
+  color: var(--nexus-muted);
+  transition: all 0.2s;
+}
+.nexus-sidebar-item:hover {
+  background: rgba(214, 168, 93, 0.08);
+  color: var(--nexus-text);
+}
+.nexus-sidebar-item.active {
+  background: rgba(214, 168, 93, 0.12);
+  color: var(--nexus-gold);
+  border-left: 3px solid var(--nexus-rose);
 }
 
-.wind-effect span:nth-child(3) {
-  top: 72%;
-  animation-delay: 6s;
-  opacity: 0.55;
+.nexus-sidebar-icon {
+  width: 42px;
+  height: 42px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(214, 168, 93, 0.15);
+  border-radius: var(--nexus-radius-sm);
+  color: var(--nexus-gold);
+  flex-shrink: 0;
 }
 
-@keyframes nexusWind {
-  0% {
-    transform: translateX(0) skewX(-18deg);
-    opacity: 0;
-  }
-
-  12% {
-    opacity: 1;
-  }
-
-  88% {
-    opacity: 1;
-  }
-
-  100% {
-    transform: translateX(210vw) skewX(-18deg);
-    opacity: 0;
-  }
+.nexus-modal {
+  background: var(--nexus-card-strong);
+  border: 1px solid var(--nexus-border);
+  border-radius: var(--nexus-radius-lg);
+  color: var(--nexus-text);
+  box-shadow: var(--nexus-shadow);
 }
 
-/* Garantir que todo conteúdo principal fique acima do efeito de vento */
-.auth-card,
-.app-layout,
-.sidebar,
-.header,
-.main-content,
-.card,
-.modal {
-  position: relative;
-  z-index: 1;
-}
-
-/* Header - Nexus Identity Colors */
-.header {
-  background: linear-gradient(180deg, #050505 0%, #151515 100%);
-  border-bottom: 1px solid rgba(62, 149, 143, 0.28);
+.nexus-header {
+  border-bottom: 1px solid var(--nexus-border);
   padding: 1rem 2rem;
-}
-
-.header-title,
-.header-text,
-.header-user-name {
-  color: #F7F2EC;
-}
-
-.header-accent,
-.header-link,
-.header-action {
-  color: #85D5D2;
-}
-
-.header-link:hover,
-.header-action:hover {
-  color: #D6B370;
+  background: rgba(5, 5, 5, 0.6);
+  backdrop-filter: blur(12px);
 }
 
 @media (max-width: 768px) {
-  .sidebar-logo {
-    width: 180px;         /* Mantém proporção em tablets */
-  }
+  .sidebar-logo { width: 180px; }
+  .nexus-auth-card { padding: 1.5rem; max-width: 90%; }
 }
 
 @media (max-width: 480px) {
-  .sidebar-logo {
-    width: 160px;         /* Ainda visível em telas pequenas */
-  }
+  .sidebar-logo { width: 160px; }
 }

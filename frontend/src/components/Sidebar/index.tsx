@@ -114,8 +114,8 @@ export function Sidebar() {
   const initials = user?.name?.charAt(0).toUpperCase() || '?';
 
   return (
-    <aside className="w-64 bg-nexus-black text-nexus-text min-h-screen flex flex-col">
-      <div className="p-8 flex items-center justify-center">
+    <aside className="nexus-sidebar w-64 min-h-screen flex flex-col">
+      <div className="p-6 flex items-center justify-center border-b" style={{ borderColor: 'rgba(214, 168, 93, 0.15)' }}>
         <img 
           src="/logo.png" 
           alt="Nexus Business Manager" 
@@ -123,7 +123,7 @@ export function Sidebar() {
         />
       </div>
 
-      <nav className="flex-1 px-4 pb-4 space-y-2 overflow-y-auto">
+      <nav className="flex-1 px-3 py-3 space-y-1 overflow-y-auto">
         {navItems
           .filter((item) => !item.roles || item.roles.includes(user?.role || ''))
           .map((item) => {
@@ -133,43 +133,13 @@ export function Sidebar() {
                 key={item.to}
                 to={item.to}
                 className={({ isActive }) =>
-                  `flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold transition-all min-h-[44px] ${
-                    isActive
-                      ? 'text-nexus-tealLight'
-                      : 'text-nexus-textSecondary hover:text-nexus-text'
-                  }`
+                  `nexus-sidebar-item ${isActive ? 'active' : ''}`
                 }
-                style={({ isActive }: { isActive: boolean }) => 
-                  isActive 
-                    ? { 
-                        backgroundColor: 'rgba(62, 149, 143, 0.16)',
-                        border: '1px solid rgba(62, 149, 143, 0.28)'
-                      } 
-                    : { border: '1px solid transparent' }
-                }
-                onMouseEnter={(e) => {
-                  const el = e.currentTarget;
-                  if (!el.classList.contains('text-nexus-tealLight')) {
-                    el.style.backgroundColor = 'rgba(62, 149, 143, 0.12)';
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  const el = e.currentTarget;
-                  if (!el.classList.contains('text-nexus-tealLight')) {
-                    el.style.backgroundColor = '';
-                  }
-                }}
               >
-                <span 
-                  className="w-9 h-9 min-w-[34px] flex items-center justify-center rounded-xl"
-                  style={{
-                    background: 'linear-gradient(145deg, rgba(62, 149, 143, 0.22), rgba(133, 213, 210, 0.18))',
-                    boxShadow: 'inset 0 1px 1px rgba(255,255,255,0.12), 0 6px 14px rgba(0,0,0,0.25)'
-                  }}
-                >
+                <span className="nexus-sidebar-icon">
                   <Icon className="w-5 h-5" />
                 </span>
-                <span className="font-semibold">{item.label}</span>
+                <span className="text-sm font-medium">{item.label}</span>
               </NavLink>
             );
           })}
