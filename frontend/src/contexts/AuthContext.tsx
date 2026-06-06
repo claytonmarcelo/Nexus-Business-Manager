@@ -64,15 +64,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Fire-and-forget: tenta notificar backend, ignora falha
     api.post('/auth/logout').catch(() => {});
 
+    // Limpar todos os dados de sessão
     localStorage.removeItem('@nexus:token');
     localStorage.removeItem('@nexus:user');
     localStorage.removeItem('@nexus:theme');
+    
+    // Limpar sessionStorage completamente
     sessionStorage.clear();
-
+    
+    // Limpar estado do contexto
     setToken(null);
     setUser(null);
-
-    window.location.href = '/login';
+    
+    // Redirecionar para login usando React Router para evitar cache
+    window.location.replace('/login');
   }
 
   function updateUser(userData: Partial<User>) {
