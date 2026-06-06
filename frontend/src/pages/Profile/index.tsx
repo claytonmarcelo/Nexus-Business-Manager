@@ -2,9 +2,10 @@ import { useState, useCallback, useRef } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useToast } from '../../contexts/ToastContext';
 import api from '../../services/api';
+import { ArrowLeftOnRectangleIcon } from '@heroicons/react/24/solid';
 
 export function Profile() {
-  const { user, updateUser } = useAuth();
+  const { user, updateUser, signOut } = useAuth();
   const { showToast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [avatarLoading, setAvatarLoading] = useState(false);
@@ -190,6 +191,18 @@ export function Profile() {
               Editar Perfil
             </button>
           )}
+        </div>
+
+        <hr className="border-nexus-border" />
+
+        <div>
+          <button
+            onClick={() => signOut()}
+            className="flex items-center gap-2 px-4 py-2 border border-red-500/20 text-red-400 rounded-lg hover:bg-red-500/10 transition-colors font-medium"
+          >
+            <ArrowLeftOnRectangleIcon className="w-5 h-5" />
+            Sair do sistema
+          </button>
         </div>
       </div>
     </div>

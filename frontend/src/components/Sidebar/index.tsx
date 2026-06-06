@@ -3,7 +3,6 @@ import { NavLink } from 'react-router-dom';
 import { ArrowLeftOnRectangleIcon } from '@heroicons/react/24/solid';
 import api from '../../services/api';
 import { useAuth } from '../../contexts/AuthContext';
-import { useTheme } from '../../contexts/ThemeContext';
 import { useToast } from '../../contexts/ToastContext';
 import {
   ChartBarIcon,
@@ -54,7 +53,6 @@ interface SidebarProps {
 
 export function Sidebar({ open, onClose }: SidebarProps) {
   const { user, signOut, updateUser } = useAuth();
-  const { theme, toggleTheme } = useTheme();
   const { showToast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [cacheLoading, setCacheLoading] = useState(false);
@@ -168,24 +166,26 @@ export function Sidebar({ open, onClose }: SidebarProps) {
     </>
   );
 
-  if (onClose) {
-    return (
-      <>
-        {open && (
-          <div className="nexus-sidebar-overlay" onClick={onClose} />
-        )}
-        <aside
-          className={`nexus-sidebar w-64 min-h-screen flex flex-col ${open ? 'nexus-sidebar-mobile open' : 'nexus-sidebar-mobile'}`}
-        >
-          {sidebarContent}
-        </aside>
-      </>
-    );
-  }
-
   return (
-    <aside className="nexus-sidebar w-64 min-h-screen flex-col hidden md:flex">
-      {sidebarContent}
-    </aside>
+    <>
+      {/* Desktop sidebar - always visible on md+ screens */}
+      <aside className="nexus-sidebar w-64 min-h-screen flex-col hidden md:flex">
+        {sidebarContent}
+      </aside>
+
+      {/* Mobile sidebar - overlay, only shown when toggled */}
+      {open !== undefined && (
+        <>
+          {open && (
+            <div className="nexus-sidebar-overlay" onClick={onClose} />
+          )}
+          <aside
+            className={`nexus-sidebar w-64 min-h-screen flex flex-col md:hidden ${open ? 'nexus-sidebar-mobile open' : 'nexus-sidebar-mobile'}`}
+          >
+            {sidebarContent}
+          </aside>
+        </>
+      )}
+    </>
   );
 }
