@@ -18,7 +18,8 @@ export function authorize(...allowedRoles: Role[]) {
       throw new AppError('Usuario nao autenticado', 401);
     }
 
-    const userLevel = roleHierarchy[user.role];
+    const normalizedRole = user.role.toLowerCase() as Role;
+    const userLevel = roleHierarchy[normalizedRole];
     const requiredLevel = Math.max(...allowedRoles.map((r) => roleHierarchy[r]));
 
     if (userLevel < requiredLevel) {

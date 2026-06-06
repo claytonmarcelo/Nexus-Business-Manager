@@ -26,7 +26,7 @@ model User {
   name         String
   email        String   @unique
   passwordHash String
-  role            String   @default("ADMIN")
+  role            String   @default("admin")
   active          Boolean  @default(true)
   avatarUrl       String?
   themePreference String   @default("dark")

@@ -40,7 +40,7 @@ export function SuggestionsList() {
     finally { setLoading(false); }
   }
 
-  const isAdminOrManager = user?.role === 'admin' || user?.role === 'manager';
+  const isAdminOrManager = user?.role?.toLowerCase() === 'admin' || user?.role?.toLowerCase() === 'manager';
   const userSuggestions = suggestions.filter((s) => s.user_id === user?.id);
   const displaySuggestions = isAdminOrManager ? suggestions : userSuggestions;
 

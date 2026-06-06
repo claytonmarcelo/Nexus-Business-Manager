@@ -79,9 +79,9 @@ export function Header({ toggleSidebar }: HeaderProps) {
 
   const avatarSrc = user?.avatar_url || user?.avatarUrl || null;
   const initials = user?.name?.charAt(0).toUpperCase() || '?';
-  const roleLabel = user?.role === 'admin' ? 'Administrador'
-    : user?.role === 'manager' ? 'Gerente'
-    : user?.role === 'operator' ? 'Operador'
+  const roleLabel = user?.role?.toLowerCase() === 'admin' ? 'Administrador'
+    : user?.role?.toLowerCase() === 'manager' ? 'Gerente'
+    : user?.role?.toLowerCase() === 'operator' ? 'Operador'
     : 'Visualizador';
 
   return (

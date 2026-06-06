@@ -18,7 +18,7 @@ async function seed(): Promise<void> {
   await prisma.user.upsert({
     where: { email: FIXED_ADMIN_EMAIL },
     update: {
-      role: 'ADMIN',
+      role: 'admin',
       active: true,
       companyId: company.id,
       passwordHash: hashedPassword,
@@ -29,7 +29,7 @@ async function seed(): Promise<void> {
       name: 'Administrador',
       email: FIXED_ADMIN_EMAIL,
       passwordHash: hashedPassword,
-      role: 'ADMIN',
+      role: 'admin',
       active: true,
     },
   });
