@@ -50,3 +50,12 @@ export async function updateStatusHandler(request: FastifyRequest, reply: Fastif
   const purchase = await purchaseService.updatePurchaseStatus(Number(id), data, user.companyId);
   return reply.send({ success: true, data: purchase });
 }
+
+export async function deleteHandler(request: FastifyRequest, reply: FastifyReply) {
+  const user = request.user as { id: number; name: string; companyId: number };
+  const { id } = request.params as { id: string };
+  const old = await purchaseService.getPurchaseById(Number(id), user.companyId);
+  await purchaseService.deletePurchase(Number(id), user.companyId);
+  await log(user.id, user.name, 'DELETE', 'purchase', Number(id), old, null, request.ip, user.companyId);
+  return reply.send({ success: true, message: 'Compra excluida com sucesso' });
+}

@@ -1,6 +1,6 @@
 import { query, execute } from '../../shared/database/connection';
 import { AppError } from '../../shared/errors/app-error';
-import { CreateSaleInput } from './sales.schema';
+import { CreateSaleInput, UpdateSaleInput } from './sales.schema';
 import { RowDataPacket } from 'mysql2';
 import { PaginationParams, PaginatedResult, buildPaginatedResponse } from '../../shared/utils/pagination';
 
@@ -122,4 +122,36 @@ export async function createSale(data: CreateSaleInput, userId: number, companyI
   }
 
   return getSaleById(saleId, companyId);
+}
+
+export async function updateSale(id: number, data: UpdateSaleInput, companyId: number): Promise<SaleRow> {
+  await getSaleById(id, companyId);
+
+  const fields: string[] = [];
+  const values: unknown[] = [];
+
+  if (data.client_id !== undefined) { fields.push('client_id = ?'); values.push(data.client_id); }
+  if (data.notes !== undefined) { fields.push('notes = ?'); values.push(data.notes); }
+  if (data.status !== undefined) { fields.push('status = ?'); values.push(data.status); }
+
+  if (fields.length > 0) {
+    values.push(id, companyId);
+    await execute(`UPDATE sales SET ${fields.join(', ')} WHERE id = ? AND company_id = ?`, values);
+  }
+
+  return getSaleById(id, companyId);
+}
+
+export async function deleteSale(id: number, companyId: number): Promise<void> {
+  await getSaleById(id, companyId);
+  const items = await getSaleItems(id);
+  for (const item of items) {
+    const products = await query<ProductRow[]>('SELECT id, quantity FROM products WHERE id = ?', [item.product_id]);
+    if (products.length > 0) {
+      const newQty = products[0].quantity + item.quantity;
+      await execute('UPDATE products SET quantity = ? WHERE id = ?', [newQty, item.product_id]);
+    }
+  }
+  await execute('DELETE FROM sale_items WHERE sale_id = ?', [id]);
+  await execute('DELETE FROM sales WHERE id = ? AND company_id = ?', [id, companyId]);
 }

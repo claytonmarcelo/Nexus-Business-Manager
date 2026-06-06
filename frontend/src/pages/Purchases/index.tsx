@@ -1,8 +1,10 @@
 import { useState, useEffect, FormEvent } from 'react';
 import api from '../../services/api';
 import { Purchase, Supplier, Product } from '../../types';
+import { useToast } from '../../contexts/ToastContext';
 
 export function Purchases() {
+  const { showToast } = useToast();
   const [purchases, setPurchases] = useState<Purchase[]>([]);
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
@@ -16,9 +18,9 @@ export function Purchases() {
   async function loadData() {
     try {
       const [purRes, supRes, prodRes] = await Promise.all([api.get('/purchases'), api.get('/suppliers'), api.get('/products')]);
-      setPurchases(purRes.data);
-      setSuppliers(supRes.data);
-      setProducts(prodRes.data);
+      setPurchases(purRes.data || []);
+      setSuppliers(supRes.data || []);
+      setProducts(prodRes.data || []);
     } catch { console.error('Erro ao carregar compras'); }
     finally { setLoading(false); }
   }
@@ -46,29 +48,37 @@ export function Purchases() {
       setFormData({ supplier_id: 0, notes: '', items: [{ product_id: 0, quantity: 1, unit_price: 0 }] });
       loadData();
     } catch (err: any) {
-      setError(err.response?.data?.error || 'Erro ao criar compra');
+      setError(err.response?.data?.message || err.response?.data?.error || 'Erro ao criar compra');
     }
   }
 
   async function handleReceive(id: number) {
     try {
       await api.post(`/purchases/${id}/receive`);
+      showToast('Compra recebida e estoque atualizado.');
       loadData();
     } catch (err: any) {
-      alert(err.response?.data?.error || 'Erro ao receber compra');
+      showToast(err.response?.data?.message || 'Erro ao receber compra', 'error');
     }
   }
 
+  async function handleDelete(id: number) {
+    if (!window.confirm('Excluir esta compra?')) return;
+    try {
+      await api.delete(`/purchases/${id}`);
+      showToast('Compra excluida.');
+      loadData();
+    } catch { showToast('Erro ao excluir.', 'error'); }
+  }
+
   const statusBadge: Record<string, string> = {
-    pending: 'bg-yellow-100 text-yellow-800',
-    received: 'bg-green-100 text-green-800',
-    cancelled: 'bg-red-100 text-red-800',
+    pending: 'bg-yellow-500/20 text-yellow-500 border-yellow-500/30',
+    received: 'bg-green-500/20 text-green-500 border-green-500/30',
+    cancelled: 'bg-red-500/20 text-red-500 border-red-500/30',
   };
 
   const statusLabel: Record<string, string> = {
-    pending: 'Pendente',
-    received: 'Recebido',
-    cancelled: 'Cancelado',
+    pending: 'Pendente', received: 'Recebido', cancelled: 'Cancelado',
   };
 
   return (
@@ -76,16 +86,16 @@ export function Purchases() {
       <div className="flex justify-between items-center mb-8">
         <div>
           <h1 className="page-title">Compras</h1>
-          <p className="text-brand-graphiteWine/60 mt-1">Pedidos de compra</p>
+          <p className="text-brand-muted text-sm mt-0.5">Pedidos de compra</p>
         </div>
         <button onClick={() => { setShowModal(true); setError(''); }} className="btn-primary">Nova Compra</button>
       </div>
 
       <div className="card overflow-hidden p-0">
         {loading ? (
-          <div className="p-8 text-center text-brand-graphiteWine/70">Carregando...</div>
+          <div className="p-8 text-center text-brand-muted">Carregando...</div>
         ) : purchases.length === 0 ? (
-          <div className="p-8 text-center text-brand-graphiteWine/70">Nenhuma compra encontrada</div>
+          <div className="p-8 text-center text-brand-muted">Nenhuma compra encontrada</div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
@@ -95,24 +105,25 @@ export function Purchases() {
                   <th className="text-left py-3 px-4 font-medium text-brand-ivorySmoke">Fornecedor</th>
                   <th className="text-left py-3 px-4 font-medium text-brand-ivorySmoke">Valor Total</th>
                   <th className="text-left py-3 px-4 font-medium text-brand-ivorySmoke">Status</th>
-                  <th className="text-right py-3 px-4 font-medium text-brand-ivorySmoke">Acoes</th>
+                  <th className="text-center py-3 px-4 font-medium text-brand-ivorySmoke">Acoes</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
                 {purchases.map((p) => (
                   <tr key={p.id} className="hover:bg-[rgba(214,179,112,0.18)]">
-                    <td className="py-3 px-4 text-brand-graphiteWine/70">{new Date(p.created_at).toLocaleDateString('pt-BR')}</td>
+                    <td className="py-3 px-4 text-brand-muted">{new Date(p.created_at).toLocaleDateString('pt-BR')}</td>
                     <td className="py-3 px-4 font-medium">{p.supplier_name || '-'}</td>
                     <td className="py-3 px-4 font-medium">
                       {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(p.total_value)}
                     </td>
                     <td className="py-3 px-4">
-                      <span className={`badge ${statusBadge[p.status]}`}>{statusLabel[p.status]}</span>
+                      <span className={`badge ${statusBadge[p.status] || 'bg-gray-500/20 text-gray-400'}`}>{statusLabel[p.status] || p.status}</span>
                     </td>
-                    <td className="py-3 px-4 text-right">
+                    <td className="py-3 px-4 text-center">
                       {p.status === 'pending' && (
-                        <button onClick={() => handleReceive(p.id)} className="text-green-600 hover:text-green-800 font-medium">Receber</button>
+                        <button onClick={() => handleReceive(p.id)} className="text-green-500 hover:text-green-400 text-xs font-medium mr-3">Receber</button>
                       )}
+                      <button onClick={() => handleDelete(p.id)} className="text-brand-danger hover:text-brand-danger/80 text-xs font-medium">Excluir</button>
                     </td>
                   </tr>
                 ))}
@@ -126,10 +137,10 @@ export function Purchases() {
         <div className="fixed inset-0 bg-brand-blackCherry/45 flex items-center justify-center z-50">
           <div className="card rounded-2xl w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
             <h2 className="text-xl font-semibold mb-6">Nova Compra</h2>
-            {error && <div className="bg-red-50 text-red-700 px-4 py-3 rounded-lg mb-4 text-sm">{error}</div>}
+            {error && <div className="bg-red-500/20 text-red-500 px-4 py-3 rounded-lg mb-4 text-sm">{error}</div>}
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-brand-blackCherry mb-1">Fornecedor</label>
+                <label className="block text-sm font-medium text-brand-muted mb-1">Fornecedor</label>
                 <select className="input-field" value={formData.supplier_id}
                   onChange={(e) => setFormData({ ...formData, supplier_id: Number(e.target.value) })}>
                   <option value={0}>Selecione...</option>
@@ -138,7 +149,7 @@ export function Purchases() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-brand-blackCherry mb-2">Itens</label>
+                <label className="block text-sm font-medium text-brand-muted mb-2">Itens</label>
                 {formData.items.map((item, index) => (
                   <div key={index} className="flex gap-2 mb-2 items-end">
                     <select className="input-field flex-1" value={item.product_id}
@@ -151,15 +162,15 @@ export function Purchases() {
                     <input type="number" step="0.01" min="0" className="input-field w-28" placeholder="Preco" value={item.unit_price}
                       onChange={(e) => updateItem(index, 'unit_price', Number(e.target.value))} required />
                     {formData.items.length > 1 && (
-                      <button type="button" onClick={() => removeItem(index)} className="text-red-500 hover:text-red-700 px-2">X</button>
+                      <button type="button" onClick={() => removeItem(index)} className="text-brand-danger hover:text-brand-danger/80 px-2">X</button>
                     )}
                   </div>
                 ))}
-                <button type="button" onClick={addItem} className="text-brand-primary hover:text-brand-primaryHover text-sm font-medium">+ Adicionar item</button>
+                <button type="button" onClick={addItem} className="text-brand-gold hover:text-brand-gold/80 text-sm font-medium">+ Adicionar item</button>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-brand-blackCherry mb-1">Observacoes</label>
+                <label className="block text-sm font-medium text-brand-muted mb-1">Observacoes</label>
                 <input type="text" className="input-field" value={formData.notes}
                   onChange={(e) => setFormData({ ...formData, notes: e.target.value })} />
               </div>

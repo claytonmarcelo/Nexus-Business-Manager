@@ -13,4 +13,11 @@ export const createSaleSchema = z.object({
   items: z.array(saleItemSchema).min(1, 'Adicione pelo menos um item'),
 });
 
+export const updateSaleSchema = z.object({
+  client_id: z.number().int().positive().optional().nullable(),
+  notes: z.string().optional().nullable(),
+  status: z.enum(['ABERTA', 'CONCLUIDA', 'CANCELADA']).optional(),
+});
+
 export type CreateSaleInput = z.infer<typeof createSaleSchema>;
+export type UpdateSaleInput = z.infer<typeof updateSaleSchema>;

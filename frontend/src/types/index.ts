@@ -94,6 +94,7 @@ export interface Sale {
   id: number;
   client_id: number | null;
   total_value: number;
+  status: string;
   notes: string | null;
   created_at: string;
   client_name: string | null;

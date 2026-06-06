@@ -12,4 +12,5 @@ export async function purchaseRoutes(app: FastifyInstance) {
   app.post('/purchases/:id/receive', { preHandler: [authorize('admin', 'manager')] }, purchaseController.receiveHandler);
   app.post('/purchases/:id/cancel', { preHandler: [authorize('admin', 'manager')] }, purchaseController.cancelHandler);
   app.put('/purchases/:id/status', { preHandler: [authorize('admin', 'manager')] }, purchaseController.updateStatusHandler);
+  app.delete('/purchases/:id', { preHandler: [authorize('admin', 'manager')] }, purchaseController.deleteHandler);
 }

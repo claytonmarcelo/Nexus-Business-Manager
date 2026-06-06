@@ -9,4 +9,6 @@ export async function saleRoutes(app: FastifyInstance) {
   app.get('/sales', { preHandler: [authorize('admin', 'manager', 'operator', 'viewer')] }, saleController.listHandler);
   app.get('/sales/:id', { preHandler: [authorize('admin', 'manager', 'operator', 'viewer')] }, saleController.getByIdHandler);
   app.post('/sales', { preHandler: [authorize('admin', 'manager', 'operator')] }, saleController.createHandler);
+  app.put('/sales/:id', { preHandler: [authorize('admin', 'manager', 'operator')] }, saleController.updateHandler);
+  app.delete('/sales/:id', { preHandler: [authorize('admin', 'manager')] }, saleController.deleteHandler);
 }

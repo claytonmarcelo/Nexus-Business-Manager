@@ -136,3 +136,9 @@ export async function updatePurchaseStatus(id: number, data: UpdatePurchaseStatu
   await execute('UPDATE purchases SET status = ? WHERE id = ?', [data.status, id]);
   return getPurchaseById(id, companyId);
 }
+
+export async function deletePurchase(id: number, companyId: number): Promise<void> {
+  await getPurchaseById(id, companyId);
+  await execute('DELETE FROM purchase_items WHERE purchase_id = ?', [id]);
+  await execute('DELETE FROM purchases WHERE id = ? AND company_id = ?', [id, companyId]);
+}

@@ -1,5 +1,5 @@
 import { FastifyRequest, FastifyReply } from 'fastify';
-import { createSaleSchema } from './sales.schema';
+import { createSaleSchema, updateSaleSchema } from './sales.schema';
 import * as saleService from './sales.service';
 import { parsePagination } from '../../shared/utils/pagination';
 import { log } from '../audit/audit.service';
@@ -25,4 +25,23 @@ export async function createHandler(request: FastifyRequest, reply: FastifyReply
   const sale = await saleService.createSale(data, user.id, user.companyId);
   await log(user.id, user.name, 'CREATE', 'sale', sale.id, null, data, request.ip, user.companyId);
   return reply.status(201).send({ success: true, data: sale });
+}
+
+export async function updateHandler(request: FastifyRequest, reply: FastifyReply) {
+  const user = request.user as { id: number; name: string; companyId: number };
+  const { id } = request.params as { id: string };
+  const data = updateSaleSchema.parse(request.body);
+  const old = await saleService.getSaleById(Number(id), user.companyId);
+  const sale = await saleService.updateSale(Number(id), data, user.companyId);
+  await log(user.id, user.name, 'UPDATE', 'sale', Number(id), old, data, request.ip, user.companyId);
+  return reply.send({ success: true, data: sale });
+}
+
+export async function deleteHandler(request: FastifyRequest, reply: FastifyReply) {
+  const user = request.user as { id: number; name: string; companyId: number };
+  const { id } = request.params as { id: string };
+  const old = await saleService.getSaleById(Number(id), user.companyId);
+  await saleService.deleteSale(Number(id), user.companyId);
+  await log(user.id, user.name, 'DELETE', 'sale', Number(id), old, null, request.ip, user.companyId);
+  return reply.send({ success: true, message: 'Venda excluida com sucesso' });
 }

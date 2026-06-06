@@ -23,6 +23,8 @@ import { Companies } from './pages/Companies';
 import { CreateSuggestion } from './pages/Suggestions/Create';
 import { AdminSuggestions } from './pages/Suggestions/Admin';
 import { NexusAI } from './pages/NexusAI';
+import { CRM } from './pages/CRM';
+import { SuggestionsList } from './pages/Suggestions/List';
 import { Profile } from './pages/Profile';
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
@@ -93,9 +95,11 @@ function AppRoutes() {
         <Route path="appointments" element={<Appointments />} />
         <Route path="reports" element={<Reports />} />
         <Route path="notifications" element={<Notifications />} />
-        <Route path="suggestions" element={<CreateSuggestion />} />
+        <Route path="suggestions" element={<SuggestionsList />} />
+        <Route path="suggestions/new" element={<CreateSuggestion />} />
         <Route path="suggestions/admin" element={<AdminSuggestions />} />
         <Route path="nexus-ai" element={<NexusAI />} />
+        <Route path="crm" element={<CRM />} />
         <Route path="audit"        element={<Audit />} />
         <Route path="companies" element={<Companies />} />
         <Route path="about" element={<About />} />
