@@ -17,13 +17,18 @@ export function NexusAISuggestions({ module, onSelect }: Props) {
 
   return (
     <div>
-      <p className="text-xs text-brand-muted mb-2">Perguntas frequentes:</p>
-      <div className="flex flex-wrap gap-1.5">
+      <p style={{ fontSize: '0.75rem', color: 'var(--nexus-muted-2)', marginBottom: '0.5rem' }}>Perguntas frequentes:</p>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.375rem' }}>
         {suggestions.map((s, i) => (
           <button
             key={i}
             onClick={() => onSelect(s)}
-            className="text-xs px-3 py-1.5 rounded-full border border-brand-border text-brand-muted hover:text-brand-gold hover:border-brand-gold transition-colors"
+            style={{
+              fontSize: '0.75rem', padding: '0.375rem 0.75rem', borderRadius: '9999px', border: '1px solid var(--nexus-border)',
+              color: 'var(--nexus-muted-2)', cursor: 'pointer', background: 'transparent', transition: 'all 0.2s',
+            }}
+            onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--nexus-gold)'; e.currentTarget.style.borderColor = 'var(--nexus-gold)'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--nexus-muted-2)'; e.currentTarget.style.borderColor = 'var(--nexus-border)'; }}
           >
             {s}
           </button>

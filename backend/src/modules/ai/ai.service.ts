@@ -35,12 +35,133 @@ export async function chat(data: ChatInput, companyId: number) {
     };
   }
 
+  // Improved fallback with contextual responses
+  const fallbackAnswer = getFallbackAnswer(message, module || '', context);
+  
   return {
-    answer: 'Desculpe, nao consegui processar sua pergunta agora. Verifique se o assistente esta configurado corretamente ou tente reformular a pergunta.',
+    answer: fallbackAnswer,
     source: 'fallback' as const,
     suggestions: getContextualSuggestions(module || ''),
     context,
   };
+}
+
+function getFallbackAnswer(message: string, module: string, context: any): string {
+  const lower = message.toLowerCase();
+  
+  // General questions about the system
+  if (lower.includes('sair') || lower.includes('logout') || lower.includes('encerrar')) {
+    return 'Para sair do sistema, clique no botao "Sair do sistema" no menu lateral ou no seu perfil no canto superior direito. Isso limpara sua sessao e redirecionara para a tela de login.';
+  }
+  
+  if (lower.includes('login') || lower.includes('entrar') || lower.includes('acessar')) {
+    return 'Para fazer login, acesse a pagina de login, informe seu email e senha, e clique em "Entrar". Se esqueceu sua senha, entre em contato com o administrador.';
+  }
+  
+  if (lower.includes('cadastrar') || lower.includes('registro') || lower.includes('criar conta')) {
+    return 'Para criar uma conta, clique em "Registrar" na tela de login. Preencha nome, email, senha e repita a senha. Apos criar, entre em contato com o administrador para ativar sua conta.';
+  }
+  
+  if (lower.includes('senha') || lower.includes('password')) {
+    return 'Para alterar sua senha, acesse seu perfil no canto superior direito e clique em "Alterar Senha". Informe a senha atual e a nova senha.';
+  }
+  
+  if (lower.includes('perfil') || lower.includes('minha conta') || lower.includes('meus dados')) {
+    return 'Para acessar seu perfil, clique no seu nome no canto superior direito. L voce pode alterar nome, email, senha e tema do sistema.';
+  }
+  
+  if (lower.includes('permissao') || lower.includes('acesso') || lower.includes('pode fazer')) {
+    return 'As permissoes sao definidas pelo administrador. Os perfis sao: Administrador (acesso total), Gerente (acesso a gestao), Operador (acesso operacional) e Visualizador (apenas leitura).';
+  }
+  
+  // Module-specific fallbacks
+  if (module === 'clientes' || lower.includes('cliente')) {
+    if (lower.includes('cadastrar') || lower.includes('criar') || lower.includes('novo')) {
+      return 'Para cadastrar um cliente: va em Clientes > Novo Cliente, preencha nome, telefone, email e documento, depois clique em Salvar.';
+    }
+    if (lower.includes('editar') || lower.includes('alterar')) {
+      return 'Para editar um cliente: va em Clientes, encontre o cliente na lista e clique no icone de edicao (lapis).';
+    }
+    if (lower.includes('buscar') || lower.includes('procurar')) {
+      return 'Use o campo de busca no topo da lista de Clientes para encontrar rapidamente por nome, email ou documento.';
+    }
+    return 'No modulo de Clientes, voce pode cadastrar, editar, buscar e gerenciar todos os seus clientes. Use o menu lateral para acessar.';
+  }
+  
+  if (module === 'produtos' || lower.includes('produto')) {
+    if (lower.includes('cadastrar') || lower.includes('criar') || lower.includes('novo')) {
+      return 'Para cadastrar um produto: va em Produtos > Novo Produto, preencha nome, SKU, categoria, preco e quantidade, depois clique em Salvar.';
+    }
+    if (lower.includes('editar') || lower.includes('alterar')) {
+      return 'Para editar um produto: va em Produtos, encontre o produto e clique no icone de edicao.';
+    }
+    return 'No modulo de Produtos, voce pode gerenciar seu catalogo, precos, categorias e imagens dos produtos.';
+  }
+  
+  if (module === 'estoque' || lower.includes('estoque') || lower.includes('inventario')) {
+    if (lower.includes('entrada') || lower.includes('adicionar')) {
+      return 'Para dar entrada no estoque: va em Estoque > Entrada, selecione o produto e informe a quantidade.';
+    }
+    if (lower.includes('saida') || lower.includes('remover')) {
+      return 'Para dar saida no estoque: va em Estoque > Saida, selecione o produto e informe a quantidade.';
+    }
+    return 'No modulo de Estoque, voce pode controlar entradas, saidas, ajustes e ver produtos com estoque baixo.';
+  }
+  
+  if (module === 'vendas' || lower.includes('venda') || lower.includes('vender')) {
+    if (lower.includes('criar') || lower.includes('nova') || lower.includes('registrar')) {
+      return 'Para criar uma venda: va em Vendas > Nova Venda, selecione o cliente (opcional), adicione produtos e confirme.';
+    }
+    return 'No modulo de Vendas, voce pode registrar vendas, ver historico, cancelar vendas e gerar relatorios.';
+  }
+  
+  if (module === 'compras' || lower.includes('compra')) {
+    if (lower.includes('criar') || lower.includes('nova') || lower.includes('registrar')) {
+      return 'Para registrar uma compra: va em Compras > Nova Compra, selecione o fornecedor, adicione produtos e confirme.';
+    }
+    return 'No modulo de Compras, voce pode registrar compras de fornecedores, receber mercadorias e controlar pedidos.';
+  }
+  
+  if (module === 'financeiro' || lower.includes('financeiro') || lower.includes('dinheiro') || lower.includes('conta')) {
+    if (lower.includes('receita') || lower.includes('entrar dinheiro')) {
+      return 'Para lancar uma receita: va em Financeiro > Nova Receita, informe descricao, valor, categoria e data.';
+    }
+    if (lower.includes('despesa') || lower.includes('pagar') || lower.includes('gasto')) {
+      return 'Para lancar uma despesa: va em Financeiro > Nova Despesa, informe descricao, valor, categoria e data.';
+    }
+    return 'No modulo Financeiro, voce pode lancar receitas e despesas, ver contas a vencer e analisar o fluxo de caixa.';
+  }
+  
+  if (module === 'dashboard' || lower.includes('dashboard') || lower.includes('painel')) {
+    return 'O Dashboard mostra um resumo do seu negocio: totais de clientes, produtos, vendas e estoque, graficos de receitas vs despesas, vendas por mes e categorias. Use os cards para acesso rapido aos modulos.';
+  }
+  
+  if (module === 'agenda' || lower.includes('agenda') || lower.includes('agendamento')) {
+    return 'No modulo Agenda, voce pode gerenciar compromissos, agendar reunicoes com clientes e controlar status (agendado, concluido, cancelado).';
+  }
+  
+  if (module === 'relatorios' || lower.includes('relatorio') || lower.includes('relat')) {
+    return 'No modulo Relatorios, voce pode gerar relatorios de vendas, financeiro e estoque, filtrar por periodo e exportar para PDF ou Excel.';
+  }
+  
+  if (module === 'notificacoes' || lower.includes('notificacao') || lower.includes('alerta')) {
+    return 'O modulo Notificacoes exibe alertas do sistema sobre estoque baixo, contas a vencer e agendamentos. Voce pode marcar como lidas para limpar.';
+  }
+  
+  if (module === 'auditoria' || lower.includes('auditoria') || lower.includes('log')) {
+    return 'O modulo Auditoria registra todas as acoes dos usuarios: criacao, edicao e exclusao de registros. Use para consultar quem fez o que e quando.';
+  }
+  
+  if (module === 'usuarios' || lower.includes('usuario') || lower.includes('usuario')) {
+    return 'No modulo Usuarios (admin), voce pode gerenciar usuarios do sistema, definir perfis e permissoes, e ativar/desativar contas.';
+  }
+  
+  if (module === 'config' || lower.includes('configuracao') || lower.includes('empresa')) {
+    return 'No modulo Configuracoes (admin), voce pode configurar os dados da empresa, gerenciar multi-empresas e definir preferencias do sistema.';
+  }
+  
+  // Generic helpful response
+  return 'Posso ajudar voce com o Nexus Business Manager! Pergunte sobre como usar modulos como Clientes, Produtos, Estoque, Vendas, Compras, Financeiro, Agenda, Relatorios, Notificacoes, Auditoria, Usuarios ou Configuracoes. Tambem posso ajudar com login, cadastro, perfil e permissoes.';
 }
 
 export async function getSuggestions(module: string) {

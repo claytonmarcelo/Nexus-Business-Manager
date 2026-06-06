@@ -60,20 +60,20 @@ export function NexusAIChat({ module, page, onClose }: Props) {
   }
 
   return (
-    <div className="flex flex-col h-full">
-      <div className="flex items-center justify-between p-4 border-b" style={{ borderColor: 'var(--nexus-border)' }}>
-        <div className="flex items-center gap-2">
-          <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-          <span className="text-sm font-medium text-brand-text">Nexus AI</span>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '1rem', borderBottom: '1px solid var(--nexus-border)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <span style={{ width: '0.5rem', height: '0.5rem', borderRadius: '9999px', background: '#22C55E', animation: 'pulse 2s infinite' }} />
+          <span style={{ fontSize: '0.875rem', fontWeight: 500, color: 'var(--nexus-text)' }}>Nexus AI</span>
         </div>
         {onClose && (
-          <button onClick={onClose} className="text-brand-muted hover:text-brand-text transition-colors text-sm">
+          <button onClick={onClose} style={{ color: 'var(--nexus-muted-2)', fontSize: '0.875rem', cursor: 'pointer', background: 'none', border: 'none' }} onMouseEnter={(e) => e.currentTarget.style.color = 'var(--nexus-text)'} onMouseLeave={(e) => e.currentTarget.style.color = 'var(--nexus-muted-2)'}>
             Fechar
           </button>
         )}
       </div>
 
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+      <div style={{ flex: 1, overflowY: 'auto', padding: '1rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
         {messages.map((msg) => (
           <NexusAIMessage
             key={msg.id}
@@ -85,15 +85,15 @@ export function NexusAIChat({ module, page, onClose }: Props) {
         ))}
 
         {loading && (
-          <div className="flex gap-3">
-            <div className="w-8 h-8 rounded-full bg-brand-rose/20 flex items-center justify-center">
-              <span className="w-3 h-3 border-2 border-brand-rose border-t-transparent rounded-full animate-spin" />
+          <div style={{ display: 'flex', gap: '0.75rem' }}>
+            <div style={{ width: '2rem', height: '2rem', borderRadius: '9999px', background: 'rgba(198, 90, 113, 0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <span style={{ width: '0.75rem', height: '0.75rem', border: '2px solid #C65A71', borderTopColor: 'transparent', borderRadius: '9999px', animation: 'spin 1s linear infinite' }} />
             </div>
-            <div className="rounded-2xl px-4 py-2.5 bg-[rgba(24,22,22,0.94)] border border-brand-border">
-              <div className="flex gap-1">
-                <span className="w-2 h-2 rounded-full bg-brand-muted animate-bounce" style={{ animationDelay: '0ms' }} />
-                <span className="w-2 h-2 rounded-full bg-brand-muted animate-bounce" style={{ animationDelay: '150ms' }} />
-                <span className="w-2 h-2 rounded-full bg-brand-muted animate-bounce" style={{ animationDelay: '300ms' }} />
+            <div style={{ borderRadius: '1rem', padding: '0.625rem 1rem', background: 'rgba(11, 13, 16, 0.94)', border: '1px solid var(--nexus-border)' }}>
+              <div style={{ display: 'flex', gap: '0.25rem' }}>
+                <span style={{ width: '0.5rem', height: '0.5rem', borderRadius: '9999px', background: 'var(--nexus-muted-2)', animation: 'bounce 1s infinite' }} />
+                <span style={{ width: '0.5rem', height: '0.5rem', borderRadius: '9999px', background: 'var(--nexus-muted-2)', animation: 'bounce 1s infinite 0.15s' }} />
+                <span style={{ width: '0.5rem', height: '0.5rem', borderRadius: '9999px', background: 'var(--nexus-muted-2)', animation: 'bounce 1s infinite 0.3s' }} />
               </div>
             </div>
           </div>
@@ -102,28 +102,28 @@ export function NexusAIChat({ module, page, onClose }: Props) {
         <div ref={endRef} />
       </div>
 
-      <div className="p-4 border-t" style={{ borderColor: 'var(--nexus-border)' }}>
+      <div style={{ padding: '1rem', borderTop: '1px solid var(--nexus-border)' }}>
         {messages.length === 1 && (
-          <div className="mb-3">
+          <div style={{ marginBottom: '0.75rem' }}>
             <NexusAISuggestions module={module} onSelect={(s) => handleSend(s)} />
           </div>
         )}
 
-        <div className="flex gap-2">
+        <div style={{ display: 'flex', gap: '0.5rem' }}>
           <input
             type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="Digite sua pergunta..."
-            className="input-field flex-1"
+            style={{ flex: 1, padding: '0.625rem 1rem', background: 'rgba(0,0,0,0.5)', color: 'var(--nexus-text)', border: '1px solid var(--nexus-border)', borderRadius: '10px', fontSize: '0.875rem', outline: 'none' }}
             disabled={loading}
             maxLength={2000}
           />
           <button
             onClick={() => handleSend()}
             disabled={loading || !input.trim()}
-            className="btn-primary px-4"
+            style={{ background: 'linear-gradient(135deg, #C65A71, #9d4e58)', color: '#fff', border: 'none', borderRadius: '10px', padding: '0.625rem 1rem', fontWeight: 500, cursor: 'pointer', fontSize: '0.875rem', opacity: loading || !input.trim() ? 0.5 : 1 }}
           >
             Enviar
           </button>

@@ -10,36 +10,44 @@ export function NexusAI() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-8">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ background: 'linear-gradient(135deg, var(--nexus-rose), var(--nexus-rose-dark))' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '2rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+          <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #C65A71, #9d4e58)' }}>
             <SparklesIcon className="w-5 h-5 text-white" />
           </div>
           <div>
-            <h1 className="page-title">Nexus AI Assistant</h1>
-            <p className="text-brand-muted text-sm mt-0.5">Assistente inteligente do seu ERP</p>
+            <h1 style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--nexus-text)' }}>Nexus AI Assistant</h1>
+            <p style={{ fontSize: '0.875rem', color: 'var(--nexus-muted-2)', marginTop: '0.25rem' }}>Assistente inteligente do seu ERP</p>
           </div>
         </div>
       </div>
 
-      <div className="flex gap-2 mb-6">
+      <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1.5rem' }}>
         <button
           onClick={() => setTab('chat')}
-          className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-            tab === 'chat'
-              ? 'bg-brand-primary/20 text-brand-gold border border-brand-primary/40'
-              : 'text-brand-muted border border-brand-border hover:text-brand-text'
-          }`}
+          style={{
+            padding: '0.5rem 1rem', borderRadius: '0.5rem', fontSize: '0.875rem', fontWeight: 500, border: '1px solid',
+            background: tab === 'chat' ? 'rgba(212, 149, 86, 0.2)' : 'transparent',
+            borderColor: tab === 'chat' ? 'rgba(212, 149, 86, 0.4)' : 'var(--nexus-border)',
+            color: tab === 'chat' ? 'var(--nexus-gold)' : 'var(--nexus-muted-2)',
+            cursor: 'pointer', transition: 'all 0.2s',
+          }}
+          onMouseEnter={(e) => e.currentTarget.style.color = 'var(--nexus-text)'}
+          onMouseLeave={(e) => e.currentTarget.style.color = tab === 'chat' ? 'var(--nexus-gold)' : 'var(--nexus-muted-2)'}
         >
           Chat
         </button>
         <button
           onClick={() => setTab('insights')}
-          className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-            tab === 'insights'
-              ? 'bg-brand-primary/20 text-brand-gold border border-brand-primary/40'
-              : 'text-brand-muted border border-brand-border hover:text-brand-text'
-          }`}
+          style={{
+            padding: '0.5rem 1rem', borderRadius: '0.5rem', fontSize: '0.875rem', fontWeight: 500, border: '1px solid',
+            background: tab === 'insights' ? 'rgba(212, 149, 86, 0.2)' : 'transparent',
+            borderColor: tab === 'insights' ? 'rgba(212, 149, 86, 0.4)' : 'var(--nexus-border)',
+            color: tab === 'insights' ? 'var(--nexus-gold)' : 'var(--nexus-muted-2)',
+            cursor: 'pointer', transition: 'all 0.2s',
+          }}
+          onMouseEnter={(e) => e.currentTarget.style.color = 'var(--nexus-text)'}
+          onMouseLeave={(e) => e.currentTarget.style.color = tab === 'insights' ? 'var(--nexus-gold)' : 'var(--nexus-muted-2)'}
         >
           Insights & Analise
         </button>
@@ -47,14 +55,13 @@ export function NexusAI() {
 
       {tab === 'chat' ? (
         <div
-          className="rounded-2xl overflow-hidden"
           style={{
+            borderRadius: '1rem', overflow: 'hidden',
             background: 'var(--nexus-card-strong)',
             border: '1px solid var(--nexus-border)',
-            boxShadow: 'var(--nexus-shadow)',
           }}
         >
-          <div className="h-[600px]">
+          <div style={{ height: '600px' }}>
             <NexusAIChat />
           </div>
         </div>

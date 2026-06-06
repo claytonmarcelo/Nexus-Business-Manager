@@ -41,29 +41,29 @@ export function NexusAIPanel() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="card">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="section-title">Insights do Negocio</h3>
-          <SparklesIcon className="w-5 h-5 text-brand-gold" />
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+      <div style={{ background: 'var(--nexus-card)', border: '1px solid var(--nexus-border)', borderRadius: '14px', padding: '1.5rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
+          <h3 style={{ fontSize: '1.125rem', fontWeight: 600, color: 'var(--nexus-text)' }}>Insights do Negocio</h3>
+          <SparklesIcon style={{ width: '1.25rem', height: '1.25rem', color: 'var(--nexus-gold)' }} />
         </div>
         <NexusAIInsights />
         {insights.length === 0 && (
-          <p className="text-sm text-brand-muted">Nenhum insight disponivel no momento.</p>
+          <p style={{ fontSize: '0.875rem', color: 'var(--nexus-muted-2)' }}>Nenhum insight disponivel no momento.</p>
         )}
       </div>
 
-      <div className="card">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="section-title">Analisar Modulo</h3>
-          <ChartBarIcon className="w-5 h-5 text-brand-rose" />
+      <div style={{ background: 'var(--nexus-card)', border: '1px solid var(--nexus-border)', borderRadius: '14px', padding: '1.5rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
+          <h3 style={{ fontSize: '1.125rem', fontWeight: 600, color: 'var(--nexus-text)' }}>Analisar Modulo</h3>
+          <ChartBarIcon style={{ width: '1.25rem', height: '1.25rem', color: '#C65A71' }} />
         </div>
 
-        <div className="flex gap-3 mb-4">
+        <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '1rem' }}>
           <select
             value={analyzeModuleName}
             onChange={(e) => setAnalyzeModuleName(e.target.value)}
-            className="input-field flex-1"
+            style={{ flex: 1, padding: '0.625rem 1rem', background: 'rgba(0,0,0,0.5)', color: 'var(--nexus-text)', border: '1px solid var(--nexus-border)', borderRadius: '10px', fontSize: '0.875rem', outline: 'none' }}
           >
             {modules.map((m) => (
               <option key={m.value} value={m.value}>{m.label}</option>
@@ -72,53 +72,53 @@ export function NexusAIPanel() {
           <select
             value={period}
             onChange={(e) => setPeriod(e.target.value)}
-            className="input-field w-32"
+            style={{ width: '8rem', padding: '0.625rem 1rem', background: 'rgba(0,0,0,0.5)', color: 'var(--nexus-text)', border: '1px solid var(--nexus-border)', borderRadius: '10px', fontSize: '0.875rem', outline: 'none' }}
           >
             <option value="week">Semana</option>
             <option value="month">Mes</option>
             <option value="quarter">Trimestre</option>
             <option value="year">Ano</option>
           </select>
-          <button onClick={handleAnalyze} disabled={analyzing} className="btn-primary">
+          <button onClick={handleAnalyze} disabled={analyzing} style={{ background: 'linear-gradient(135deg, #C65A71, #9d4e58)', color: '#fff', border: 'none', borderRadius: '10px', padding: '0.625rem 1.25rem', fontWeight: 500, cursor: 'pointer', fontSize: '0.875rem', opacity: analyzing ? 0.5 : 1 }}>
             {analyzing ? 'Analisando...' : 'Analisar'}
           </button>
         </div>
 
         {analysis && (
-          <div className="space-y-3 text-sm">
-            <div className="p-3 rounded-lg" style={{ background: 'rgba(214,168,93,0.1)', border: '1px solid rgba(214,168,93,0.2)' }}>
-              <p className="font-medium text-brand-text mb-1">Resumo</p>
-              <p className="text-brand-muted">{analysis.summary}</p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', fontSize: '0.875rem' }}>
+            <div style={{ padding: '0.75rem', borderRadius: '0.5rem', background: 'rgba(214,168,93,0.1)', border: '1px solid rgba(214,168,93,0.2)' }}>
+              <p style={{ fontWeight: 500, color: 'var(--nexus-text)', marginBottom: '0.25rem' }}>Resumo</p>
+              <p style={{ color: 'var(--nexus-muted-2)' }}>{analysis.summary}</p>
             </div>
 
             {analysis.risks && analysis.risks.length > 0 && (
-              <div className="p-3 rounded-lg" style={{ background: 'rgba(239,111,122,0.1)', border: '1px solid rgba(239,111,122,0.2)' }}>
-                <p className="font-medium text-brand-danger mb-1">Riscos</p>
-                <ul className="list-disc list-inside text-brand-muted space-y-1">
+              <div style={{ padding: '0.75rem', borderRadius: '0.5rem', background: 'rgba(239,111,122,0.1)', border: '1px solid rgba(239,111,122,0.2)' }}>
+                <p style={{ fontWeight: 500, color: '#D84B5F', marginBottom: '0.25rem' }}>Riscos</p>
+                <ul style={{ listStyle: 'disc', listStylePosition: 'inside', color: 'var(--nexus-muted-2)', display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
                   {analysis.risks.map((r, i) => <li key={i}>{r}</li>)}
                 </ul>
               </div>
             )}
 
             {analysis.opportunities && analysis.opportunities.length > 0 && (
-              <div className="p-3 rounded-lg" style={{ background: 'rgba(143,214,163,0.1)', border: '1px solid rgba(143,214,163,0.2)' }}>
-                <p className="font-medium text-brand-success mb-1">Oportunidades</p>
-                <ul className="list-disc list-inside text-brand-muted space-y-1">
+              <div style={{ padding: '0.75rem', borderRadius: '0.5rem', background: 'rgba(143,214,163,0.1)', border: '1px solid rgba(143,214,163,0.2)' }}>
+                <p style={{ fontWeight: 500, color: '#7DDA6A', marginBottom: '0.25rem' }}>Oportunidades</p>
+                <ul style={{ listStyle: 'disc', listStylePosition: 'inside', color: 'var(--nexus-muted-2)', display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
                   {analysis.opportunities.map((o, i) => <li key={i}>{o}</li>)}
                 </ul>
               </div>
             )}
 
             {analysis.recommendedActions && analysis.recommendedActions.length > 0 && (
-              <div className="p-3 rounded-lg" style={{ background: 'rgba(96,165,250,0.1)', border: '1px solid rgba(96,165,250,0.2)' }}>
-                <p className="font-medium text-blue-400 mb-1">Acoes Recomendadas</p>
-                <ul className="list-disc list-inside text-brand-muted space-y-1">
+              <div style={{ padding: '0.75rem', borderRadius: '0.5rem', background: 'rgba(96,165,250,0.1)', border: '1px solid rgba(96,165,250,0.2)' }}>
+                <p style={{ fontWeight: 500, color: '#60a5fa', marginBottom: '0.25rem' }}>Acoes Recomendadas</p>
+                <ul style={{ listStyle: 'disc', listStylePosition: 'inside', color: 'var(--nexus-muted-2)', display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
                   {analysis.recommendedActions.map((a, i) => <li key={i}>{a}</li>)}
                 </ul>
               </div>
             )}
 
-            <p className="text-xs text-brand-muted-2">
+            <p style={{ fontSize: '0.75rem', color: 'var(--nexus-muted-2)' }}>
               Fonte: {analysis.source === 'ollama' ? 'IA (Ollama)' : 'Regras do sistema'}
             </p>
           </div>

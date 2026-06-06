@@ -9,31 +9,37 @@ interface Props {
 
 export function NexusAIMessage({ text, isUser, suggestions, onSuggestionClick }: Props) {
   return (
-    <div className={`flex gap-3 ${isUser ? 'flex-row-reverse' : ''}`}>
-      <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${isUser ? 'bg-brand-primary/20' : 'bg-brand-rose/20'}`}>
+    <div style={{ display: 'flex', gap: '0.75rem', flexDirection: isUser ? 'row-reverse' : 'row' }}>
+      <div style={{ width: '2rem', height: '2rem', borderRadius: '9999px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, background: isUser ? 'rgba(212, 149, 86, 0.2)' : 'rgba(198, 90, 113, 0.2)' }}>
         {isUser ? (
-          <UserIcon className="w-4 h-4 text-brand-primary" />
+          <UserIcon style={{ width: '1rem', height: '1rem', color: '#D49556' }} />
         ) : (
-          <SparklesIcon className="w-4 h-4 text-brand-rose" />
+          <SparklesIcon style={{ width: '1rem', height: '1rem', color: '#C65A71' }} />
         )}
       </div>
-      <div className={`max-w-[80%] ${isUser ? 'items-end' : 'items-start'}`}>
+      <div style={{ maxWidth: '80%', display: 'flex', flexDirection: 'column', alignItems: isUser ? 'flex-end' : 'flex-start' }}>
         <div
-          className={`rounded-2xl px-4 py-2.5 text-sm leading-relaxed ${
-            isUser
-              ? 'bg-brand-primary/20 text-brand-text border border-brand-primary/30'
-              : 'bg-[rgba(24,22,22,0.94)] text-brand-text border border-brand-border'
-          }`}
+          style={{
+            borderRadius: '1rem', padding: '0.625rem 1rem', fontSize: '0.875rem', lineHeight: 1.5,
+            background: isUser ? 'rgba(212, 149, 86, 0.2)' : 'rgba(11, 13, 16, 0.94)',
+            color: 'var(--nexus-text)', border: '1px solid',
+            borderColor: isUser ? 'rgba(212, 149, 86, 0.3)' : 'var(--nexus-border)',
+          }}
         >
           {text}
         </div>
         {!isUser && suggestions && suggestions.length > 0 && onSuggestionClick && (
-          <div className="flex flex-wrap gap-1.5 mt-2">
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.375rem', marginTop: '0.5rem' }}>
             {suggestions.map((s, i) => (
               <button
                 key={i}
                 onClick={() => onSuggestionClick(s)}
-                className="text-xs px-2.5 py-1 rounded-full border border-brand-border text-brand-muted hover:text-brand-gold hover:border-brand-gold transition-colors"
+                style={{
+                  fontSize: '0.75rem', padding: '0.25rem 0.625rem', borderRadius: '9999px', border: '1px solid var(--nexus-border)',
+                  color: 'var(--nexus-muted-2)', cursor: 'pointer', background: 'transparent', transition: 'all 0.2s',
+                }}
+                onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--nexus-gold)'; e.currentTarget.style.borderColor = 'var(--nexus-gold)'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--nexus-muted-2)'; e.currentTarget.style.borderColor = 'var(--nexus-border)'; }}
               >
                 {s}
               </button>

@@ -32,20 +32,19 @@ export function NexusAIInsights({ compact }: Props) {
   const displayInsights = compact ? insights.slice(0, 3) : insights;
 
   return (
-    <div className="space-y-2">
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
       {displayInsights.map((insight, i) => {
         const config = severityConfig[insight.severity] || severityConfig.info;
         const Icon = config.icon;
         return (
           <div
             key={i}
-            className="flex items-start gap-3 p-3 rounded-lg text-sm"
-            style={{ background: config.bg, border: `1px solid ${config.border}` }}
+            style={{ display: 'flex', alignItems: 'flex-start', gap: '0.75rem', padding: '0.75rem', borderRadius: '0.5rem', fontSize: '0.875rem', background: config.bg, border: `1px solid ${config.border}` }}
           >
-            <Icon className="w-5 h-5 shrink-0 mt-0.5" style={{ color: config.border }} />
+            <Icon style={{ width: '1.25rem', height: '1.25rem', flexShrink: 0, marginTop: '0.125rem', color: config.border }} />
             <div>
-              <p className="font-medium text-brand-text">{insight.title}</p>
-              <p className="text-brand-muted text-xs mt-0.5">{insight.message}</p>
+              <p style={{ fontWeight: 500, color: 'var(--nexus-text)' }}>{insight.title}</p>
+              <p style={{ color: 'var(--nexus-muted-2)', fontSize: '0.75rem', marginTop: '0.125rem' }}>{insight.message}</p>
             </div>
           </div>
         );
@@ -53,9 +52,11 @@ export function NexusAIInsights({ compact }: Props) {
       {compact && insights.length > 3 && (
         <button
           onClick={() => navigate('/nexus-ai')}
-          className="flex items-center gap-2 text-xs text-brand-gold hover:text-brand-gold/80 transition-colors mt-2"
+          style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.75rem', color: 'var(--nexus-gold)', cursor: 'pointer', background: 'none', border: 'none', marginTop: '0.5rem' }}
+          onMouseEnter={(e) => e.currentTarget.style.opacity = '0.8'}
+          onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
         >
-          <ChartBarIcon className="w-4 h-4" />
+          <ChartBarIcon style={{ width: '1rem', height: '1rem' }} />
           Ver todos os {insights.length} insights
         </button>
       )}
