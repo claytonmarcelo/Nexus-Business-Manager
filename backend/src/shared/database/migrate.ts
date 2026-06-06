@@ -23,9 +23,16 @@ async function migrate(): Promise<void> {
 
   for (const file of files) {
     if (!file.endsWith('.sql')) continue;
-    const sql = fs.readFileSync(path.join(migrationsDir, file), 'utf8');
-    console.log(`Executando migracao: ${file}`);
-    await connection.query(sql);
+    const content = fs.readFileSync(path.join(migrationsDir, file), 'utf8');
+    const statements = content
+      .split(/;\s*\n/)
+      .map((s) => s.trim())
+      .filter((s) => s.length > 0 && !s.startsWith('--'))
+      .map((s) => s.endsWith(';') ? s : s + ';');
+    console.log(`Executando migracao: ${file} (${statements.length} comando(s))`);
+    for (const stmt of statements) {
+      await connection.query(stmt);
+    }
     console.log(`Migracao concluida: ${file}`);
   }
 

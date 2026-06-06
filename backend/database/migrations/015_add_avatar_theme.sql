@@ -1,4 +1,3 @@
 ALTER TABLE users
   ADD COLUMN avatar_url VARCHAR(255) DEFAULT NULL AFTER role,
-  ADD COLUMN theme_preference VARCHAR(20) DEFAULT 'dark' AFTER avatar_url,
-  ADD COLUMN updated_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP AFTER theme_preference;
+  ADD COLUMN theme_preference VARCHAR(20) DEFAULT 'dark' AFTER avatar_url;
