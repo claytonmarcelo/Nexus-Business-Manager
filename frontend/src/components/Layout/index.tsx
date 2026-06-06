@@ -2,6 +2,7 @@ import { Outlet } from 'react-router-dom';
 import { Sidebar } from '../Sidebar';
 import { Header } from '../Header';
 import { ToastProvider } from '../../contexts/ToastContext';
+import { NexusAIButton } from '../ai/NexusAIButton';
 
 export function Layout() {
   return (
@@ -15,6 +16,7 @@ export function Layout() {
           </main>
         </div>
       </div>
+      <NexusAIButton />
     </ToastProvider>
   );
 }

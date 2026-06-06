@@ -22,10 +22,12 @@ import {
   InformationCircleIcon,
   BuildingOfficeIcon,
   LightBulbIcon,
+  SparklesIcon,
 } from '@heroicons/react/24/solid';
 
 const navItems = [
   { to: '/dashboard', label: 'Dashboard', icon: ChartBarIcon },
+  { to: '/nexus-ai', label: 'Nexus AI', icon: SparklesIcon },
   { to: '/clients', label: 'Clientes', icon: UserGroupIcon },
   { to: '/suppliers', label: 'Fornecedores', icon: TruckIcon },
   { to: '/products', label: 'Produtos', icon: CubeIcon },

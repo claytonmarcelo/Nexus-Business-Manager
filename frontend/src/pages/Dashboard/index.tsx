@@ -7,6 +7,7 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell, Legend,
 } from 'recharts';
+import { NexusAIInsights } from '../../components/ai/NexusAIInsights';
 
 const COLORS = ['#d6a85d', '#c96f78', '#9a6a42', '#e89aa2', '#8f8580', '#9d4e58', '#b8afa7'];
 
@@ -103,6 +104,16 @@ export function Dashboard() {
             </p>
           </div>
         ))}
+      </div>
+
+      <div className="card mb-8">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="section-title">Insights do Nexus AI</h3>
+          <button onClick={() => navigate('/nexus-ai')} className="text-xs text-brand-rose hover:text-brand-rose-light font-medium transition-colors">
+            Ver todos
+          </button>
+        </div>
+        <NexusAIInsights compact />
       </div>
 
       {suggestionStats.length > 0 && (

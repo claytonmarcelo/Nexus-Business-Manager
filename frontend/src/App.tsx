@@ -22,6 +22,7 @@ import { Audit } from './pages/Audit';
 import { Companies } from './pages/Companies';
 import { CreateSuggestion } from './pages/Suggestions/Create';
 import { AdminSuggestions } from './pages/Suggestions/Admin';
+import { NexusAI } from './pages/NexusAI';
 import { Profile } from './pages/Profile';
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
@@ -94,6 +95,7 @@ function AppRoutes() {
         <Route path="notifications" element={<Notifications />} />
         <Route path="suggestions" element={<CreateSuggestion />} />
         <Route path="suggestions/admin" element={<AdminSuggestions />} />
+        <Route path="nexus-ai" element={<NexusAI />} />
         <Route path="audit"        element={<Audit />} />
         <Route path="companies" element={<Companies />} />
         <Route path="about" element={<About />} />
