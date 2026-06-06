@@ -41,6 +41,7 @@
 
 @layer base {
   :root {
+    /* Dark Mode (Default) */
     --nexus-bg: #05070A;
     --nexus-bg-soft: #0B0D10;
     --nexus-bg-panel: #0B0D10;
@@ -72,10 +73,43 @@
     --nexus-glow: 0 0 34px rgba(212, 149, 86, 0.16);
   }
 
+  .light {
+    /* Light Mode */
+    --nexus-bg: #F8F5F0;
+    --nexus-bg-soft: #F2ECE4;
+    --nexus-bg-panel: #F2ECE4;
+    --nexus-card: #FFFFFF;
+    --nexus-card-strong: #FFFFFF;
+    --nexus-card-soft: #FAF4EC;
+    --nexus-sidebar: #EFE6DA;
+    --nexus-border: #D8C5AE;
+    --nexus-border-strong: #C9B896;
+    --nexus-gold: #C48A43;
+    --nexus-gold-light: #D9A866;
+    --nexus-bronze: #8B6914;
+    --nexus-rose: #C65A71;
+    --nexus-rose-light: #D97F91;
+    --nexus-rose-dark: #A04A5A;
+    --nexus-white: #FFFFFF;
+    --nexus-gray: #5A5A5A;
+    --nexus-text: #2B2B2B;
+    --nexus-muted: #5A5A5A;
+    --nexus-muted-2: #7A7A7A;
+    --nexus-success: #2F9E44;
+    --nexus-danger: #C92A2A;
+    --nexus-warning: #D89A28;
+    --nexus-radius-sm: 10px;
+    --nexus-radius-md: 14px;
+    --nexus-radius-lg: 18px;
+    --nexus-radius-xl: 24px;
+    --nexus-shadow: 0 4px 18px rgba(0, 0, 0, 0.08);
+    --nexus-glow: 0 0 20px rgba(196, 138, 67, 0.2);
+  }
+
   body {
     @apply transition-colors duration-200;
   }
-    body, .page-bg {
+  body, .page-bg {
     min-height: 100vh;
     color: var(--nexus-text);
     background:
@@ -90,6 +124,14 @@
       radial-gradient(circle at 82% 18%, rgba(212, 149, 86, 0.10), transparent 34%),
       radial-gradient(circle at 18% 82%, rgba(198, 90, 113, 0.08), transparent 32%),
       linear-gradient(135deg, #05070A 0%, #0B0D10 48%, #05070A 100%);
+  }
+  .light body, .light, .light .page-bg {
+    min-height: 100vh;
+    color: var(--nexus-text);
+    background:
+      radial-gradient(circle at 82% 18%, rgba(196, 138, 67, 0.08), transparent 34%),
+      radial-gradient(circle at 18% 82%, rgba(198, 90, 113, 0.06), transparent 32%),
+      linear-gradient(135deg, #F8F5F0 0%, #F2ECE4 48%, #F8F5F0 100%);
   }
 }
 
@@ -123,6 +165,9 @@
     background: rgba(0, 0, 0, 0.5);
     color: var(--nexus-text);
     border: 1px solid var(--nexus-border);
+  }
+  .light .input-field {
+    background: #FFFFFF;
   }
   .input-field::placeholder {
     color: var(--nexus-muted-2);
@@ -220,6 +265,9 @@
   border-radius: var(--nexus-radius-sm);
   padding: 0.75rem 1rem;
   width: 100%;
+}
+.light .nexus-input {
+  background: #FFFFFF;
 }
 .nexus-input::placeholder {
   color: var(--nexus-muted-2);
@@ -337,6 +385,9 @@
   border-radius: var(--nexus-radius-sm);
   padding: 0.5rem 0.75rem;
 }
+.light .select-field {
+  background: #FFFFFF;
+}
 
 .toast-success {
   background: rgba(143, 214, 163, 0.9) !important;
@@ -367,8 +418,11 @@
 
 ::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-track { background: rgba(0, 0, 0, 0.2); }
+.light ::-webkit-scrollbar-track { background: rgba(0, 0, 0, 0.05); }
 ::-webkit-scrollbar-thumb { background: rgba(214, 168, 93, 0.3); border-radius: 3px; }
+.light ::-webkit-scrollbar-thumb { background: rgba(196, 138, 67, 0.3); }
 ::-webkit-scrollbar-thumb:hover { background: rgba(214, 168, 93, 0.5); }
+.light ::-webkit-scrollbar-thumb:hover { background: rgba(196, 138, 67, 0.5); }
 
 *:focus { outline: none; }
 input:focus, textarea:focus, select:focus {
@@ -400,6 +454,12 @@ input:focus, textarea:focus, select:focus {
     radial-gradient(circle at 82% 18%, rgba(212, 149, 86, 0.12), transparent 34%),
     radial-gradient(circle at 18% 82%, rgba(198, 90, 113, 0.10), transparent 32%),
     linear-gradient(135deg, #05070A 0%, #0B0D10 48%, #05070A 100%);
+}
+.light .nexus-auth-page {
+  background:
+    radial-gradient(circle at 82% 18%, rgba(196, 138, 67, 0.08), transparent 34%),
+    radial-gradient(circle at 18% 82%, rgba(198, 90, 113, 0.06), transparent 32%),
+    linear-gradient(135deg, #F8F5F0 0%, #F2ECE4 48%, #F8F5F0 100%);
 }
 
 .nexus-auth-card {
@@ -454,10 +514,18 @@ input:focus, textarea:focus, select:focus {
   background: rgba(214, 168, 93, 0.08);
   color: var(--nexus-text);
 }
+.light .nexus-sidebar-item:hover {
+  background: #F5D8BF;
+}
 .nexus-sidebar-item.active {
   background: rgba(214, 168, 93, 0.12);
   color: var(--nexus-gold);
   border-left: 3px solid var(--nexus-rose);
+}
+.light .nexus-sidebar-item.active {
+  background: linear-gradient(135deg, #D9A866, #C48A43);
+  color: #FFFFFF;
+  border-left: 3px solid #C65A71;
 }
 
 .nexus-sidebar-icon {
@@ -471,6 +539,10 @@ input:focus, textarea:focus, select:focus {
   border-radius: var(--nexus-radius-sm);
   color: var(--nexus-gold);
   flex-shrink: 0;
+}
+.light .nexus-sidebar-icon {
+  background: rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(196, 138, 67, 0.2);
 }
 
 .nexus-modal {
@@ -486,6 +558,10 @@ input:focus, textarea:focus, select:focus {
   padding: 1rem 2rem;
   background: rgba(5, 5, 5, 0.6);
   backdrop-filter: blur(12px);
+}
+.light .nexus-header {
+  background: #FFFFFF;
+  border-bottom: 1px solid #D8C5AE;
 }
 
 @media (max-width: 768px) {
@@ -658,6 +734,10 @@ input:focus, textarea:focus, select:focus {
   max-width: 420px;
   transition: all 0.2s;
 }
+.light .header-search {
+  background: #FFFFFF;
+  border: 1px solid #D8C5AE;
+}
 .header-search:focus-within {
   border-color: var(--nexus-gold);
   box-shadow: var(--nexus-glow);
@@ -687,6 +767,10 @@ input:focus, textarea:focus, select:focus {
   color: var(--nexus-muted);
   transition: all 0.2s;
   cursor: pointer;
+}
+.light .header-notification {
+  background: rgba(0, 0, 0, 0.03);
+  border: 1px solid #D8C5AE;
 }
 .header-notification:hover {
   border-color: var(--nexus-gold);

@@ -56,7 +56,7 @@ export function Login() {
           <p className="mb-6" style={{ color: 'var(--nexus-muted)' }}>Informe seus dados para entrar</p>
 
           {error && (
-            <div className="bg-red-50 text-red-700 px-4 py-3 rounded-lg mb-4 text-sm">{error}</div>
+            <div className="px-4 py-3 rounded-lg mb-4 text-sm" style={{ background: 'rgba(216, 75, 95, 0.12)', color: '#D84B5F', border: '1px solid rgba(216, 75, 95, 0.2)' }}>{error}</div>
           )}
 
           <form onSubmit={handleSubmit} className="space-y-4">

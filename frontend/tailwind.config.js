@@ -6,7 +6,7 @@ export default {
     extend: {
       colors: {
         nexus: {
-          // Fundo e Superficies
+          // Dark Mode (Default)
           bg: '#05070A',
           'bg-soft': '#0B0D10',
           'bg-panel': '#0B0D10',
@@ -14,24 +14,40 @@ export default {
           'card-strong': 'rgba(11, 13, 16, 0.94)',
           'card-soft': 'rgba(17, 20, 25, 0.74)',
           sidebar: '#07090D',
-          // Dourado e Bronze
+          // Dourado e Bronze (Dark)
           gold: '#D49556',
+          'gold-light': '#F2C38B',
           bronze: '#9a6a42',
-          // Rose
-          rose: '#c96f78',
-          'rose-light': '#e89aa2',
+          // Rose (Dark)
+          rose: '#C65A71',
+          'rose-light': '#E18A9D',
           'rose-dark': '#9d4e58',
-          // Textos
+          // Textos (Dark)
           text: '#f5f1ec',
-          muted: '#b8afa7',
+          muted: '#A8A8A8',
           'muted-2': '#8f8580',
-          // Status
-          success: '#9BE37A',
-          danger: '#FF6B6B',
-          warning: '#D49556',
-          // Bordas
+          // Status (Dark)
+          success: '#7DDA6A',
+          danger: '#D84B5F',
+          warning: '#D89A28',
+          // Bordas (Dark)
           border: 'rgba(212, 149, 86, 0.24)',
           'border-strong': 'rgba(212, 149, 86, 0.38)',
+          // Light Mode
+          'light-bg': '#F8F5F0',
+          'light-bg-soft': '#F2ECE4',
+          'light-card': '#FFFFFF',
+          'light-sidebar': '#EFE6DA',
+          'light-border': '#D8C5AE',
+          'light-gold': '#C48A43',
+          'light-gold-light': '#D9A866',
+          'light-rose': '#C65A71',
+          'light-rose-light': '#D97F91',
+          'light-text': '#2B2B2B',
+          'light-muted': '#5A5A5A',
+          'light-success': '#2F9E44',
+          'light-danger': '#C92A2A',
+          'light-warning': '#D89A28',
         },
         brand: {
           // Dashboard Image Colors (mantidos para compatibilidade)

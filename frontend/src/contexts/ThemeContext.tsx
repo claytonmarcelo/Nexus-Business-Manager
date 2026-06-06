@@ -2,35 +2,44 @@ import { createContext, useContext, useState, useEffect, ReactNode, useCallback 
 import api from '../services/api';
 
 interface ThemeContextData {
-  theme: 'dark' | 'light';
+  theme: 'dark' | 'light' | 'auto';
   toggleTheme: () => void;
-  setTheme: (theme: 'dark' | 'light') => void;
+  setTheme: (theme: 'dark' | 'light' | 'auto') => void;
 }
 
 const ThemeContext = createContext<ThemeContextData>({} as ThemeContextData);
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  const [theme, setThemeState] = useState<'dark' | 'light'>('dark');
+  const [theme, setThemeState] = useState<'dark' | 'light' | 'auto'>('dark');
 
   useEffect(() => {
-    const stored = localStorage.getItem('@nexus:theme') as 'dark' | 'light' | null;
-    if (stored === 'light' || stored === 'dark') {
+    const stored = localStorage.getItem('@nexus:theme') as 'dark' | 'light' | 'auto' | null;
+    if (stored === 'light' || stored === 'dark' || stored === 'auto') {
       setThemeState(stored);
     }
   }, []);
 
   useEffect(() => {
     localStorage.setItem('@nexus:theme', theme);
-    if (theme === 'dark') {
+    
+    const effectiveTheme = theme === 'auto' 
+      ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
+      : theme;
+
+    if (effectiveTheme === 'dark') {
       document.documentElement.classList.add('dark');
+      document.documentElement.classList.remove('light');
       document.body.classList.add('dark');
+      document.body.classList.remove('light');
     } else {
       document.documentElement.classList.remove('dark');
+      document.documentElement.classList.add('light');
       document.body.classList.remove('dark');
+      document.body.classList.add('light');
     }
   }, [theme]);
 
-  const syncThemeToBackend = useCallback(async (t: 'dark' | 'light') => {
+  const syncThemeToBackend = useCallback(async (t: 'dark' | 'light' | 'auto') => {
     try {
       await api.put('/users/theme', { theme: t });
     } catch {
@@ -46,7 +55,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     });
   }, [syncThemeToBackend]);
 
-  const setTheme = useCallback((t: 'dark' | 'light') => {
+  const setTheme = useCallback((t: 'dark' | 'light' | 'auto') => {
     setThemeState(t);
     syncThemeToBackend(t);
   }, [syncThemeToBackend]);

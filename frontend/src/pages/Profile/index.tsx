@@ -1,12 +1,14 @@
 import { useState, useCallback, useRef } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useToast } from '../../contexts/ToastContext';
+import { useTheme } from '../../contexts/ThemeContext';
 import api from '../../services/api';
-import { ArrowLeftOnRectangleIcon } from '@heroicons/react/24/solid';
+import { ArrowLeftOnRectangleIcon, MoonIcon, SunIcon, ComputerDesktopIcon } from '@heroicons/react/24/solid';
 
 export function Profile() {
   const { user, updateUser, signOut } = useAuth();
   const { showToast } = useToast();
+  const { theme, setTheme } = useTheme();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [avatarLoading, setAvatarLoading] = useState(false);
   const [editing, setEditing] = useState(false);
@@ -191,6 +193,49 @@ export function Profile() {
               Editar Perfil
             </button>
           )}
+        </div>
+
+        <hr className="border-nexus-border" />
+
+        <div>
+          <label className="block text-sm font-medium text-nexus-text mb-3">
+            Aparência
+          </label>
+          <div className="grid grid-cols-3 gap-3">
+            <button
+              onClick={() => setTheme('dark')}
+              className={`flex flex-col items-center gap-2 p-4 rounded-lg border transition-all ${
+                theme === 'dark'
+                  ? 'border-nexus-gold bg-nexus-gold/10'
+                  : 'border-nexus-border hover:border-nexus-gold/50'
+              }`}
+            >
+              <MoonIcon className="w-6 h-6 text-nexus-gold" />
+              <span className="text-sm text-nexus-text">Escuro</span>
+            </button>
+            <button
+              onClick={() => setTheme('light')}
+              className={`flex flex-col items-center gap-2 p-4 rounded-lg border transition-all ${
+                theme === 'light'
+                  ? 'border-nexus-gold bg-nexus-gold/10'
+                  : 'border-nexus-border hover:border-nexus-gold/50'
+              }`}
+            >
+              <SunIcon className="w-6 h-6 text-nexus-gold" />
+              <span className="text-sm text-nexus-text">Claro</span>
+            </button>
+            <button
+              onClick={() => setTheme('auto')}
+              className={`flex flex-col items-center gap-2 p-4 rounded-lg border transition-all ${
+                theme === 'auto'
+                  ? 'border-nexus-gold bg-nexus-gold/10'
+                  : 'border-nexus-border hover:border-nexus-gold/50'
+              }`}
+            >
+              <ComputerDesktopIcon className="w-6 h-6 text-nexus-gold" />
+              <span className="text-sm text-nexus-text">Automático</span>
+            </button>
+          </div>
         </div>
 
         <hr className="border-nexus-border" />

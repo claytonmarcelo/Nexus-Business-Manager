@@ -101,7 +101,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
 
   const sidebarContent = (
     <>
-      <div className="p-6 flex items-center justify-center border-b" style={{ borderColor: 'rgba(212, 149, 86, 0.15)' }}>
+      <div className="p-6 flex items-center justify-center border-b" style={{ borderColor: 'var(--nexus-border)' }}>
         <img
           src="/logo.png"
           alt="Nexus Business Manager"
@@ -139,13 +139,15 @@ export function Sidebar({ open, onClose }: SidebarProps) {
             <div className="flex gap-2">
               <button
                 onClick={handleLogout}
-                className="flex-1 text-xs font-medium py-1.5 px-3 rounded-lg bg-red-500/20 text-red-400 hover:bg-red-500/30 transition-colors"
+                className="flex-1 text-xs font-medium py-1.5 px-3 rounded-lg transition-colors"
+                style={{ background: 'rgba(216, 75, 95, 0.2)', color: '#D84B5F' }}
               >
                 Sim, sair
               </button>
               <button
                 onClick={() => setConfirmLogout(false)}
-                className="flex-1 text-xs font-medium py-1.5 px-3 rounded-lg bg-nexus-card text-nexus-muted hover:text-nexus-text transition-colors"
+                className="flex-1 text-xs font-medium py-1.5 px-3 rounded-lg transition-colors"
+                style={{ background: 'var(--nexus-card)', color: 'var(--nexus-muted)' }}
               >
                 Cancelar
               </button>
@@ -156,7 +158,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
             onClick={() => setConfirmLogout(true)}
             className="sidebar-logout-btn w-full"
           >
-            <span className="w-[42px] h-[42px] flex items-center justify-center bg-red-500/10 border border-red-500/20 rounded-lg flex-shrink-0">
+            <span className="w-[42px] h-[42px] flex items-center justify-center rounded-lg flex-shrink-0" style={{ background: 'rgba(216, 75, 95, 0.1)', border: '1px solid rgba(216, 75, 95, 0.2)' }}>
               <ArrowLeftOnRectangleIcon className="w-5 h-5" />
             </span>
             <span className="text-sm font-medium">Sair do sistema</span>
