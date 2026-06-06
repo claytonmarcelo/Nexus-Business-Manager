@@ -431,7 +431,7 @@ input:focus, textarea:focus, select:focus {
 }
 
 .sidebar-logo {
-  width: 150px;
+  width: 201px;
   max-width: 85%;
   height: auto;
   display: block;
@@ -565,12 +565,12 @@ input:focus, textarea:focus, select:focus {
 }
 
 @media (max-width: 768px) {
-  .sidebar-logo { width: 180px; }
+  .sidebar-logo { width: 241px; }
   .nexus-auth-card { padding: 1.5rem; max-width: 90%; }
 }
 
 @media (max-width: 480px) {
-  .sidebar-logo { width: 160px; }
+  .sidebar-logo { width: 214px; }
 }
 
 /* Dashboard KPI Cards */
