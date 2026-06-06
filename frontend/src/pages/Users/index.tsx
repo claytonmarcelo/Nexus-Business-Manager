@@ -73,14 +73,14 @@ export function Users() {
     } catch { console.error('Erro ao alternar status do usuario'); }
   }
 
-  function getRoleBadge(role: string) {
-    const classes: Record<string, string> = {
-      admin: 'badge-admin',
-      manager: 'badge-manager',
-      operator: 'badge-operator',
-      viewer: 'badge-viewer',
+  function getRoleBadgeStyle(role: string) {
+    const styles: Record<string, React.CSSProperties> = {
+      admin: { display: 'inline-flex', alignItems: 'center', gap: '0.375rem', padding: '0.25rem 0.75rem', borderRadius: '9999px', fontSize: '0.75rem', fontWeight: 500, background: 'rgba(216, 75, 95, 0.12)', color: '#D84B5F', border: '1px solid rgba(216, 75, 95, 0.2)' },
+      manager: { display: 'inline-flex', alignItems: 'center', gap: '0.375rem', padding: '0.25rem 0.75rem', borderRadius: '9999px', fontSize: '0.75rem', fontWeight: 500, background: 'rgba(212, 149, 86, 0.12)', color: '#D49556', border: '1px solid rgba(212, 149, 86, 0.2)' },
+      operator: { display: 'inline-flex', alignItems: 'center', gap: '0.375rem', padding: '0.25rem 0.75rem', borderRadius: '9999px', fontSize: '0.75rem', fontWeight: 500, background: 'rgba(96, 165, 250, 0.12)', color: '#60a5fa', border: '1px solid rgba(96, 165, 250, 0.2)' },
+      viewer: { display: 'inline-flex', alignItems: 'center', gap: '0.375rem', padding: '0.25rem 0.75rem', borderRadius: '9999px', fontSize: '0.75rem', fontWeight: 500, background: 'rgba(168, 168, 168, 0.12)', color: '#A8A8A8', border: '1px solid rgba(168, 168, 168, 0.2)' },
     };
-    return classes[role] || 'badge';
+    return styles[role] || styles.viewer;
   }
 
   const inputStyle: React.CSSProperties = {
@@ -133,7 +133,7 @@ export function Users() {
                     <td style={{ padding: '0.75rem 1rem', borderBottom: '1px solid rgba(212,149,86,0.05)', color: 'var(--nexus-text)', fontSize: '0.875rem', fontWeight: 500 }}>{user.name}</td>
                     <td style={{ padding: '0.75rem 1rem', borderBottom: '1px solid rgba(212,149,86,0.05)', color: 'var(--nexus-text)', fontSize: '0.875rem' }}>{user.email}</td>
                     <td style={{ padding: '0.75rem 1rem', borderBottom: '1px solid rgba(212,149,86,0.05)', color: 'var(--nexus-text)', fontSize: '0.875rem' }}>
-                      <span className={getRoleBadge(user.role)}>{roleLabels[user.role]}</span>
+                      <span style={getRoleBadgeStyle(user.role)}>{roleLabels[user.role]}</span>
                     </td>
                     <td style={{ padding: '0.75rem 1rem', borderBottom: '1px solid rgba(212,149,86,0.05)', color: 'var(--nexus-text)', fontSize: '0.875rem' }}>
                       <span style={{

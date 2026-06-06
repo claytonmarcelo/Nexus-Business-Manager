@@ -1,4 +1,5 @@
 import { useState, useEffect, FormEvent } from 'react';
+import { motion } from 'framer-motion';
 import api from '../../services/api';
 import { useToast } from '../../contexts/ToastContext';
 
@@ -21,15 +22,15 @@ const statusLabels: Record<string, string> = {
 };
 
 const statusColors: Record<string, string> = {
-  new: 'text-blue-400', contacted: 'text-yellow-500', qualified: 'text-purple-400',
-  proposal: 'text-orange-400', negotiation: 'text-rose-400', won: 'text-green-500', lost: 'text-red-500',
+  new: '#60a5fa', contacted: '#D89A28', qualified: '#a78bfa',
+  proposal: '#f97316', negotiation: '#C65A71', won: '#7DDA6A', lost: '#D84B5F',
 };
 
 const statusBgColors: Record<string, string> = {
-  new: 'bg-blue-500/20 border-blue-500/30', contacted: 'bg-yellow-500/20 border-yellow-500/30',
-  qualified: 'bg-purple-500/20 border-purple-500/30', proposal: 'bg-orange-500/20 border-orange-500/30',
-  negotiation: 'bg-rose-500/20 border-rose-500/30', won: 'bg-green-500/20 border-green-500/30',
-  lost: 'bg-red-500/20 border-red-500/30',
+  new: 'rgba(96, 165, 250, 0.12)', contacted: 'rgba(216, 154, 40, 0.12)',
+  qualified: 'rgba(167, 139, 250, 0.12)', proposal: 'rgba(249, 115, 22, 0.12)',
+  negotiation: 'rgba(198, 90, 113, 0.12)', won: 'rgba(125, 218, 106, 0.12)',
+  lost: 'rgba(216, 75, 95, 0.12)',
 };
 
 export function CRM() {
@@ -106,67 +107,77 @@ export function CRM() {
   ];
 
   return (
-    <div>
-      <div className="flex justify-between items-center mb-8">
+    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.5rem' }}>
         <div>
-          <h1 className="page-title">CRM</h1>
-          <p className="text-brand-muted text-sm mt-0.5">Gestao de leads e oportunidades</p>
+          <h1 style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--nexus-text)' }}>CRM</h1>
+          <p style={{ fontSize: '0.875rem', color: 'var(--nexus-muted-2)', marginTop: '0.25rem' }}>Gestao de leads e oportunidades</p>
         </div>
-        <button onClick={openCreate} className="btn-primary">Novo Lead</button>
+        <button onClick={openCreate} style={{ background: 'linear-gradient(135deg, #C65A71, #9d4e58)', color: '#fff', border: 'none', borderRadius: '10px', padding: '0.75rem 1.5rem', fontWeight: 500, cursor: 'pointer' }}>Novo Lead</button>
       </div>
 
-      <div className="flex gap-2 mb-6 flex-wrap">
+      <div style={{ marginBottom: '1.5rem', display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
         {statusOptions.map((opt) => (
           <button key={opt.value} onClick={() => setStatusFilter(opt.value)}
-            className={`px-3 py-1.5 text-xs rounded-lg border transition-colors ${
-              statusFilter === opt.value
-                ? 'bg-brand-primary/20 text-brand-gold border-brand-primary/40'
-                : 'border-brand-border text-brand-muted hover:border-brand-primary/50'
-            }`}
+            style={{
+              padding: '0.375rem 0.75rem', fontSize: '0.75rem', borderRadius: '9999px', border: '1px solid',
+              background: statusFilter === opt.value ? 'rgba(212, 149, 86, 0.2)' : 'transparent',
+              borderColor: statusFilter === opt.value ? 'rgba(212, 149, 86, 0.4)' : 'var(--nexus-border)',
+              color: statusFilter === opt.value ? 'var(--nexus-gold)' : 'var(--nexus-muted-2)',
+              cursor: 'pointer', transition: 'all 0.2s',
+            }}
+            onMouseEnter={(e) => e.currentTarget.style.borderColor = 'rgba(212, 149, 86, 0.5)'}
+            onMouseLeave={(e) => e.currentTarget.style.borderColor = statusFilter === opt.value ? 'rgba(212, 149, 86, 0.4)' : 'var(--nexus-border)'}
           >
             {opt.label}
           </button>
         ))}
       </div>
 
-      <div className="card overflow-hidden p-0">
+      <div style={{ background: 'var(--nexus-card)', border: '1px solid var(--nexus-border)', borderRadius: '14px', overflow: 'hidden' }}>
         {loading ? (
-          <div className="p-8 text-center text-brand-muted">Carregando...</div>
+          <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--nexus-muted-2)', fontSize: '0.875rem' }}>Carregando...</div>
         ) : leads.length === 0 ? (
-          <div className="p-8 text-center text-brand-muted">Nenhum lead encontrado.</div>
+          <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--nexus-muted-2)' }}>Nenhum lead encontrado.</div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+          <div style={{ overflowX: 'auto' }}>
+            <table style={{ width: '100%', fontSize: '0.875rem', borderCollapse: 'collapse' }}>
               <thead>
-                <tr className="border-b border-brand-border">
-                  <th className="text-left py-3 px-4 font-medium text-brand-muted">Nome</th>
-                  <th className="text-left py-3 px-4 font-medium text-brand-muted">Contato</th>
-                  <th className="text-left py-3 px-4 font-medium text-brand-muted">Empresa</th>
-                  <th className="text-left py-3 px-4 font-medium text-brand-muted">Status</th>
-                  <th className="text-left py-3 px-4 font-medium text-brand-muted">Valor</th>
-                  <th className="text-center py-3 px-4 font-medium text-brand-muted">Acoes</th>
+                <tr>
+                  <th style={{ textAlign: 'left', padding: '0.75rem 1rem', fontSize: '0.75rem', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--nexus-muted-2)', borderBottom: '1px solid rgba(212,149,86,0.1)' }}>Nome</th>
+                  <th style={{ textAlign: 'left', padding: '0.75rem 1rem', fontSize: '0.75rem', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--nexus-muted-2)', borderBottom: '1px solid rgba(212,149,86,0.1)' }}>Contato</th>
+                  <th style={{ textAlign: 'left', padding: '0.75rem 1rem', fontSize: '0.75rem', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--nexus-muted-2)', borderBottom: '1px solid rgba(212,149,86,0.1)' }}>Empresa</th>
+                  <th style={{ textAlign: 'left', padding: '0.75rem 1rem', fontSize: '0.75rem', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--nexus-muted-2)', borderBottom: '1px solid rgba(212,149,86,0.1)' }}>Status</th>
+                  <th style={{ textAlign: 'left', padding: '0.75rem 1rem', fontSize: '0.75rem', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--nexus-muted-2)', borderBottom: '1px solid rgba(212,149,86,0.1)' }}>Valor</th>
+                  <th style={{ textAlign: 'center', padding: '0.75rem 1rem', fontSize: '0.75rem', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--nexus-muted-2)', borderBottom: '1px solid rgba(212,149,86,0.1)' }}>Acoes</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-brand-border/50">
+              <tbody>
                 {leads.map((lead) => (
-                  <tr key={lead.id} className="hover:bg-brand-primary/5 transition-colors">
-                    <td className="py-3 px-4 font-medium">{lead.name}</td>
-                    <td className="py-3 px-4 text-brand-muted text-xs">
+                  <tr key={lead.id} style={{ borderBottom: '1px solid rgba(212,149,86,0.05)' }} onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(212,149,86,0.04)'} onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}>
+                    <td style={{ padding: '0.75rem 1rem', color: 'var(--nexus-text)', fontSize: '0.875rem', fontWeight: 500 }}>{lead.name}</td>
+                    <td style={{ padding: '0.75rem 1rem', color: 'var(--nexus-muted-2)', fontSize: '0.75rem' }}>
                       {lead.email && <div>{lead.email}</div>}
                       {lead.phone && <div>{lead.phone}</div>}
                     </td>
-                    <td className="py-3 px-4 text-brand-muted">{lead.company || '-'}</td>
-                    <td className="py-3 px-4">
-                      <span className={`inline-block px-2.5 py-1 rounded-full text-xs font-medium border ${statusBgColors[lead.status] || ''} ${statusColors[lead.status] || ''}`}>
+                    <td style={{ padding: '0.75rem 1rem', color: 'var(--nexus-muted-2)', fontSize: '0.875rem' }}>{lead.company || '-'}</td>
+                    <td style={{ padding: '0.75rem 1rem', color: 'var(--nexus-text)', fontSize: '0.875rem' }}>
+                      <span style={{
+                        display: 'inline-flex', alignItems: 'center', gap: '0.375rem', padding: '0.25rem 0.75rem',
+                        borderRadius: '9999px', fontSize: '0.75rem', fontWeight: 500, border: '1px solid',
+                        background: statusBgColors[lead.status] || 'rgba(128,128,128,0.12)',
+                        borderColor: `${statusColors[lead.status]}40`,
+                        color: statusColors[lead.status] || '#999',
+                      }}>
                         {statusLabels[lead.status] || lead.status}
                       </span>
                     </td>
-                    <td className="py-3 px-4 font-medium">
+                    <td style={{ padding: '0.75rem 1rem', color: 'var(--nexus-text)', fontSize: '0.875rem', fontWeight: 500 }}>
                       {lead.value > 0 ? new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(lead.value) : '-'}
                     </td>
-                    <td className="py-3 px-4 text-center">
-                      <button onClick={() => openEdit(lead)} className="text-brand-gold hover:text-brand-gold/80 text-xs font-medium mr-3">Editar</button>
-                      <button onClick={() => handleDelete(lead.id)} className="text-brand-danger hover:text-brand-danger/80 text-xs font-medium">Excluir</button>
+                    <td style={{ padding: '0.75rem 1rem', color: 'var(--nexus-text)', fontSize: '0.875rem', textAlign: 'center' }}>
+                      <button onClick={() => openEdit(lead)} style={{ color: '#D49556', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 500, fontSize: '0.875rem', marginRight: '0.75rem' }}>Editar</button>
+                      <button onClick={() => handleDelete(lead.id)} style={{ color: '#D84B5F', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 500, fontSize: '0.875rem' }}>Excluir</button>
                     </td>
                   </tr>
                 ))}
@@ -177,58 +188,66 @@ export function CRM() {
       </div>
 
       {showModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60" onClick={() => setShowModal(false)}>
-          <div className="card max-w-xl w-full mx-4 max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
-            <h2 className="text-lg font-semibold mb-6">{editing ? 'Editar Lead' : 'Novo Lead'}</h2>
-            <form onSubmit={handleSubmit} className="space-y-4">
+        <div style={{ position: 'fixed', inset: 0, zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem', background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }} onClick={() => setShowModal(false)}>
+          <div style={{ background: 'var(--nexus-card-strong)', border: '1px solid var(--nexus-border)', borderRadius: '18px', padding: '2rem', width: '100%', maxWidth: '32rem', maxHeight: '90vh', overflow: 'auto' }} onClick={(e) => e.stopPropagation()}>
+            <h2 style={{ fontSize: '1.25rem', fontWeight: 600, color: 'var(--nexus-text)', marginBottom: '1.5rem' }}>{editing ? 'Editar Lead' : 'Novo Lead'}</h2>
+            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
               <div>
-                <label className="block text-sm font-medium text-brand-muted mb-1">Nome *</label>
-                <input type="text" className="input-field" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} required minLength={2} />
+                <label style={{ color: 'var(--nexus-text)', fontSize: '0.875rem', fontWeight: 500, marginBottom: '0.375rem', display: 'block' }}>Nome *</label>
+                <input type="text" required value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} minLength={2}
+                  style={{ padding: '0.625rem 1rem', background: 'rgba(0,0,0,0.5)', color: 'var(--nexus-text)', border: '1px solid var(--nexus-border)', borderRadius: '10px', fontSize: '0.875rem', width: '100%', boxSizing: 'border-box', outline: 'none' }} />
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                 <div>
-                  <label className="block text-sm font-medium text-brand-muted mb-1">Email</label>
-                  <input type="email" className="input-field" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} />
+                  <label style={{ color: 'var(--nexus-text)', fontSize: '0.875rem', fontWeight: 500, marginBottom: '0.375rem', display: 'block' }}>Email</label>
+                  <input type="email" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                    style={{ padding: '0.625rem 1rem', background: 'rgba(0,0,0,0.5)', color: 'var(--nexus-text)', border: '1px solid var(--nexus-border)', borderRadius: '10px', fontSize: '0.875rem', width: '100%', boxSizing: 'border-box', outline: 'none' }} />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-brand-muted mb-1">Telefone</label>
-                  <input type="text" className="input-field" value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} />
+                  <label style={{ color: 'var(--nexus-text)', fontSize: '0.875rem', fontWeight: 500, marginBottom: '0.375rem', display: 'block' }}>Telefone</label>
+                  <input type="text" value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                    style={{ padding: '0.625rem 1rem', background: 'rgba(0,0,0,0.5)', color: 'var(--nexus-text)', border: '1px solid var(--nexus-border)', borderRadius: '10px', fontSize: '0.875rem', width: '100%', boxSizing: 'border-box', outline: 'none' }} />
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                 <div>
-                  <label className="block text-sm font-medium text-brand-muted mb-1">Empresa</label>
-                  <input type="text" className="input-field" value={formData.company} onChange={(e) => setFormData({ ...formData, company: e.target.value })} />
+                  <label style={{ color: 'var(--nexus-text)', fontSize: '0.875rem', fontWeight: 500, marginBottom: '0.375rem', display: 'block' }}>Empresa</label>
+                  <input type="text" value={formData.company} onChange={(e) => setFormData({ ...formData, company: e.target.value })}
+                    style={{ padding: '0.625rem 1rem', background: 'rgba(0,0,0,0.5)', color: 'var(--nexus-text)', border: '1px solid var(--nexus-border)', borderRadius: '10px', fontSize: '0.875rem', width: '100%', boxSizing: 'border-box', outline: 'none' }} />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-brand-muted mb-1">Status</label>
-                  <select className="input-field" value={formData.status} onChange={(e) => setFormData({ ...formData, status: e.target.value })}>
+                  <label style={{ color: 'var(--nexus-text)', fontSize: '0.875rem', fontWeight: 500, marginBottom: '0.375rem', display: 'block' }}>Status</label>
+                  <select value={formData.status} onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+                    style={{ padding: '0.625rem 1rem', background: 'rgba(0,0,0,0.5)', color: 'var(--nexus-text)', border: '1px solid var(--nexus-border)', borderRadius: '10px', fontSize: '0.875rem', width: '100%', boxSizing: 'border-box', outline: 'none' }}>
                     {Object.entries(statusLabels).map(([key, label]) => <option key={key} value={key}>{label}</option>)}
                   </select>
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                 <div>
-                  <label className="block text-sm font-medium text-brand-muted mb-1">Valor Potencial</label>
-                  <input type="number" step="0.01" min="0" className="input-field" value={formData.value} onChange={(e) => setFormData({ ...formData, value: Number(e.target.value) })} />
+                  <label style={{ color: 'var(--nexus-text)', fontSize: '0.875rem', fontWeight: 500, marginBottom: '0.375rem', display: 'block' }}>Valor Potencial</label>
+                  <input type="number" step="0.01" min="0" value={formData.value} onChange={(e) => setFormData({ ...formData, value: Number(e.target.value) })}
+                    style={{ padding: '0.625rem 1rem', background: 'rgba(0,0,0,0.5)', color: 'var(--nexus-text)', border: '1px solid var(--nexus-border)', borderRadius: '10px', fontSize: '0.875rem', width: '100%', boxSizing: 'border-box', outline: 'none' }} />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-brand-muted mb-1">Proximo Contato</label>
-                  <input type="datetime-local" className="input-field" value={formData.next_follow_up} onChange={(e) => setFormData({ ...formData, next_follow_up: e.target.value })} />
+                  <label style={{ color: 'var(--nexus-text)', fontSize: '0.875rem', fontWeight: 500, marginBottom: '0.375rem', display: 'block' }}>Proximo Contato</label>
+                  <input type="datetime-local" value={formData.next_follow_up} onChange={(e) => setFormData({ ...formData, next_follow_up: e.target.value })}
+                    style={{ padding: '0.625rem 1rem', background: 'rgba(0,0,0,0.5)', color: 'var(--nexus-text)', border: '1px solid var(--nexus-border)', borderRadius: '10px', fontSize: '0.875rem', width: '100%', boxSizing: 'border-box', outline: 'none' }} />
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-medium text-brand-muted mb-1">Observacoes</label>
-                <textarea className="input-field min-h-[80px] resize-y" value={formData.notes} onChange={(e) => setFormData({ ...formData, notes: e.target.value })} />
+                <label style={{ color: 'var(--nexus-text)', fontSize: '0.875rem', fontWeight: 500, marginBottom: '0.375rem', display: 'block' }}>Observacoes</label>
+                <textarea rows={3} value={formData.notes} onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                  style={{ padding: '0.625rem 1rem', background: 'rgba(0,0,0,0.5)', color: 'var(--nexus-text)', border: '1px solid var(--nexus-border)', borderRadius: '10px', fontSize: '0.875rem', width: '100%', boxSizing: 'border-box', resize: 'vertical', outline: 'none' }} />
               </div>
-              <div className="flex gap-3 pt-2">
-                <button type="submit" className="btn-primary">{editing ? 'Salvar' : 'Criar Lead'}</button>
-                <button type="button" onClick={() => setShowModal(false)} className="btn-secondary">Cancelar</button>
+              <div style={{ display: 'flex', gap: '0.75rem', paddingTop: '0.5rem' }}>
+                <button type="submit" style={{ background: 'linear-gradient(135deg, #C65A71, #9d4e58)', color: '#fff', border: 'none', borderRadius: '10px', padding: '0.625rem 1.25rem', fontWeight: 500, cursor: 'pointer', fontSize: '0.875rem' }}>{editing ? 'Salvar' : 'Criar Lead'}</button>
+                <button type="button" onClick={() => setShowModal(false)} style={{ background: 'var(--nexus-card)', color: 'var(--nexus-text)', border: '1px solid var(--nexus-border)', borderRadius: '10px', padding: '0.625rem 1.25rem', cursor: 'pointer', fontSize: '0.875rem' }}>Cancelar</button>
               </div>
             </form>
           </div>
         </div>
       )}
-    </div>
+    </motion.div>
   );
 }
