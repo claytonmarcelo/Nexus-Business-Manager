@@ -16,6 +16,8 @@ import {
   CpuChipIcon,
   BeakerIcon,
   BoltIcon,
+  SparklesIcon,
+  ShieldCheckIcon,
   LifebuoyIcon,
   BookOpenIcon,
   ChatBubbleLeftRightIcon,
@@ -54,15 +56,24 @@ export function About() {
     { name: 'Usuários', desc: 'Gestão de usuários', icon: UsersIcon },
     { name: 'Configurações', desc: 'Configurações do sistema', icon: CogIcon },
     { name: 'Agenda', desc: 'Compromissos e tarefas', icon: CalendarIcon },
+    { name: 'Backup', desc: 'Backup e restauração', icon: ArchiveBoxIcon },
+    { name: 'Importação', desc: 'Importação de dados', icon: BoltIcon },
+    { name: 'Nexus AI', desc: 'Inteligência artificial', icon: BeakerIcon },
   ];
 
   const technologies = [
     { name: 'React 18', desc: 'Biblioteca JavaScript para interfaces', icon: CodeBracketIcon },
     { name: 'TypeScript', desc: 'Linguagem de programação', icon: CodeBracketIcon },
-    { name: 'Node.js', desc: 'Runtime JavaScript', icon: ServerIcon },
-    { name: 'PostgreSQL', desc: 'Banco de dados', icon: ServerIcon },
-    { name: 'Tailwind CSS', desc: 'Framework CSS', icon: CodeBracketIcon },
     { name: 'Vite', desc: 'Build tool e dev server', icon: CpuChipIcon },
+    { name: 'Tailwind CSS', desc: 'Framework CSS', icon: CodeBracketIcon },
+    { name: 'Framer Motion', desc: 'Animações e transições', icon: SparklesIcon },
+    { name: 'React Router', desc: 'Roteamento de páginas', icon: CodeBracketIcon },
+    { name: 'Axios', desc: 'Cliente HTTP', icon: CodeBracketIcon },
+    { name: 'Recharts', desc: 'Gráficos e visualizações', icon: ChartBarIcon },
+    { name: 'Fastify', desc: 'Framework web backend', icon: ServerIcon },
+    { name: 'Prisma ORM', desc: 'ORM para banco de dados', icon: ServerIcon },
+    { name: 'MariaDB', desc: 'Banco de dados', icon: ServerIcon },
+    { name: 'JWT Auth', desc: 'Autenticação JWT', icon: ShieldCheckIcon },
   ];
 
   return (
@@ -91,7 +102,7 @@ export function About() {
           {/* Badge de Versão */}
           <div className="absolute top-4 right-4 px-3 py-1 rounded-lg text-xs font-semibold"
             style={{ background: '#0B0D10', border: '1px solid #D49556', color: '#D49556' }}>
-            Versão 2.4.1
+            Versão 1.0.0
           </div>
 
           <div className="flex flex-col md:flex-row gap-6">
@@ -147,13 +158,13 @@ export function About() {
           </h3>
           <div className="space-y-3">
             {[
-              { label: 'Versão', value: '2.4.1' },
-              { label: 'Ambiente', value: 'Produção' },
+              { label: 'Versão', value: '1.0.0' },
+              { label: 'Ambiente', value: 'Desenvolvimento' },
               { label: 'Data de instalação', value: '15/01/2024 08:30' },
-              { label: 'Última atualização', value: '05/06/2026 14:20' },
-              { label: 'Limite de usuários', value: '50 usuários' },
-              { label: 'Usuários ativos', value: '24 usuários' },
-              { label: 'Banco de dados', value: 'PostgreSQL 15.4' },
+              { label: 'Última atualização', value: '08/06/2026 23:30' },
+              { label: 'Limite de usuários', value: 'Ilimitado' },
+              { label: 'Usuários ativos', value: '1 usuário' },
+              { label: 'Banco de dados', value: 'MariaDB' },
             ].map((item) => (
               <div key={item.label} className="flex justify-between items-center py-2"
                 style={{ borderBottom: '1px solid rgba(212,149,86,0.1)' }}>
@@ -193,15 +204,15 @@ export function About() {
         <h3 className="text-lg font-semibold mb-4" style={{ color: '#FFFFFF' }}>
           Módulos do Sistema
         </h3>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
           {modules.map((module) => {
             const Icon = module.icon;
             return (
-              <div key={module.name} className="rounded-xl p-4 transition-all duration-200 hover:scale-105"
-                style={{ background: 'var(--nexus-card)', border: '1px solid rgba(212,149,86,0.15)' }}>
-                <Icon className="w-6 h-6 mb-2" style={{ color: '#D49556' }} />
+              <div key={module.name} className="rounded-xl p-4 transition-all duration-200 hover:scale-105 flex flex-col items-center text-center"
+                style={{ background: 'var(--nexus-card)', border: '1px solid rgba(212,149,86,0.15)', minHeight: '120px' }}>
+                <Icon className="w-8 h-8 mb-3" style={{ color: '#D49556' }} />
                 <h4 className="text-sm font-semibold mb-1" style={{ color: '#FFFFFF' }}>{module.name}</h4>
-                <p className="text-xs" style={{ color: '#A8A8A8' }}>{module.desc}</p>
+                <p className="text-xs leading-tight" style={{ color: '#A8A8A8' }}>{module.desc}</p>
               </div>
             );
           })}
@@ -213,17 +224,15 @@ export function About() {
         <h3 className="text-lg font-semibold mb-4" style={{ color: '#FFFFFF' }}>
           Tecnologias Utilizadas
         </h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
           {technologies.map((tech) => {
             const Icon = tech.icon;
             return (
-              <div key={tech.name} className="rounded-xl p-4 flex items-center gap-4"
-                style={{ background: 'var(--nexus-card)', border: '1px solid rgba(212,149,86,0.15)' }}>
-                <Icon className="w-8 h-8" style={{ color: '#D49556' }} />
-                <div>
-                  <h4 className="text-sm font-semibold" style={{ color: '#FFFFFF' }}>{tech.name}</h4>
-                  <p className="text-xs" style={{ color: '#A8A8A8' }}>{tech.desc}</p>
-                </div>
+              <div key={tech.name} className="rounded-xl p-4 transition-all duration-200 hover:scale-105 flex flex-col items-center text-center"
+                style={{ background: 'var(--nexus-card)', border: '1px solid rgba(212,149,86,0.15)', minHeight: '120px' }}>
+                <Icon className="w-8 h-8 mb-3" style={{ color: '#D49556' }} />
+                <h4 className="text-sm font-semibold mb-1" style={{ color: '#FFFFFF' }}>{tech.name}</h4>
+                <p className="text-xs leading-tight" style={{ color: '#A8A8A8' }}>{tech.desc}</p>
               </div>
             );
           })}
@@ -235,7 +244,7 @@ export function About() {
         <h3 className="text-lg font-semibold mb-4" style={{ color: '#FFFFFF' }}>
           Suporte e Contato
         </h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           {[
             { icon: LifebuoyIcon, title: 'Suporte técnico', desc: 'Para dúvidas e suporte técnico', btn: 'Abrir chamado' },
             { icon: BookOpenIcon, title: 'Documentação', desc: 'Acesse a documentação completa', btn: 'Ver documentação' },
@@ -243,12 +252,12 @@ export function About() {
           ].map((item) => {
             const Icon = item.icon;
             return (
-              <div key={item.title} className="rounded-xl p-5"
-                style={{ background: 'var(--nexus-card)', border: '1px solid rgba(212,149,86,0.15)' }}>
-                <Icon className="w-8 h-8 mb-3" style={{ color: '#D49556' }} />
+              <div key={item.title} className="rounded-xl p-5 transition-all duration-200 hover:scale-105 flex flex-col items-center text-center"
+                style={{ background: 'var(--nexus-card)', border: '1px solid rgba(212,149,86,0.15)', minHeight: '180px' }}>
+                <Icon className="w-10 h-10 mb-3" style={{ color: '#D49556' }} />
                 <h4 className="text-base font-semibold mb-2" style={{ color: '#FFFFFF' }}>{item.title}</h4>
-                <p className="text-sm mb-4" style={{ color: '#A8A8A8' }}>{item.desc}</p>
-                <button className="w-full py-2 rounded-lg text-sm font-semibold transition-all duration-200"
+                <p className="text-sm mb-4 leading-tight" style={{ color: '#A8A8A8' }}>{item.desc}</p>
+                <button className="w-full py-2 rounded-lg text-sm font-semibold transition-all duration-200 mt-auto"
                   style={{ background: 'rgba(212,149,86,0.15)', color: '#D49556', border: '1px solid rgba(212,149,86,0.25)' }}
                   onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(212,149,86,0.25)'}
                   onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(212,149,86,0.15)'}>
