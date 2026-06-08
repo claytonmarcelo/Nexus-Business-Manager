@@ -45,9 +45,9 @@ const monthlyData = [
 ];
 
 const categoryData = [
-  { name: 'Produtos', value: 45, color: '#D49556' },
-  { name: 'Servicos', value: 30, color: '#C65A71' },
-  { name: 'Consultorias', value: 25, color: '#60a5fa' },
+  { name: 'Produtos', value: 45, color: 'var(--nexus-gold)' },
+  { name: 'Servicos', value: 30, color: 'var(--nexus-rose)' },
+  { name: 'Consultorias', value: 25, color: 'var(--nexus-chart-blue)' },
 ];
 
 const reportRows: ReportRow[] = [
@@ -71,7 +71,7 @@ function formatCurrency(value: number): string {
 function CustomBarTooltip({ active, payload, label }: { active?: boolean; payload?: Array<{ value: number }>; label?: string }) {
   if (!active || !payload?.length) return null;
   return (
-    <div className="rounded-lg px-3 py-2 text-sm shadow-lg" style={{ background: 'rgba(11, 13, 16, 0.95)', border: '1px solid var(--nexus-border)' }}>
+    <div className="rounded-lg px-3 py-2 text-sm shadow-lg" style={{ background: 'var(--nexus-card-strong)', border: '1px solid var(--nexus-border)' }}>
       <p style={{ color: 'var(--nexus-muted-2)' }}>{label}</p>
       <p className="font-semibold" style={{ color: 'var(--nexus-gold)' }}>{formatCurrency(payload[0].value)}</p>
     </div>
@@ -81,7 +81,7 @@ function CustomBarTooltip({ active, payload, label }: { active?: boolean; payloa
 function CustomPieTooltip({ active, payload }: { active?: boolean; payload?: Array<{ name: string; value: number }> }) {
   if (!active || !payload?.length) return null;
   return (
-    <div className="rounded-lg px-3 py-2 text-sm shadow-lg" style={{ background: 'rgba(11, 13, 16, 0.95)', border: '1px solid var(--nexus-border)' }}>
+    <div className="rounded-lg px-3 py-2 text-sm shadow-lg" style={{ background: 'var(--nexus-card-strong)', border: '1px solid var(--nexus-border)' }}>
       <p style={{ color: 'var(--nexus-text)' }}>{payload[0].name}</p>
       <p className="font-semibold" style={{ color: 'var(--nexus-gold)' }}>{payload[0].value}%</p>
     </div>
@@ -269,7 +269,7 @@ export function Reports() {
           <div className="h-72">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={monthlyData} margin={{ top: 5, right: 5, left: -10, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(212, 149, 86, 0.08)" vertical={false} />
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--nexus-chart-grid)" vertical={false} />
                 <XAxis
                   dataKey="month"
                   axisLine={false}
@@ -282,7 +282,7 @@ export function Reports() {
                   tick={{ fill: 'var(--nexus-muted-2)', fontSize: 11 }}
                   tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`}
                 />
-                <Tooltip content={<CustomBarTooltip />} cursor={{ fill: 'rgba(212, 149, 86, 0.04)' }} />
+                <Tooltip content={<CustomBarTooltip />} cursor={{ fill: 'var(--nexus-chart-grid)' }} />
                 <defs>
                   <linearGradient id="barGradient" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="0%" stopColor="var(--nexus-gold)" stopOpacity={0.9} />
@@ -352,7 +352,7 @@ export function Reports() {
                   disabled={!!isBusy}
                   className="flex items-center gap-3 p-4 rounded-xl text-left transition-all duration-200"
                   style={{
-                    background: 'rgba(11, 13, 16, 0.6)',
+                    background: 'var(--nexus-card)',
                     border: '1px solid var(--nexus-border)',
                     opacity: isBusy ? 0.6 : 1,
                   }}

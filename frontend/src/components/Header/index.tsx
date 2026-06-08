@@ -183,6 +183,15 @@ export function Header({ toggleSidebar }: HeaderProps) {
                     Perfil
                   </button>
                   <button
+                    onClick={() => {
+                      navigate('/settings');
+                      setMenuOpen(false);
+                    }}
+                    className="w-full text-left px-4 py-3 text-sm text-nexus-text hover:bg-nexus-bg transition-colors"
+                  >
+                    Configurações
+                  </button>
+                  <button
                     onClick={handleClearCache}
                     disabled={cacheLoading}
                     className="w-full text-left px-4 py-3 text-sm text-nexus-text hover:bg-nexus-bg transition-colors disabled:opacity-50"

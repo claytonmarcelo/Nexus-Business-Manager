@@ -27,6 +27,7 @@ import { NexusAI } from './pages/NexusAI';
 import { CRM } from './pages/CRM';
 import { SuggestionsList } from './pages/Suggestions/List';
 import { Profile } from './pages/Profile';
+import { Settings } from './pages/Settings';
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, loading } = useAuth();
@@ -105,6 +106,7 @@ function AppRoutes() {
         <Route path="companies" element={<Companies />} />
         <Route path="about" element={<About />} />
         <Route path="profile" element={<Profile />} />
+        <Route path="settings" element={<Settings />} />
       </Route>
       <Route path="*" element={<Navigate to="/dashboard" replace />} />
     </Routes>

@@ -14,7 +14,7 @@ import { ChartCard } from '../../components/ui/ChartCard';
 const currency = (v: number) =>
   new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v);
 
-const PIE_COLORS = ['#D49556', '#C65A71', '#7DDA6A', '#60a5fa', '#a78bfa', '#D89A28', '#D84B5F'];
+const PIE_COLORS = ['var(--nexus-gold)', 'var(--nexus-rose)', 'var(--nexus-chart-green)', 'var(--nexus-chart-blue)', 'var(--nexus-chart-purple)', 'var(--nexus-warning)', 'var(--nexus-chart-red)'];
 
 const sparklineHeights = Array.from({ length: 8 }, () => Math.floor(Math.random() * 30) + 10);
 
@@ -247,15 +247,15 @@ export function Financial() {
               <AreaChart data={monthlyData} margin={{ top: 5, right: 5, left: -10, bottom: 0 }}>
                 <defs>
                   <linearGradient id="gradReceita" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#7DDA6A" stopOpacity={0.3} />
-                    <stop offset="95%" stopColor="#7DDA6A" stopOpacity={0} />
+                    <stop offset="5%" stopColor="var(--nexus-chart-green)" stopOpacity={0.3} />
+                    <stop offset="95%" stopColor="var(--nexus-chart-green)" stopOpacity={0} />
                   </linearGradient>
                   <linearGradient id="gradDespesa" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#D84B5F" stopOpacity={0.3} />
-                    <stop offset="95%" stopColor="#D84B5F" stopOpacity={0} />
+                    <stop offset="5%" stopColor="var(--nexus-chart-red)" stopOpacity={0.3} />
+                    <stop offset="95%" stopColor="var(--nexus-chart-red)" stopOpacity={0} />
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(212,149,86,0.08)" />
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--nexus-chart-grid)" />
                 <XAxis dataKey="label" tick={{ fontSize: 11, fill: 'var(--nexus-muted-2)' }} axisLine={false} tickLine={false} />
                 <YAxis tick={{ fontSize: 11, fill: 'var(--nexus-muted-2)' }} axisLine={false} tickLine={false} tickFormatter={(v: number) => currency(v).slice(0, -3)} />
                 <Tooltip
@@ -263,8 +263,8 @@ export function Financial() {
                   labelStyle={{ color: 'var(--nexus-muted-2)' }}
                   formatter={(v: number) => currency(v)}
                 />
-                <Area type="monotone" dataKey="receita" stroke="#7DDA6A" strokeWidth={2} fill="url(#gradReceita)" />
-                <Area type="monotone" dataKey="despesa" stroke="#D84B5F" strokeWidth={2} fill="url(#gradDespesa)" />
+                <Area type="monotone" dataKey="receita" stroke="var(--nexus-chart-green)" strokeWidth={2} fill="url(#gradReceita)" />
+                <Area type="monotone" dataKey="despesa" stroke="var(--nexus-chart-red)" strokeWidth={2} fill="url(#gradDespesa)" />
               </AreaChart>
             </ResponsiveContainer>
           ) : (
@@ -387,7 +387,7 @@ export function Financial() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="fixed inset-0 z-50 flex items-center justify-center p-4"
-            style={{ background: 'rgba(5, 7, 10, 0.75)' }}
+            style={{ background: 'var(--nexus-overlay)' }}
           >
             <motion.div
               initial={{ opacity: 0, scale: 0.95, y: 10 }}

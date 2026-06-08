@@ -71,6 +71,11 @@
     --nexus-radius-md: 14px;
     --nexus-radius-lg: 18px;
     --nexus-radius-xl: 24px;
+    --nexus-chart-grid: rgba(212, 149, 86, 0.08);
+    --nexus-chart-green: #7DDA6A;
+    --nexus-chart-red: #D84B5F;
+    --nexus-chart-blue: #60a5fa;
+    --nexus-chart-purple: #a78bfa;
     --nexus-shadow: 0 22px 70px rgba(0, 0, 0, 0.62);
     --nexus-glow: 0 0 34px rgba(212, 149, 86, 0.16);
   }
@@ -106,6 +111,11 @@
     --nexus-radius-md: 14px;
     --nexus-radius-lg: 18px;
     --nexus-radius-xl: 24px;
+    --nexus-chart-grid: #D8C5AE;
+    --nexus-chart-green: #2F9E44;
+    --nexus-chart-red: #C92A2A;
+    --nexus-chart-blue: #3b82f6;
+    --nexus-chart-purple: #8b5cf6;
     --nexus-shadow: 0 4px 18px rgba(0, 0, 0, 0.08);
     --nexus-glow: 0 0 20px rgba(196, 138, 67, 0.2);
   }
@@ -467,8 +477,8 @@ input:focus, textarea:focus, select:focus {
 }
 
 .sidebar-logo {
-  width: 269px;
-  max-width: 85%;
+  width: 377px;
+  max-width: 95%;
   height: auto;
   display: block;
   margin: 0 auto;
@@ -601,12 +611,12 @@ input:focus, textarea:focus, select:focus {
 }
 
 @media (max-width: 768px) {
-  .sidebar-logo { width: 323px; }
+  .sidebar-logo { width: 452px; }
   .nexus-auth-card { padding: 1.5rem; max-width: 90%; }
 }
 
 @media (max-width: 480px) {
-  .sidebar-logo { width: 287px; }
+  .sidebar-logo { width: 402px; }
 }
 
 /* Dashboard KPI Cards */
