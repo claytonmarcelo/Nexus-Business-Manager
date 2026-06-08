@@ -18,7 +18,7 @@ export function Products() {
   async function loadProducts() {
     try {
       const res = await api.get('/products');
-      setProducts(res.data);
+      setProducts(res.data?.data || []);
     } catch { console.error('Erro ao carregar produtos'); }
     finally { setLoading(false); }
   }

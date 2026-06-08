@@ -93,8 +93,8 @@ export function Stock() {
   async function loadData() {
     try {
       const [movRes, prodRes] = await Promise.all([api.get('/stock'), api.get('/products')]);
-      setMovements(movRes.data);
-      setProducts(prodRes.data);
+      setMovements(movRes.data?.data || []);
+      setProducts(prodRes.data?.data || []);
       setUsedMock(false);
     } catch {
       console.error('Erro ao carregar estoque, usando dados mock');

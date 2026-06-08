@@ -16,7 +16,7 @@ export function Suppliers() {
   async function loadSuppliers() {
     try {
       const res = await api.get('/suppliers');
-      setSuppliers(res.data);
+      setSuppliers(res.data?.data || []);
     } catch { console.error('Erro ao carregar fornecedores'); }
     finally { setLoading(false); }
   }

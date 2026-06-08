@@ -19,9 +19,9 @@ export function Purchases() {
   async function loadData() {
     try {
       const [purRes, supRes, prodRes] = await Promise.all([api.get('/purchases'), api.get('/suppliers'), api.get('/products')]);
-      setPurchases(purRes.data || []);
-      setSuppliers(supRes.data || []);
-      setProducts(prodRes.data || []);
+      setPurchases(purRes.data?.data || []);
+      setSuppliers(supRes.data?.data || []);
+      setProducts(prodRes.data?.data || []);
     } catch { console.error('Erro ao carregar compras'); }
     finally { setLoading(false); }
   }

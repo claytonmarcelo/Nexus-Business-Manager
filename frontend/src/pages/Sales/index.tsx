@@ -20,9 +20,9 @@ export function Sales() {
   async function loadData() {
     try {
       const [salRes, cliRes, prodRes] = await Promise.all([api.get('/sales'), api.get('/clients'), api.get('/products')]);
-      setSales(salRes.data || []);
-      setClients(cliRes.data || []);
-      setProducts(prodRes.data || []);
+      setSales(salRes.data?.data || []);
+      setClients(cliRes.data?.data || []);
+      setProducts(prodRes.data?.data || []);
     } catch { console.error('Erro ao carregar vendas'); }
     finally { setLoading(false); }
   }

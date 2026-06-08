@@ -13,7 +13,7 @@ export function Audit() {
   async function load() {
     try {
       const res = await api.get('/audit');
-      setLogs(res.data);
+      setLogs(res.data?.data || []);
     } catch { console.error('Erro ao carregar auditoria'); }
     finally { setLoading(false); }
   }

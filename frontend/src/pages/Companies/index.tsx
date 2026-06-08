@@ -16,7 +16,7 @@ export function Companies() {
   async function load() {
     try {
       const res = await api.get('/companies');
-      setCompanies(res.data);
+      setCompanies(res.data?.data || []);
     } catch { console.error('Erro ao carregar empresas'); }
     finally { setLoading(false); }
   }

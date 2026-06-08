@@ -23,8 +23,8 @@ export function Appointments() {
     try {
       const url = date ? `/appointments?date=${date}` : '/appointments';
       const [appRes, cliRes] = await Promise.all([api.get(url), api.get('/clients')]);
-      setAppointments(appRes.data);
-      setClients(cliRes.data);
+      setAppointments(appRes.data?.data || []);
+      setClients(cliRes.data?.data || []);
     } catch { console.error('Erro ao carregar agendamentos'); }
     finally { setLoading(false); }
   }

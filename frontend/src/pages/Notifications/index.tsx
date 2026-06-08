@@ -13,7 +13,7 @@ export function Notifications() {
   async function load() {
     try {
       const res = await api.get('/notifications');
-      setNotifications(res.data.notifications);
+      setNotifications(res.data.data || []);
       setUnreadCount(res.data.unreadCount);
     } catch { console.error('Erro ao carregar notificacoes'); }
     finally { setLoading(false); }

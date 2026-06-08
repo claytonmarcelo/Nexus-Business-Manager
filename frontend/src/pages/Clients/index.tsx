@@ -39,16 +39,9 @@ export function Clients() {
       const params: any = { page: p, limit: 10 };
       if (query) params.search = query;
       const res = await api.get('/clients', { params });
-      const data = res.data.data || res.data;
-      if (Array.isArray(data)) {
-        setClients(data);
-        setTotal(data.length);
-        setTotalPages(1);
-      } else {
-        setClients(data.data || []);
-        setTotal(data.total || 0);
-        setTotalPages(data.totalPages || 1);
-      }
+      setClients(res.data.data || []);
+      setTotal(res.data.total || 0);
+      setTotalPages(res.data.totalPages || 1);
     } catch { console.error('Erro ao carregar clientes'); }
     finally { setLoading(false); }
   }

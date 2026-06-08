@@ -28,7 +28,7 @@ export function Users() {
   async function loadUsers() {
     try {
       const res = await api.get('/users');
-      setUsers(res.data);
+      setUsers(res.data?.data || []);
     } catch { console.error('Erro ao carregar usuarios'); }
     finally { setLoading(false); }
   }
