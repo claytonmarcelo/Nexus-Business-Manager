@@ -242,6 +242,29 @@ export function About() {
             </div>
           </div>
 
+          {/* Níveis de Usuários Panel */}
+          <div className="rounded-xl p-6" style={{ background: 'var(--nexus-card)', border: '1px solid var(--nexus-border)' }}>
+            <h3 className="text-lg font-semibold mb-4" style={{ color: 'var(--nexus-text)' }}>Níveis de usuários</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="p-4 rounded-lg border text-xs" style={{ borderColor: 'rgba(var(--nexus-gold-rgb), 0.2)', background: 'rgba(0,0,0,0.1)' }}>
+                <h4 className="font-semibold mb-2" style={{ color: 'var(--nexus-gold)' }}>Administrador</h4>
+                <p style={{ color: 'var(--nexus-muted-2)' }}>Controle total do sistema. Pode gerenciar usuários, empresas, configurações e auditar todas as ações.</p>
+              </div>
+              <div className="p-4 rounded-lg border text-xs" style={{ borderColor: 'rgba(var(--nexus-gold-rgb), 0.2)', background: 'rgba(0,0,0,0.1)' }}>
+                <h4 className="font-semibold mb-2" style={{ color: 'var(--nexus-gold)' }}>Gerente</h4>
+                <p style={{ color: 'var(--nexus-muted-2)' }}>Controle operacional. Pode gerenciar cadastros, operações e visualizar relatórios gerenciais.</p>
+              </div>
+              <div className="p-4 rounded-lg border text-xs" style={{ borderColor: 'var(--nexus-border)', background: 'rgba(0,0,0,0.1)' }}>
+                <h4 className="font-semibold mb-2" style={{ color: 'var(--nexus-text)' }}>Operador</h4>
+                <p style={{ color: 'var(--nexus-muted-2)' }}>Pode realizar cadastros e operações do dia a dia, como registrar vendas, compras e movimentações.</p>
+              </div>
+              <div className="p-4 rounded-lg border text-xs" style={{ borderColor: 'var(--nexus-border)', background: 'rgba(0,0,0,0.1)' }}>
+                <h4 className="font-semibold mb-2" style={{ color: 'var(--nexus-text)' }}>Visualizador</h4>
+                <p style={{ color: 'var(--nexus-muted-2)' }}>Acesso somente leitura. Pode consultar dados e gerar relatórios, mas não pode criar ou alterar registros.</p>
+              </div>
+            </div>
+          </div>
+
           {/* Support Panel */}
           <div className="rounded-xl p-6" style={{ background: 'var(--nexus-card)', border: '1px solid var(--nexus-border)' }}>
             <h3 className="text-lg font-semibold mb-6" style={{ color: 'var(--nexus-text)' }}>Suporte e contato</h3>
