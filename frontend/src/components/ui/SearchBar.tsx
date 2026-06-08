@@ -28,7 +28,7 @@ export function SearchBar({
         <button
           onClick={onFilterClick}
           className="w-10 h-10 flex items-center justify-center rounded-xl transition-colors"
-          style={{ background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(212,149,86,0.15)', color: 'var(--nexus-muted)' }}
+          style={{ background: 'var(--nexus-input-bg)', border: '1px solid rgba(var(--nexus-gold-rgb),0.15)', color: 'var(--nexus-muted)' }}
         >
           <FunnelIcon className="w-5 h-5" />
         </button>

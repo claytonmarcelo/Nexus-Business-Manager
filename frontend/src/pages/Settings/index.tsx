@@ -62,7 +62,7 @@ export function Settings() {
         <div className="flex items-center gap-3 mb-6">
           <div
             className="w-10 h-10 rounded-xl flex items-center justify-center"
-            style={{ background: 'rgba(212, 149, 86, 0.12)', color: 'var(--nexus-gold)' }}
+            style={{ background: 'rgba(var(--nexus-gold-rgb), 0.12)', color: 'var(--nexus-gold)' }}
           >
             <SunIcon className="w-5 h-5" />
           </div>
@@ -92,7 +92,7 @@ export function Settings() {
                 className="relative flex flex-col items-center text-center p-6 rounded-xl transition-all duration-200 disabled:opacity-60"
                 style={{
                   background: isActive
-                    ? 'linear-gradient(135deg, rgba(212, 149, 86, 0.12), rgba(198, 90, 113, 0.08))'
+                    ? 'linear-gradient(135deg, rgba(var(--nexus-gold-rgb), 0.12), rgba(var(--nexus-rose-rgb), 0.08))'
                     : 'var(--nexus-card-soft)',
                   border: isActive
                     ? '1px solid var(--nexus-gold)'
@@ -118,7 +118,7 @@ export function Settings() {
                   style={{
                     background: isActive
                       ? 'linear-gradient(135deg, var(--nexus-gold), var(--nexus-rose))'
-                      : 'rgba(212, 149, 86, 0.08)',
+                      : 'rgba(var(--nexus-gold-rgb), 0.08)',
                     color: isActive ? '#FFFFFF' : 'var(--nexus-muted)',
                   }}
                 >

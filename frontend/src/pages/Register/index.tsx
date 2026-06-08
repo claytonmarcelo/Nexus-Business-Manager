@@ -8,12 +8,12 @@ import { GradientButton } from '../../components/ui/GradientButton';
 
 function getPasswordStrength(password: string): { level: string; label: string; color: string; width: string } {
   if (!password) return { level: 'none', label: '', color: '', width: '0%' };
-  if (password.length < 8) return { level: 'weak', label: 'Fraca', color: '#D84B5F', width: '25%' };
+  if (password.length < 8) return { level: 'weak', label: 'Fraca', color: 'var(--nexus-danger)', width: '25%' };
   const score = [/[A-Z]/, /[a-z]/, /[0-9]/, /[^A-Za-z0-9]/].filter((r) => r.test(password)).length;
   if (score === 4) return { level: 'very_strong', label: 'Muito Forte', color: '#7DDA6A', width: '100%' };
-  if (score === 3) return { level: 'strong', label: 'Forte', color: '#D49556', width: '75%' };
+  if (score === 3) return { level: 'strong', label: 'Forte', color: 'var(--nexus-gold)', width: '75%' };
   if (score === 2) return { level: 'medium', label: 'Media', color: '#E18A9D', width: '50%' };
-  return { level: 'weak', label: 'Fraca', color: '#D84B5F', width: '25%' };
+  return { level: 'weak', label: 'Fraca', color: 'var(--nexus-danger)', width: '25%' };
 }
 
 export function Register() {
@@ -81,7 +81,7 @@ export function Register() {
               initial={{ opacity: 0, x: -10 }}
               animate={{ opacity: 1, x: 0 }}
               className="px-4 py-3 rounded-xl mb-4 text-sm"
-              style={{ background: 'rgba(216, 75, 95, 0.12)', color: '#D84B5F', border: '1px solid rgba(216, 75, 95, 0.2)' }}
+              style={{ background: 'rgba(var(--nexus-danger-rgb), 0.12)', color: 'var(--nexus-danger)', border: '1px solid rgba(var(--nexus-danger-rgb), 0.2)' }}
             >
               {error}
             </motion.div>
@@ -156,7 +156,7 @@ export function Register() {
 
             {password && (
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-1">
-                <div className="h-1.5 rounded-full overflow-hidden" style={{ background: 'rgba(212, 149, 86, 0.1)' }}>
+                <div className="h-1.5 rounded-full overflow-hidden" style={{ background: 'rgba(var(--nexus-gold-rgb), 0.1)' }}>
                   <motion.div
                     className="h-full rounded-full"
                     initial={{ width: 0 }}

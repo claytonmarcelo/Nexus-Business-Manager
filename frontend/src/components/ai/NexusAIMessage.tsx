@@ -10,9 +10,9 @@ interface Props {
 export function NexusAIMessage({ text, isUser, suggestions, onSuggestionClick }: Props) {
   return (
     <div style={{ display: 'flex', gap: '0.75rem', flexDirection: isUser ? 'row-reverse' : 'row' }}>
-      <div style={{ width: '2rem', height: '2rem', borderRadius: '9999px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, background: isUser ? 'rgba(212, 149, 86, 0.2)' : 'rgba(198, 90, 113, 0.2)' }}>
+      <div style={{ width: '2rem', height: '2rem', borderRadius: '9999px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, background: isUser ? 'rgba(var(--nexus-gold-rgb), 0.2)' : 'rgba(var(--nexus-rose-rgb), 0.2)' }}>
         {isUser ? (
-          <UserIcon style={{ width: '1rem', height: '1rem', color: '#D49556' }} />
+          <UserIcon style={{ width: '1rem', height: '1rem', color: 'var(--nexus-gold)' }} />
         ) : (
           <SparklesIcon style={{ width: '1rem', height: '1rem', color: '#C65A71' }} />
         )}
@@ -21,9 +21,9 @@ export function NexusAIMessage({ text, isUser, suggestions, onSuggestionClick }:
         <div
           style={{
             borderRadius: '1rem', padding: '0.625rem 1rem', fontSize: '0.875rem', lineHeight: 1.5,
-            background: isUser ? 'rgba(212, 149, 86, 0.2)' : 'rgba(11, 13, 16, 0.94)',
+            background: isUser ? 'rgba(var(--nexus-gold-rgb), 0.2)' : 'rgba(11, 13, 16, 0.94)',
             color: 'var(--nexus-text)', border: '1px solid',
-            borderColor: isUser ? 'rgba(212, 149, 86, 0.3)' : 'var(--nexus-border)',
+            borderColor: isUser ? 'rgba(var(--nexus-gold-rgb), 0.3)' : 'var(--nexus-border)',
           }}
         >
           {text}

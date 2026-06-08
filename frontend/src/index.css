@@ -67,6 +67,15 @@
     --nexus-success: #7DDA6A;
     --nexus-danger: #D84B5F;
     --nexus-warning: #D89A28;
+    
+    /* RGB Variables for opacity injection */
+    --nexus-gold-rgb: 212, 149, 86;
+    --nexus-rose-rgb: 198, 90, 113;
+    --nexus-danger-rgb: 216, 75, 95;
+    --nexus-success-rgb: 125, 218, 106;
+    --nexus-muted-rgb: 168, 168, 168;
+    --nexus-blue-rgb: 96, 165, 250;
+    
     --nexus-radius-sm: 10px;
     --nexus-radius-md: 14px;
     --nexus-radius-lg: 18px;
@@ -105,6 +114,15 @@
     --nexus-success: #2F9E44;
     --nexus-danger: #C92A2A;
     --nexus-warning: #D89A28;
+    
+    /* RGB Variables for opacity injection */
+    --nexus-gold-rgb: 196, 138, 67;
+    --nexus-rose-rgb: 198, 90, 113;
+    --nexus-danger-rgb: 201, 42, 42;
+    --nexus-success-rgb: 47, 158, 68;
+    --nexus-muted-rgb: 90, 90, 90;
+    --nexus-blue-rgb: 59, 130, 246;
+    
     --nexus-input-bg: #FFFFFF;
     --nexus-overlay: rgba(0, 0, 0, 0.5);
     --nexus-radius-sm: 10px;

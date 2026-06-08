@@ -116,7 +116,7 @@ export function Products() {
       key: 'quantity',
       header: 'Qtd',
       render: (product) => (
-        <span className="font-semibold" style={{ color: product.quantity <= 5 ? '#D84B5F' : 'var(--nexus-text)' }}>
+        <span className="font-semibold" style={{ color: product.quantity <= 5 ? 'var(--nexus-danger)' : 'var(--nexus-text)' }}>
           {product.quantity}
         </span>
       ),
@@ -130,12 +130,12 @@ export function Products() {
             onClick={() => openEdit(product)}
             className="text-xs font-medium px-3 py-1.5 rounded-lg transition-all duration-200"
             style={{
-              color: '#D49556',
-              background: 'rgba(212, 149, 86, 0.1)',
-              border: '1px solid rgba(212, 149, 86, 0.2)',
+              color: 'var(--nexus-gold)',
+              background: 'rgba(var(--nexus-gold-rgb), 0.1)',
+              border: '1px solid rgba(var(--nexus-gold-rgb), 0.2)',
             }}
-            onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(212, 149, 86, 0.2)'; }}
-            onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(212, 149, 86, 0.1)'; }}
+            onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(var(--nexus-gold-rgb), 0.2)'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(var(--nexus-gold-rgb), 0.1)'; }}
           >
             Editar
           </button>
@@ -143,12 +143,12 @@ export function Products() {
             onClick={() => handleDelete(product.id)}
             className="text-xs font-medium px-3 py-1.5 rounded-lg transition-all duration-200"
             style={{
-              color: '#D84B5F',
-              background: 'rgba(216, 75, 95, 0.1)',
-              border: '1px solid rgba(216, 75, 95, 0.2)',
+              color: 'var(--nexus-danger)',
+              background: 'rgba(var(--nexus-danger-rgb), 0.1)',
+              border: '1px solid rgba(var(--nexus-danger-rgb), 0.2)',
             }}
-            onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(216, 75, 95, 0.2)'; }}
-            onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(216, 75, 95, 0.1)'; }}
+            onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(var(--nexus-danger-rgb), 0.2)'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(var(--nexus-danger-rgb), 0.1)'; }}
           >
             Excluir
           </button>
@@ -195,7 +195,7 @@ export function Products() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           className="fixed inset-0 z-50 flex items-center justify-center p-4"
-          style={{ background: 'rgba(5, 7, 10, 0.8)' }}
+          style={{ background: 'var(--nexus-overlay)' }}
           onClick={() => setShowModal(false)}
         >
           <motion.div
@@ -213,7 +213,7 @@ export function Products() {
               <button
                 onClick={() => setShowModal(false)}
                 className="w-8 h-8 flex items-center justify-center rounded-lg transition-colors"
-                style={{ color: 'var(--nexus-muted-2)', background: 'rgba(0,0,0,0.3)' }}
+                style={{ color: 'var(--nexus-muted-2)', background: 'var(--nexus-card-soft)' }}
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -222,7 +222,7 @@ export function Products() {
             </div>
 
             {error && (
-              <div className="px-4 py-3 rounded-lg mb-4 text-sm" style={{ background: 'rgba(216, 75, 95, 0.12)', color: '#D84B5F', border: '1px solid rgba(216, 75, 95, 0.2)' }}>
+              <div className="px-4 py-3 rounded-lg mb-4 text-sm" style={{ background: 'rgba(var(--nexus-danger-rgb), 0.12)', color: 'var(--nexus-danger)', border: '1px solid rgba(var(--nexus-danger-rgb), 0.2)' }}>
                 {error}
               </div>
             )}
@@ -235,9 +235,9 @@ export function Products() {
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   className="w-full rounded-lg px-4 py-2.5 text-sm outline-none transition-all duration-200"
-                  style={{ background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(212,149,86,0.15)', color: 'var(--nexus-text)' }}
-                  onFocus={(e) => e.target.style.borderColor = 'rgba(212,149,86,0.4)'}
-                  onBlur={(e) => e.target.style.borderColor = 'rgba(212,149,86,0.15)'}
+                  style={{ background: 'var(--nexus-input-bg)', border: '1px solid rgba(var(--nexus-gold-rgb),0.15)', color: 'var(--nexus-text)' }}
+                  onFocus={(e) => e.target.style.borderColor = 'rgba(var(--nexus-gold-rgb),0.4)'}
+                  onBlur={(e) => e.target.style.borderColor = 'rgba(var(--nexus-gold-rgb),0.15)'}
                 />
               </div>
               <div className="grid grid-cols-2 gap-4">
@@ -248,9 +248,9 @@ export function Products() {
                     value={formData.sku}
                     onChange={(e) => setFormData({ ...formData, sku: e.target.value })}
                     className="w-full rounded-lg px-4 py-2.5 text-sm outline-none transition-all duration-200"
-                    style={{ background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(212,149,86,0.15)', color: 'var(--nexus-text)' }}
-                    onFocus={(e) => e.target.style.borderColor = 'rgba(212,149,86,0.4)'}
-                    onBlur={(e) => e.target.style.borderColor = 'rgba(212,149,86,0.15)'}
+                    style={{ background: 'var(--nexus-input-bg)', border: '1px solid rgba(var(--nexus-gold-rgb),0.15)', color: 'var(--nexus-text)' }}
+                    onFocus={(e) => e.target.style.borderColor = 'rgba(var(--nexus-gold-rgb),0.4)'}
+                    onBlur={(e) => e.target.style.borderColor = 'rgba(var(--nexus-gold-rgb),0.15)'}
                   />
                 </div>
                 <div>
@@ -260,9 +260,9 @@ export function Products() {
                     value={formData.category}
                     onChange={(e) => setFormData({ ...formData, category: e.target.value })}
                     className="w-full rounded-lg px-4 py-2.5 text-sm outline-none transition-all duration-200"
-                    style={{ background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(212,149,86,0.15)', color: 'var(--nexus-text)' }}
-                    onFocus={(e) => e.target.style.borderColor = 'rgba(212,149,86,0.4)'}
-                    onBlur={(e) => e.target.style.borderColor = 'rgba(212,149,86,0.15)'}
+                    style={{ background: 'var(--nexus-input-bg)', border: '1px solid rgba(var(--nexus-gold-rgb),0.15)', color: 'var(--nexus-text)' }}
+                    onFocus={(e) => e.target.style.borderColor = 'rgba(var(--nexus-gold-rgb),0.4)'}
+                    onBlur={(e) => e.target.style.borderColor = 'rgba(var(--nexus-gold-rgb),0.15)'}
                   />
                 </div>
               </div>
@@ -274,9 +274,9 @@ export function Products() {
                     value={formData.price}
                     onChange={(e) => setFormData({ ...formData, price: Number(e.target.value) })}
                     className="w-full rounded-lg px-4 py-2.5 text-sm outline-none transition-all duration-200"
-                    style={{ background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(212,149,86,0.15)', color: 'var(--nexus-text)' }}
-                    onFocus={(e) => e.target.style.borderColor = 'rgba(212,149,86,0.4)'}
-                    onBlur={(e) => e.target.style.borderColor = 'rgba(212,149,86,0.15)'}
+                    style={{ background: 'var(--nexus-input-bg)', border: '1px solid rgba(var(--nexus-gold-rgb),0.15)', color: 'var(--nexus-text)' }}
+                    onFocus={(e) => e.target.style.borderColor = 'rgba(var(--nexus-gold-rgb),0.4)'}
+                    onBlur={(e) => e.target.style.borderColor = 'rgba(var(--nexus-gold-rgb),0.15)'}
                   />
                 </div>
                 <div>
@@ -286,9 +286,9 @@ export function Products() {
                     value={formData.quantity}
                     onChange={(e) => setFormData({ ...formData, quantity: Number(e.target.value) })}
                     className="w-full rounded-lg px-4 py-2.5 text-sm outline-none transition-all duration-200"
-                    style={{ background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(212,149,86,0.15)', color: 'var(--nexus-text)' }}
-                    onFocus={(e) => e.target.style.borderColor = 'rgba(212,149,86,0.4)'}
-                    onBlur={(e) => e.target.style.borderColor = 'rgba(212,149,86,0.15)'}
+                    style={{ background: 'var(--nexus-input-bg)', border: '1px solid rgba(var(--nexus-gold-rgb),0.15)', color: 'var(--nexus-text)' }}
+                    onFocus={(e) => e.target.style.borderColor = 'rgba(var(--nexus-gold-rgb),0.4)'}
+                    onBlur={(e) => e.target.style.borderColor = 'rgba(var(--nexus-gold-rgb),0.15)'}
                   />
                 </div>
               </div>
@@ -299,9 +299,9 @@ export function Products() {
                   value={formData.image}
                   onChange={(e) => setFormData({ ...formData, image: e.target.value })}
                   className="w-full rounded-lg px-4 py-2.5 text-sm outline-none transition-all duration-200"
-                  style={{ background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(212,149,86,0.15)', color: 'var(--nexus-text)' }}
-                  onFocus={(e) => e.target.style.borderColor = 'rgba(212,149,86,0.4)'}
-                  onBlur={(e) => e.target.style.borderColor = 'rgba(212,149,86,0.15)'}
+                  style={{ background: 'var(--nexus-input-bg)', border: '1px solid rgba(var(--nexus-gold-rgb),0.15)', color: 'var(--nexus-text)' }}
+                  onFocus={(e) => e.target.style.borderColor = 'rgba(var(--nexus-gold-rgb),0.4)'}
+                  onBlur={(e) => e.target.style.borderColor = 'rgba(var(--nexus-gold-rgb),0.15)'}
                 />
               </div>
               <div className="flex justify-end gap-3 pt-2">

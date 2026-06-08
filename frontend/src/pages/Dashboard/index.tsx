@@ -1,376 +1,249 @@
 import { useState, useEffect } from 'react';
-import api from '../../services/api';
+import { 
+  ChartBarIcon, 
+  UserGroupIcon, 
+  CurrencyDollarIcon, 
+  ArrowTrendingUpIcon,
+  Cog6ToothIcon,
+  MagnifyingGlassIcon,
+  BellIcon,
+  ChevronDownIcon,
+  ShoppingCartIcon,
+  ArrowUpIcon,
+  ArrowDownIcon
+} from '@heroicons/react/24/outline';
 import { useAuth } from '../../contexts/AuthContext';
-import { useTheme } from '../../contexts/ThemeContext';
-import { DashboardData } from '../../types';
-import { useNavigate } from 'react-router-dom';
-import {
-  AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-  PieChart, Pie, Cell,
-} from 'recharts';
-import { UserGroupIcon, CurrencyDollarIcon, ArrowTrendingUpIcon, BanknotesIcon } from '@heroicons/react/24/solid';
-import { NexusAIInsights } from '../../components/ai/NexusAIInsights';
-import { StatsCard } from '../../components/ui/StatsCard';
 
-const GOLD = '#D49556';
-const LIGHT_GOLD = '#C48A43';
-const SUCCESS = '#7DDA6A';
-const LIGHT_SUCCESS = '#2F9E44';
-const ROSE = '#C65A71';
-const GRAY = '#A8A8A8';
-const LIGHT_GRAY = '#5A5A5A';
-const WHITE = '#FFFFFF';
-const DANGER = '#D84B5F';
-const LIGHT_DANGER = '#C92A2A';
-const WARNING = '#D89A28';
-
-const chartColors = [GOLD, ROSE, '#60a5fa', SUCCESS, '#a78bfa', '#f472b6', GRAY];
-const lightChartColors = [LIGHT_GOLD, ROSE, '#60a5fa', LIGHT_SUCCESS, '#a78bfa', '#f472b6', LIGHT_GRAY];
-
-
-
-function formatCurrency(value: number) {
-  return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
-}
-
-function formatNumber(value: number) {
-  if (value >= 1000000) return (value / 1000000).toFixed(1) + 'M';
-  if (value >= 1000) return (value / 1000).toFixed(1) + 'k';
-  return value.toLocaleString('pt-BR');
-}
-
-function AreaChartGradient() {
-  return (
-    <defs>
-      <linearGradient id="salesGrad" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="5%" stopColor={GOLD} stopOpacity={0.3} />
-        <stop offset="95%" stopColor={GOLD} stopOpacity={0} />
-      </linearGradient>
-      <linearGradient id="revenueGrad" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="5%" stopColor={SUCCESS} stopOpacity={0.3} />
-        <stop offset="95%" stopColor={SUCCESS} stopOpacity={0} />
-      </linearGradient>
-    </defs>
-  );
-}
-
-interface LowStockItem {
-  id: number;
-  name: string;
-  category: string;
-  quantity: number;
-  minStock: number;
-  status: 'normal' | 'low' | 'critical';
-}
-
-interface ActivityItem {
-  text: string;
-  time: string;
-  color: 'green' | 'rose' | 'gold' | 'blue';
-}
+// Dados mockados para demonstração (substituir pela API quando funcionar)
+const mockData = {
+  stats: {
+    total_clients: 1250,
+    total_sales: 84230.50,
+    total_revenue: 126430.20,
+    profit: 28200.00
+  },
+  salesData: [
+    { name: '05 Mai', value: 20 },
+    { name: '06 Mai', value: 15 },
+    { name: '07 Mai', value: 25 },
+    { name: '08 Mai', value: 40 },
+    { name: '09 Mai', value: 30 },
+    { name: '10 Mai', value: 35 },
+    { name: '11 Mai', value: 22 }
+  ],
+  categoryData: [
+    { name: 'Eletrônicos', value: 35, color: '#B76E79' },
+    { name: 'Informática', value: 25, color: '#D6B370' },
+    { name: 'Casa', value: 20, color: '#32252B' },
+    { name: 'Acessórios', value: 20, color: '#F7F2EC' }
+  ],
+  products: [
+    { name: 'Notebook Dell Inspiron 15', stock: 8, status: 'Baixo', image: '💻' },
+    { name: 'Mouse Gamer Logitech G502', stock: 15, status: 'Normal', image: '🖱️' },
+    { name: 'Teclado Mecânico Kedragon', stock: 3, status: 'Baixo', image: '⌨️' },
+    { name: 'Monitor LG 24" Full HD', stock: 12, status: 'Normal', image: '🖥️' },
+    { name: 'Cadeira Gamer ThunderX3', stock: 2, status: 'Crítico', image: '🪑' }
+  ],
+  activities: [
+    { type: 'sale', description: 'Nova venda realizada', details: 'Venda #VDA-2024-1587', time: 'Agora', icon: '🛒' },
+    { type: 'client', description: 'Novo cliente cadastrado', details: 'João Silva', time: '5 min atrás', icon: '👤' },
+    { type: 'stock', description: 'Produto com estoque baixo', details: 'Teclado Mecânico Kedragon', time: '15 min atrás', icon: '📦' },
+    { type: 'purchase', description: 'Nova compra realizada', details: 'Compra #CMP-2024-964', time: '1 hora atrás', icon: '🛍️' },
+    { type: 'payment', description: 'Pagamento recebido', details: 'Venda #VDA-2024-1586', time: '2 horas atrás', icon: '💳' }
+  ]
+};
 
 export function Dashboard() {
   const { user } = useAuth();
-  const { theme } = useTheme();
-  const navigate = useNavigate();
-  const isLight = theme === 'light' || (theme === 'auto' && window.matchMedia('(prefers-color-scheme: light)').matches);
-  const [data, setData] = useState<DashboardData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [suggestionStats, setSuggestionStats] = useState<{ status: string; count: number }[]>([]);
-  const [lowStock, setLowStock] = useState<LowStockItem[]>([]);
-  const [activities, setActivities] = useState<ActivityItem[]>([]);
+  const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    async function load() {
-      try {
-        const [dashRes, productsRes, auditRes, sugRes] = await Promise.all([
-          api.get('/dashboard'),
-          api.get('/products'),
-          api.get('/audit'),
-          api.get('/suggestions/stats').catch(() => null),
-        ]);
-
-        const dashData = dashRes.data?.data || dashRes.data;
-        setData(dashData);
-
-        const allProducts = productsRes.data?.data || [];
-        const lowStockItems = allProducts
-          .filter((p: any) => p.quantity <= (p.min_stock || 5))
-          .slice(0, 6)
-          .map((p: any) => ({
-            id: p.id,
-            name: p.name,
-            category: p.category || 'Sem categoria',
-            quantity: p.quantity,
-            minStock: p.min_stock || 5,
-            status: (p.quantity <= 3 ? 'critical' : p.quantity <= (p.min_stock || 5) ? 'low' : 'normal') as 'normal' | 'low' | 'critical',
-          }));
-        setLowStock(lowStockItems.length > 0 ? lowStockItems : []);
-
-        const auditData = auditRes.data?.data || auditRes.data || [];
-        const recent: ActivityItem[] = (Array.isArray(auditData) ? auditData : []).slice(0, 6).map((a: any) => ({
-          text: `${a.action} em ${a.entity}`,
-          time: a.created_at ? new Date(a.created_at + 'Z').toLocaleString('pt-BR') : '',
-          color: (a.action === 'DELETE' ? 'rose' : a.action === 'CREATE' ? 'green' : 'gold') as 'rose' | 'green' | 'gold',
-        }));
-        setActivities(recent);
-
-        if (sugRes?.data?.data) setSuggestionStats(sugRes.data.data);
-      } catch (err: any) {
-        const errorMsg = err?.response?.data?.message || err?.message || 'Erro ao carregar dashboard.';
-        setError(errorMsg);
-      } finally {
-        setLoading(false);
-      }
-    }
-    load();
-  }, []);
-
-  const now = new Date();
-  const hour = now.getHours();
-  const greeting = hour < 12 ? 'Bom dia' : hour < 18 ? 'Boa tarde' : 'Boa noite';
-  const dateStr = now.toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
-
-  if (loading) {
-    return (
-      <div>
-        <div className="mb-8">
-          <p className="text-sm capitalize" style={{color: 'var(--nexus-muted)'}}>{dateStr}</p>
-          <h1 className="text-2xl font-bold mt-1" style={{color: 'var(--nexus-text)'}}>{greeting}, {user?.name}!</h1>
+  const StatCard = ({ title, value, change, icon: Icon, trend }: any) => (
+    <div className="bg-gradient-to-br from-brand-blackCherry/95 to-brand-graphiteWine/95 dark:from-brand-blackCherry dark:to-brand-graphiteWine rounded-2xl p-6 border border-brand-roseGold/20">
+      <div className="flex items-center justify-between mb-4">
+        <div className="p-3 bg-gradient-to-r from-brand-roseGold to-brand-champagneGold rounded-xl">
+          <Icon className="w-6 h-6 text-white" />
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 mb-8">
-          {[1, 2, 3, 4].map(i => (
-            <div key={i} className="kpi-card animate-pulse">
-              <div className="h-4 rounded w-20 mb-3" style={{background: 'var(--nexus-card-soft)'}} />
-              <div className="h-8 rounded w-28 mb-2" style={{background: 'var(--nexus-card-soft)'}} />
-              <div className="h-3 rounded w-16" style={{background: 'var(--nexus-card-soft)'}} />
-            </div>
-          ))}
+        <div className="flex items-center space-x-2">
+          <span className="text-xs text-brand-ivorySmoke/60">Últimos 7 dias</span>
+          <Cog6ToothIcon className="w-4 h-4 text-brand-ivorySmoke/40" />
         </div>
       </div>
-    );
-  }
-
-  const stats = data?.stats;
-  const charts = data?.charts;
-
-  const cards = [
-    {
-      label: 'Clientes',
-      value: stats ? formatNumber(stats.total_clients) : '0',
-      icon: <UserGroupIcon className="w-5 h-5" />,
-      color: 'blue' as const,
-      trend: { value: '+12.5%', direction: 'up' as const },
-    },
-    {
-      label: 'Vendas',
-      value: stats ? formatCurrency(stats.total_revenue) : 'R$ 0',
-      icon: <CurrencyDollarIcon className="w-5 h-5" />,
-      color: 'gold' as const,
-      trend: { value: '+8.2%', direction: 'up' as const },
-    },
-    {
-      label: 'Receitas',
-      value: data && charts ? formatCurrency(charts.salesByMonth.reduce((s, m) => s + m.value, 0)) : 'R$ 0',
-      icon: <ArrowTrendingUpIcon className="w-5 h-5" />,
-      color: 'green' as const,
-      trend: { value: '+15.3%', direction: 'up' as const },
-    },
-    {
-      label: 'Lucro',
-      value: stats ? formatCurrency(stats.balance) : 'R$ 0',
-      icon: <BanknotesIcon className="w-5 h-5" />,
-      color: 'rose' as const,
-      trend: stats && stats.balance < 0
-        ? { value: '-3.2%', direction: 'down' as const }
-        : { value: '+5.7%', direction: 'up' as const },
-    },
-  ];
-
-  const areaData = charts ? charts.salesByMonth.map(m => ({ name: m.label, Vendas: m.value })) : [];
-
-  const totalSalesRevenue = areaData.reduce((s, d) => s + d.Vendas, 0);
-
-  const donutData = charts ? charts.productsByCategory : [];
+      <h3 className="text-sm font-medium text-brand-ivorySmoke/80 mb-1">{title}</h3>
+      <div className="flex items-baseline space-x-2">
+        <span className="text-2xl font-bold text-brand-ivorySmoke">{value}</span>
+        <div className={`flex items-center text-xs ${trend === 'up' ? 'text-green-400' : 'text-red-400'}`}>
+          {trend === 'up' ? <ArrowUpIcon className="w-3 h-3 mr-1" /> : <ArrowDownIcon className="w-3 h-3 mr-1" />}
+          {change}
+        </div>
+      </div>
+    </div>
+  );
 
   return (
-    <div>
-      <div className="mb-8 flex items-center justify-between">
+    <div className="p-6 space-y-6 bg-gradient-to-br from-brand-blackCherry to-brand-graphiteWine min-h-screen">
+      {/* Header */}
+      <div className="flex items-center justify-between">
         <div>
-          <p className="text-sm capitalize" style={{color: 'var(--nexus-muted)'}}>{dateStr}</p>
-          <h1 className="text-2xl font-bold mt-1" style={{color: 'var(--nexus-text)'}}>{greeting}, {user?.name}!</h1>
+          <h1 className="text-2xl font-bold text-brand-ivorySmoke">Dashboard</h1>
+          <p className="text-brand-ivorySmoke/70">Visão geral do seu negócio</p>
         </div>
-        <button
-          onClick={() => navigate('/nexus-ai')}
-          className="hidden sm:flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium border transition-colors"
-          style={{color: 'var(--nexus-gold)', borderColor: 'var(--nexus-border)', background: 'var(--nexus-card)'}}
-        >
-          <span className="w-2 h-2 rounded-full animate-pulse" style={{background: 'var(--nexus-gold)'}} />
-          Nexus AI Online
-        </button>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 mb-8">
-        {cards.map((card) => (
-          <StatsCard
-            key={card.label}
-            label={card.label}
-            value={card.value}
-            icon={card.icon}
-            color={card.color}
-            trend={card.trend}
-          />
-        ))}
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-        <div className="chart-card lg:col-span-2">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="chart-title mb-0">Vendas dos Ultimos 7 Dias</h3>
-            {totalSalesRevenue > 0 && (
-              <span className="text-xs" style={{color: 'var(--nexus-muted-2)'}}>
-                Total: {formatCurrency(totalSalesRevenue)}
-              </span>
-            )}
+        <div className="flex items-center space-x-4">
+          {/* Search */}
+          <div className="relative">
+            <input 
+              type="text" 
+              placeholder="Buscar no sistema..." 
+              className="bg-brand-blackCherry/50 border border-brand-roseGold/30 rounded-xl px-4 py-2 pl-10 text-brand-ivorySmoke placeholder-brand-ivorySmoke/50 focus:outline-none focus:border-brand-champagneGold w-80"
+            />
+            <MagnifyingGlassIcon className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-brand-ivorySmoke/50" />
+            <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-xs text-brand-ivorySmoke/40">Ctrl + K</span>
           </div>
-          <ResponsiveContainer width="100%" height={280}>
-            <AreaChart data={areaData}>
-              <AreaChartGradient />
-              <CartesianGrid strokeDasharray="3 3" stroke={isLight ? 'rgba(216, 197, 174, 0.3)' : 'rgba(212, 149, 86, 0.08)'} />
-              <XAxis dataKey="name" fontSize={12} tick={{ fill: isLight ? LIGHT_GRAY : GRAY }} axisLine={false} tickLine={false} />
-              <YAxis fontSize={12} tick={{ fill: isLight ? LIGHT_GRAY : GRAY }} axisLine={false} tickLine={false} />
-              <Tooltip
-                contentStyle={{
-                  background: isLight ? 'rgba(255, 255, 255, 0.95)' : 'rgba(11, 13, 16, 0.95)',
-                  border: isLight ? '1px solid #D8C5AE' : '1px solid rgba(212, 149, 86, 0.3)',
-                  borderRadius: '10px',
-                  color: isLight ? '#2B2B2B' : '#f5f1ec',
-                }}
-              />
-              <Area type="monotone" dataKey="Vendas" stroke={isLight ? LIGHT_GOLD : GOLD} fill="url(#salesGrad)" strokeWidth={2} />
-            </AreaChart>
-          </ResponsiveContainer>
+          
+          {/* Notifications */}
+          <div className="relative">
+            <button className="p-2 bg-brand-blackCherry/50 border border-brand-roseGold/30 rounded-xl hover:bg-brand-roseGold/20 transition-colors">
+              <BellIcon className="w-5 h-5 text-brand-ivorySmoke" />
+              <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full text-xs flex items-center justify-center text-white">3</span>
+            </button>
+          </div>
+          
+          {/* User Menu */}
+          <div className="flex items-center space-x-3">
+            <div className="w-8 h-8 bg-gradient-to-r from-brand-roseGold to-brand-champagneGold rounded-full flex items-center justify-center text-white font-semibold">
+              {user?.name?.charAt(0) || 'U'}
+            </div>
+            <div className="text-right">
+              <p className="text-sm font-medium text-brand-ivorySmoke">{user?.name || 'Usuário'}</p>
+              <p className="text-xs text-brand-ivorySmoke/60 capitalize">{user?.role || 'Admin'}</p>
+            </div>
+            <ChevronDownIcon className="w-4 h-4 text-brand-ivorySmoke/60" />
+          </div>
+        </div>
+      </div>
+
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <StatCard 
+          title="Clientes" 
+          value="1.250" 
+          change="12,5% este mês" 
+          icon={UserGroupIcon}
+          trend="up"
+        />
+        <StatCard 
+          title="Vendas" 
+          value="R$ 84.230,50" 
+          change="18,7% este mês" 
+          icon={ShoppingCartIcon}
+          trend="up"
+        />
+        <StatCard 
+          title="Receitas" 
+          value="R$ 126.430,20" 
+          change="15,3% este mês" 
+          icon={CurrencyDollarIcon}
+          trend="up"
+        />
+        <StatCard 
+          title="Lucro Líquido" 
+          value="R$ 28.200,00" 
+          change="11,8% este mês" 
+          icon={ArrowTrendingUpIcon}
+          trend="up"
+        />
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Sales Chart */}
+        <div className="lg:col-span-2 bg-gradient-to-br from-brand-blackCherry/95 to-brand-graphiteWine/95 rounded-2xl p-6 border border-brand-roseGold/20">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-lg font-semibold text-brand-ivorySmoke">Vendas nos últimos 7 dias</h2>
+            <select className="bg-brand-blackCherry/50 border border-brand-roseGold/30 rounded-lg px-3 py-1 text-sm text-brand-ivorySmoke">
+              <option>Últimos 7 dias</option>
+            </select>
+          </div>
+          
+          {/* Simple Line Chart */}
+          <div className="h-64 flex items-end space-x-4">
+            {mockData.salesData.map((item, index) => (
+              <div key={index} className="flex-1 flex flex-col items-center">
+                <div 
+                  className="w-full bg-gradient-to-t from-brand-roseGold to-brand-champagneGold rounded-t-lg"
+                  style={{ height: `${(item.value / 40) * 100}%` }}
+                />
+                <span className="text-xs text-brand-ivorySmoke/60 mt-2">{item.name}</span>
+              </div>
+            ))}
+          </div>
         </div>
 
-        <div className="chart-card">
-          <h3 className="chart-title">Categorias</h3>
-          <ResponsiveContainer width="100%" height={280}>
-            <PieChart>
-              <Pie
-                data={donutData}
-                dataKey="value"
-                nameKey="label"
-                cx="50%"
-                cy="50%"
-                innerRadius={60}
-                outerRadius={100}
-                paddingAngle={3}
-              >
-                {donutData.map((_entry, index) => (
-                  <Cell key={index} fill={isLight ? lightChartColors[index % lightChartColors.length] : chartColors[index % chartColors.length]} />
-                ))}
-              </Pie>
-              <Tooltip
-                contentStyle={{
-                  background: isLight ? 'rgba(255, 255, 255, 0.95)' : 'rgba(11, 13, 16, 0.95)',
-                  border: isLight ? '1px solid #D8C5AE' : '1px solid rgba(212, 149, 86, 0.3)',
-                  borderRadius: '10px',
-                  color: isLight ? '#2B2B2B' : '#f5f1ec',
-                }}
-              />
-            </PieChart>
-          </ResponsiveContainer>
-          <div className="flex flex-wrap gap-3 mt-2 justify-center">
-            {donutData.map((entry, index) => (
-              <div key={entry.label} className="flex items-center gap-1.5">
-                <span className="w-2.5 h-2.5 rounded-full" style={{ background: isLight ? lightChartColors[index % lightChartColors.length] : chartColors[index % chartColors.length] }} />
-                <span className="text-xs" style={{color: 'var(--nexus-muted)'}}>{entry.label}</span>
+        {/* Category Chart */}
+        <div className="bg-gradient-to-br from-brand-blackCherry/95 to-brand-graphiteWine/95 rounded-2xl p-6 border border-brand-roseGold/20">
+          <h2 className="text-lg font-semibold text-brand-ivorySmoke mb-6">Vendas por categoria</h2>
+          
+          {/* Simple Pie Chart */}
+          <div className="space-y-4">
+            {mockData.categoryData.map((item, index) => (
+              <div key={index} className="flex items-center justify-between">
+                <div className="flex items-center space-x-3">
+                  <div 
+                    className="w-3 h-3 rounded-full" 
+                    style={{ backgroundColor: item.color }}
+                  />
+                  <span className="text-sm text-brand-ivorySmoke">{item.name}</span>
+                </div>
+                <span className="text-sm font-medium text-brand-ivorySmoke">{item.value}%</span>
               </div>
             ))}
           </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-        <div className="chart-card lg:col-span-2">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="chart-title mb-0">Estoque</h3>
-            <button
-              onClick={() => navigate('/stock')}
-              className="text-xs font-medium transition-colors"
-              style={{color: 'var(--nexus-gold)'}}
-              onMouseEnter={(e) => e.currentTarget.style.color = 'var(--nexus-text)'}
-              onMouseLeave={(e) => e.currentTarget.style.color = 'var(--nexus-gold)'}
-            >
-              Ver todos
-            </button>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Products in Stock */}
+        <div className="bg-gradient-to-br from-brand-blackCherry/95 to-brand-graphiteWine/95 rounded-2xl p-6 border border-brand-roseGold/20">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-lg font-semibold text-brand-ivorySmoke">Produtos em estoque</h2>
+            <button className="text-brand-champagneGold text-sm hover:underline">Ver todos os produtos →</button>
           </div>
-          <div className="overflow-x-auto">
-            <table className="stock-table">
-              <thead>
-                <tr>
-                  <th>Produto</th>
-                  <th className="hidden sm:table-cell">Categoria</th>
-                  <th>Qtd</th>
-                  <th>Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {lowStock.length === 0 ? (
-                  <tr>
-                    <td colSpan={4} className="text-center py-8" style={{color: 'var(--nexus-muted)'}}>
-                      Nenhum produto com estoque baixo
-                    </td>
-                  </tr>
-                ) : lowStock.map((item, i) => {
-                  const statusLabel = item.status === 'normal' ? 'Normal'
-                    : item.status === 'low' ? 'Baixo' : 'Critico';
-                  return (
-                    <tr key={item.id}>
-                      <td className="font-medium">{item.name}</td>
-                      <td className="hidden sm:table-cell" style={{color: 'var(--nexus-muted)'}}>{item.category}</td>
-                      <td>
-                        <span style={item.quantity <= item.minStock ? {color: DANGER} : {}}>
-                          {item.quantity}
-                        </span>
-                      </td>
-                      <td>
-                        <span className={`status-badge ${item.status}`}>
-                          <span className={`status-dot ${item.status}`} />
-                          {statusLabel}
-                        </span>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+          
+          <div className="space-y-4">
+            {mockData.products.map((product, index) => (
+              <div key={index} className="flex items-center justify-between p-3 bg-brand-blackCherry/30 rounded-xl">
+                <div className="flex items-center space-x-3">
+                  <span className="text-2xl">{product.image}</span>
+                  <div>
+                    <h3 className="text-sm font-medium text-brand-ivorySmoke">{product.name}</h3>
+                    <p className="text-xs text-brand-ivorySmoke/60">{product.stock} unidades</p>
+                  </div>
+                </div>
+                <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                  product.status === 'Crítico' ? 'bg-red-500/20 text-red-400' :
+                  product.status === 'Baixo' ? 'bg-yellow-500/20 text-yellow-400' :
+                  'bg-green-500/20 text-green-400'
+                }`}>
+                  {product.status}
+                </span>
+              </div>
+            ))}
           </div>
         </div>
 
-        <div className="chart-card">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="chart-title mb-0">Atividades Recentes</h3>
-            <button
-              onClick={() => navigate('/notifications')}
-              className="text-xs font-medium transition-colors"
-              style={{color: 'var(--nexus-gold)'}}
-              onMouseEnter={(e) => e.currentTarget.style.color = 'var(--nexus-text)'}
-              onMouseLeave={(e) => e.currentTarget.style.color = 'var(--nexus-gold)'}
-            >
-              Ver todas
-            </button>
+        {/* Recent Activities */}
+        <div className="bg-gradient-to-br from-brand-blackCherry/95 to-brand-graphiteWine/95 rounded-2xl p-6 border border-brand-roseGold/20">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-lg font-semibold text-brand-ivorySmoke">Atividades recentes</h2>
+            <button className="text-brand-champagneGold text-sm hover:underline">Ver todas as atividades →</button>
           </div>
-          <div>
-            {activities.length === 0 ? (
-              <p className="text-center py-8" style={{color: 'var(--nexus-muted)'}}>Nenhuma atividade recente</p>
-            ) : activities.map((act, i) => (
-              <div key={i} className="activity-item">
-                <span className={`activity-dot ${act.color}`} />
-                <div>
-                  <p className="activity-text">{act.text}</p>
-                  <p className="activity-time">{act.time}</p>
+          
+          <div className="space-y-4">
+            {mockData.activities.map((activity, index) => (
+              <div key={index} className="flex items-start space-x-3 p-3 bg-brand-blackCherry/30 rounded-xl">
+                <span className="text-xl">{activity.icon}</span>
+                <div className="flex-1">
+                  <h3 className="text-sm font-medium text-brand-ivorySmoke">{activity.description}</h3>
+                  <p className="text-xs text-brand-champagneGold">{activity.details}</p>
+                  <p className="text-xs text-brand-ivorySmoke/60 mt-1">{activity.time}</p>
                 </div>
               </div>
             ))}
@@ -378,73 +251,10 @@ export function Dashboard() {
         </div>
       </div>
 
-      <div className="card mb-6">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="section-title mb-0">Insights do Nexus AI</h3>
-          <button
-            onClick={() => navigate('/nexus-ai')}
-            className="text-xs font-medium transition-colors"
-            style={{color: 'var(--nexus-gold)'}}
-            onMouseEnter={(e) => e.currentTarget.style.color = 'var(--nexus-text)'}
-            onMouseLeave={(e) => e.currentTarget.style.color = 'var(--nexus-gold)'}
-          >
-            Ver todos
-          </button>
-        </div>
-        <NexusAIInsights compact />
+      {/* Footer */}
+      <div className="text-center py-4">
+        <p className="text-sm text-brand-ivorySmoke/60">© 2024 Nexus Business Manager. Todos os direitos reservados.</p>
       </div>
-
-      {suggestionStats.length > 0 && (
-        <div className="card mb-6">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="section-title mb-0">Sugestoes Recebidas</h3>
-            <button
-              onClick={() => navigate('/suggestions/admin')}
-              className="text-xs font-medium transition-colors"
-              style={{color: 'var(--nexus-gold)'}}
-              onMouseEnter={(e) => e.currentTarget.style.color = 'var(--nexus-text)'}
-              onMouseLeave={(e) => e.currentTarget.style.color = 'var(--nexus-gold)'}
-            >
-              Gerenciar
-            </button>
-          </div>
-          <div className="grid grid-cols-5 gap-4">
-            {suggestionStats.map((s) => {
-              const statusLabels: Record<string, string> = {
-                pending: 'Pendentes', under_review: 'Analise', approved: 'Aprovadas',
-                rejected: 'Rejeitadas', implemented: 'Implementadas',
-              };
-              const statusColors: Record<string, string> = {
-                pending: WARNING, under_review: '#60a5fa', approved: SUCCESS,
-                rejected: DANGER, implemented: GOLD,
-              };
-              return (
-                <div key={s.status} className="text-center">
-                  <p className="text-xl font-bold" style={{color: statusColors[s.status] || 'var(--nexus-text)'}}>{s.count}</p>
-                  <p className="text-xs" style={{color: 'var(--nexus-muted)'}}>{statusLabels[s.status] || s.status}</p>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      )}
-
-      {error && (
-        <div className="rounded-lg p-4 mb-6" style={{ background: 'rgba(255, 107, 107, 0.1)', border: '1px solid rgba(255, 107, 107, 0.2)' }}>
-          <div className="flex items-center justify-between">
-            <p className="text-sm" style={{color: DANGER}}>{error}</p>
-            <button
-              onClick={() => { setLoading(true); setError(''); }}
-              className="text-xs font-medium px-3 py-1.5 rounded-lg transition-colors"
-              style={{color: DANGER, background: 'rgba(216, 75, 95, 0.2)'}}
-              onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(216, 75, 95, 0.3)'}
-              onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(216, 75, 95, 0.2)'}
-            >
-              Tentar novamente
-            </button>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

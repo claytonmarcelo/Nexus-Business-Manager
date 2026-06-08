@@ -96,9 +96,9 @@ export function Appointments() {
   });
 
   const statusBadgeStyle: Record<string, ReturnType<typeof badge>> = {
-    scheduled: badge('rgba(212,149,86,0.12)', '#D49556'),
-    completed: badge('rgba(125,218,106,0.12)', '#7DDA6A'),
-    cancelled: badge('rgba(216,75,95,0.12)', '#D84B5F'),
+    scheduled: badge('rgba(var(--nexus-gold-rgb),0.12)', 'var(--nexus-gold)'),
+    completed: badge('rgba(var(--nexus-success-rgb),0.12)', '#7DDA6A'),
+    cancelled: badge('rgba(var(--nexus-danger-rgb),0.12)', 'var(--nexus-danger)'),
   };
 
   return (
@@ -133,38 +133,38 @@ export function Appointments() {
             <table style={{ width: '100%', fontSize: '0.875rem', borderCollapse: 'collapse' }}>
               <thead>
                 <tr>
-                  <th style={{ textAlign: 'left', padding: '0.75rem 1rem', fontSize: '0.75rem', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--nexus-muted-2)', borderBottom: '1px solid rgba(212,149,86,0.1)' }}>Data</th>
-                  <th style={{ textAlign: 'left', padding: '0.75rem 1rem', fontSize: '0.75rem', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--nexus-muted-2)', borderBottom: '1px solid rgba(212,149,86,0.1)' }}>Hora</th>
-                  <th style={{ textAlign: 'left', padding: '0.75rem 1rem', fontSize: '0.75rem', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--nexus-muted-2)', borderBottom: '1px solid rgba(212,149,86,0.1)' }}>Titulo</th>
-                  <th style={{ textAlign: 'left', padding: '0.75rem 1rem', fontSize: '0.75rem', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--nexus-muted-2)', borderBottom: '1px solid rgba(212,149,86,0.1)' }}>Cliente</th>
-                  <th style={{ textAlign: 'left', padding: '0.75rem 1rem', fontSize: '0.75rem', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--nexus-muted-2)', borderBottom: '1px solid rgba(212,149,86,0.1)' }}>Status</th>
-                  <th style={{ textAlign: 'right', padding: '0.75rem 1rem', fontSize: '0.75rem', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--nexus-muted-2)', borderBottom: '1px solid rgba(212,149,86,0.1)' }}>Acoes</th>
+                  <th style={{ textAlign: 'left', padding: '0.75rem 1rem', fontSize: '0.75rem', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--nexus-muted-2)', borderBottom: '1px solid rgba(var(--nexus-gold-rgb),0.1)' }}>Data</th>
+                  <th style={{ textAlign: 'left', padding: '0.75rem 1rem', fontSize: '0.75rem', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--nexus-muted-2)', borderBottom: '1px solid rgba(var(--nexus-gold-rgb),0.1)' }}>Hora</th>
+                  <th style={{ textAlign: 'left', padding: '0.75rem 1rem', fontSize: '0.75rem', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--nexus-muted-2)', borderBottom: '1px solid rgba(var(--nexus-gold-rgb),0.1)' }}>Titulo</th>
+                  <th style={{ textAlign: 'left', padding: '0.75rem 1rem', fontSize: '0.75rem', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--nexus-muted-2)', borderBottom: '1px solid rgba(var(--nexus-gold-rgb),0.1)' }}>Cliente</th>
+                  <th style={{ textAlign: 'left', padding: '0.75rem 1rem', fontSize: '0.75rem', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--nexus-muted-2)', borderBottom: '1px solid rgba(var(--nexus-gold-rgb),0.1)' }}>Status</th>
+                  <th style={{ textAlign: 'right', padding: '0.75rem 1rem', fontSize: '0.75rem', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--nexus-muted-2)', borderBottom: '1px solid rgba(var(--nexus-gold-rgb),0.1)' }}>Acoes</th>
                 </tr>
               </thead>
               <tbody>
                 {appointments.map((a) => (
                   <tr key={a.id}
-                    style={{ background: hoveredRowId === a.id ? 'rgba(212,149,86,0.08)' : 'transparent' }}
+                    style={{ background: hoveredRowId === a.id ? 'rgba(var(--nexus-gold-rgb),0.08)' : 'transparent' }}
                     onMouseEnter={() => setHoveredRowId(a.id)}
                     onMouseLeave={() => setHoveredRowId(null)}
                   >
-                    <td style={{ padding: '0.75rem 1rem', borderBottom: '1px solid rgba(212,149,86,0.05)', color: 'var(--nexus-text)', fontSize: '0.875rem' }}>{new Date(a.appointment_date).toLocaleDateString('pt-BR')}</td>
-                    <td style={{ padding: '0.75rem 1rem', borderBottom: '1px solid rgba(212,149,86,0.05)', color: 'var(--nexus-text)', fontSize: '0.875rem' }}>{a.appointment_time || '-'}</td>
-                    <td style={{ padding: '0.75rem 1rem', borderBottom: '1px solid rgba(212,149,86,0.05)', color: 'var(--nexus-text)', fontSize: '0.875rem', fontWeight: 500 }}>{a.title}</td>
-                    <td style={{ padding: '0.75rem 1rem', borderBottom: '1px solid rgba(212,149,86,0.05)', color: 'var(--nexus-text)', fontSize: '0.875rem' }}>{a.client_name || '-'}</td>
-                    <td style={{ padding: '0.75rem 1rem', borderBottom: '1px solid rgba(212,149,86,0.05)', color: 'var(--nexus-text)', fontSize: '0.875rem' }}>
+                    <td style={{ padding: '0.75rem 1rem', borderBottom: '1px solid rgba(var(--nexus-gold-rgb),0.05)', color: 'var(--nexus-text)', fontSize: '0.875rem' }}>{new Date(a.appointment_date).toLocaleDateString('pt-BR')}</td>
+                    <td style={{ padding: '0.75rem 1rem', borderBottom: '1px solid rgba(var(--nexus-gold-rgb),0.05)', color: 'var(--nexus-text)', fontSize: '0.875rem' }}>{a.appointment_time || '-'}</td>
+                    <td style={{ padding: '0.75rem 1rem', borderBottom: '1px solid rgba(var(--nexus-gold-rgb),0.05)', color: 'var(--nexus-text)', fontSize: '0.875rem', fontWeight: 500 }}>{a.title}</td>
+                    <td style={{ padding: '0.75rem 1rem', borderBottom: '1px solid rgba(var(--nexus-gold-rgb),0.05)', color: 'var(--nexus-text)', fontSize: '0.875rem' }}>{a.client_name || '-'}</td>
+                    <td style={{ padding: '0.75rem 1rem', borderBottom: '1px solid rgba(var(--nexus-gold-rgb),0.05)', color: 'var(--nexus-text)', fontSize: '0.875rem' }}>
                       <span style={statusBadgeStyle[a.status]}>{statusLabel[a.status]}</span>
                     </td>
-                    <td style={{ padding: '0.75rem 1rem', borderBottom: '1px solid rgba(212,149,86,0.05)', color: 'var(--nexus-text)', fontSize: '0.875rem', textAlign: 'right' }}>
+                    <td style={{ padding: '0.75rem 1rem', borderBottom: '1px solid rgba(var(--nexus-gold-rgb),0.05)', color: 'var(--nexus-text)', fontSize: '0.875rem', textAlign: 'right' }}>
                       <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end' }}>
                         {a.status === 'scheduled' && (
                           <>
-                            <button onClick={() => handleStatusChange(a.id, 'completed')} style={{ color: '#D49556', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 500, fontSize: '0.875rem' }}>Concluir</button>
-                            <button onClick={() => handleStatusChange(a.id, 'cancelled')} style={{ color: '#D84B5F', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 500, fontSize: '0.875rem' }}>Cancelar</button>
+                            <button onClick={() => handleStatusChange(a.id, 'completed')} style={{ color: 'var(--nexus-gold)', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 500, fontSize: '0.875rem' }}>Concluir</button>
+                            <button onClick={() => handleStatusChange(a.id, 'cancelled')} style={{ color: 'var(--nexus-danger)', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 500, fontSize: '0.875rem' }}>Cancelar</button>
                           </>
                         )}
-                        <button onClick={() => openEdit(a)} style={{ color: '#D49556', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 500, fontSize: '0.875rem' }}>Editar</button>
-                        <button onClick={() => handleDelete(a.id)} style={{ color: '#D84B5F', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 500, fontSize: '0.875rem' }}>Excluir</button>
+                        <button onClick={() => openEdit(a)} style={{ color: 'var(--nexus-gold)', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 500, fontSize: '0.875rem' }}>Editar</button>
+                        <button onClick={() => handleDelete(a.id)} style={{ color: 'var(--nexus-danger)', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 500, fontSize: '0.875rem' }}>Excluir</button>
                       </div>
                     </td>
                   </tr>
@@ -179,7 +179,7 @@ export function Appointments() {
         <div style={{ position: 'fixed', inset: 0, zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem', background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }}>
           <div style={{ background: 'var(--nexus-card-strong)', border: '1px solid var(--nexus-border)', borderRadius: '18px', padding: '2rem', width: '100%', maxWidth: '32rem' }}>
             <h2 style={{ fontSize: '1.25rem', fontWeight: 600, color: 'var(--nexus-text)', marginBottom: '1.5rem' }}>{editing ? 'Editar Agendamento' : 'Novo Agendamento'}</h2>
-            {error && <div style={{ background: 'rgba(216,75,95,0.12)', color: '#D84B5F', border: '1px solid rgba(216,75,95,0.2)', borderRadius: '10px', padding: '0.75rem 1rem', fontSize: '0.875rem', marginBottom: '1rem' }}>{error}</div>}
+            {error && <div style={{ background: 'rgba(var(--nexus-danger-rgb),0.12)', color: 'var(--nexus-danger)', border: '1px solid rgba(var(--nexus-danger-rgb),0.2)', borderRadius: '10px', padding: '0.75rem 1rem', fontSize: '0.875rem', marginBottom: '1rem' }}>{error}</div>}
             <form onSubmit={handleSubmit}>
               <div style={{ marginBottom: '1rem' }}>
                 <label style={{ color: 'var(--nexus-text)', fontSize: '0.875rem', fontWeight: 500, marginBottom: '0.375rem', display: 'block' }}>Titulo</label>

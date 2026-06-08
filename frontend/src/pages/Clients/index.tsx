@@ -177,12 +177,12 @@ export function Clients() {
             onClick={(e) => { e.stopPropagation(); openEdit(client); }}
             className="text-xs font-medium px-3 py-1.5 rounded-lg transition-all duration-200"
             style={{
-              color: '#D49556',
-              background: 'rgba(212, 149, 86, 0.1)',
-              border: '1px solid rgba(212, 149, 86, 0.2)',
+              color: 'var(--nexus-gold)',
+              background: 'rgba(var(--nexus-gold-rgb), 0.1)',
+              border: '1px solid rgba(var(--nexus-gold-rgb), 0.2)',
             }}
-            onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(212, 149, 86, 0.2)'; }}
-            onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(212, 149, 86, 0.1)'; }}
+            onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(var(--nexus-gold-rgb), 0.2)'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(var(--nexus-gold-rgb), 0.1)'; }}
           >
             Editar
           </button>
@@ -190,12 +190,12 @@ export function Clients() {
             onClick={(e) => { e.stopPropagation(); handleDelete(client.id); }}
             className="text-xs font-medium px-3 py-1.5 rounded-lg transition-all duration-200"
             style={{
-              color: '#D84B5F',
-              background: 'rgba(216, 75, 95, 0.1)',
-              border: '1px solid rgba(216, 75, 95, 0.2)',
+              color: 'var(--nexus-danger)',
+              background: 'rgba(var(--nexus-danger-rgb), 0.1)',
+              border: '1px solid rgba(var(--nexus-danger-rgb), 0.2)',
             }}
-            onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(216, 75, 95, 0.2)'; }}
-            onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(216, 75, 95, 0.1)'; }}
+            onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(var(--nexus-danger-rgb), 0.2)'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(var(--nexus-danger-rgb), 0.1)'; }}
           >
             Excluir
           </button>
@@ -275,8 +275,8 @@ export function Clients() {
                   className="text-xs font-medium px-3 py-2 rounded-lg transition-all duration-200"
                   style={{
                     color: 'var(--nexus-muted-2)',
-                    background: 'rgba(0,0,0,0.4)',
-                    border: '1px solid rgba(212,149,86,0.15)',
+                    background: 'var(--nexus-input-bg)',
+                    border: '1px solid rgba(var(--nexus-gold-rgb),0.15)',
                   }}
                 >
                   Limpar
@@ -326,7 +326,7 @@ export function Clients() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           className="fixed inset-0 z-50 flex items-center justify-center p-4"
-          style={{ background: 'rgba(5, 7, 10, 0.8)' }}
+          style={{ background: 'var(--nexus-overlay)' }}
           onClick={() => setShowModal(false)}
         >
           <motion.div
@@ -347,7 +347,7 @@ export function Clients() {
               <button
                 onClick={() => setShowModal(false)}
                 className="w-8 h-8 flex items-center justify-center rounded-lg transition-colors"
-                style={{ color: 'var(--nexus-muted-2)', background: 'rgba(0,0,0,0.3)' }}
+                style={{ color: 'var(--nexus-muted-2)', background: 'var(--nexus-card-soft)' }}
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -359,9 +359,9 @@ export function Clients() {
               <div
                 className="px-4 py-3 rounded-lg mb-4 text-sm"
                 style={{
-                  background: 'rgba(216, 75, 95, 0.12)',
-                  color: '#D84B5F',
-                  border: '1px solid rgba(216, 75, 95, 0.2)',
+                  background: 'rgba(var(--nexus-danger-rgb), 0.12)',
+                  color: 'var(--nexus-danger)',
+                  border: '1px solid rgba(var(--nexus-danger-rgb), 0.2)',
                 }}
               >
                 {error}
@@ -378,12 +378,12 @@ export function Clients() {
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   className="w-full rounded-lg px-4 py-2.5 text-sm outline-none transition-all duration-200"
                   style={{
-                    background: 'rgba(0,0,0,0.4)',
-                    border: '1px solid rgba(212,149,86,0.15)',
+                    background: 'var(--nexus-input-bg)',
+                    border: '1px solid rgba(var(--nexus-gold-rgb),0.15)',
                     color: 'var(--nexus-text)',
                   }}
-                  onFocus={(e) => e.target.style.borderColor = 'rgba(212,149,86,0.4)'}
-                  onBlur={(e) => e.target.style.borderColor = 'rgba(212,149,86,0.15)'}
+                  onFocus={(e) => e.target.style.borderColor = 'rgba(var(--nexus-gold-rgb),0.4)'}
+                  onBlur={(e) => e.target.style.borderColor = 'rgba(var(--nexus-gold-rgb),0.15)'}
                 />
               </div>
 
@@ -396,12 +396,12 @@ export function Clients() {
                     onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                     className="w-full rounded-lg px-4 py-2.5 text-sm outline-none transition-all duration-200"
                     style={{
-                      background: 'rgba(0,0,0,0.4)',
-                      border: '1px solid rgba(212,149,86,0.15)',
+                      background: 'var(--nexus-input-bg)',
+                      border: '1px solid rgba(var(--nexus-gold-rgb),0.15)',
                       color: 'var(--nexus-text)',
                     }}
-                    onFocus={(e) => e.target.style.borderColor = 'rgba(212,149,86,0.4)'}
-                    onBlur={(e) => e.target.style.borderColor = 'rgba(212,149,86,0.15)'}
+                    onFocus={(e) => e.target.style.borderColor = 'rgba(var(--nexus-gold-rgb),0.4)'}
+                    onBlur={(e) => e.target.style.borderColor = 'rgba(var(--nexus-gold-rgb),0.15)'}
                   />
                 </div>
                 <div>
@@ -412,12 +412,12 @@ export function Clients() {
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                     className="w-full rounded-lg px-4 py-2.5 text-sm outline-none transition-all duration-200"
                     style={{
-                      background: 'rgba(0,0,0,0.4)',
-                      border: '1px solid rgba(212,149,86,0.15)',
+                      background: 'var(--nexus-input-bg)',
+                      border: '1px solid rgba(var(--nexus-gold-rgb),0.15)',
                       color: 'var(--nexus-text)',
                     }}
-                    onFocus={(e) => e.target.style.borderColor = 'rgba(212,149,86,0.4)'}
-                    onBlur={(e) => e.target.style.borderColor = 'rgba(212,149,86,0.15)'}
+                    onFocus={(e) => e.target.style.borderColor = 'rgba(var(--nexus-gold-rgb),0.4)'}
+                    onBlur={(e) => e.target.style.borderColor = 'rgba(var(--nexus-gold-rgb),0.15)'}
                   />
                 </div>
               </div>
@@ -430,12 +430,12 @@ export function Clients() {
                   onChange={(e) => setFormData({ ...formData, document: e.target.value })}
                   className="w-full rounded-lg px-4 py-2.5 text-sm outline-none transition-all duration-200"
                   style={{
-                    background: 'rgba(0,0,0,0.4)',
-                    border: '1px solid rgba(212,149,86,0.15)',
+                    background: 'var(--nexus-input-bg)',
+                    border: '1px solid rgba(var(--nexus-gold-rgb),0.15)',
                     color: 'var(--nexus-text)',
                   }}
-                  onFocus={(e) => e.target.style.borderColor = 'rgba(212,149,86,0.4)'}
-                  onBlur={(e) => e.target.style.borderColor = 'rgba(212,149,86,0.15)'}
+                  onFocus={(e) => e.target.style.borderColor = 'rgba(var(--nexus-gold-rgb),0.4)'}
+                  onBlur={(e) => e.target.style.borderColor = 'rgba(var(--nexus-gold-rgb),0.15)'}
                 />
               </div>
 
@@ -447,12 +447,12 @@ export function Clients() {
                   onChange={(e) => setFormData({ ...formData, address: e.target.value })}
                   className="w-full rounded-lg px-4 py-2.5 text-sm outline-none transition-all duration-200"
                   style={{
-                    background: 'rgba(0,0,0,0.4)',
-                    border: '1px solid rgba(212,149,86,0.15)',
+                    background: 'var(--nexus-input-bg)',
+                    border: '1px solid rgba(var(--nexus-gold-rgb),0.15)',
                     color: 'var(--nexus-text)',
                   }}
-                  onFocus={(e) => e.target.style.borderColor = 'rgba(212,149,86,0.4)'}
-                  onBlur={(e) => e.target.style.borderColor = 'rgba(212,149,86,0.15)'}
+                  onFocus={(e) => e.target.style.borderColor = 'rgba(var(--nexus-gold-rgb),0.4)'}
+                  onBlur={(e) => e.target.style.borderColor = 'rgba(var(--nexus-gold-rgb),0.15)'}
                 />
               </div>
 
@@ -463,12 +463,12 @@ export function Clients() {
                   onChange={(e) => setFormData({ ...formData, status: e.target.value })}
                   className="w-full rounded-lg px-4 py-2.5 text-sm outline-none transition-all duration-200"
                   style={{
-                    background: 'rgba(0,0,0,0.4)',
-                    border: '1px solid rgba(212,149,86,0.15)',
+                    background: 'var(--nexus-input-bg)',
+                    border: '1px solid rgba(var(--nexus-gold-rgb),0.15)',
                     color: 'var(--nexus-text)',
                   }}
-                  onFocus={(e) => e.target.style.borderColor = 'rgba(212,149,86,0.4)'}
-                  onBlur={(e) => e.target.style.borderColor = 'rgba(212,149,86,0.15)'}
+                  onFocus={(e) => e.target.style.borderColor = 'rgba(var(--nexus-gold-rgb),0.4)'}
+                  onBlur={(e) => e.target.style.borderColor = 'rgba(var(--nexus-gold-rgb),0.15)'}
                 >
                   <option value="ATIVO">ATIVO</option>
                   <option value="INATIVO">INATIVO</option>
@@ -483,12 +483,12 @@ export function Clients() {
                   onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                   className="w-full rounded-lg px-4 py-2.5 text-sm outline-none transition-all duration-200 resize-none"
                   style={{
-                    background: 'rgba(0,0,0,0.4)',
-                    border: '1px solid rgba(212,149,86,0.15)',
+                    background: 'var(--nexus-input-bg)',
+                    border: '1px solid rgba(var(--nexus-gold-rgb),0.15)',
                     color: 'var(--nexus-text)',
                   }}
-                  onFocus={(e) => e.target.style.borderColor = 'rgba(212,149,86,0.4)'}
-                  onBlur={(e) => e.target.style.borderColor = 'rgba(212,149,86,0.15)'}
+                  onFocus={(e) => e.target.style.borderColor = 'rgba(var(--nexus-gold-rgb),0.4)'}
+                  onBlur={(e) => e.target.style.borderColor = 'rgba(var(--nexus-gold-rgb),0.15)'}
                 />
               </div>
 

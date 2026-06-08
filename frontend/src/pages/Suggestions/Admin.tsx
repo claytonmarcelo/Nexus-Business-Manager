@@ -14,11 +14,11 @@ const statusLabels: Record<string, string> = {
 };
 
 const statusBadgeStyles: Record<string, React.CSSProperties> = {
-  pending: { background: 'rgba(212,149,86,0.12)', color: '#D49556' },
-  under_review: { background: 'rgba(96,165,250,0.12)', color: '#60a5fa' },
-  approved: { background: 'rgba(125,218,106,0.12)', color: '#7DDA6A' },
-  rejected: { background: 'rgba(216,75,95,0.12)', color: '#D84B5F' },
-  implemented: { background: 'rgba(125,218,106,0.12)', color: '#7DDA6A' },
+  pending: { background: 'rgba(var(--nexus-gold-rgb),0.12)', color: 'var(--nexus-gold)' },
+  under_review: { background: 'rgba(var(--nexus-blue-rgb),0.12)', color: 'var(--nexus-chart-blue)' },
+  approved: { background: 'rgba(var(--nexus-success-rgb),0.12)', color: '#7DDA6A' },
+  rejected: { background: 'rgba(var(--nexus-danger-rgb),0.12)', color: 'var(--nexus-danger)' },
+  implemented: { background: 'rgba(var(--nexus-success-rgb),0.12)', color: '#7DDA6A' },
 };
 
 const categoryLabels: Record<string, string> = {
@@ -151,14 +151,14 @@ export function AdminSuggestions() {
             >
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
-                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.375rem', padding: '0.25rem 0.75rem', borderRadius: '9999px', fontSize: '0.75rem', fontWeight: 500, background: 'rgba(0,0,0,0.3)', color: 'var(--nexus-muted-2)' }}>
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.375rem', padding: '0.25rem 0.75rem', borderRadius: '9999px', fontSize: '0.75rem', fontWeight: 500, background: 'var(--nexus-card-soft)', color: 'var(--nexus-muted-2)' }}>
                     {categoryLabels[s.category] || s.category}
                   </span>
                   <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.375rem', padding: '0.25rem 0.75rem', borderRadius: '9999px', fontSize: '0.75rem', fontWeight: 500, ...(statusBadgeStyles[s.status] || statusBadgeStyles.pending) }}>
                     {statusLabels[s.status] || s.status}
                   </span>
                   {s.is_offensive === 1 && (
-                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.375rem', padding: '0.25rem 0.75rem', borderRadius: '9999px', fontSize: '0.75rem', fontWeight: 500, background: 'rgba(216,75,95,0.12)', color: '#D84B5F' }}>
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.375rem', padding: '0.25rem 0.75rem', borderRadius: '9999px', fontSize: '0.75rem', fontWeight: 500, background: 'rgba(var(--nexus-danger-rgb),0.12)', color: 'var(--nexus-danger)' }}>
                       Ofensivo
                     </span>
                   )}
@@ -170,7 +170,7 @@ export function AdminSuggestions() {
                   <span>{new Date(s.created_at).toLocaleString('pt-BR')}</span>
                 </div>
                 {s.admin_notes && (
-                  <div style={{ marginTop: '0.5rem', padding: '0.5rem', background: 'rgba(0,0,0,0.3)', borderRadius: '8px', fontSize: '0.75rem', color: 'var(--nexus-muted-2)', fontStyle: 'italic' }}>
+                  <div style={{ marginTop: '0.5rem', padding: '0.5rem', background: 'var(--nexus-card-soft)', borderRadius: '8px', fontSize: '0.75rem', color: 'var(--nexus-muted-2)', fontStyle: 'italic' }}>
                     Nota: {s.admin_notes}
                   </div>
                 )}
@@ -179,13 +179,13 @@ export function AdminSuggestions() {
                 <div style={{ display: 'flex', gap: '0.5rem', flexShrink: 0 }}>
                   <button
                     onClick={() => openEdit(s)}
-                    style={{ color: '#D49556', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 500, fontSize: '0.8125rem' }}
+                    style={{ color: 'var(--nexus-gold)', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 500, fontSize: '0.8125rem' }}
                   >
                     Editar
                   </button>
                   <button
                     onClick={() => handleDelete(s.id)}
-                    style={{ color: '#D84B5F', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 500, fontSize: '0.8125rem' }}
+                    style={{ color: 'var(--nexus-danger)', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 500, fontSize: '0.8125rem' }}
                   >
                     Excluir
                   </button>

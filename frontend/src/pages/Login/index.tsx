@@ -5,7 +5,7 @@ import { AuthLogo } from '../../components/AuthLogo';
 
 function getPasswordStrength(password: string): { level: 'none' | 'weak' | 'medium' | 'strong' | 'very_strong'; label: string; color: string; bgColor: string; width: string } {
   if (!password) return { level: 'none', label: '', color: '', bgColor: '', width: '0%' };
-  if (password.length < 8) return { level: 'weak', label: 'Fraca', color: '#ef6f7a', bgColor: '#ef6f7a', width: '25%' };
+  if (password.length < 8) return { level: 'weak', label: 'Fraca', color: 'var(--nexus-danger)', bgColor: 'var(--nexus-danger)', width: '25%' };
 
   const hasUpper = /[A-Z]/.test(password);
   const hasLower = /[a-z]/.test(password);
@@ -14,10 +14,10 @@ function getPasswordStrength(password: string): { level: 'none' | 'weak' | 'medi
 
   const score = [hasUpper, hasLower, hasNumber, hasSpecial].filter(Boolean).length;
 
-  if (score === 4) return { level: 'very_strong', label: 'Muito Forte', color: '#8fd6a3', bgColor: '#8fd6a3', width: '100%' };
-  if (score === 3) return { level: 'strong', label: 'Forte', color: '#d6a85d', bgColor: '#d6a85d', width: '75%' };
-  if (score === 2) return { level: 'medium', label: 'Media', color: '#e89aa2', bgColor: '#e89aa2', width: '50%' };
-  return { level: 'weak', label: 'Fraca', color: '#ef6f7a', bgColor: '#ef6f7a', width: '25%' };
+  if (score === 4) return { level: 'very_strong', label: 'Muito Forte', color: 'var(--nexus-success)', bgColor: 'var(--nexus-success)', width: '100%' };
+  if (score === 3) return { level: 'strong', label: 'Forte', color: 'var(--nexus-gold)', bgColor: 'var(--nexus-gold)', width: '75%' };
+  if (score === 2) return { level: 'medium', label: 'Media', color: 'var(--nexus-rose-light)', bgColor: 'var(--nexus-rose-light)', width: '50%' };
+  return { level: 'weak', label: 'Fraca', color: 'var(--nexus-danger)', bgColor: 'var(--nexus-danger)', width: '25%' };
 }
 
 export function Login() {
@@ -64,11 +64,11 @@ export function Login() {
           <p className="mb-6" style={{ color: 'var(--nexus-muted)' }}>Informe seus dados para entrar</p>
 
           {successMessage && (
-            <div className="px-4 py-3 rounded-lg mb-4 text-sm" style={{ background: 'rgba(76, 175, 80, 0.12)', color: '#4CAF50', border: '1px solid rgba(76, 175, 80, 0.2)' }}>{successMessage}</div>
+            <div className="px-4 py-3 rounded-lg mb-4 text-sm" style={{ background: 'rgba(var(--nexus-success-rgb), 0.12)', color: 'var(--nexus-success)', border: '1px solid rgba(var(--nexus-success-rgb), 0.2)' }}>{successMessage}</div>
           )}
 
           {error && (
-            <div className="px-4 py-3 rounded-lg mb-4 text-sm" style={{ background: 'rgba(216, 75, 95, 0.12)', color: '#D84B5F', border: '1px solid rgba(216, 75, 95, 0.2)' }}>{error}</div>
+            <div className="px-4 py-3 rounded-lg mb-4 text-sm" style={{ background: 'rgba(var(--nexus-danger-rgb), 0.12)', color: 'var(--nexus-danger)', border: '1px solid rgba(var(--nexus-danger-rgb), 0.2)' }}>{error}</div>
           )}
 
           <form onSubmit={handleSubmit} className="space-y-4">

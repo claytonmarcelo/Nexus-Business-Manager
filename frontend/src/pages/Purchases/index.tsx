@@ -73,9 +73,9 @@ export function Purchases() {
   }
 
   const statusBadge: Record<string, React.CSSProperties> = {
-    pending: { display: 'inline-flex', alignItems: 'center', gap: '0.375rem', padding: '0.25rem 0.75rem', borderRadius: '9999px', fontSize: '0.75rem', fontWeight: 500, background: 'rgba(212,149,86,0.12)', color: '#D49556' },
-    received: { display: 'inline-flex', alignItems: 'center', gap: '0.375rem', padding: '0.25rem 0.75rem', borderRadius: '9999px', fontSize: '0.75rem', fontWeight: 500, background: 'rgba(125,218,106,0.12)', color: '#7DDA6A' },
-    cancelled: { display: 'inline-flex', alignItems: 'center', gap: '0.375rem', padding: '0.25rem 0.75rem', borderRadius: '9999px', fontSize: '0.75rem', fontWeight: 500, background: 'rgba(216,75,95,0.12)', color: '#D84B5F' },
+    pending: { display: 'inline-flex', alignItems: 'center', gap: '0.375rem', padding: '0.25rem 0.75rem', borderRadius: '9999px', fontSize: '0.75rem', fontWeight: 500, background: 'rgba(var(--nexus-gold-rgb),0.12)', color: 'var(--nexus-gold)' },
+    received: { display: 'inline-flex', alignItems: 'center', gap: '0.375rem', padding: '0.25rem 0.75rem', borderRadius: '9999px', fontSize: '0.75rem', fontWeight: 500, background: 'rgba(var(--nexus-success-rgb),0.12)', color: '#7DDA6A' },
+    cancelled: { display: 'inline-flex', alignItems: 'center', gap: '0.375rem', padding: '0.25rem 0.75rem', borderRadius: '9999px', fontSize: '0.75rem', fontWeight: 500, background: 'rgba(var(--nexus-danger-rgb),0.12)', color: 'var(--nexus-danger)' },
   };
 
   const statusLabel: Record<string, string> = {
@@ -104,32 +104,32 @@ export function Purchases() {
             <table style={{ width: '100%', fontSize: '0.875rem' }}>
               <thead>
                 <tr>
-                  <th style={{ textAlign: 'left', padding: '0.75rem 1rem', fontSize: '0.75rem', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--nexus-muted-2)', borderBottom: '1px solid rgba(212,149,86,0.1)' }}>Data</th>
-                  <th style={{ textAlign: 'left', padding: '0.75rem 1rem', fontSize: '0.75rem', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--nexus-muted-2)', borderBottom: '1px solid rgba(212,149,86,0.1)' }}>Fornecedor</th>
-                  <th style={{ textAlign: 'left', padding: '0.75rem 1rem', fontSize: '0.75rem', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--nexus-muted-2)', borderBottom: '1px solid rgba(212,149,86,0.1)' }}>Valor Total</th>
-                  <th style={{ textAlign: 'left', padding: '0.75rem 1rem', fontSize: '0.75rem', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--nexus-muted-2)', borderBottom: '1px solid rgba(212,149,86,0.1)' }}>Status</th>
-                  <th style={{ textAlign: 'center', padding: '0.75rem 1rem', fontSize: '0.75rem', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--nexus-muted-2)', borderBottom: '1px solid rgba(212,149,86,0.1)' }}>Acoes</th>
+                  <th style={{ textAlign: 'left', padding: '0.75rem 1rem', fontSize: '0.75rem', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--nexus-muted-2)', borderBottom: '1px solid rgba(var(--nexus-gold-rgb),0.1)' }}>Data</th>
+                  <th style={{ textAlign: 'left', padding: '0.75rem 1rem', fontSize: '0.75rem', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--nexus-muted-2)', borderBottom: '1px solid rgba(var(--nexus-gold-rgb),0.1)' }}>Fornecedor</th>
+                  <th style={{ textAlign: 'left', padding: '0.75rem 1rem', fontSize: '0.75rem', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--nexus-muted-2)', borderBottom: '1px solid rgba(var(--nexus-gold-rgb),0.1)' }}>Valor Total</th>
+                  <th style={{ textAlign: 'left', padding: '0.75rem 1rem', fontSize: '0.75rem', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--nexus-muted-2)', borderBottom: '1px solid rgba(var(--nexus-gold-rgb),0.1)' }}>Status</th>
+                  <th style={{ textAlign: 'center', padding: '0.75rem 1rem', fontSize: '0.75rem', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--nexus-muted-2)', borderBottom: '1px solid rgba(var(--nexus-gold-rgb),0.1)' }}>Acoes</th>
                 </tr>
               </thead>
               <tbody>
                 {purchases.map((p) => (
                   <tr key={p.id}
-                    onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'rgba(212,149,86,0.04)'; }}
+                    onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'rgba(var(--nexus-gold-rgb),0.04)'; }}
                     onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = ''; }}
                   >
-                    <td style={{ padding: '0.75rem 1rem', borderBottom: '1px solid rgba(212,149,86,0.05)', color: 'var(--nexus-text)', fontSize: '0.875rem' }}>{new Date(p.created_at).toLocaleDateString('pt-BR')}</td>
-                    <td style={{ padding: '0.75rem 1rem', borderBottom: '1px solid rgba(212,149,86,0.05)', color: 'var(--nexus-text)', fontSize: '0.875rem', fontWeight: 500 }}>{p.supplier_name || '-'}</td>
-                    <td style={{ padding: '0.75rem 1rem', borderBottom: '1px solid rgba(212,149,86,0.05)', color: 'var(--nexus-text)', fontSize: '0.875rem', fontWeight: 500 }}>
+                    <td style={{ padding: '0.75rem 1rem', borderBottom: '1px solid rgba(var(--nexus-gold-rgb),0.05)', color: 'var(--nexus-text)', fontSize: '0.875rem' }}>{new Date(p.created_at).toLocaleDateString('pt-BR')}</td>
+                    <td style={{ padding: '0.75rem 1rem', borderBottom: '1px solid rgba(var(--nexus-gold-rgb),0.05)', color: 'var(--nexus-text)', fontSize: '0.875rem', fontWeight: 500 }}>{p.supplier_name || '-'}</td>
+                    <td style={{ padding: '0.75rem 1rem', borderBottom: '1px solid rgba(var(--nexus-gold-rgb),0.05)', color: 'var(--nexus-text)', fontSize: '0.875rem', fontWeight: 500 }}>
                       {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(p.total_value)}
                     </td>
-                    <td style={{ padding: '0.75rem 1rem', borderBottom: '1px solid rgba(212,149,86,0.05)', color: 'var(--nexus-text)', fontSize: '0.875rem' }}>
+                    <td style={{ padding: '0.75rem 1rem', borderBottom: '1px solid rgba(var(--nexus-gold-rgb),0.05)', color: 'var(--nexus-text)', fontSize: '0.875rem' }}>
                       <span style={statusBadge[p.status] || { display: 'inline-flex', alignItems: 'center', gap: '0.375rem', padding: '0.25rem 0.75rem', borderRadius: '9999px', fontSize: '0.75rem', fontWeight: 500, background: 'rgba(128,128,128,0.12)', color: '#999' }}>{statusLabel[p.status] || p.status}</span>
                     </td>
-                    <td style={{ padding: '0.75rem 1rem', borderBottom: '1px solid rgba(212,149,86,0.05)', color: 'var(--nexus-text)', fontSize: '0.875rem', textAlign: 'center' }}>
+                    <td style={{ padding: '0.75rem 1rem', borderBottom: '1px solid rgba(var(--nexus-gold-rgb),0.05)', color: 'var(--nexus-text)', fontSize: '0.875rem', textAlign: 'center' }}>
                       {p.status === 'pending' && (
                         <button onClick={() => handleReceive(p.id)} style={{ color: '#7DDA6A', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 500 }}>Receber</button>
                       )}
-                      <button onClick={() => handleDelete(p.id)} style={{ color: '#D84B5F', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 500, marginLeft: '0.75rem' }}>Excluir</button>
+                      <button onClick={() => handleDelete(p.id)} style={{ color: 'var(--nexus-danger)', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 500, marginLeft: '0.75rem' }}>Excluir</button>
                     </td>
                   </tr>
                 ))}
@@ -143,7 +143,7 @@ export function Purchases() {
         <div style={{ position: 'fixed', inset: 0, zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem', background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }}>
           <div style={{ background: 'var(--nexus-card-strong)', border: '1px solid var(--nexus-border)', borderRadius: '18px', padding: '2rem', width: '100%', maxWidth: '32rem', maxHeight: '90vh', overflow: 'auto' }}>
             <h2 style={{ fontSize: '1.25rem', fontWeight: 600, color: 'var(--nexus-text)', marginBottom: '1.5rem' }}>Nova Compra</h2>
-            {error && <div style={{ background: 'rgba(216,75,95,0.12)', color: '#D84B5F', border: '1px solid rgba(216,75,95,0.2)', borderRadius: '10px', padding: '0.75rem 1rem', fontSize: '0.875rem', marginBottom: '1rem' }}>{error}</div>}
+            {error && <div style={{ background: 'rgba(var(--nexus-danger-rgb),0.12)', color: 'var(--nexus-danger)', border: '1px solid rgba(var(--nexus-danger-rgb),0.2)', borderRadius: '10px', padding: '0.75rem 1rem', fontSize: '0.875rem', marginBottom: '1rem' }}>{error}</div>}
             <form onSubmit={handleSubmit}>
               <div style={{ marginBottom: '1rem' }}>
                 <label style={{ color: 'var(--nexus-text)', fontSize: '0.875rem', fontWeight: 500, marginBottom: '0.375rem', display: 'block' }}>Fornecedor</label>
@@ -168,11 +168,11 @@ export function Purchases() {
                     <input type="number" step="0.01" min="0" style={{ width: '7rem', padding: '0.625rem 1rem', background: 'rgba(0,0,0,0.5)', color: 'var(--nexus-text)', border: '1px solid var(--nexus-border)', borderRadius: '10px', fontSize: '0.875rem' }} placeholder="Preco" value={item.unit_price}
                       onChange={(e) => updateItem(index, 'unit_price', Number(e.target.value))} required />
                     {formData.items.length > 1 && (
-                      <button type="button" onClick={() => removeItem(index)} style={{ color: '#D84B5F', background: 'none', border: 'none', cursor: 'pointer', padding: '0 0.5rem' }}>X</button>
+                      <button type="button" onClick={() => removeItem(index)} style={{ color: 'var(--nexus-danger)', background: 'none', border: 'none', cursor: 'pointer', padding: '0 0.5rem' }}>X</button>
                     )}
                   </div>
                 ))}
-                <button type="button" onClick={addItem} style={{ color: '#D49556', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 500, fontSize: '0.875rem' }}>+ Adicionar item</button>
+                <button type="button" onClick={addItem} style={{ color: 'var(--nexus-gold)', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 500, fontSize: '0.875rem' }}>+ Adicionar item</button>
               </div>
 
               <div style={{ marginBottom: '1rem' }}>

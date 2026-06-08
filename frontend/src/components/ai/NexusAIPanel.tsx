@@ -110,7 +110,7 @@ export function NexusAIPanel() {
             )}
 
             {analysis.recommendedActions && analysis.recommendedActions.length > 0 && (
-              <div style={{ padding: '0.75rem', borderRadius: '0.5rem', background: 'rgba(96,165,250,0.1)', border: '1px solid rgba(96,165,250,0.2)' }}>
+              <div style={{ padding: '0.75rem', borderRadius: '0.5rem', background: 'rgba(var(--nexus-blue-rgb),0.1)', border: '1px solid rgba(var(--nexus-blue-rgb),0.2)' }}>
                 <p style={{ fontWeight: 500, color: 'var(--nexus-muted)', marginBottom: '0.25rem' }}>Acoes Recomendadas</p>
                 <ul style={{ listStyle: 'disc', listStylePosition: 'inside', color: 'var(--nexus-muted-2)', display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
                   {analysis.recommendedActions.map((a, i) => <li key={i}>{a}</li>)}

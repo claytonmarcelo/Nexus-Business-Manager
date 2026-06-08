@@ -80,10 +80,10 @@ export function Users() {
 
   function getRoleBadgeStyle(role: string) {
     const styles: Record<string, React.CSSProperties> = {
-      admin: { display: 'inline-flex', alignItems: 'center', gap: '0.375rem', padding: '0.25rem 0.75rem', borderRadius: '9999px', fontSize: '0.75rem', fontWeight: 500, background: 'rgba(216, 75, 95, 0.12)', color: '#D84B5F', border: '1px solid rgba(216, 75, 95, 0.2)' },
-      manager: { display: 'inline-flex', alignItems: 'center', gap: '0.375rem', padding: '0.25rem 0.75rem', borderRadius: '9999px', fontSize: '0.75rem', fontWeight: 500, background: 'rgba(212, 149, 86, 0.12)', color: '#D49556', border: '1px solid rgba(212, 149, 86, 0.2)' },
-      operator: { display: 'inline-flex', alignItems: 'center', gap: '0.375rem', padding: '0.25rem 0.75rem', borderRadius: '9999px', fontSize: '0.75rem', fontWeight: 500, background: 'rgba(96, 165, 250, 0.12)', color: '#60a5fa', border: '1px solid rgba(96, 165, 250, 0.2)' },
-      viewer: { display: 'inline-flex', alignItems: 'center', gap: '0.375rem', padding: '0.25rem 0.75rem', borderRadius: '9999px', fontSize: '0.75rem', fontWeight: 500, background: 'rgba(168, 168, 168, 0.12)', color: '#A8A8A8', border: '1px solid rgba(168, 168, 168, 0.2)' },
+      admin: { display: 'inline-flex', alignItems: 'center', gap: '0.375rem', padding: '0.25rem 0.75rem', borderRadius: '9999px', fontSize: '0.75rem', fontWeight: 500, background: 'rgba(var(--nexus-danger-rgb), 0.12)', color: 'var(--nexus-danger)', border: '1px solid rgba(var(--nexus-danger-rgb), 0.2)' },
+      manager: { display: 'inline-flex', alignItems: 'center', gap: '0.375rem', padding: '0.25rem 0.75rem', borderRadius: '9999px', fontSize: '0.75rem', fontWeight: 500, background: 'rgba(var(--nexus-gold-rgb), 0.12)', color: 'var(--nexus-gold)', border: '1px solid rgba(var(--nexus-gold-rgb), 0.2)' },
+      operator: { display: 'inline-flex', alignItems: 'center', gap: '0.375rem', padding: '0.25rem 0.75rem', borderRadius: '9999px', fontSize: '0.75rem', fontWeight: 500, background: 'rgba(var(--nexus-blue-rgb), 0.12)', color: 'var(--nexus-chart-blue)', border: '1px solid rgba(var(--nexus-blue-rgb), 0.2)' },
+      viewer: { display: 'inline-flex', alignItems: 'center', gap: '0.375rem', padding: '0.25rem 0.75rem', borderRadius: '9999px', fontSize: '0.75rem', fontWeight: 500, background: 'rgba(var(--nexus-muted-rgb), 0.12)', color: 'var(--nexus-muted)', border: '1px solid rgba(var(--nexus-muted-rgb), 0.2)' },
     };
     return styles[role] || styles.viewer;
   }
@@ -135,12 +135,12 @@ export function Users() {
             onClick={() => openEdit(user)}
             className="text-xs font-medium px-3 py-1.5 rounded-lg transition-all duration-200"
             style={{
-              color: '#D49556',
-              background: 'rgba(212, 149, 86, 0.1)',
-              border: '1px solid rgba(212, 149, 86, 0.2)',
+              color: 'var(--nexus-gold)',
+              background: 'rgba(var(--nexus-gold-rgb), 0.1)',
+              border: '1px solid rgba(var(--nexus-gold-rgb), 0.2)',
             }}
-            onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(212, 149, 86, 0.2)'; }}
-            onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(212, 149, 86, 0.1)'; }}
+            onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(var(--nexus-gold-rgb), 0.2)'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(var(--nexus-gold-rgb), 0.1)'; }}
           >
             Editar
           </button>
@@ -148,12 +148,12 @@ export function Users() {
             onClick={() => handleToggleActive(user)}
             className="text-xs font-medium px-3 py-1.5 rounded-lg transition-all duration-200"
             style={{
-              color: user.active ? '#D84B5F' : '#22C55E',
-              background: user.active ? 'rgba(216, 75, 95, 0.1)' : 'rgba(34, 197, 94, 0.1)',
-              border: user.active ? '1px solid rgba(216, 75, 95, 0.2)' : '1px solid rgba(34, 197, 94, 0.2)',
+              color: user.active ? 'var(--nexus-danger)' : '#22C55E',
+              background: user.active ? 'rgba(var(--nexus-danger-rgb), 0.1)' : 'rgba(var(--nexus-success-rgb), 0.1)',
+              border: user.active ? '1px solid rgba(var(--nexus-danger-rgb), 0.2)' : '1px solid rgba(var(--nexus-success-rgb), 0.2)',
             }}
-            onMouseEnter={(e) => { e.currentTarget.style.background = user.active ? 'rgba(216, 75, 95, 0.2)' : 'rgba(34, 197, 94, 0.2)'; }}
-            onMouseLeave={(e) => { e.currentTarget.style.background = user.active ? 'rgba(216, 75, 95, 0.1)' : 'rgba(34, 197, 94, 0.1)'; }}
+            onMouseEnter={(e) => { e.currentTarget.style.background = user.active ? 'rgba(var(--nexus-danger-rgb), 0.2)' : 'rgba(var(--nexus-success-rgb), 0.2)'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.background = user.active ? 'rgba(var(--nexus-danger-rgb), 0.1)' : 'rgba(var(--nexus-success-rgb), 0.1)'; }}
           >
             {user.active ? 'Desativar' : 'Ativar'}
           </button>
@@ -199,7 +199,7 @@ export function Users() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           className="fixed inset-0 z-50 flex items-center justify-center p-4"
-          style={{ background: 'rgba(5, 7, 10, 0.8)' }}
+          style={{ background: 'var(--nexus-overlay)' }}
           onClick={() => setShowModal(false)}
         >
           <motion.div
@@ -217,7 +217,7 @@ export function Users() {
               <button
                 onClick={() => setShowModal(false)}
                 className="w-8 h-8 flex items-center justify-center rounded-lg transition-colors"
-                style={{ color: 'var(--nexus-muted-2)', background: 'rgba(0,0,0,0.3)' }}
+                style={{ color: 'var(--nexus-muted-2)', background: 'var(--nexus-card-soft)' }}
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -226,7 +226,7 @@ export function Users() {
             </div>
 
             {error && (
-              <div className="px-4 py-3 rounded-lg mb-4 text-sm" style={{ background: 'rgba(216, 75, 95, 0.12)', color: '#D84B5F', border: '1px solid rgba(216, 75, 95, 0.2)' }}>
+              <div className="px-4 py-3 rounded-lg mb-4 text-sm" style={{ background: 'rgba(var(--nexus-danger-rgb), 0.12)', color: 'var(--nexus-danger)', border: '1px solid rgba(var(--nexus-danger-rgb), 0.2)' }}>
                 {error}
               </div>
             )}
@@ -239,9 +239,9 @@ export function Users() {
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   className="w-full rounded-lg px-4 py-2.5 text-sm outline-none transition-all duration-200"
-                  style={{ background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(212,149,86,0.15)', color: 'var(--nexus-text)' }}
-                  onFocus={(e) => e.target.style.borderColor = 'rgba(212,149,86,0.4)'}
-                  onBlur={(e) => e.target.style.borderColor = 'rgba(212,149,86,0.15)'}
+                  style={{ background: 'var(--nexus-input-bg)', border: '1px solid rgba(var(--nexus-gold-rgb),0.15)', color: 'var(--nexus-text)' }}
+                  onFocus={(e) => e.target.style.borderColor = 'rgba(var(--nexus-gold-rgb),0.4)'}
+                  onBlur={(e) => e.target.style.borderColor = 'rgba(var(--nexus-gold-rgb),0.15)'}
                 />
               </div>
               <div>
@@ -251,9 +251,9 @@ export function Users() {
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                   className="w-full rounded-lg px-4 py-2.5 text-sm outline-none transition-all duration-200"
-                  style={{ background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(212,149,86,0.15)', color: 'var(--nexus-text)' }}
-                  onFocus={(e) => e.target.style.borderColor = 'rgba(212,149,86,0.4)'}
-                  onBlur={(e) => e.target.style.borderColor = 'rgba(212,149,86,0.15)'}
+                  style={{ background: 'var(--nexus-input-bg)', border: '1px solid rgba(var(--nexus-gold-rgb),0.15)', color: 'var(--nexus-text)' }}
+                  onFocus={(e) => e.target.style.borderColor = 'rgba(var(--nexus-gold-rgb),0.4)'}
+                  onBlur={(e) => e.target.style.borderColor = 'rgba(var(--nexus-gold-rgb),0.15)'}
                 />
               </div>
               <div>
@@ -266,9 +266,9 @@ export function Users() {
                   value={formData.password}
                   onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                   className="w-full rounded-lg px-4 py-2.5 text-sm outline-none transition-all duration-200"
-                  style={{ background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(212,149,86,0.15)', color: 'var(--nexus-text)' }}
-                  onFocus={(e) => e.target.style.borderColor = 'rgba(212,149,86,0.4)'}
-                  onBlur={(e) => e.target.style.borderColor = 'rgba(212,149,86,0.15)'}
+                  style={{ background: 'var(--nexus-input-bg)', border: '1px solid rgba(var(--nexus-gold-rgb),0.15)', color: 'var(--nexus-text)' }}
+                  onFocus={(e) => e.target.style.borderColor = 'rgba(var(--nexus-gold-rgb),0.4)'}
+                  onBlur={(e) => e.target.style.borderColor = 'rgba(var(--nexus-gold-rgb),0.15)'}
                 />
               </div>
               <div>
@@ -278,9 +278,9 @@ export function Users() {
                   value={formData.role}
                   onChange={(e) => setFormData({ ...formData, role: e.target.value as User['role'] })}
                   className="w-full rounded-lg px-4 py-2.5 text-sm outline-none transition-all duration-200"
-                  style={{ background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(212,149,86,0.15)', color: 'var(--nexus-text)' }}
-                  onFocus={(e) => e.target.style.borderColor = 'rgba(212,149,86,0.4)'}
-                  onBlur={(e) => e.target.style.borderColor = 'rgba(212,149,86,0.15)'}
+                  style={{ background: 'var(--nexus-input-bg)', border: '1px solid rgba(var(--nexus-gold-rgb),0.15)', color: 'var(--nexus-text)' }}
+                  onFocus={(e) => e.target.style.borderColor = 'rgba(var(--nexus-gold-rgb),0.4)'}
+                  onBlur={(e) => e.target.style.borderColor = 'rgba(var(--nexus-gold-rgb),0.15)'}
                 >
                   <option value="admin">Administrador</option>
                   <option value="manager">Gerente</option>

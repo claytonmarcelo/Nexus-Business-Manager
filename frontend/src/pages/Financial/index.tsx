@@ -201,16 +201,16 @@ export function Financial() {
       <motion.div variants={itemVariants} className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
         {([
           { label: 'Receitas', value: cashFlow.total_revenue, color: 'green', bars: '#7DDA6A' },
-          { label: 'Despesas', value: cashFlow.total_expense, color: 'rose', bars: '#D84B5F' },
-          { label: 'Saldo', value: cashFlow.balance, color: 'gold', bars: '#D49556' },
-          { label: 'Saldo Previsto', value: cashFlow.balance * 1.1, color: 'blue', bars: '#60a5fa' },
+          { label: 'Despesas', value: cashFlow.total_expense, color: 'rose', bars: 'var(--nexus-danger)' },
+          { label: 'Saldo', value: cashFlow.balance, color: 'gold', bars: 'var(--nexus-gold)' },
+          { label: 'Saldo Previsto', value: cashFlow.balance * 1.1, color: 'blue', bars: 'var(--nexus-chart-blue)' },
         ] as const).map((card, i) => (
           <motion.div
             key={card.label}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3, delay: i * 0.08 }}
-            whileHover={{ y: -3, boxShadow: `0 0 30px rgba(212, 149, 86, 0.1)` }}
+            whileHover={{ y: -3, boxShadow: `0 0 30px rgba(var(--nexus-gold-rgb), 0.1)` }}
             className="relative rounded-xl p-5 overflow-hidden"
             style={{ background: 'var(--nexus-card)', border: '1px solid var(--nexus-border)' }}
           >
@@ -332,7 +332,7 @@ export function Financial() {
                 <div
                   key={item.id}
                   className="flex items-center justify-between p-3 rounded-lg"
-                  style={{ background: 'rgba(125, 218, 106, 0.06)' }}
+                  style={{ background: 'rgba(var(--nexus-success-rgb), 0.06)' }}
                 >
                   <div>
                     <p className="text-sm font-medium" style={{ color: 'var(--nexus-text)' }}>{item.cliente}</p>
@@ -358,7 +358,7 @@ export function Financial() {
                 <div
                   key={item.id}
                   className="flex items-center justify-between p-3 rounded-lg"
-                  style={{ background: 'rgba(216, 75, 95, 0.06)' }}
+                  style={{ background: 'rgba(var(--nexus-danger-rgb), 0.06)' }}
                 >
                   <div>
                     <p className="text-sm font-medium" style={{ color: 'var(--nexus-text)' }}>{item.fornecedor}</p>
@@ -404,7 +404,7 @@ export function Financial() {
               {error && (
                 <div
                   className="text-sm px-4 py-3 rounded-lg mb-4"
-                  style={{ background: 'rgba(216, 75, 95, 0.1)', color: 'var(--nexus-danger)' }}
+                  style={{ background: 'rgba(var(--nexus-danger-rgb), 0.1)', color: 'var(--nexus-danger)' }}
                 >
                   {error}
                 </div>
@@ -418,9 +418,9 @@ export function Financial() {
                     style={{
                       height: '52px',
                       padding: '0 16px',
-                      background: 'rgba(0, 0, 0, 0.4)',
+                      background: 'var(--nexus-input-bg)',
                       color: 'var(--nexus-text)',
-                      border: '1px solid rgba(212, 149, 86, 0.2)',
+                      border: '1px solid rgba(var(--nexus-gold-rgb), 0.2)',
                       outline: 'none',
                     }}
                     value={formData.type}
@@ -438,9 +438,9 @@ export function Financial() {
                     style={{
                       height: '52px',
                       padding: '0 16px',
-                      background: 'rgba(0, 0, 0, 0.4)',
+                      background: 'var(--nexus-input-bg)',
                       color: 'var(--nexus-text)',
-                      border: '1px solid rgba(212, 149, 86, 0.2)',
+                      border: '1px solid rgba(var(--nexus-gold-rgb), 0.2)',
                       outline: 'none',
                     }}
                     required
@@ -462,9 +462,9 @@ export function Financial() {
                     style={{
                       height: '52px',
                       padding: '0 16px',
-                      background: 'rgba(0, 0, 0, 0.4)',
+                      background: 'var(--nexus-input-bg)',
                       color: 'var(--nexus-text)',
-                      border: '1px solid rgba(212, 149, 86, 0.2)',
+                      border: '1px solid rgba(var(--nexus-gold-rgb), 0.2)',
                       outline: 'none',
                     }}
                     required
@@ -484,9 +484,9 @@ export function Financial() {
                       style={{
                         height: '52px',
                         padding: '0 16px',
-                        background: 'rgba(0, 0, 0, 0.4)',
+                        background: 'var(--nexus-input-bg)',
                         color: 'var(--nexus-text)',
-                        border: '1px solid rgba(212, 149, 86, 0.2)',
+                        border: '1px solid rgba(var(--nexus-gold-rgb), 0.2)',
                         outline: 'none',
                       }}
                       required
@@ -502,9 +502,9 @@ export function Financial() {
                       style={{
                         height: '52px',
                         padding: '0 16px',
-                        background: 'rgba(0, 0, 0, 0.4)',
+                        background: 'var(--nexus-input-bg)',
                         color: 'var(--nexus-text)',
-                        border: '1px solid rgba(212, 149, 86, 0.2)',
+                        border: '1px solid rgba(var(--nexus-gold-rgb), 0.2)',
                         outline: 'none',
                       }}
                       required

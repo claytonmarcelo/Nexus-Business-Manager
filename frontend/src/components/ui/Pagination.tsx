@@ -30,7 +30,7 @@ export function Pagination({ page, totalPages, onPageChange }: PaginationProps) 
           onClick={() => onPageChange(page - 1)}
           disabled={page <= 1}
           className="w-9 h-9 flex items-center justify-center rounded-lg transition-colors disabled:opacity-30"
-          style={{ color: 'var(--nexus-muted)', border: '1px solid rgba(212,149,86,0.15)' }}
+          style={{ color: 'var(--nexus-muted)', border: '1px solid rgba(var(--nexus-gold-rgb),0.15)' }}
         >
           <ChevronLeftIcon className="w-4 h-4" />
         </button>
@@ -43,9 +43,9 @@ export function Pagination({ page, totalPages, onPageChange }: PaginationProps) 
               onClick={() => onPageChange(p)}
               className="w-9 h-9 flex items-center justify-center rounded-lg text-xs font-medium transition-all duration-200"
               style={{
-                background: p === page ? 'rgba(212, 149, 86, 0.15)' : 'transparent',
-                color: p === page ? '#D49556' : 'var(--nexus-muted)',
-                border: p === page ? '1px solid rgba(212, 149, 86, 0.3)' : '1px solid transparent',
+                background: p === page ? 'rgba(var(--nexus-gold-rgb), 0.15)' : 'transparent',
+                color: p === page ? 'var(--nexus-gold)' : 'var(--nexus-muted)',
+                border: p === page ? '1px solid rgba(var(--nexus-gold-rgb), 0.3)' : '1px solid transparent',
               }}
             >
               {p}
@@ -56,7 +56,7 @@ export function Pagination({ page, totalPages, onPageChange }: PaginationProps) 
           onClick={() => onPageChange(page + 1)}
           disabled={page >= totalPages}
           className="w-9 h-9 flex items-center justify-center rounded-lg transition-colors disabled:opacity-30"
-          style={{ color: 'var(--nexus-muted)', border: '1px solid rgba(212,149,86,0.15)' }}
+          style={{ color: 'var(--nexus-muted)', border: '1px solid rgba(var(--nexus-gold-rgb),0.15)' }}
         >
           <ChevronRightIcon className="w-4 h-4" />
         </button>

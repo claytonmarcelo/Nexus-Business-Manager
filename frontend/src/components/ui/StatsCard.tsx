@@ -10,10 +10,10 @@ interface StatsCardProps {
 }
 
 const colorMap = {
-  gold: { bar: '#D49556', iconBg: 'rgba(212, 149, 86, 0.12)', iconColor: '#D49556' },
-  rose: { bar: '#C65A71', iconBg: 'rgba(198, 90, 113, 0.12)', iconColor: '#C65A71' },
-  green: { bar: '#7DDA6A', iconBg: 'rgba(125, 218, 106, 0.12)', iconColor: '#7DDA6A' },
-  blue: { bar: '#60a5fa', iconBg: 'rgba(96, 165, 250, 0.12)', iconColor: '#60a5fa' },
+  gold: { bar: 'var(--nexus-gold)', iconBg: 'rgba(var(--nexus-gold-rgb), 0.12)', iconColor: 'var(--nexus-gold)' },
+  rose: { bar: '#C65A71', iconBg: 'rgba(var(--nexus-rose-rgb), 0.12)', iconColor: '#C65A71' },
+  green: { bar: '#7DDA6A', iconBg: 'rgba(var(--nexus-success-rgb), 0.12)', iconColor: '#7DDA6A' },
+  blue: { bar: 'var(--nexus-chart-blue)', iconBg: 'rgba(var(--nexus-blue-rgb), 0.12)', iconColor: 'var(--nexus-chart-blue)' },
   purple: { bar: '#a78bfa', iconBg: 'rgba(167, 139, 250, 0.12)', iconColor: '#a78bfa' },
 };
 
@@ -25,7 +25,7 @@ export function StatsCard({ label, value, icon, color, trend, subtitle }: StatsC
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
-      whileHover={{ y: -3, boxShadow: `0 0 30px rgba(212, 149, 86, 0.1)` }}
+      whileHover={{ y: -3, boxShadow: `0 0 30px rgba(var(--nexus-gold-rgb), 0.1)` }}
       className="relative rounded-xl p-5 overflow-hidden"
       style={{
         background: 'var(--nexus-card)',
@@ -54,7 +54,7 @@ export function StatsCard({ label, value, icon, color, trend, subtitle }: StatsC
         {trend && (
           <span
             className="text-xs font-medium"
-            style={{ color: trend.direction === 'up' ? '#7DDA6A' : '#D84B5F' }}
+            style={{ color: trend.direction === 'up' ? '#7DDA6A' : 'var(--nexus-danger)' }}
           >
             {trend.direction === 'up' ? '\u2191' : '\u2193'} {trend.value}
           </span>

@@ -86,7 +86,7 @@ export function NexusAIChat({ module, page, onClose }: Props) {
 
         {loading && (
           <div style={{ display: 'flex', gap: '0.75rem' }}>
-            <div style={{ width: '2rem', height: '2rem', borderRadius: '9999px', background: 'rgba(198, 90, 113, 0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <div style={{ width: '2rem', height: '2rem', borderRadius: '9999px', background: 'rgba(var(--nexus-rose-rgb), 0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <span style={{ width: '0.75rem', height: '0.75rem', border: '2px solid var(--nexus-rose)', borderTopColor: 'transparent', borderRadius: '9999px', animation: 'spin 1s linear infinite' }} />
             </div>
             <div style={{ borderRadius: '1rem', padding: '0.625rem 1rem', background: 'var(--nexus-card-strong)', border: '1px solid var(--nexus-border)' }}>

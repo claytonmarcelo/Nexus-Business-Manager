@@ -22,15 +22,15 @@ const statusLabels: Record<string, string> = {
 };
 
 const statusColors: Record<string, string> = {
-  new: '#60a5fa', contacted: '#D89A28', qualified: '#a78bfa',
-  proposal: '#f97316', negotiation: '#C65A71', won: '#7DDA6A', lost: '#D84B5F',
+  new: 'var(--nexus-chart-blue)', contacted: '#D89A28', qualified: '#a78bfa',
+  proposal: '#f97316', negotiation: '#C65A71', won: '#7DDA6A', lost: 'var(--nexus-danger)',
 };
 
 const statusBgColors: Record<string, string> = {
-  new: 'rgba(96, 165, 250, 0.12)', contacted: 'rgba(216, 154, 40, 0.12)',
+  new: 'rgba(var(--nexus-blue-rgb), 0.12)', contacted: 'rgba(216, 154, 40, 0.12)',
   qualified: 'rgba(167, 139, 250, 0.12)', proposal: 'rgba(249, 115, 22, 0.12)',
-  negotiation: 'rgba(198, 90, 113, 0.12)', won: 'rgba(125, 218, 106, 0.12)',
-  lost: 'rgba(216, 75, 95, 0.12)',
+  negotiation: 'rgba(var(--nexus-rose-rgb), 0.12)', won: 'rgba(var(--nexus-success-rgb), 0.12)',
+  lost: 'rgba(var(--nexus-danger-rgb), 0.12)',
 };
 
 export function CRM() {
@@ -121,13 +121,13 @@ export function CRM() {
           <button key={opt.value} onClick={() => setStatusFilter(opt.value)}
             style={{
               padding: '0.375rem 0.75rem', fontSize: '0.75rem', borderRadius: '9999px', border: '1px solid',
-              background: statusFilter === opt.value ? 'rgba(212, 149, 86, 0.2)' : 'transparent',
-              borderColor: statusFilter === opt.value ? 'rgba(212, 149, 86, 0.4)' : 'var(--nexus-border)',
+              background: statusFilter === opt.value ? 'rgba(var(--nexus-gold-rgb), 0.2)' : 'transparent',
+              borderColor: statusFilter === opt.value ? 'rgba(var(--nexus-gold-rgb), 0.4)' : 'var(--nexus-border)',
               color: statusFilter === opt.value ? 'var(--nexus-gold)' : 'var(--nexus-muted-2)',
               cursor: 'pointer', transition: 'all 0.2s',
             }}
-            onMouseEnter={(e) => e.currentTarget.style.borderColor = 'rgba(212, 149, 86, 0.5)'}
-            onMouseLeave={(e) => e.currentTarget.style.borderColor = statusFilter === opt.value ? 'rgba(212, 149, 86, 0.4)' : 'var(--nexus-border)'}
+            onMouseEnter={(e) => e.currentTarget.style.borderColor = 'rgba(var(--nexus-gold-rgb), 0.5)'}
+            onMouseLeave={(e) => e.currentTarget.style.borderColor = statusFilter === opt.value ? 'rgba(var(--nexus-gold-rgb), 0.4)' : 'var(--nexus-border)'}
           >
             {opt.label}
           </button>
@@ -144,17 +144,17 @@ export function CRM() {
             <table style={{ width: '100%', fontSize: '0.875rem', borderCollapse: 'collapse' }}>
               <thead>
                 <tr>
-                  <th style={{ textAlign: 'left', padding: '0.75rem 1rem', fontSize: '0.75rem', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--nexus-muted-2)', borderBottom: '1px solid rgba(212,149,86,0.1)' }}>Nome</th>
-                  <th style={{ textAlign: 'left', padding: '0.75rem 1rem', fontSize: '0.75rem', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--nexus-muted-2)', borderBottom: '1px solid rgba(212,149,86,0.1)' }}>Contato</th>
-                  <th style={{ textAlign: 'left', padding: '0.75rem 1rem', fontSize: '0.75rem', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--nexus-muted-2)', borderBottom: '1px solid rgba(212,149,86,0.1)' }}>Empresa</th>
-                  <th style={{ textAlign: 'left', padding: '0.75rem 1rem', fontSize: '0.75rem', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--nexus-muted-2)', borderBottom: '1px solid rgba(212,149,86,0.1)' }}>Status</th>
-                  <th style={{ textAlign: 'left', padding: '0.75rem 1rem', fontSize: '0.75rem', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--nexus-muted-2)', borderBottom: '1px solid rgba(212,149,86,0.1)' }}>Valor</th>
-                  <th style={{ textAlign: 'center', padding: '0.75rem 1rem', fontSize: '0.75rem', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--nexus-muted-2)', borderBottom: '1px solid rgba(212,149,86,0.1)' }}>Acoes</th>
+                  <th style={{ textAlign: 'left', padding: '0.75rem 1rem', fontSize: '0.75rem', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--nexus-muted-2)', borderBottom: '1px solid rgba(var(--nexus-gold-rgb),0.1)' }}>Nome</th>
+                  <th style={{ textAlign: 'left', padding: '0.75rem 1rem', fontSize: '0.75rem', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--nexus-muted-2)', borderBottom: '1px solid rgba(var(--nexus-gold-rgb),0.1)' }}>Contato</th>
+                  <th style={{ textAlign: 'left', padding: '0.75rem 1rem', fontSize: '0.75rem', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--nexus-muted-2)', borderBottom: '1px solid rgba(var(--nexus-gold-rgb),0.1)' }}>Empresa</th>
+                  <th style={{ textAlign: 'left', padding: '0.75rem 1rem', fontSize: '0.75rem', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--nexus-muted-2)', borderBottom: '1px solid rgba(var(--nexus-gold-rgb),0.1)' }}>Status</th>
+                  <th style={{ textAlign: 'left', padding: '0.75rem 1rem', fontSize: '0.75rem', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--nexus-muted-2)', borderBottom: '1px solid rgba(var(--nexus-gold-rgb),0.1)' }}>Valor</th>
+                  <th style={{ textAlign: 'center', padding: '0.75rem 1rem', fontSize: '0.75rem', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--nexus-muted-2)', borderBottom: '1px solid rgba(var(--nexus-gold-rgb),0.1)' }}>Acoes</th>
                 </tr>
               </thead>
               <tbody>
                 {leads.map((lead) => (
-                  <tr key={lead.id} style={{ borderBottom: '1px solid rgba(212,149,86,0.05)' }} onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(212,149,86,0.04)'} onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}>
+                  <tr key={lead.id} style={{ borderBottom: '1px solid rgba(var(--nexus-gold-rgb),0.05)' }} onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(var(--nexus-gold-rgb),0.04)'} onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}>
                     <td style={{ padding: '0.75rem 1rem', color: 'var(--nexus-text)', fontSize: '0.875rem', fontWeight: 500 }}>{lead.name}</td>
                     <td style={{ padding: '0.75rem 1rem', color: 'var(--nexus-muted-2)', fontSize: '0.75rem' }}>
                       {lead.email && <div>{lead.email}</div>}
@@ -176,8 +176,8 @@ export function CRM() {
                       {lead.value > 0 ? new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(lead.value) : '-'}
                     </td>
                     <td style={{ padding: '0.75rem 1rem', color: 'var(--nexus-text)', fontSize: '0.875rem', textAlign: 'center' }}>
-                      <button onClick={() => openEdit(lead)} style={{ color: '#D49556', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 500, fontSize: '0.875rem', marginRight: '0.75rem' }}>Editar</button>
-                      <button onClick={() => handleDelete(lead.id)} style={{ color: '#D84B5F', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 500, fontSize: '0.875rem' }}>Excluir</button>
+                      <button onClick={() => openEdit(lead)} style={{ color: 'var(--nexus-gold)', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 500, fontSize: '0.875rem', marginRight: '0.75rem' }}>Editar</button>
+                      <button onClick={() => handleDelete(lead.id)} style={{ color: 'var(--nexus-danger)', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 500, fontSize: '0.875rem' }}>Excluir</button>
                     </td>
                   </tr>
                 ))}

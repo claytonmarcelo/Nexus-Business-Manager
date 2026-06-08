@@ -97,7 +97,7 @@ export function CreateSuggestion() {
           />
         </div>
 
-        <div style={{ background: 'rgba(0,0,0,0.3)', borderRadius: '12px', padding: '1rem', marginBottom: '1.25rem', border: '1px solid var(--nexus-border)', fontSize: '0.875rem', color: 'var(--nexus-muted-2)', lineHeight: 1.6 }}>
+        <div style={{ background: 'var(--nexus-card-soft)', borderRadius: '12px', padding: '1rem', marginBottom: '1.25rem', border: '1px solid var(--nexus-border)', fontSize: '0.875rem', color: 'var(--nexus-muted-2)', lineHeight: 1.6 }}>
           <p style={{ fontWeight: 600, color: 'var(--nexus-text)', marginBottom: '0.5rem' }}>Aviso Legal</p>
           <p style={{ marginBottom: '0.5rem' }}>
             Ao enviar esta sugestao, voce concede ao Nexus Business Manager o direito de

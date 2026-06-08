@@ -20,7 +20,7 @@ export function PremiumTable<T extends { id: number | string }>({
     return (
       <div className="space-y-3 p-4">
         {[1, 2, 3, 4, 5].map((i) => (
-          <div key={i} className="h-12 rounded-lg animate-pulse" style={{ background: 'rgba(212, 149, 86, 0.06)' }} />
+          <div key={i} className="h-12 rounded-lg animate-pulse" style={{ background: 'rgba(var(--nexus-gold-rgb), 0.06)' }} />
         ))}
       </div>
     );

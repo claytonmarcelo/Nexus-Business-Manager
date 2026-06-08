@@ -27,8 +27,8 @@ export function NexusAI() {
           onClick={() => setTab('chat')}
           style={{
             padding: '0.5rem 1rem', borderRadius: '0.5rem', fontSize: '0.875rem', fontWeight: 500, border: '1px solid',
-            background: tab === 'chat' ? 'rgba(212, 149, 86, 0.2)' : 'transparent',
-            borderColor: tab === 'chat' ? 'rgba(212, 149, 86, 0.4)' : 'var(--nexus-border)',
+            background: tab === 'chat' ? 'rgba(var(--nexus-gold-rgb), 0.2)' : 'transparent',
+            borderColor: tab === 'chat' ? 'rgba(var(--nexus-gold-rgb), 0.4)' : 'var(--nexus-border)',
             color: tab === 'chat' ? 'var(--nexus-gold)' : 'var(--nexus-muted-2)',
             cursor: 'pointer', transition: 'all 0.2s',
           }}
@@ -41,8 +41,8 @@ export function NexusAI() {
           onClick={() => setTab('insights')}
           style={{
             padding: '0.5rem 1rem', borderRadius: '0.5rem', fontSize: '0.875rem', fontWeight: 500, border: '1px solid',
-            background: tab === 'insights' ? 'rgba(212, 149, 86, 0.2)' : 'transparent',
-            borderColor: tab === 'insights' ? 'rgba(212, 149, 86, 0.4)' : 'var(--nexus-border)',
+            background: tab === 'insights' ? 'rgba(var(--nexus-gold-rgb), 0.2)' : 'transparent',
+            borderColor: tab === 'insights' ? 'rgba(var(--nexus-gold-rgb), 0.4)' : 'var(--nexus-border)',
             color: tab === 'insights' ? 'var(--nexus-gold)' : 'var(--nexus-muted-2)',
             cursor: 'pointer', transition: 'all 0.2s',
           }}

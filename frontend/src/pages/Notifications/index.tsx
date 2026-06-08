@@ -73,8 +73,8 @@ export function Notifications() {
             {notifications.map((n) => (
               <div key={n.id} style={{
                 display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem 1rem',
-                borderBottom: '1px solid rgba(212,149,86,0.05)',
-                background: !n.read ? 'rgba(212,149,86,0.08)' : undefined,
+                borderBottom: '1px solid rgba(var(--nexus-gold-rgb),0.05)',
+                background: !n.read ? 'rgba(var(--nexus-gold-rgb),0.08)' : undefined,
               }}>
                 <span style={{ fontSize: '1.25rem' }}>{iconMap[n.icon || 'info'] || 'ℹ️'}</span>
                 <div style={{ flex: 1, minWidth: 0 }}>
@@ -83,7 +83,7 @@ export function Notifications() {
                   <p style={{ fontSize: '0.75rem', color: 'var(--nexus-muted-2)', margin: '0.25rem 0 0 0', opacity: 0.65 }}>{new Date(n.created_at).toLocaleString('pt-BR')}</p>
                 </div>
                 {!n.read && (
-                  <button onClick={() => handleMarkRead(n.id)} style={{ color: '#D49556', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 500, fontSize: '0.875rem', whiteSpace: 'nowrap' }}>
+                  <button onClick={() => handleMarkRead(n.id)} style={{ color: 'var(--nexus-gold)', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 500, fontSize: '0.875rem', whiteSpace: 'nowrap' }}>
                     Marcar lida
                   </button>
                 )}

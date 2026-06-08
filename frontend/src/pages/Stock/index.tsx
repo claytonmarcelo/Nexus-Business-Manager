@@ -168,7 +168,7 @@ export function Stock() {
         <div className="flex items-center gap-3">
           <div
             className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 text-sm font-bold"
-            style={{ background: 'rgba(212, 149, 86, 0.1)', color: '#D49556' }}
+            style={{ background: 'rgba(var(--nexus-gold-rgb), 0.1)', color: 'var(--nexus-gold)' }}
           >
             {p.name.charAt(0).toUpperCase()}
           </div>
@@ -186,7 +186,7 @@ export function Stock() {
       render: (p) => (
         <span
           className="inline-block text-xs font-medium px-2.5 py-1 rounded-full"
-          style={{ background: 'rgba(212, 149, 86, 0.08)', color: 'var(--nexus-muted)' }}
+          style={{ background: 'rgba(var(--nexus-gold-rgb), 0.08)', color: 'var(--nexus-muted)' }}
         >
           {p.category || '-'}
         </span>
@@ -253,12 +253,12 @@ export function Stock() {
           }}
           className="text-xs font-medium px-3 py-1.5 rounded-lg transition-all duration-200"
           style={{
-            background: 'rgba(212, 149, 86, 0.1)',
-            color: '#D49556',
-            border: '1px solid rgba(212, 149, 86, 0.2)',
+            background: 'rgba(var(--nexus-gold-rgb), 0.1)',
+            color: 'var(--nexus-gold)',
+            border: '1px solid rgba(var(--nexus-gold-rgb), 0.2)',
           }}
-          onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(212, 149, 86, 0.2)'; }}
-          onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(212, 149, 86, 0.1)'; }}
+          onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(var(--nexus-gold-rgb), 0.2)'; }}
+          onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(var(--nexus-gold-rgb), 0.1)'; }}
         >
           Movimentar
         </button>
@@ -335,8 +335,8 @@ export function Stock() {
           onChange={(e) => { setCategoryFilter(e.target.value); setPage(1); }}
           className="h-10 px-3 rounded-xl text-sm"
           style={{
-            background: 'rgba(0,0,0,0.4)',
-            border: '1px solid rgba(212,149,86,0.15)',
+            background: 'var(--nexus-input-bg)',
+            border: '1px solid rgba(var(--nexus-gold-rgb),0.15)',
             color: 'var(--nexus-text)',
           }}
         >
@@ -348,8 +348,8 @@ export function Stock() {
           onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
           className="h-10 px-3 rounded-xl text-sm"
           style={{
-            background: 'rgba(0,0,0,0.4)',
-            border: '1px solid rgba(212,149,86,0.15)',
+            background: 'var(--nexus-input-bg)',
+            border: '1px solid rgba(var(--nexus-gold-rgb),0.15)',
             color: 'var(--nexus-text)',
           }}
         >
@@ -426,7 +426,7 @@ export function Stock() {
                 onClick={() => setShowModal(false)}
                 className="w-8 h-8 flex items-center justify-center rounded-lg transition-colors"
                 style={{ color: 'var(--nexus-muted-2)' }}
-                onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(212,149,86,0.1)'; }}
+                onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(var(--nexus-gold-rgb),0.1)'; }}
                 onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
               >
                 <XMarkIcon className="w-5 h-5" />
@@ -437,7 +437,7 @@ export function Stock() {
               {error && (
                 <div
                   className="px-4 py-3 rounded-lg mb-4 text-sm"
-                  style={{ background: 'rgba(216, 75, 95, 0.1)', color: '#D84B5F', border: '1px solid rgba(216, 75, 95, 0.2)' }}
+                  style={{ background: 'rgba(var(--nexus-danger-rgb), 0.1)', color: 'var(--nexus-danger)', border: '1px solid rgba(var(--nexus-danger-rgb), 0.2)' }}
                 >
                   {error}
                 </div>
@@ -454,8 +454,8 @@ export function Stock() {
                     value={formData.product_id}
                     onChange={(e) => setFormData({ ...formData, product_id: Number(e.target.value) })}
                     style={{
-                      background: 'rgba(0,0,0,0.3)',
-                      border: '1px solid rgba(212,149,86,0.15)',
+                      background: 'var(--nexus-card-soft)',
+                      border: '1px solid rgba(var(--nexus-gold-rgb),0.15)',
                       color: 'var(--nexus-text)',
                     }}
                   >
@@ -476,9 +476,9 @@ export function Stock() {
                       onClick={() => setFormData({ ...formData, type: 'in' })}
                       className="flex-1 py-2.5 rounded-xl text-sm font-medium transition-all duration-200"
                       style={{
-                        background: formData.type === 'in' ? 'rgba(125, 218, 106, 0.15)' : 'rgba(0,0,0,0.3)',
+                        background: formData.type === 'in' ? 'rgba(var(--nexus-success-rgb), 0.15)' : 'var(--nexus-card-soft)',
                         color: formData.type === 'in' ? '#7DDA6A' : 'var(--nexus-muted)',
-                        border: formData.type === 'in' ? '1px solid rgba(125, 218, 106, 0.3)' : '1px solid rgba(212,149,86,0.15)',
+                        border: formData.type === 'in' ? '1px solid rgba(var(--nexus-success-rgb), 0.3)' : '1px solid rgba(var(--nexus-gold-rgb),0.15)',
                       }}
                     >
                       <ArrowUpIcon className="w-4 h-4 inline mr-1.5" />
@@ -489,9 +489,9 @@ export function Stock() {
                       onClick={() => setFormData({ ...formData, type: 'out' })}
                       className="flex-1 py-2.5 rounded-xl text-sm font-medium transition-all duration-200"
                       style={{
-                        background: formData.type === 'out' ? 'rgba(216, 75, 95, 0.15)' : 'rgba(0,0,0,0.3)',
-                        color: formData.type === 'out' ? '#D84B5F' : 'var(--nexus-muted)',
-                        border: formData.type === 'out' ? '1px solid rgba(216, 75, 95, 0.3)' : '1px solid rgba(212,149,86,0.15)',
+                        background: formData.type === 'out' ? 'rgba(var(--nexus-danger-rgb), 0.15)' : 'var(--nexus-card-soft)',
+                        color: formData.type === 'out' ? 'var(--nexus-danger)' : 'var(--nexus-muted)',
+                        border: formData.type === 'out' ? '1px solid rgba(var(--nexus-danger-rgb), 0.3)' : '1px solid rgba(var(--nexus-gold-rgb),0.15)',
                       }}
                     >
                       <ArrowDownIcon className="w-4 h-4 inline mr-1.5" />
@@ -512,8 +512,8 @@ export function Stock() {
                     value={formData.quantity}
                     onChange={(e) => setFormData({ ...formData, quantity: Number(e.target.value) })}
                     style={{
-                      background: 'rgba(0,0,0,0.3)',
-                      border: '1px solid rgba(212,149,86,0.15)',
+                      background: 'var(--nexus-card-soft)',
+                      border: '1px solid rgba(var(--nexus-gold-rgb),0.15)',
                       color: 'var(--nexus-text)',
                     }}
                   />
@@ -530,8 +530,8 @@ export function Stock() {
                     onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                     placeholder="Opcional..."
                     style={{
-                      background: 'rgba(0,0,0,0.3)',
-                      border: '1px solid rgba(212,149,86,0.15)',
+                      background: 'var(--nexus-card-soft)',
+                      border: '1px solid rgba(var(--nexus-gold-rgb),0.15)',
                       color: 'var(--nexus-text)',
                     }}
                   />
@@ -543,9 +543,9 @@ export function Stock() {
                     onClick={() => setShowModal(false)}
                     className="px-5 py-2.5 rounded-xl text-sm font-medium transition-all duration-200"
                     style={{
-                      background: 'rgba(0,0,0,0.3)',
+                      background: 'var(--nexus-card-soft)',
                       color: 'var(--nexus-muted)',
-                      border: '1px solid rgba(212,149,86,0.15)',
+                      border: '1px solid rgba(var(--nexus-gold-rgb),0.15)',
                     }}
                   >
                     Cancelar

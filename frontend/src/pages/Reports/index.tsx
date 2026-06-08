@@ -151,8 +151,8 @@ export function Reports() {
       hide: 'md',
       render: () => (
         <div className="flex gap-2">
-          <span className="text-xs font-medium px-2 py-0.5 rounded" style={{ background: 'rgba(212, 149, 86, 0.12)', color: 'var(--nexus-gold)' }}>PDF</span>
-          <span className="text-xs font-medium px-2 py-0.5 rounded" style={{ background: 'rgba(198, 90, 113, 0.12)', color: 'var(--nexus-rose)' }}>XLSX</span>
+          <span className="text-xs font-medium px-2 py-0.5 rounded" style={{ background: 'rgba(var(--nexus-gold-rgb), 0.12)', color: 'var(--nexus-gold)' }}>PDF</span>
+          <span className="text-xs font-medium px-2 py-0.5 rounded" style={{ background: 'rgba(var(--nexus-rose-rgb), 0.12)', color: 'var(--nexus-rose)' }}>XLSX</span>
         </div>
       ),
     },
@@ -169,14 +169,14 @@ export function Reports() {
               className="px-3 py-1.5 text-xs font-medium rounded-lg transition-all duration-200"
               style={{
                 background: isLoading && loading?.format === 'pdf'
-                  ? 'rgba(212, 149, 86, 0.1)'
-                  : 'rgba(212, 149, 86, 0.12)',
+                  ? 'rgba(var(--nexus-gold-rgb), 0.1)'
+                  : 'rgba(var(--nexus-gold-rgb), 0.12)',
                 color: 'var(--nexus-gold)',
-                border: '1px solid rgba(212, 149, 86, 0.2)',
+                border: '1px solid rgba(var(--nexus-gold-rgb), 0.2)',
                 opacity: isLoading && loading?.format === 'pdf' ? 0.6 : 1,
               }}
-              onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(212, 149, 86, 0.2)'; }}
-              onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(212, 149, 86, 0.12)'; }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(var(--nexus-gold-rgb), 0.2)'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(var(--nexus-gold-rgb), 0.12)'; }}
             >
               {isLoading && loading?.format === 'pdf' ? '...' : 'PDF'}
             </button>
@@ -186,14 +186,14 @@ export function Reports() {
               className="px-3 py-1.5 text-xs font-medium rounded-lg transition-all duration-200"
               style={{
                 background: isLoading && loading?.format === 'xlsx'
-                  ? 'rgba(198, 90, 113, 0.1)'
-                  : 'rgba(198, 90, 113, 0.12)',
+                  ? 'rgba(var(--nexus-rose-rgb), 0.1)'
+                  : 'rgba(var(--nexus-rose-rgb), 0.12)',
                 color: 'var(--nexus-rose)',
-                border: '1px solid rgba(198, 90, 113, 0.2)',
+                border: '1px solid rgba(var(--nexus-rose-rgb), 0.2)',
                 opacity: isLoading && loading?.format === 'xlsx' ? 0.6 : 1,
               }}
-              onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(198, 90, 113, 0.2)'; }}
-              onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(198, 90, 113, 0.12)'; }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(var(--nexus-rose-rgb), 0.2)'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(var(--nexus-rose-rgb), 0.12)'; }}
             >
               {isLoading && loading?.format === 'xlsx' ? '...' : 'Excel'}
             </button>
@@ -289,7 +289,7 @@ export function Reports() {
                     <stop offset="100%" stopColor="var(--nexus-bronze)" stopOpacity={0.7} />
                   </linearGradient>
                 </defs>
-                <Bar dataKey="value" radius={[4, 4, 0, 0]} fill="url(#barGradient)" style={{ filter: 'drop-shadow(0 0 6px rgba(212, 149, 86, 0.25))' }} />
+                <Bar dataKey="value" radius={[4, 4, 0, 0]} fill="url(#barGradient)" style={{ filter: 'drop-shadow(0 0 6px rgba(var(--nexus-gold-rgb), 0.25))' }} />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -359,7 +359,7 @@ export function Reports() {
                 >
                   <div
                     className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0"
-                    style={{ background: 'rgba(212, 149, 86, 0.1)', color: 'var(--nexus-gold)' }}
+                    style={{ background: 'rgba(var(--nexus-gold-rgb), 0.1)', color: 'var(--nexus-gold)' }}
                   >
                     <DocumentArrowDownIcon className="w-5 h-5" />
                   </div>
