@@ -1,12 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { 
   ChartBarIcon, 
   UserGroupIcon, 
   CurrencyDollarIcon, 
   ArrowTrendingUpIcon,
-  MagnifyingGlassIcon,
-  BellIcon,
-  ChevronDownIcon,
   ShoppingCartIcon,
   ArrowUpIcon,
   ArrowDownIcon,
@@ -16,7 +13,6 @@ import {
   ArchiveBoxIcon,
   ArrowRightIcon
 } from '@heroicons/react/24/outline';
-import { useAuth } from '../../contexts/AuthContext';
 import { 
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell
@@ -61,7 +57,6 @@ const mockData = {
 };
 
 export function Dashboard() {
-  const { user } = useAuth();
   const [loading, setLoading] = useState(false);
 
   const StatCard = ({ title, value, change, icon: Icon, trend }: any) => (
@@ -92,42 +87,6 @@ export function Dashboard() {
         <div>
           <h1 className="text-2xl font-bold text-[var(--nexus-text)]">Dashboard</h1>
           <p className="text-[var(--nexus-muted)] text-sm mt-1">Visão geral do seu negócio</p>
-        </div>
-        <div className="flex items-center space-x-5">
-          {/* Search */}
-          <div className="relative">
-            <input 
-              type="text" 
-              placeholder="Buscar no sistema..." 
-              className="bg-[var(--nexus-bg-soft)] border border-[var(--nexus-border)] rounded-xl px-4 py-2.5 pl-11 text-[var(--nexus-text)] placeholder-[var(--nexus-muted)] focus:outline-none focus:border-[var(--nexus-gold)] w-80 text-sm transition-colors"
-            />
-            <MagnifyingGlassIcon className="w-5 h-5 absolute left-4 top-1/2 transform -translate-y-1/2 text-[var(--nexus-muted)]" />
-            <div className="absolute right-3 top-1/2 transform -translate-y-1/2 bg-[var(--nexus-card)] border border-[var(--nexus-border)] rounded px-1.5 py-0.5">
-              <span className="text-[10px] text-[var(--nexus-muted)] font-medium">Ctrl + K</span>
-            </div>
-          </div>
-          
-          {/* Notifications */}
-          <div className="relative">
-            <button className="p-2.5 bg-[var(--nexus-bg-soft)] border border-[var(--nexus-border)] rounded-xl hover:border-[var(--nexus-gold)] transition-colors relative group">
-              <BellIcon className="w-5 h-5 text-[var(--nexus-muted)] group-hover:text-[var(--nexus-text)] transition-colors" />
-              <span className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-[var(--nexus-danger)] border-2 border-[var(--nexus-bg)] rounded-full text-[9px] font-bold flex items-center justify-center text-white">1</span>
-            </button>
-          </div>
-          
-          {/* User Menu */}
-          <div className="flex items-center space-x-3 cursor-pointer pl-2">
-            <div className="w-10 h-10 rounded-full bg-[var(--nexus-bg-soft)] border border-[var(--nexus-border)] flex items-center justify-center overflow-hidden">
-              <span className="text-[var(--nexus-text)] font-semibold text-sm">
-                {user?.name?.charAt(0) || 'A'}
-              </span>
-            </div>
-            <div className="text-left hidden sm:block">
-              <p className="text-sm font-semibold text-[var(--nexus-text)] leading-tight">{user?.name || 'Administrador'}</p>
-              <p className="text-xs text-[var(--nexus-muted)] capitalize mt-0.5">{user?.role || 'Admin'}</p>
-            </div>
-            <ChevronDownIcon className="w-4 h-4 text-[var(--nexus-muted)] ml-1" />
-          </div>
         </div>
       </div>
 
