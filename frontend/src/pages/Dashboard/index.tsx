@@ -21,23 +21,7 @@ const WARNING = '#D89A28';
 
 const chartColors = [GOLD, ROSE, '#60a5fa', SUCCESS, '#a78bfa', '#f472b6', GRAY];
 
-const mockStock = [
-  { product: 'Teclado Mecanico RGB', category: 'Perifericos', qty: 45, min: 20, status: 'normal' as const },
-  { product: 'Monitor 27" 4K', category: 'Monitores', qty: 12, min: 15, status: 'low' as const },
-  { product: 'Mouse Wireless', category: 'Perifericos', qty: 78, min: 30, status: 'normal' as const },
-  { product: 'Webcam HD 1080p', category: 'Perifericos', qty: 3, min: 10, status: 'critical' as const },
-  { product: 'Notebook Pro i7', category: 'Computadores', qty: 8, min: 10, status: 'low' as const },
-  { product: 'Fonte 650W 80Plus', category: 'Componentes', qty: 22, min: 15, status: 'normal' as const },
-];
 
-const mockActivities = [
-  { text: 'Nova venda registrada para Tech Solutions Ltda', time: 'Ha 5 minutos', color: 'green' as const },
-  { text: 'Estoque critico: Webcam HD 1080p (3 unidades)', time: 'Ha 15 minutos', color: 'rose' as const },
-  { text: 'Lead qualificado no CRM: Inovacao Tech', time: 'Ha 1 hora', color: 'blue' as const },
-  { text: 'Relatorio financeiro de Maio gerado', time: 'Ha 2 horas', color: 'gold' as const },
-  { text: 'Produto cadastrado: Mousepad Gamer XL', time: 'Ha 3 horas', color: 'green' as const },
-  { text: 'Pagamento recebido de Distribuidora ABC', time: 'Ha 5 horas', color: 'gold' as const },
-];
 
 function formatCurrency(value: number) {
   return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
@@ -64,6 +48,21 @@ function AreaChartGradient() {
   );
 }
 
+interface LowStockItem {
+  id: number;
+  name: string;
+  category: string;
+  quantity: number;
+  minStock: number;
+  status: 'normal' | 'low' | 'critical';
+}
+
+interface ActivityItem {
+  text: string;
+  time: string;
+  color: 'green' | 'rose' | 'gold' | 'blue';
+}
+
 export function Dashboard() {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -71,26 +70,51 @@ export function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [suggestionStats, setSuggestionStats] = useState<{ status: string; count: number }[]>([]);
+  const [lowStock, setLowStock] = useState<LowStockItem[]>([]);
+  const [activities, setActivities] = useState<ActivityItem[]>([]);
 
   useEffect(() => {
     async function load() {
       try {
-        const res = await api.get('/dashboard');
-        if (res.data && res.data.data) {
-          setData(res.data.data);
-        } else {
-          setData(res.data);
-        }
+        const [dashRes, productsRes, auditRes, sugRes] = await Promise.all([
+          api.get('/dashboard'),
+          api.get('/products'),
+          api.get('/audit'),
+          api.get('/suggestions/stats').catch(() => null),
+        ]);
+
+        const dashData = dashRes.data?.data || dashRes.data;
+        setData(dashData);
+
+        const allProducts = productsRes.data?.data || [];
+        const lowStockItems = allProducts
+          .filter((p: any) => p.quantity <= (p.min_stock || 5))
+          .slice(0, 6)
+          .map((p: any) => ({
+            id: p.id,
+            name: p.name,
+            category: p.category || 'Sem categoria',
+            quantity: p.quantity,
+            minStock: p.min_stock || 5,
+            status: (p.quantity <= 3 ? 'critical' : p.quantity <= (p.min_stock || 5) ? 'low' : 'normal') as 'normal' | 'low' | 'critical',
+          }));
+        setLowStock(lowStockItems.length > 0 ? lowStockItems : []);
+
+        const auditData = auditRes.data?.data || auditRes.data || [];
+        const recent: ActivityItem[] = (Array.isArray(auditData) ? auditData : []).slice(0, 6).map((a: any) => ({
+          text: `${a.action} em ${a.entity}`,
+          time: a.created_at ? new Date(a.created_at + 'Z').toLocaleString('pt-BR') : '',
+          color: (a.action === 'DELETE' ? 'rose' : a.action === 'CREATE' ? 'green' : 'gold') as 'rose' | 'green' | 'gold',
+        }));
+        setActivities(recent);
+
+        if (sugRes?.data?.data) setSuggestionStats(sugRes.data.data);
       } catch (err: any) {
-        console.error('Erro ao carregar dashboard:', err);
-        const errorMsg = err?.response?.data?.message || err?.message || 'Erro ao carregar dashboard. Verifique a conexão com o servidor.';
+        const errorMsg = err?.response?.data?.message || err?.message || 'Erro ao carregar dashboard.';
         setError(errorMsg);
+      } finally {
+        setLoading(false);
       }
-      try {
-        const sug = await api.get('/suggestions/stats');
-        if (sug.data?.data) setSuggestionStats(sug.data.data);
-      } catch { /* suggestions table may not exist yet */ }
-      finally { setLoading(false); }
     }
     load();
   }, []);
@@ -285,16 +309,22 @@ export function Dashboard() {
                 </tr>
               </thead>
               <tbody>
-                {mockStock.map((item, i) => {
+                {lowStock.length === 0 ? (
+                  <tr>
+                    <td colSpan={4} className="text-center py-8" style={{color: 'var(--nexus-muted)'}}>
+                      Nenhum produto com estoque baixo
+                    </td>
+                  </tr>
+                ) : lowStock.map((item, i) => {
                   const statusLabel = item.status === 'normal' ? 'Normal'
                     : item.status === 'low' ? 'Baixo' : 'Critico';
                   return (
-                    <tr key={i}>
-                      <td className="font-medium">{item.product}</td>
+                    <tr key={item.id}>
+                      <td className="font-medium">{item.name}</td>
                       <td className="hidden sm:table-cell" style={{color: 'var(--nexus-muted)'}}>{item.category}</td>
                       <td>
-                        <span style={item.qty <= item.min ? {color: DANGER} : {}}>
-                          {item.qty}
+                        <span style={item.quantity <= item.minStock ? {color: DANGER} : {}}>
+                          {item.quantity}
                         </span>
                       </td>
                       <td>
@@ -325,7 +355,9 @@ export function Dashboard() {
             </button>
           </div>
           <div>
-            {mockActivities.map((act, i) => (
+            {activities.length === 0 ? (
+              <p className="text-center py-8" style={{color: 'var(--nexus-muted)'}}>Nenhuma atividade recente</p>
+            ) : activities.map((act, i) => (
               <div key={i} className="activity-item">
                 <span className={`activity-dot ${act.color}`} />
                 <div>
@@ -394,7 +426,7 @@ export function Dashboard() {
           <div className="flex items-center justify-between">
             <p className="text-sm" style={{color: DANGER}}>{error}</p>
             <button
-              onClick={() => { setLoading(true); setError(''); window.location.reload(); }}
+              onClick={() => { setLoading(true); setError(''); }}
               className="text-xs font-medium px-3 py-1.5 rounded-lg transition-colors"
               style={{color: DANGER, background: 'rgba(216, 75, 95, 0.2)'}}
               onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(216, 75, 95, 0.3)'}

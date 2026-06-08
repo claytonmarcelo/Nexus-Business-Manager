@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
 import { User, AuthResponse } from '../types';
 
@@ -7,7 +8,7 @@ interface AuthContextData {
   token: string | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<void>;
-  signUp: (name: string, email: string, password: string) => Promise<void>;
+  signUp: (name: string, email: string, password: string, username?: string, phone?: string) => Promise<void>;
   signOut: () => void;
   updateUser: (userData: Partial<User>) => void;
   isAuthenticated: boolean;
@@ -16,6 +17,7 @@ interface AuthContextData {
 const AuthContext = createContext<AuthContextData>({} as AuthContextData);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
+  const navigate = useNavigate();
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -49,8 +51,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(userData);
   }
 
-  async function signUp(name: string, email: string, password: string) {
-    const response = await api.post<AuthResponse>('/auth/register', { name, email, password });
+  async function signUp(name: string, email: string, password: string, username?: string, phone?: string) {
+    const response = await api.post<AuthResponse>('/auth/register', { name, email, password, username, phone });
     const { token: newToken, user: userData } = response.data;
 
     localStorage.setItem('@nexus:token', newToken);
@@ -76,8 +78,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setToken(null);
     setUser(null);
     
-    // Redirecionar para login usando React Router para evitar cache
-    window.location.replace('/login');
+    navigate('/login', { replace: true });
   }
 
   function updateUser(userData: Partial<User>) {

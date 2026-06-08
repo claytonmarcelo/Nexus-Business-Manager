@@ -115,7 +115,7 @@ export function Suppliers() {
           <div style={{ background: 'var(--nexus-card-strong)', border: '1px solid var(--nexus-border)', borderRadius: '18px', padding: '2rem', width: '100%', maxWidth: '32rem' }}>
             <h2 className="text-xl font-bold" style={{ color: 'var(--nexus-text)', marginBottom: '1.5rem' }}>{editing ? 'Editar Fornecedor' : 'Novo Fornecedor'}</h2>
             {error && <div style={{ background: 'rgba(216, 75, 95, 0.12)', color: '#D84B5F', border: '1px solid rgba(216, 75, 95, 0.2)', borderRadius: '10px', padding: '0.75rem 1rem', fontSize: '0.875rem', marginBottom: '1rem' }}>{error}</div>}
-            <form>
+            <form onSubmit={handleSubmit}>
               <div style={{ marginBottom: '1rem' }}>
                 <label style={{ color: 'var(--nexus-text)', fontSize: '0.875rem', fontWeight: 500, marginBottom: '0.375rem', display: 'block' }}>Empresa</label>
                 <input type="text" required value={formData.company_name}

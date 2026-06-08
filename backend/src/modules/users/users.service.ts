@@ -18,19 +18,6 @@ interface UserRow extends RowDataPacket {
   theme_preference?: string;
 }
 
-export async function getAllPasswordHashes(companyId: number): Promise<string[]> {
-  const rows = await query<RowDataPacket[]>('SELECT password FROM users WHERE company_id = ?', [companyId]);
-  return rows.map(r => r.password);
-}
-
-export async function isPasswordTaken(password: string, companyId: number): Promise<boolean> {
-  const hashes = await getAllPasswordHashes(companyId);
-  for (const hash of hashes) {
-    if (await bcrypt.compare(password, hash)) return true;
-  }
-  return false;
-}
-
 export async function listUsers(companyId: number, params: PaginationParams): Promise<PaginatedResult<UserRow>> {
   const where = ['company_id = ?'];
   const values: unknown[] = [companyId];
@@ -64,10 +51,6 @@ export async function getUserById(id: number): Promise<UserRow> {
 export async function createUser(data: CreateUserInput, companyId: number): Promise<UserRow> {
   const existing = await query<UserRow[]>('SELECT id FROM users WHERE email = ?', [data.email]);
   if (existing.length > 0) throw new AppError('Email ja cadastrado', 409);
-
-  if (await isPasswordTaken(data.password, companyId)) {
-    throw new AppError('Por segurança, escolha uma senha diferente.', 409);
-  }
 
   const hashedPassword = await bcrypt.hash(data.password, 10);
 
@@ -110,9 +93,6 @@ export async function updateUser(id: number, data: UpdateUserInput): Promise<Use
   if (data.avatarUrl) { fields.push('avatar_url = ?'); values.push(data.avatarUrl); }
   if (data.themePreference) { fields.push('theme_preference = ?'); values.push(data.themePreference); }
   if (data.password && data.password.length >= 8) {
-    if (await isPasswordTaken(data.password, companyId)) {
-      throw new AppError('Por segurança, escolha uma senha diferente.', 409);
-    }
     const hashedPassword = await bcrypt.hash(data.password, 10);
     fields.push('password = ?');
     values.push(hashedPassword);

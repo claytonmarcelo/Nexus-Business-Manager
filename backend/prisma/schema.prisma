@@ -8,75 +8,87 @@ datasource db {
 
 model Company {
   id        Int      @id @default(autoincrement())
-  name      String
-  cnpj      String?  @unique
-  email     String?
-  phone     String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  name      String   @db.VarChar(255)
+  slug      String   @unique @db.VarChar(100)
+  document  String?  @db.VarChar(20)
+  phone     String?  @db.VarChar(50)
+  email     String?  @db.VarChar(255)
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
-  users     User[]
-  customers Customer[]
-  products  Product[]
+  users    User[]
+  products Product[]
+
+  @@map("companies")
 }
 
 model User {
-  id           Int      @id @default(autoincrement())
-  companyId   Int?
-  name         String
-  email        String   @unique
-  passwordHash String
-  role            String   @default("admin")
+  id              Int      @id @default(autoincrement())
+  companyId       Int?     @map("company_id")
+  name            String   @db.VarChar(255)
+  email           String   @unique @db.VarChar(255)
+  password        String   @db.VarChar(255)
+  role            String   @default("operator") @db.VarChar(50)
   active          Boolean  @default(true)
-  avatarUrl       String?
-  themePreference String   @default("dark")
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  avatarUrl       String?  @map("avatar_url") @db.VarChar(255)
+  themePreference String?  @default("dark") @map("theme_preference") @db.VarChar(20)
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
 
   company Company? @relation(fields: [companyId], references: [id])
+
+  @@map("users")
 }
 
 model Customer {
   id        Int      @id @default(autoincrement())
-  companyId Int
-  name      String
-  email     String?
-  phone     String?
-  document  String?
+  companyId Int?     @map("company_id")
+  name      String   @db.VarChar(255)
+  phone     String?  @db.VarChar(50)
+  email     String?  @db.VarChar(255)
+  document  String?  @db.VarChar(20)
+  address   String?  @db.Text
   notes     String?  @db.Text
-  status    String   @default("ACTIVE")
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
-  company Company @relation(fields: [companyId], references: [id])
+  company Company? @relation(fields: [companyId], references: [id])
+
+  @@map("clients")
 }
 
 model Product {
   id            Int      @id @default(autoincrement())
-  companyId     Int
-  name          String
-  sku           String?
-  category      String?
-  costPrice     Decimal? @db.Decimal(10, 2)
-  salePrice     Decimal  @db.Decimal(10, 2)
-  stockQuantity Int      @default(0)
-  minStock      Int      @default(0)
-  imageUrl      String?
+  companyId     Int?     @map("company_id")
+  name          String   @db.VarChar(255)
+  sku           String   @unique @db.VarChar(100)
+  category      String?  @db.VarChar(100)
+  price         Decimal  @default(0) @db.Decimal(10, 2)
+  quantity      Int      @default(0)
+  image         String?  @db.VarChar(500)
   active        Boolean  @default(true)
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
 
-  company        Company @relation(fields: [companyId], references: [id])
+  company        Company         @relation(fields: [companyId], references: [id])
   stockMovements StockMovement[]
+
+  @@map("products")
 }
 
 model StockMovement {
-  id        Int      @id @default(autoincrement())
-  productId Int
-  type      String
-  quantity  Int
-  reason    String?
-  createdAt DateTime @default(now())
+  id            Int      @id @default(autoincrement())
+  productId     Int      @map("product_id")
+  companyId     Int?     @map("company_id")
+  type          String   @db.VarChar(10)
+  quantity      Int
+  description   String?  @db.VarChar(500)
+  referenceType String?  @map("reference_type") @db.VarChar(50)
+  referenceId   Int?     @map("reference_id")
+  createdAt     DateTime @default(now()) @map("created_at")
 
   product Product @relation(fields: [productId], references: [id])
+
+  @@map("stock_movements")
 }

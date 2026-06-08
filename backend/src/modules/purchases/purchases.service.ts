@@ -1,7 +1,7 @@
-import { query, execute } from '../../shared/database/connection';
+import { query, execute, getConnection } from '../../shared/database/connection';
 import { AppError } from '../../shared/errors/app-error';
 import { CreatePurchaseInput, UpdatePurchaseStatusInput } from './purchases.schema';
-import { RowDataPacket } from 'mysql2';
+import { RowDataPacket, ResultSetHeader } from 'mysql2';
 import { PaginationParams, PaginatedResult, buildPaginatedResponse } from '../../shared/utils/pagination';
 
 interface PurchaseRow extends RowDataPacket {
@@ -33,36 +33,28 @@ interface ProductRow extends RowDataPacket {
 export async function listPurchases(companyId: number, params: PaginationParams): Promise<PaginatedResult<PurchaseRow>> {
   const where = ['p.company_id = ?'];
   const values: unknown[] = [companyId];
-
   if (params.search) {
     where.push('(s.company_name LIKE ? OR p.notes LIKE ?)');
     const term = `%${params.search}%`;
     values.push(term, term);
   }
-
   const countResult = await query<RowDataPacket[]>(
     `SELECT COUNT(*) as total FROM purchases p LEFT JOIN suppliers s ON s.id = p.supplier_id WHERE ${where.join(' AND ')}`, values
   );
   const total = countResult[0].total;
-
   const data = await query<PurchaseRow[]>(
     `SELECT p.*, s.company_name as supplier_name
-     FROM purchases p
-     LEFT JOIN suppliers s ON s.id = p.supplier_id
+     FROM purchases p LEFT JOIN suppliers s ON s.id = p.supplier_id
      WHERE ${where.join(' AND ')}
      ORDER BY p.created_at DESC LIMIT ? OFFSET ?`,
     [...values, params.limit, params.offset]
   );
-
   return buildPaginatedResponse(data, total, params);
 }
 
 export async function getPurchaseById(id: number, companyId: number): Promise<PurchaseRow> {
   const purchases = await query<PurchaseRow[]>(
-    `SELECT p.*, s.company_name as supplier_name
-     FROM purchases p
-     LEFT JOIN suppliers s ON s.id = p.supplier_id
-     WHERE p.id = ? AND p.company_id = ?`, [id, companyId]
+    `SELECT p.*, s.company_name as supplier_name FROM purchases p LEFT JOIN suppliers s ON s.id = p.supplier_id WHERE p.id = ? AND p.company_id = ?`, [id, companyId]
   );
   if (purchases.length === 0) throw new AppError('Compra nao encontrada', 404);
   return purchases[0];
@@ -70,10 +62,7 @@ export async function getPurchaseById(id: number, companyId: number): Promise<Pu
 
 export async function getPurchaseItems(purchaseId: number): Promise<PurchaseItemRow[]> {
   return query<PurchaseItemRow[]>(
-    `SELECT pi.*, pr.name as product_name
-     FROM purchase_items pi
-     JOIN products pr ON pr.id = pi.product_id
-     WHERE pi.purchase_id = ?`, [purchaseId]
+    `SELECT pi.*, pr.name as product_name FROM purchase_items pi JOIN products pr ON pr.id = pi.product_id WHERE pi.purchase_id = ?`, [purchaseId]
   );
 }
 
@@ -82,14 +71,11 @@ export async function createPurchase(data: CreatePurchaseInput, userId: number, 
   for (const item of data.items) {
     totalValue += item.quantity * item.unit_price;
   }
-
   const result = await execute(
     'INSERT INTO purchases (supplier_id, total_value, status, notes, created_by, company_id) VALUES (?, ?, ?, ?, ?, ?)',
     [data.supplier_id || null, totalValue, data.status || 'PENDENTE', data.notes || null, userId, companyId]
   );
-
   const purchaseId = result.insertId;
-
   for (const item of data.items) {
     const totalPrice = item.quantity * item.unit_price;
     await execute(
@@ -97,38 +83,58 @@ export async function createPurchase(data: CreatePurchaseInput, userId: number, 
       [purchaseId, item.product_id, item.quantity, item.unit_price, totalPrice]
     );
   }
-
   return getPurchaseById(purchaseId, companyId);
 }
 
 export async function receivePurchase(id: number, userId: number, companyId: number): Promise<void> {
   const purchase = await getPurchaseById(id, companyId);
   if (purchase.status !== 'PENDENTE') throw new AppError('Compra ja foi processada', 400);
-
-  const items = await getPurchaseItems(id);
-
-  for (const item of items) {
-    const products = await query<ProductRow[]>(
-      'SELECT id, quantity FROM products WHERE id = ?', [item.product_id]
-    );
-    if (products.length === 0) throw new AppError(`Produto ID ${item.product_id} nao encontrado`, 404);
-
-    const newQty = products[0].quantity + item.quantity;
-    await execute('UPDATE products SET quantity = ? WHERE id = ?', [newQty, item.product_id]);
-
-    await execute(
-      'INSERT INTO stock_movements (product_id, type, quantity, description, reference_type, reference_id, created_by, company_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-      [item.product_id, 'in', item.quantity, 'Entrada por compra', 'purchase', id, userId, companyId]
-    );
+  const conn = await getConnection();
+  try {
+    await conn.beginTransaction();
+    const items = await getPurchaseItems(id);
+    for (const item of items) {
+      await conn.execute('UPDATE products SET quantity = quantity + ? WHERE id = ?', [item.quantity, item.product_id]);
+      await conn.execute(
+        'INSERT INTO stock_movements (product_id, type, quantity, description, reference_type, reference_id, created_by, company_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+        [item.product_id, 'in', item.quantity, 'Entrada por compra', 'purchase', id, userId, companyId]
+      );
+    }
+    await conn.execute("UPDATE purchases SET status = 'RECEBIDA' WHERE id = ?", [id]);
+    await conn.commit();
+  } catch (error) {
+    await conn.rollback();
+    throw error;
+  } finally {
+    conn.release();
   }
-
-  await execute("UPDATE purchases SET status = 'RECEBIDA' WHERE id = ?", [id]);
 }
 
 export async function cancelPurchase(id: number, companyId: number): Promise<PurchaseRow> {
-  await getPurchaseById(id, companyId);
-  await execute("UPDATE purchases SET status = 'CANCELADA' WHERE id = ? AND company_id = ?", [id, companyId]);
-  return getPurchaseById(id, companyId);
+  const purchase = await getPurchaseById(id, companyId);
+  if (purchase.status === 'CANCELADA') throw new AppError('Compra ja esta cancelada', 400);
+  const conn = await getConnection();
+  try {
+    await conn.beginTransaction();
+    if (purchase.status === 'RECEBIDA') {
+      const items = await getPurchaseItems(id);
+      for (const item of items) {
+        await conn.execute('UPDATE products SET quantity = quantity - ? WHERE id = ?', [item.quantity, item.product_id]);
+        await conn.execute(
+          'INSERT INTO stock_movements (product_id, type, quantity, description, reference_type, reference_id, created_by, company_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+          [item.product_id, 'out', item.quantity, 'Estorno por cancelamento de compra', 'purchase_cancel', id, 0, companyId]
+        );
+      }
+    }
+    await conn.execute("UPDATE purchases SET status = 'CANCELADA' WHERE id = ?", [id]);
+    await conn.commit();
+    return getPurchaseById(id, companyId);
+  } catch (error) {
+    await conn.rollback();
+    throw error;
+  } finally {
+    conn.release();
+  }
 }
 
 export async function updatePurchaseStatus(id: number, data: UpdatePurchaseStatusInput, companyId: number): Promise<PurchaseRow> {
@@ -138,7 +144,23 @@ export async function updatePurchaseStatus(id: number, data: UpdatePurchaseStatu
 }
 
 export async function deletePurchase(id: number, companyId: number): Promise<void> {
-  await getPurchaseById(id, companyId);
-  await execute('DELETE FROM purchase_items WHERE purchase_id = ?', [id]);
-  await execute('DELETE FROM purchases WHERE id = ? AND company_id = ?', [id, companyId]);
+  const purchase = await getPurchaseById(id, companyId);
+  const conn = await getConnection();
+  try {
+    await conn.beginTransaction();
+    if (purchase.status === 'RECEBIDA') {
+      const items = await getPurchaseItems(id);
+      for (const item of items) {
+        await conn.execute('UPDATE products SET quantity = quantity - ? WHERE id = ?', [item.quantity, item.product_id]);
+      }
+    }
+    await conn.execute('DELETE FROM purchase_items WHERE purchase_id = ?', [id]);
+    await conn.execute('DELETE FROM purchases WHERE id = ? AND company_id = ?', [id, companyId]);
+    await conn.commit();
+  } catch (error) {
+    await conn.rollback();
+    throw error;
+  } finally {
+    conn.release();
+  }
 }

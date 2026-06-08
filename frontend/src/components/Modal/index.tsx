@@ -1,4 +1,4 @@
-import { ReactNode } from 'react';
+import { ReactNode, useEffect } from 'react';
 import { CheckCircleIcon, ExclamationTriangleIcon, XMarkIcon } from '@heroicons/react/24/solid';
 
 interface ModalProps {
@@ -12,23 +12,21 @@ interface ModalProps {
   autoCloseDelay?: number;
 }
 
-export function Modal({ 
-  isOpen, 
-  onClose, 
-  type, 
-  title, 
-  message, 
+export function Modal({
+  isOpen,
+  onClose,
+  type,
+  title,
+  message,
   showCloseButton = true,
   autoClose = false,
-  autoCloseDelay = 3000 
+  autoCloseDelay = 3000
 }: ModalProps) {
-  
-  // Auto close functionality
-  if (autoClose && isOpen) {
-    setTimeout(() => {
-      onClose();
-    }, autoCloseDelay);
-  }
+  useEffect(() => {
+    if (!autoClose || !isOpen) return;
+    const timer = setTimeout(onClose, autoCloseDelay);
+    return () => clearTimeout(timer);
+  }, [autoClose, autoCloseDelay, isOpen, onClose]);
 
   if (!isOpen) return null;
 
@@ -91,16 +89,16 @@ export function Modal({
             <XMarkIcon className="w-5 h-5" />
           </button>
         )}
-        
+
         <div className="text-center">
           <div className="flex justify-center mb-4">
             {getIcon()}
           </div>
-          
+
           <h3 className={`text-xl font-semibold mb-3 ${colors.titleColor}`}>
             {title}
           </h3>
-          
+
           <div className={`text-sm ${colors.messageColor}`}>
             {typeof message === 'string' ? (
               <p>{message}</p>
@@ -108,7 +106,7 @@ export function Modal({
               message
             )}
           </div>
-          
+
           {!autoClose && (
             <div className="mt-6">
               <button

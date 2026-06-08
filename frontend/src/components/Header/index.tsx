@@ -104,7 +104,7 @@ export function Header({ toggleSidebar }: HeaderProps) {
             onKeyDown={(e) => {
               if (e.key === 'Enter') {
                 const q = (e.target as HTMLInputElement).value.trim();
-                if (q) navigate(`/search?q=${encodeURIComponent(q)}`);
+                if (q) showToast('Busca disponivel em breve.', 'info');
               }
             }}
           />

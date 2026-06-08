@@ -1,51 +1,44 @@
 import bcrypt from 'bcryptjs';
-import { prisma } from './prisma';
+import { query, execute } from './connection';
+import { RowDataPacket } from 'mysql2';
 
 const FIXED_ADMIN_EMAIL = 'marcelolimadez@gmail.com';
 
 async function seed(): Promise<void> {
-  const company = await prisma.company.upsert({
-    where: { id: 1 },
-    update: { name: 'Nexus Business Manager Demo' },
-    create: {
-      name: 'Nexus Business Manager Demo',
-      email: 'marcelolimadez@gmail.com',
-    },
-  });
+  const existing = await query<RowDataPacket[]>('SELECT id FROM companies WHERE id = 1');
+  if (existing.length === 0) {
+    await execute(
+      'INSERT INTO companies (id, name, slug, email) VALUES (1, ?, ?, ?)',
+      ['Nexus Business Manager Demo', 'nexus-demo', 'marcelolimadez@gmail.com']
+    );
+  } else {
+    await execute('UPDATE companies SET name = ? WHERE id = 1', ['Nexus Business Manager Demo']);
+  }
 
   const hashedPassword = await bcrypt.hash('12345678', 10);
+  const adminCheck = await query<RowDataPacket[]>('SELECT id FROM users WHERE email = ? LIMIT 1', [FIXED_ADMIN_EMAIL]);
 
-  await prisma.user.upsert({
-    where: { email: FIXED_ADMIN_EMAIL },
-    update: {
-      role: 'admin',
-      active: true,
-      companyId: company.id,
-      passwordHash: hashedPassword,
-      name: 'Administrador',
-    },
-    create: {
-      companyId: company.id,
-      name: 'Administrador',
-      email: FIXED_ADMIN_EMAIL,
-      passwordHash: hashedPassword,
-      role: 'admin',
-      active: true,
-    },
-  });
+  if (adminCheck.length === 0) {
+    await execute(
+      'INSERT INTO users (company_id, name, email, password, role, active) VALUES (1, ?, ?, ?, ?, TRUE)',
+      ['Administrador', FIXED_ADMIN_EMAIL, hashedPassword, 'admin']
+    );
+  } else {
+    await execute(
+      'UPDATE users SET role = ?, active = TRUE, password = ? WHERE email = ?',
+      ['admin', hashedPassword, FIXED_ADMIN_EMAIL]
+    );
+  }
 
   console.log('Administrador fixo criado/atualizado com sucesso');
   console.log(`Email: ${FIXED_ADMIN_EMAIL}`);
   console.log('Senha: 12345678');
   console.log('Perfil: ADMIN');
-  console.log(`Empresa: ${company.name}`);
+  console.log('Empresa: Nexus Business Manager Demo');
 }
 
 seed()
   .catch((error) => {
     console.error(error);
     process.exit(1);
-  })
-  .finally(async () => {
-    await prisma.$disconnect();
   });

@@ -36,7 +36,7 @@ export function Register() {
     if (password !== confirmPassword) { setError('As senhas nao conferem.'); return; }
     setLoading(true);
     try {
-      await signUp(name, email, password);
+      await signUp(name, email, password, username, phone);
       navigate('/dashboard');
     } catch (err: any) {
       setError(err.response?.data?.message || err.response?.data?.error || 'Erro ao cadastrar');

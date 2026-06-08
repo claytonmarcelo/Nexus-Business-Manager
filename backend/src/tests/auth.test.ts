@@ -1,12 +1,8 @@
 import { describe, it, expect, vi } from "vitest";
 import { AppError } from "../shared/errors/app-error";
 
-vi.mock("../shared/database/prisma", () => ({
-  prisma: {
-    user: {
-      findFirst: vi.fn(),
-    },
-  },
+vi.mock("../shared/database/connection", () => ({
+  query: vi.fn(),
 }));
 
 vi.mock("bcryptjs", () => ({
@@ -19,56 +15,60 @@ vi.mock("bcryptjs", () => ({
 }));
 
 import { authenticateUser } from "../modules/auth/auth.service";
-import { prisma } from "../shared/database/prisma";
+import * as connection from "../shared/database/connection";
 import bcrypt from "bcryptjs";
 
 describe("Auth - authenticateUser", () => {
   it("deve autenticar usuario com credenciais validas", async () => {
-    const mockUser = {
+    const mockUser = [{
       id: 1,
-      companyId: 1,
+      company_id: 1,
       name: "Admin",
       email: "admin@test.com",
-      passwordHash: "$2b$10$hashfake",
+      password: "$2b$10$hashfake",
       role: "admin",
-    };
+      avatar_url: null,
+      theme_preference: "dark",
+    }];
 
-    (prisma.user.findFirst as any).mockResolvedValue(mockUser);
+    (connection.query as any).mockResolvedValue(mockUser);
     (bcrypt.compare as any).mockResolvedValue(true);
 
     const result = await authenticateUser({
       email: "admin@test.com",
-      password: "12345678",
+      password: "123456",
     });
 
     expect(result).toBeDefined();
-    expect(result.id).toBe(1);
-    expect(result.email).toBe("admin@test.com");
+    expect(result!.email).toBe("admin@test.com");
+    expect(result!.role).toBe("admin");
   });
 
-  it("deve rejeitar credenciais invalidas", async () => {
-    (prisma.user.findFirst as any).mockResolvedValue(null);
+  it("deve lancar erro com credenciais invalidas", async () => {
+    (connection.query as any).mockResolvedValue([]);
 
     await expect(
-      authenticateUser({ email: "wrong@test.com", password: "12345678" })
+      authenticateUser({ email: "wrong@test.com", password: "wrong" })
     ).rejects.toThrow(AppError);
   });
 
-  it("deve rejeitar senha incorreta", async () => {
-    const mockUser = {
+  it("deve lancar erro quando senha nao confere", async () => {
+    const mockUser = [{
       id: 1,
-      companyId: 1,
+      company_id: 1,
       name: "Admin",
       email: "admin@test.com",
-      passwordHash: "$2b$10$hashfake",
+      password: "$2b$10$hashfake",
       role: "admin",
-    };
+      avatar_url: null,
+      theme_preference: "dark",
+    }];
 
-    (prisma.user.findFirst as any).mockResolvedValue(mockUser);
+    (connection.query as any).mockResolvedValue(mockUser);
     (bcrypt.compare as any).mockResolvedValue(false);
 
     await expect(
-      authenticateUser({ email: "admin@test.com", password: "wrongpass" })
+      authenticateUser({ email: "admin@test.com", password: "wrong" })
     ).rejects.toThrow(AppError);
   });
 });

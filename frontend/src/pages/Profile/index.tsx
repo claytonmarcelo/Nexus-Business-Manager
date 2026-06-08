@@ -78,7 +78,7 @@ export function Profile() {
     <div className="max-w-4xl mx-auto space-y-8">
       <div>
         <h1 className="text-3xl font-bold text-nexus-text mb-2">Meu Perfil</h1>
-        <p className="text-nexus-textSecondary">Informações da sua conta</p>
+        <p className="text-nexus-muted">Informações da sua conta</p>
       </div>
 
       <div className="card space-y-6">
@@ -87,7 +87,7 @@ export function Profile() {
             <button
               onClick={handleAvatarClick}
               disabled={avatarLoading}
-              className="w-24 h-24 rounded-full bg-nexus-teal flex items-center justify-center text-3xl font-bold overflow-hidden hover:opacity-80 transition-opacity cursor-pointer"
+              className="w-24 h-24 rounded-full bg-nexus-gold flex items-center justify-center text-3xl font-bold overflow-hidden hover:opacity-80 transition-opacity cursor-pointer"
               title="Clique para alterar avatar"
             >
               {avatarLoading ? (
@@ -110,10 +110,10 @@ export function Profile() {
             <h2 className="text-xl font-semibold text-nexus-text">
               {user?.name}
             </h2>
-            <p className="text-sm text-nexus-textSecondary capitalize">
+            <p className="text-sm text-nexus-muted capitalize">
               {user?.role}
             </p>
-            <p className="text-sm text-nexus-textSecondary">
+            <p className="text-sm text-nexus-muted">
               {user?.email}
             </p>
           </div>
@@ -131,10 +131,10 @@ export function Profile() {
                 type="text"
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                className="w-full px-4 py-2 rounded-lg border border-nexus-border bg-nexus-graphite text-nexus-text focus:outline-none focus:ring-2 focus:ring-nexus-teal"
+                className="w-full px-4 py-2 rounded-lg border border-nexus-border bg-nexus-card text-nexus-text focus:outline-none focus:ring-2 focus:ring-nexus-gold"
               />
             ) : (
-              <p className="text-nexus-textSecondary">{user?.name}</p>
+              <p className="text-nexus-muted">{user?.name}</p>
             )}
           </div>
 
@@ -147,10 +147,10 @@ export function Profile() {
                 type="email"
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                className="w-full px-4 py-2 rounded-lg border border-nexus-border bg-nexus-graphite text-nexus-text focus:outline-none focus:ring-2 focus:ring-nexus-teal"
+                className="w-full px-4 py-2 rounded-lg border border-nexus-border bg-nexus-card text-nexus-text focus:outline-none focus:ring-2 focus:ring-nexus-gold"
               />
             ) : (
-              <p className="text-nexus-textSecondary">{user?.email}</p>
+              <p className="text-nexus-muted">{user?.email}</p>
             )}
           </div>
 
@@ -158,14 +158,14 @@ export function Profile() {
             <label className="block text-sm font-medium text-nexus-text mb-2">
               Função
             </label>
-            <p className="text-nexus-textSecondary capitalize">{user?.role}</p>
+            <p className="text-nexus-muted capitalize">{user?.role}</p>
           </div>
 
           <div>
             <label className="block text-sm font-medium text-nexus-text mb-2">
               ID da Empresa
             </label>
-            <p className="text-nexus-textSecondary">{user?.company_id}</p>
+            <p className="text-nexus-muted">{user?.company_id}</p>
           </div>
         </div>
 
@@ -174,13 +174,13 @@ export function Profile() {
             <>
               <button
                 onClick={handleSave}
-                className="px-4 py-2 bg-nexus-teal text-white rounded-lg hover:opacity-90 transition-opacity font-medium"
+                className="px-4 py-2 bg-nexus-gold text-white rounded-lg hover:opacity-90 transition-opacity font-medium"
               >
                 Salvar
               </button>
               <button
                 onClick={handleCancel}
-                className="px-4 py-2 border border-nexus-border text-nexus-text rounded-lg hover:bg-nexus-softGray transition-colors font-medium"
+                className="px-4 py-2 border border-nexus-border text-nexus-text rounded-lg hover:bg-nexus-bg-soft transition-colors font-medium"
               >
                 Cancelar
               </button>
@@ -188,7 +188,7 @@ export function Profile() {
           ) : (
             <button
               onClick={() => setEditing(true)}
-              className="px-4 py-2 bg-nexus-teal text-white rounded-lg hover:opacity-90 transition-opacity font-medium"
+              className="px-4 py-2 bg-nexus-gold text-white rounded-lg hover:opacity-90 transition-opacity font-medium"
             >
               Editar Perfil
             </button>

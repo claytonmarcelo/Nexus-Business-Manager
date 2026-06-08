@@ -32,9 +32,9 @@ export function PremiumInput({ label, icon, error, className = '', ...props }: P
             boxShadow: focused ? '0 0 20px rgba(212, 149, 86, 0.1)' : 'none',
             outline: 'none',
           }}
+          {...props}
           onFocus={(e) => { setFocused(true); props.onFocus?.(e); }}
           onBlur={(e) => { setFocused(false); props.onBlur?.(e); }}
-          {...props}
         />
       </div>
       {error && (
