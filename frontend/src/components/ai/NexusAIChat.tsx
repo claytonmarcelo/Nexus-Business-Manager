@@ -63,7 +63,7 @@ export function NexusAIChat({ module, page, onClose }: Props) {
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '1rem', borderBottom: '1px solid var(--nexus-border)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <span style={{ width: '0.5rem', height: '0.5rem', borderRadius: '9999px', background: '#22C55E', animation: 'pulse 2s infinite' }} />
+          <span style={{ width: '0.5rem', height: '0.5rem', borderRadius: '9999px', background: 'var(--nexus-success)', animation: 'pulse 2s infinite' }} />
           <span style={{ fontSize: '0.875rem', fontWeight: 500, color: 'var(--nexus-text)' }}>Nexus AI</span>
         </div>
         {onClose && (
@@ -87,9 +87,9 @@ export function NexusAIChat({ module, page, onClose }: Props) {
         {loading && (
           <div style={{ display: 'flex', gap: '0.75rem' }}>
             <div style={{ width: '2rem', height: '2rem', borderRadius: '9999px', background: 'rgba(198, 90, 113, 0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <span style={{ width: '0.75rem', height: '0.75rem', border: '2px solid #C65A71', borderTopColor: 'transparent', borderRadius: '9999px', animation: 'spin 1s linear infinite' }} />
+              <span style={{ width: '0.75rem', height: '0.75rem', border: '2px solid var(--nexus-rose)', borderTopColor: 'transparent', borderRadius: '9999px', animation: 'spin 1s linear infinite' }} />
             </div>
-            <div style={{ borderRadius: '1rem', padding: '0.625rem 1rem', background: 'rgba(11, 13, 16, 0.94)', border: '1px solid var(--nexus-border)' }}>
+            <div style={{ borderRadius: '1rem', padding: '0.625rem 1rem', background: 'var(--nexus-card-strong)', border: '1px solid var(--nexus-border)' }}>
               <div style={{ display: 'flex', gap: '0.25rem' }}>
                 <span style={{ width: '0.5rem', height: '0.5rem', borderRadius: '9999px', background: 'var(--nexus-muted-2)', animation: 'bounce 1s infinite' }} />
                 <span style={{ width: '0.5rem', height: '0.5rem', borderRadius: '9999px', background: 'var(--nexus-muted-2)', animation: 'bounce 1s infinite 0.15s' }} />
@@ -116,14 +116,14 @@ export function NexusAIChat({ module, page, onClose }: Props) {
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="Digite sua pergunta..."
-            style={{ flex: 1, padding: '0.625rem 1rem', background: 'rgba(0,0,0,0.5)', color: 'var(--nexus-text)', border: '1px solid var(--nexus-border)', borderRadius: '10px', fontSize: '0.875rem', outline: 'none' }}
+            style={{ flex: 1, padding: '0.625rem 1rem', background: 'var(--nexus-input-bg)', color: 'var(--nexus-text)', border: '1px solid var(--nexus-border)', borderRadius: '10px', fontSize: '0.875rem', outline: 'none' }}
             disabled={loading}
             maxLength={2000}
           />
           <button
             onClick={() => handleSend()}
             disabled={loading || !input.trim()}
-            style={{ background: 'linear-gradient(135deg, #C65A71, #9d4e58)', color: '#fff', border: 'none', borderRadius: '10px', padding: '0.625rem 1rem', fontWeight: 500, cursor: 'pointer', fontSize: '0.875rem', opacity: loading || !input.trim() ? 0.5 : 1 }}
+            style={{ background: 'linear-gradient(135deg, var(--nexus-rose), var(--nexus-rose-dark))', color: 'var(--nexus-text)', border: 'none', borderRadius: '10px', padding: '0.625rem 1rem', fontWeight: 500, cursor: 'pointer', fontSize: '0.875rem', opacity: loading || !input.trim() ? 0.5 : 1 }}
           >
             Enviar
           </button>

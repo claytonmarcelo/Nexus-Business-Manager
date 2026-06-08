@@ -43,6 +43,8 @@
   :root {
     /* Dark Mode (Default) */
     --nexus-bg: #05070A;
+    --nexus-input-bg: rgba(0, 0, 0, 0.5);
+    --nexus-overlay: rgba(0, 0, 0, 0.7);
     --nexus-bg-soft: #0B0D10;
     --nexus-bg-panel: #0B0D10;
     --nexus-card: rgba(11, 13, 16, 0.86);
@@ -98,6 +100,8 @@
     --nexus-success: #2F9E44;
     --nexus-danger: #C92A2A;
     --nexus-warning: #D89A28;
+    --nexus-input-bg: #FFFFFF;
+    --nexus-overlay: rgba(0, 0, 0, 0.5);
     --nexus-radius-sm: 10px;
     --nexus-radius-md: 14px;
     --nexus-radius-lg: 18px;
@@ -162,12 +166,9 @@
 
   .input-field {
     @apply w-full px-3 py-2 rounded-lg transition-colors duration-200;
-    background: rgba(0, 0, 0, 0.5);
+    background: var(--nexus-input-bg);
     color: var(--nexus-text);
     border: 1px solid var(--nexus-border);
-  }
-  .light .input-field {
-    background: #FFFFFF;
   }
   .input-field::placeholder {
     color: var(--nexus-muted-2);
@@ -259,15 +260,12 @@
 }
 
 .nexus-input {
-  background: rgba(0, 0, 0, 0.5);
+  background: var(--nexus-input-bg);
   color: var(--nexus-text);
   border: 1px solid var(--nexus-border);
   border-radius: var(--nexus-radius-sm);
   padding: 0.75rem 1rem;
   width: 100%;
-}
-.light .nexus-input {
-  background: #FFFFFF;
 }
 .nexus-input::placeholder {
   color: var(--nexus-muted-2);
@@ -311,6 +309,7 @@
 }
 
 .dark .nexus-page { background: inherit; }
+.light .nexus-page { background: inherit; }
 
 .dark .text-brand-graphiteWine { color: var(--nexus-text) !important; }
 .dark .text-brand-graphiteWine\/60 { color: var(--nexus-muted) !important; }
@@ -367,6 +366,46 @@
   background: var(--nexus-card-strong) !important;
 }
 
+/* Light mode overrides for component-level colors */
+.light .table-row:hover {
+  background: #FAF4EC;
+}
+.light .stock-table th {
+  background: #F2ECE4;
+  color: #2B2B2B;
+}
+.light .stock-table td {
+  border-bottom: 1px solid #E4D3BE;
+}
+.light .stock-table tr:hover td {
+  background: #FAF4EC;
+}
+.light .activity-item {
+  border-bottom: 1px solid #E4D3BE;
+}
+.light .header-notification-dot {
+  border-color: #F8F5F0;
+}
+.light .premium-modal {
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.1);
+}
+.light .gradient-divider {
+  background: linear-gradient(90deg, transparent, rgba(200, 180, 160, 0.3), transparent);
+}
+.light .nexus-table th {
+  background: #F2ECE4;
+}
+.light .nexus-table td {
+  border-bottom: 1px solid #E4D3BE;
+}
+.light .nexus-table tr:hover td {
+  background: #FAF4EC;
+}
+.light .text-green-500 { color: #2F9E44 !important; }
+.light .text-red-500,
+.light .text-red-400 { color: #C92A2A !important; }
+.light .border-red-400 { border-color: rgba(201, 42, 42, 0.3) !important; }
+
 .sidebar-dark {
   background: var(--nexus-bg) !important;
   color: var(--nexus-text) !important;
@@ -374,19 +413,16 @@
 }
 
 .modal-overlay {
-  background: rgba(0, 0, 0, 0.7) !important;
+  background: var(--nexus-overlay) !important;
   backdrop-filter: blur(4px);
 }
 
 .select-field {
-  background: rgba(0, 0, 0, 0.5);
+  background: var(--nexus-input-bg);
   color: var(--nexus-text);
   border: 1px solid var(--nexus-border);
   border-radius: var(--nexus-radius-sm);
   padding: 0.5rem 0.75rem;
-}
-.light .select-field {
-  background: #FFFFFF;
 }
 
 .toast-success {

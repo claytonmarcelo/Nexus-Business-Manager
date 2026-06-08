@@ -1,7 +1,11 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import { ClipboardDocumentListIcon } from '@heroicons/react/24/outline';
 import api from '../../services/api';
 import { AuditLog } from '../../types';
+import { StatsCard } from '../../components/ui/StatsCard';
+import { PremiumTable, Column } from '../../components/ui/PremiumTable';
+import { PremiumBadge } from '../../components/ui/PremiumBadge';
 
 export function Audit() {
   const [logs, setLogs] = useState<AuditLog[]>([]);
@@ -28,64 +32,74 @@ export function Audit() {
     return map[action] || action;
   }
 
-  const badge = (bg: string, color: string) => ({
-    display: 'inline-flex', alignItems: 'center', gap: '0.375rem', padding: '0.25rem 0.75rem',
-    borderRadius: '9999px', fontSize: '0.75rem', fontWeight: 500, background: bg, color,
-  });
+  function actionVariant(action: string): 'success' | 'warning' | 'danger' | 'default' {
+    const map: Record<string, 'success' | 'warning' | 'danger' | 'default'> = {
+      create: 'success',
+      update: 'warning',
+      delete: 'danger',
+      login: 'default',
+    };
+    return map[action] || 'default';
+  }
 
-  const actionBadgeStyle: Record<string, ReturnType<typeof badge>> = {
-    create: badge('rgba(125,218,106,0.12)', '#7DDA6A'),
-    update: badge('rgba(212,149,86,0.12)', '#D49556'),
-    delete: badge('rgba(216,75,95,0.12)', '#D84B5F'),
-    login: badge('rgba(148,163,184,0.12)', '#94A3B8'),
-  };
+  const columns: Column<AuditLog>[] = [
+    {
+      key: 'date',
+      header: 'Data/Hora',
+      render: (log) => (
+        <span style={{ color: 'var(--nexus-muted-2)' }}>{new Date(log.created_at).toLocaleString('pt-BR')}</span>
+      ),
+    },
+    {
+      key: 'user',
+      header: 'Usuario',
+      render: (log) => (
+        <span className="font-medium" style={{ color: 'var(--nexus-text)' }}>{log.user_name}</span>
+      ),
+    },
+    {
+      key: 'action',
+      header: 'Acao',
+      render: (log) => (
+        <PremiumBadge variant={actionVariant(log.action)}>{actionLabel(log.action)}</PremiumBadge>
+      ),
+    },
+    {
+      key: 'entity',
+      header: 'Entidade',
+      render: (log) => (
+        <span style={{ color: 'var(--nexus-muted-2)', textTransform: 'capitalize' }}>{log.entity_type}</span>
+      ),
+    },
+    {
+      key: 'id',
+      header: 'ID',
+      render: (log) => (
+        <span style={{ color: 'var(--nexus-muted-2)' }}>{log.entity_id || '-'}</span>
+      ),
+    },
+  ];
 
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.5rem' }}>
+      <div className="flex justify-between items-center mb-8">
         <div>
-          <h1 style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--nexus-text)' }}>Auditoria</h1>
-          <p style={{ fontSize: '0.875rem', color: 'var(--nexus-muted-2)', marginTop: '0.25rem' }}>Historico de acoes no sistema</p>
+          <h1 className="text-2xl font-bold" style={{ color: 'var(--nexus-text)' }}>Auditoria</h1>
+          <p className="text-sm mt-1" style={{ color: 'var(--nexus-muted-2)' }}>Historico de acoes no sistema</p>
         </div>
       </div>
 
-      <div style={{ background: 'var(--nexus-card)', border: '1px solid var(--nexus-border)', borderRadius: '14px', overflow: 'hidden' }}>
-        {loading ? (
-          <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--nexus-muted-2)', fontSize: '0.875rem' }}>Carregando...</div>
-        ) : logs.length === 0 ? (
-          <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--nexus-muted-2)' }}>Nenhum registro encontrado</div>
-        ) : (
-          <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', fontSize: '0.875rem', borderCollapse: 'collapse' }}>
-              <thead>
-                <tr>
-                  <th style={{ textAlign: 'left', padding: '0.75rem 1rem', fontSize: '0.75rem', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--nexus-muted-2)', borderBottom: '1px solid rgba(212,149,86,0.1)' }}>Data/Hora</th>
-                  <th style={{ textAlign: 'left', padding: '0.75rem 1rem', fontSize: '0.75rem', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--nexus-muted-2)', borderBottom: '1px solid rgba(212,149,86,0.1)' }}>Usuario</th>
-                  <th style={{ textAlign: 'left', padding: '0.75rem 1rem', fontSize: '0.75rem', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--nexus-muted-2)', borderBottom: '1px solid rgba(212,149,86,0.1)' }}>Acao</th>
-                  <th style={{ textAlign: 'left', padding: '0.75rem 1rem', fontSize: '0.75rem', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--nexus-muted-2)', borderBottom: '1px solid rgba(212,149,86,0.1)' }}>Entidade</th>
-                  <th style={{ textAlign: 'left', padding: '0.75rem 1rem', fontSize: '0.75rem', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--nexus-muted-2)', borderBottom: '1px solid rgba(212,149,86,0.1)' }}>ID</th>
-                </tr>
-              </thead>
-              <tbody>
-                {logs.map((log) => (
-                  <tr key={log.id}
-                    style={{ background: hoveredRowId === log.id ? 'rgba(212,149,86,0.08)' : 'transparent' }}
-                    onMouseEnter={() => setHoveredRowId(log.id)}
-                    onMouseLeave={() => setHoveredRowId(null)}
-                  >
-                    <td style={{ padding: '0.75rem 1rem', borderBottom: '1px solid rgba(212,149,86,0.05)', color: 'var(--nexus-text)', fontSize: '0.875rem' }}>{new Date(log.created_at).toLocaleString('pt-BR')}</td>
-                    <td style={{ padding: '0.75rem 1rem', borderBottom: '1px solid rgba(212,149,86,0.05)', color: 'var(--nexus-text)', fontSize: '0.875rem', fontWeight: 500 }}>{log.user_name}</td>
-                    <td style={{ padding: '0.75rem 1rem', borderBottom: '1px solid rgba(212,149,86,0.05)', color: 'var(--nexus-text)', fontSize: '0.875rem' }}>
-                      <span style={actionBadgeStyle[log.action] || actionBadgeStyle['login']}>{actionLabel(log.action)}</span>
-                    </td>
-                    <td style={{ padding: '0.75rem 1rem', borderBottom: '1px solid rgba(212,149,86,0.05)', color: 'var(--nexus-text)', fontSize: '0.875rem', textTransform: 'capitalize' }}>{log.entity_type}</td>
-                    <td style={{ padding: '0.75rem 1rem', borderBottom: '1px solid rgba(212,149,86,0.05)', color: 'var(--nexus-text)', fontSize: '0.875rem' }}>{log.entity_id || '-'}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <StatsCard
+          label="Total Registros"
+          value={String(logs.length)}
+          icon={<ClipboardDocumentListIcon className="w-5 h-5" />}
+          color="gold"
+        />
+      </div>
+
+      <div className="rounded-xl overflow-hidden" style={{ background: 'var(--nexus-card)', border: '1px solid var(--nexus-border)' }}>
+        <PremiumTable columns={columns} data={logs} loading={loading} emptyMessage="Nenhum registro encontrado." />
       </div>
     </motion.div>
   );

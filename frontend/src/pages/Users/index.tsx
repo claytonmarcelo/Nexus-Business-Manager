@@ -1,7 +1,12 @@
 import { useState, useEffect, FormEvent } from 'react';
 import { motion } from 'framer-motion';
+import { UserGroupIcon, UserPlusIcon } from '@heroicons/react/24/outline';
 import api from '../../services/api';
 import { User } from '../../types';
+import { StatsCard } from '../../components/ui/StatsCard';
+import { PremiumTable, Column } from '../../components/ui/PremiumTable';
+import { PremiumBadge } from '../../components/ui/PremiumBadge';
+import { GradientButton } from '../../components/ui/GradientButton';
 
 const roleLabels: Record<string, string> = {
   admin: 'Administrador',
@@ -83,139 +88,199 @@ export function Users() {
     return styles[role] || styles.viewer;
   }
 
-  const inputStyle: React.CSSProperties = {
-    width: '100%', padding: '0.625rem 1rem', background: 'rgba(0,0,0,0.5)', color: 'var(--nexus-text)',
-    border: '1px solid var(--nexus-border)', borderRadius: '10px', fontSize: '0.875rem', outline: 'none',
-  };
+
+  const columns: Column<User>[] = [
+    {
+      key: 'name',
+      header: 'Nome',
+      render: (user) => (
+        <span className="font-medium" style={{ color: 'var(--nexus-text)' }}>{user.name}</span>
+      ),
+    },
+    {
+      key: 'email',
+      header: 'Email',
+      render: (user) => (
+        <span style={{ color: 'var(--nexus-muted-2)' }}>{user.email}</span>
+      ),
+    },
+    {
+      key: 'role',
+      header: 'Perfil',
+      render: (user) => {
+        const roleColors: Record<string, 'success' | 'warning' | 'danger' | 'default'> = {
+          admin: 'danger',
+          manager: 'warning',
+          operator: 'success',
+          viewer: 'default',
+        };
+        return <PremiumBadge variant={roleColors[user.role] || 'default'}>{roleLabels[user.role]}</PremiumBadge>;
+      },
+    },
+    {
+      key: 'status',
+      header: 'Status',
+      render: (user) => (
+        <PremiumBadge variant={user.active ? 'success' : 'danger'}>
+          {user.active ? 'Ativo' : 'Inativo'}
+        </PremiumBadge>
+      ),
+    },
+    {
+      key: 'actions',
+      header: 'Acoes',
+      render: (user) => (
+        <div className="flex items-center gap-2 justify-end">
+          <button
+            onClick={() => openEdit(user)}
+            className="text-xs font-medium px-3 py-1.5 rounded-lg transition-all duration-200"
+            style={{
+              color: '#D49556',
+              background: 'rgba(212, 149, 86, 0.1)',
+              border: '1px solid rgba(212, 149, 86, 0.2)',
+            }}
+            onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(212, 149, 86, 0.2)'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(212, 149, 86, 0.1)'; }}
+          >
+            Editar
+          </button>
+          <button
+            onClick={() => handleToggleActive(user)}
+            className="text-xs font-medium px-3 py-1.5 rounded-lg transition-all duration-200"
+            style={{
+              color: user.active ? '#D84B5F' : '#22C55E',
+              background: user.active ? 'rgba(216, 75, 95, 0.1)' : 'rgba(34, 197, 94, 0.1)',
+              border: user.active ? '1px solid rgba(216, 75, 95, 0.2)' : '1px solid rgba(34, 197, 94, 0.2)',
+            }}
+            onMouseEnter={(e) => { e.currentTarget.style.background = user.active ? 'rgba(216, 75, 95, 0.2)' : 'rgba(34, 197, 94, 0.2)'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.background = user.active ? 'rgba(216, 75, 95, 0.1)' : 'rgba(34, 197, 94, 0.1)'; }}
+          >
+            {user.active ? 'Desativar' : 'Ativar'}
+          </button>
+        </div>
+      ),
+    },
+  ];
 
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
-      <div className="page-header">
+      <div className="flex justify-between items-center mb-8">
         <div>
-          <h1 style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--nexus-text)' }}>Usuarios</h1>
-          <p style={{ fontSize: '0.875rem', color: 'var(--nexus-muted-2)', marginTop: '0.25rem' }}>Gerenciar usuarios do sistema</p>
+          <h1 className="text-2xl font-bold" style={{ color: 'var(--nexus-text)' }}>Usuarios</h1>
+          <p className="text-sm mt-1" style={{ color: 'var(--nexus-muted-2)' }}>Gerenciar usuarios do sistema</p>
         </div>
-        <button
-          onClick={openCreate}
-          style={{
-            background: 'linear-gradient(135deg, #C65A71, #9d4e58)', color: '#fff', border: 'none',
-            borderRadius: '10px', padding: '0.625rem 1.25rem', fontWeight: 500, cursor: 'pointer',
-          }}
-        >
+        <GradientButton onClick={openCreate} icon={<UserPlusIcon className="w-5 h-5" />}>
           Novo Usuario
-        </button>
+        </GradientButton>
       </div>
 
-      <div style={{ background: 'var(--nexus-card)', border: '1px solid var(--nexus-border)', borderRadius: '14px', overflow: 'hidden' }}>
-        {loading ? (
-          <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--nexus-muted-2)' }}>Carregando...</div>
-        ) : users.length === 0 ? (
-          <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--nexus-muted-2)' }}>Nenhum usuario encontrado</div>
-        ) : (
-          <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', fontSize: '0.875rem', borderCollapse: 'collapse' }}>
-              <thead>
-                <tr>
-                  <th style={{ textAlign: 'left', padding: '0.75rem 1rem', fontSize: '0.75rem', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--nexus-muted-2)', borderBottom: '1px solid rgba(212, 149, 86, 0.1)' }}>Nome</th>
-                  <th style={{ textAlign: 'left', padding: '0.75rem 1rem', fontSize: '0.75rem', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--nexus-muted-2)', borderBottom: '1px solid rgba(212, 149, 86, 0.1)' }}>Email</th>
-                  <th style={{ textAlign: 'left', padding: '0.75rem 1rem', fontSize: '0.75rem', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--nexus-muted-2)', borderBottom: '1px solid rgba(212, 149, 86, 0.1)' }}>Perfil</th>
-                  <th style={{ textAlign: 'left', padding: '0.75rem 1rem', fontSize: '0.75rem', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--nexus-muted-2)', borderBottom: '1px solid rgba(212, 149, 86, 0.1)' }}>Status</th>
-                  <th style={{ textAlign: 'right', padding: '0.75rem 1rem', fontSize: '0.75rem', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--nexus-muted-2)', borderBottom: '1px solid rgba(212, 149, 86, 0.1)' }}>Acoes</th>
-                </tr>
-              </thead>
-              <tbody>
-                {users.map((user) => (
-                  <tr
-                    key={user.id}
-                    onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(212,149,86,0.04)'}
-                    onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
-                  >
-                    <td style={{ padding: '0.75rem 1rem', borderBottom: '1px solid rgba(212,149,86,0.05)', color: 'var(--nexus-text)', fontSize: '0.875rem', fontWeight: 500 }}>{user.name}</td>
-                    <td style={{ padding: '0.75rem 1rem', borderBottom: '1px solid rgba(212,149,86,0.05)', color: 'var(--nexus-text)', fontSize: '0.875rem' }}>{user.email}</td>
-                    <td style={{ padding: '0.75rem 1rem', borderBottom: '1px solid rgba(212,149,86,0.05)', color: 'var(--nexus-text)', fontSize: '0.875rem' }}>
-                      <span style={getRoleBadgeStyle(user.role)}>{roleLabels[user.role]}</span>
-                    </td>
-                    <td style={{ padding: '0.75rem 1rem', borderBottom: '1px solid rgba(212,149,86,0.05)', color: 'var(--nexus-text)', fontSize: '0.875rem' }}>
-                      <span style={{
-                        display: 'inline-flex', alignItems: 'center', gap: '0.375rem',
-                        padding: '0.25rem 0.75rem', borderRadius: '9999px', fontSize: '0.75rem', fontWeight: 500,
-                        background: user.active ? 'rgba(34,197,94,0.12)' : 'rgba(216,75,95,0.12)',
-                        color: user.active ? '#22C55E' : '#D84B5F',
-                      }}>
-                        {user.active ? 'Ativo' : 'Inativo'}
-                      </span>
-                    </td>
-                    <td style={{ padding: '0.75rem 1rem', borderBottom: '1px solid rgba(212,149,86,0.05)', color: 'var(--nexus-text)', fontSize: '0.875rem', textAlign: 'right' }}>
-                      <button
-                        onClick={() => openEdit(user)}
-                        style={{ color: '#D49556', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 500, fontSize: '0.875rem' }}
-                      >
-                        Editar
-                      </button>
-                      <span style={{ color: 'var(--nexus-border)', margin: '0 0.5rem' }}>|</span>
-                      <button
-                        onClick={() => handleToggleActive(user)}
-                        style={{
-                          color: user.active ? '#D84B5F' : '#22C55E', background: 'none', border: 'none',
-                          cursor: 'pointer', fontWeight: 500, fontSize: '0.875rem',
-                        }}
-                      >
-                        {user.active ? 'Desativar' : 'Ativar'}
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <StatsCard
+          label="Total Usuarios"
+          value={String(users.length)}
+          icon={<UserGroupIcon className="w-5 h-5" />}
+          color="gold"
+        />
+        <StatsCard
+          label="Usuarios Ativos"
+          value={String(users.filter(u => u.active).length)}
+          icon={<UserGroupIcon className="w-5 h-5" />}
+          color="green"
+          trend={users.length > 0 ? { value: `${Math.round((users.filter(u => u.active).length / users.length) * 100)}%`, direction: 'up' } : undefined}
+        />
+      </div>
+
+      <div className="rounded-xl overflow-hidden" style={{ background: 'var(--nexus-card)', border: '1px solid var(--nexus-border)' }}>
+        <PremiumTable columns={columns} data={users} loading={loading} emptyMessage="Nenhum usuario encontrado." />
       </div>
 
       {showModal && (
-        <div style={{ position: 'fixed', inset: 0, zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem', background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }}>
-          <div style={{ background: 'var(--nexus-card-strong)', border: '1px solid var(--nexus-border)', borderRadius: '18px', padding: '2rem', width: '100%', maxWidth: '32rem' }}>
-            <h2 style={{ fontSize: '1.25rem', fontWeight: 600, color: 'var(--nexus-text)', marginBottom: '1.5rem' }}>
-              {editingUser ? 'Editar Usuario' : 'Novo Usuario'}
-            </h2>
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          style={{ background: 'rgba(5, 7, 10, 0.8)' }}
+          onClick={() => setShowModal(false)}
+        >
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95, y: 10 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            transition={{ duration: 0.2 }}
+            onClick={(e) => e.stopPropagation()}
+            className="w-full max-w-lg rounded-xl p-6"
+            style={{ background: 'var(--nexus-card)', border: '1px solid var(--nexus-border)' }}
+          >
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-lg font-bold" style={{ color: 'var(--nexus-text)' }}>
+                {editingUser ? 'Editar Usuario' : 'Novo Usuario'}
+              </h2>
+              <button
+                onClick={() => setShowModal(false)}
+                className="w-8 h-8 flex items-center justify-center rounded-lg transition-colors"
+                style={{ color: 'var(--nexus-muted-2)', background: 'rgba(0,0,0,0.3)' }}
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
 
             {error && (
-              <div style={{ background: 'rgba(216, 75, 95, 0.12)', color: '#D84B5F', border: '1px solid rgba(216, 75, 95, 0.2)', borderRadius: '10px', padding: '0.75rem 1rem', fontSize: '0.875rem', marginBottom: '1rem' }}>{error}</div>
+              <div className="px-4 py-3 rounded-lg mb-4 text-sm" style={{ background: 'rgba(216, 75, 95, 0.12)', color: '#D84B5F', border: '1px solid rgba(216, 75, 95, 0.2)' }}>
+                {error}
+              </div>
             )}
 
-            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label style={{ color: 'var(--nexus-text)', fontSize: '0.875rem', fontWeight: 500, marginBottom: '0.375rem', display: 'block' }}>Nome</label>
+                <label className="block text-sm font-medium mb-1" style={{ color: 'var(--nexus-muted-2)' }}>Nome *</label>
                 <input
-                  type="text" style={inputStyle} required
+                  type="text" required
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  className="w-full rounded-lg px-4 py-2.5 text-sm outline-none transition-all duration-200"
+                  style={{ background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(212,149,86,0.15)', color: 'var(--nexus-text)' }}
+                  onFocus={(e) => e.target.style.borderColor = 'rgba(212,149,86,0.4)'}
+                  onBlur={(e) => e.target.style.borderColor = 'rgba(212,149,86,0.15)'}
                 />
               </div>
               <div>
-                <label style={{ color: 'var(--nexus-text)', fontSize: '0.875rem', fontWeight: 500, marginBottom: '0.375rem', display: 'block' }}>Email</label>
+                <label className="block text-sm font-medium mb-1" style={{ color: 'var(--nexus-muted-2)' }}>Email *</label>
                 <input
-                  type="email" style={inputStyle} required
+                  type="email" required
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  className="w-full rounded-lg px-4 py-2.5 text-sm outline-none transition-all duration-200"
+                  style={{ background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(212,149,86,0.15)', color: 'var(--nexus-text)' }}
+                  onFocus={(e) => e.target.style.borderColor = 'rgba(212,149,86,0.4)'}
+                  onBlur={(e) => e.target.style.borderColor = 'rgba(212,149,86,0.15)'}
                 />
               </div>
               <div>
-                <label style={{ color: 'var(--nexus-text)', fontSize: '0.875rem', fontWeight: 500, marginBottom: '0.375rem', display: 'block' }}>
-                  {editingUser ? 'Nova Senha (deixe em branco para manter)' : 'Senha'}
+                <label className="block text-sm font-medium mb-1" style={{ color: 'var(--nexus-muted-2)' }}>
+                  {editingUser ? 'Nova Senha (opcional)' : 'Senha *'}
                 </label>
                 <input
-                  type="password" style={inputStyle}
+                  type="password"
                   required={!editingUser}
                   value={formData.password}
                   onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                  className="w-full rounded-lg px-4 py-2.5 text-sm outline-none transition-all duration-200"
+                  style={{ background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(212,149,86,0.15)', color: 'var(--nexus-text)' }}
+                  onFocus={(e) => e.target.style.borderColor = 'rgba(212,149,86,0.4)'}
+                  onBlur={(e) => e.target.style.borderColor = 'rgba(212,149,86,0.15)'}
                 />
               </div>
               <div>
-                <label style={{ color: 'var(--nexus-text)', fontSize: '0.875rem', fontWeight: 500, marginBottom: '0.375rem', display: 'block' }}>Perfil</label>
+                <label className="block text-sm font-medium mb-1" style={{ color: 'var(--nexus-muted-2)' }}>Perfil *</label>
                 <select
-                  style={inputStyle}
+                  required
                   value={formData.role}
                   onChange={(e) => setFormData({ ...formData, role: e.target.value as User['role'] })}
+                  className="w-full rounded-lg px-4 py-2.5 text-sm outline-none transition-all duration-200"
+                  style={{ background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(212,149,86,0.15)', color: 'var(--nexus-text)' }}
+                  onFocus={(e) => e.target.style.borderColor = 'rgba(212,149,86,0.4)'}
+                  onBlur={(e) => e.target.style.borderColor = 'rgba(212,149,86,0.15)'}
                 >
                   <option value="admin">Administrador</option>
                   <option value="manager">Gerente</option>
@@ -223,23 +288,17 @@ export function Users() {
                   <option value="viewer">Visualizador</option>
                 </select>
               </div>
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', paddingTop: '0.5rem' }}>
-                <button
-                  type="button" onClick={() => setShowModal(false)}
-                  style={{ background: 'var(--nexus-card)', color: 'var(--nexus-text)', border: '1px solid var(--nexus-border)', borderRadius: '10px', padding: '0.625rem 1.25rem', cursor: 'pointer' }}
-                >
+              <div className="flex justify-end gap-3 pt-2">
+                <GradientButton variant="secondary" type="button" onClick={() => setShowModal(false)}>
                   Cancelar
-                </button>
-                <button
-                  type="submit"
-                  style={{ background: 'linear-gradient(135deg, #C65A71, #9d4e58)', color: '#fff', border: 'none', borderRadius: '10px', padding: '0.625rem 1.25rem', fontWeight: 500, cursor: 'pointer' }}
-                >
+                </GradientButton>
+                <GradientButton type="submit">
                   Salvar
-                </button>
+                </GradientButton>
               </div>
             </form>
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
       )}
     </motion.div>
   );

@@ -1,7 +1,12 @@
 import { useState, useEffect, FormEvent } from 'react';
 import { motion } from 'framer-motion';
+import { CubeIcon, PlusIcon } from '@heroicons/react/24/outline';
 import api from '../../services/api';
 import { Product } from '../../types';
+import { StatsCard } from '../../components/ui/StatsCard';
+import { PremiumTable, Column } from '../../components/ui/PremiumTable';
+import { PremiumBadge } from '../../components/ui/PremiumBadge';
+import { GradientButton } from '../../components/ui/GradientButton';
 
 export function Products() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -74,128 +79,242 @@ export function Products() {
     return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
   }
 
+  const columns: Column<Product>[] = [
+    {
+      key: 'name',
+      header: 'Nome',
+      render: (product) => (
+        <span className="font-medium" style={{ color: 'var(--nexus-text)' }}>{product.name}</span>
+      ),
+    },
+    {
+      key: 'sku',
+      header: 'SKU',
+      render: (product) => (
+        <span className="font-mono text-xs" style={{ color: 'var(--nexus-muted-2)' }}>{product.sku}</span>
+      ),
+    },
+    {
+      key: 'category',
+      header: 'Categoria',
+      render: (product) => (
+        product.category ? (
+          <PremiumBadge variant="success">{product.category}</PremiumBadge>
+        ) : (
+          <span style={{ color: 'var(--nexus-muted-2)' }}>-</span>
+        )
+      ),
+    },
+    {
+      key: 'price',
+      header: 'Preco',
+      render: (product) => (
+        <span className="font-medium" style={{ color: 'var(--nexus-text)' }}>{formatPrice(product.price)}</span>
+      ),
+    },
+    {
+      key: 'quantity',
+      header: 'Qtd',
+      render: (product) => (
+        <span className="font-semibold" style={{ color: product.quantity <= 5 ? '#D84B5F' : 'var(--nexus-text)' }}>
+          {product.quantity}
+        </span>
+      ),
+    },
+    {
+      key: 'actions',
+      header: 'Acoes',
+      render: (product) => (
+        <div className="flex items-center gap-2 justify-end">
+          <button
+            onClick={() => openEdit(product)}
+            className="text-xs font-medium px-3 py-1.5 rounded-lg transition-all duration-200"
+            style={{
+              color: '#D49556',
+              background: 'rgba(212, 149, 86, 0.1)',
+              border: '1px solid rgba(212, 149, 86, 0.2)',
+            }}
+            onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(212, 149, 86, 0.2)'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(212, 149, 86, 0.1)'; }}
+          >
+            Editar
+          </button>
+          <button
+            onClick={() => handleDelete(product.id)}
+            className="text-xs font-medium px-3 py-1.5 rounded-lg transition-all duration-200"
+            style={{
+              color: '#D84B5F',
+              background: 'rgba(216, 75, 95, 0.1)',
+              border: '1px solid rgba(216, 75, 95, 0.2)',
+            }}
+            onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(216, 75, 95, 0.2)'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(216, 75, 95, 0.1)'; }}
+          >
+            Excluir
+          </button>
+        </div>
+      ),
+    },
+  ];
+
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
-      <div className="page-header" style={{ marginBottom: '1.5rem' }}>
+      <div className="flex justify-between items-center mb-8">
         <div>
-          <h1 className="text-xl font-bold" style={{ color: 'var(--nexus-text)' }}>Produtos</h1>
-          <p className="text-sm" style={{ color: 'var(--nexus-muted-2)', marginTop: '0.25rem' }}>Gerenciar catalogo de produtos</p>
+          <h1 className="text-2xl font-bold" style={{ color: 'var(--nexus-text)' }}>Produtos</h1>
+          <p className="text-sm mt-1" style={{ color: 'var(--nexus-muted-2)' }}>Gerenciar catalogo de produtos</p>
         </div>
-      </div>
-
-      <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '1rem' }}>
-        <button onClick={openCreate} className="btn-primary" style={{ background: 'linear-gradient(135deg, #C65A71, #9d4e58)', color: '#fff', border: 'none', borderRadius: '10px', padding: '0.75rem 1.5rem', fontWeight: 500, fontSize: '0.875rem', cursor: 'pointer' }}>
+        <GradientButton onClick={openCreate} icon={<PlusIcon className="w-5 h-5" />}>
           Novo Produto
-        </button>
+        </GradientButton>
       </div>
 
-      <div style={{ background: 'var(--nexus-card)', border: '1px solid var(--nexus-border)', borderRadius: '14px', overflow: 'hidden' }}>
-        {loading ? (
-          <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--nexus-muted-2)' }}>Carregando...</div>
-        ) : products.length === 0 ? (
-          <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--nexus-muted-2)' }}>Nenhum produto encontrado</div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr>
-                  <th style={{ textAlign: 'left', padding: '0.75rem 1rem', fontSize: '0.75rem', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--nexus-muted-2)', borderBottom: '1px solid rgba(212, 149, 86, 0.1)' }}>Nome</th>
-                  <th style={{ textAlign: 'left', padding: '0.75rem 1rem', fontSize: '0.75rem', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--nexus-muted-2)', borderBottom: '1px solid rgba(212, 149, 86, 0.1)' }}>SKU</th>
-                  <th style={{ textAlign: 'left', padding: '0.75rem 1rem', fontSize: '0.75rem', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--nexus-muted-2)', borderBottom: '1px solid rgba(212, 149, 86, 0.1)' }}>Categoria</th>
-                  <th style={{ textAlign: 'left', padding: '0.75rem 1rem', fontSize: '0.75rem', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--nexus-muted-2)', borderBottom: '1px solid rgba(212, 149, 86, 0.1)' }}>Preco</th>
-                  <th style={{ textAlign: 'left', padding: '0.75rem 1rem', fontSize: '0.75rem', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--nexus-muted-2)', borderBottom: '1px solid rgba(212, 149, 86, 0.1)' }}>Qtd</th>
-                  <th style={{ textAlign: 'right', padding: '0.75rem 1rem', fontSize: '0.75rem', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--nexus-muted-2)', borderBottom: '1px solid rgba(212, 149, 86, 0.1)' }}>Acoes</th>
-                </tr>
-              </thead>
-              <tbody>
-                {products.map((product) => (
-                  <tr key={product.id} style={{ transition: 'background 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(212,149,86,0.04)'} onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}>
-                    <td style={{ padding: '0.75rem 1rem', borderBottom: '1px solid rgba(212,149,86,0.05)', color: 'var(--nexus-text)', fontSize: '0.875rem', fontWeight: 500 }}>{product.name}</td>
-                    <td style={{ padding: '0.75rem 1rem', borderBottom: '1px solid rgba(212,149,86,0.05)', color: 'var(--nexus-muted-2)', fontSize: '0.875rem', fontFamily: 'monospace' }}>{product.sku}</td>
-                    <td style={{ padding: '0.75rem 1rem', borderBottom: '1px solid rgba(212,149,86,0.05)', color: 'var(--nexus-text)', fontSize: '0.875rem' }}>
-                      {product.category ? (
-                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.375rem', padding: '0.25rem 0.75rem', borderRadius: '9999px', fontSize: '0.75rem', fontWeight: 500, background: 'rgba(125,218,106,0.12)', color: '#7DDA6A' }}>
-                          {product.category}
-                        </span>
-                      ) : '-'}
-                    </td>
-                    <td style={{ padding: '0.75rem 1rem', borderBottom: '1px solid rgba(212,149,86,0.05)', color: 'var(--nexus-text)', fontSize: '0.875rem', fontWeight: 500 }}>{formatPrice(product.price)}</td>
-                    <td style={{ padding: '0.75rem 1rem', borderBottom: '1px solid rgba(212,149,86,0.05)', color: 'var(--nexus-text)', fontSize: '0.875rem' }}>
-                      <span style={{ fontWeight: 500, color: product.quantity <= 5 ? '#D84B5F' : 'var(--nexus-text)' }}>
-                        {product.quantity}
-                      </span>
-                    </td>
-                    <td style={{ padding: '0.75rem 1rem', borderBottom: '1px solid rgba(212,149,86,0.05)', color: 'var(--nexus-text)', fontSize: '0.875rem', textAlign: 'right' }}>
-                      <button onClick={() => openEdit(product)} style={{ color: '#D49556', background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.875rem', fontWeight: 500 }}>Editar</button>
-                      <button onClick={() => handleDelete(product.id)} style={{ color: '#D84B5F', background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.875rem', fontWeight: 500, marginLeft: '0.75rem' }}>Excluir</button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <StatsCard
+          label="Total Produtos"
+          value={String(products.length)}
+          icon={<CubeIcon className="w-5 h-5" />}
+          color="gold"
+        />
+        <StatsCard
+          label="Estoque Baixo"
+          value={String(products.filter(p => p.quantity <= 5).length)}
+          icon={<CubeIcon className="w-5 h-5" />}
+          color="rose"
+          trend={products.filter(p => p.quantity <= 5).length > 0 ? { value: String(products.filter(p => p.quantity <= 5).length), direction: 'up' } : undefined}
+          subtitle="itens preocupantes"
+        />
+      </div>
+
+      <div className="rounded-xl overflow-hidden" style={{ background: 'var(--nexus-card)', border: '1px solid var(--nexus-border)' }}>
+        <PremiumTable columns={columns} data={products} loading={loading} emptyMessage="Nenhum produto encontrado." />
       </div>
 
       {showModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }}>
-          <div style={{ background: 'var(--nexus-card-strong)', border: '1px solid var(--nexus-border)', borderRadius: '18px', padding: '2rem', width: '100%', maxWidth: '32rem' }}>
-            <h2 className="text-xl font-bold" style={{ color: 'var(--nexus-text)', marginBottom: '1.5rem' }}>
-              {editingProduct ? 'Editar Produto' : 'Novo Produto'}
-            </h2>
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          style={{ background: 'rgba(5, 7, 10, 0.8)' }}
+          onClick={() => setShowModal(false)}
+        >
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95, y: 10 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            transition={{ duration: 0.2 }}
+            onClick={(e) => e.stopPropagation()}
+            className="w-full max-w-lg rounded-xl p-6"
+            style={{ background: 'var(--nexus-card)', border: '1px solid var(--nexus-border)' }}
+          >
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-lg font-bold" style={{ color: 'var(--nexus-text)' }}>
+                {editingProduct ? 'Editar Produto' : 'Novo Produto'}
+              </h2>
+              <button
+                onClick={() => setShowModal(false)}
+                className="w-8 h-8 flex items-center justify-center rounded-lg transition-colors"
+                style={{ color: 'var(--nexus-muted-2)', background: 'rgba(0,0,0,0.3)' }}
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
 
             {error && (
-              <div style={{ background: 'rgba(216, 75, 95, 0.12)', color: '#D84B5F', border: '1px solid rgba(216, 75, 95, 0.2)', borderRadius: '10px', padding: '0.75rem 1rem', fontSize: '0.875rem', marginBottom: '1rem' }}>{error}</div>
+              <div className="px-4 py-3 rounded-lg mb-4 text-sm" style={{ background: 'rgba(216, 75, 95, 0.12)', color: '#D84B5F', border: '1px solid rgba(216, 75, 95, 0.2)' }}>
+                {error}
+              </div>
             )}
 
-            <form onSubmit={handleSubmit}>
-              <div style={{ marginBottom: '1rem' }}>
-                <label style={{ color: 'var(--nexus-text)', fontSize: '0.875rem', fontWeight: 500, marginBottom: '0.375rem', display: 'block' }}>Nome</label>
-                <input type="text" required value={formData.name}
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium mb-1" style={{ color: 'var(--nexus-muted-2)' }}>Nome *</label>
+                <input
+                  type="text" required
+                  value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  style={{ width: '100%', padding: '0.625rem 1rem', background: 'rgba(0,0,0,0.5)', color: 'var(--nexus-text)', border: '1px solid var(--nexus-border)', borderRadius: '10px', fontSize: '0.875rem' }} />
+                  className="w-full rounded-lg px-4 py-2.5 text-sm outline-none transition-all duration-200"
+                  style={{ background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(212,149,86,0.15)', color: 'var(--nexus-text)' }}
+                  onFocus={(e) => e.target.style.borderColor = 'rgba(212,149,86,0.4)'}
+                  onBlur={(e) => e.target.style.borderColor = 'rgba(212,149,86,0.15)'}
+                />
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
+              <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label style={{ color: 'var(--nexus-text)', fontSize: '0.875rem', fontWeight: 500, marginBottom: '0.375rem', display: 'block' }}>SKU</label>
-                  <input type="text" required value={formData.sku}
+                  <label className="block text-sm font-medium mb-1" style={{ color: 'var(--nexus-muted-2)' }}>SKU *</label>
+                  <input
+                    type="text" required
+                    value={formData.sku}
                     onChange={(e) => setFormData({ ...formData, sku: e.target.value })}
-                    style={{ width: '100%', padding: '0.625rem 1rem', background: 'rgba(0,0,0,0.5)', color: 'var(--nexus-text)', border: '1px solid var(--nexus-border)', borderRadius: '10px', fontSize: '0.875rem' }} />
+                    className="w-full rounded-lg px-4 py-2.5 text-sm outline-none transition-all duration-200"
+                    style={{ background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(212,149,86,0.15)', color: 'var(--nexus-text)' }}
+                    onFocus={(e) => e.target.style.borderColor = 'rgba(212,149,86,0.4)'}
+                    onBlur={(e) => e.target.style.borderColor = 'rgba(212,149,86,0.15)'}
+                  />
                 </div>
                 <div>
-                  <label style={{ color: 'var(--nexus-text)', fontSize: '0.875rem', fontWeight: 500, marginBottom: '0.375rem', display: 'block' }}>Categoria</label>
-                  <input type="text" value={formData.category}
+                  <label className="block text-sm font-medium mb-1" style={{ color: 'var(--nexus-muted-2)' }}>Categoria</label>
+                  <input
+                    type="text"
+                    value={formData.category}
                     onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                    style={{ width: '100%', padding: '0.625rem 1rem', background: 'rgba(0,0,0,0.5)', color: 'var(--nexus-text)', border: '1px solid var(--nexus-border)', borderRadius: '10px', fontSize: '0.875rem' }} />
+                    className="w-full rounded-lg px-4 py-2.5 text-sm outline-none transition-all duration-200"
+                    style={{ background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(212,149,86,0.15)', color: 'var(--nexus-text)' }}
+                    onFocus={(e) => e.target.style.borderColor = 'rgba(212,149,86,0.4)'}
+                    onBlur={(e) => e.target.style.borderColor = 'rgba(212,149,86,0.15)'}
+                  />
                 </div>
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
+              <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label style={{ color: 'var(--nexus-text)', fontSize: '0.875rem', fontWeight: 500, marginBottom: '0.375rem', display: 'block' }}>Preco</label>
-                  <input type="number" step="0.01" min="0" required value={formData.price}
+                  <label className="block text-sm font-medium mb-1" style={{ color: 'var(--nexus-muted-2)' }}>Preco *</label>
+                  <input
+                    type="number" step="0.01" min="0" required
+                    value={formData.price}
                     onChange={(e) => setFormData({ ...formData, price: Number(e.target.value) })}
-                    style={{ width: '100%', padding: '0.625rem 1rem', background: 'rgba(0,0,0,0.5)', color: 'var(--nexus-text)', border: '1px solid var(--nexus-border)', borderRadius: '10px', fontSize: '0.875rem' }} />
+                    className="w-full rounded-lg px-4 py-2.5 text-sm outline-none transition-all duration-200"
+                    style={{ background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(212,149,86,0.15)', color: 'var(--nexus-text)' }}
+                    onFocus={(e) => e.target.style.borderColor = 'rgba(212,149,86,0.4)'}
+                    onBlur={(e) => e.target.style.borderColor = 'rgba(212,149,86,0.15)'}
+                  />
                 </div>
                 <div>
-                  <label style={{ color: 'var(--nexus-text)', fontSize: '0.875rem', fontWeight: 500, marginBottom: '0.375rem', display: 'block' }}>Quantidade</label>
-                  <input type="number" min="0" required value={formData.quantity}
+                  <label className="block text-sm font-medium mb-1" style={{ color: 'var(--nexus-muted-2)' }}>Quantidade *</label>
+                  <input
+                    type="number" min="0" required
+                    value={formData.quantity}
                     onChange={(e) => setFormData({ ...formData, quantity: Number(e.target.value) })}
-                    style={{ width: '100%', padding: '0.625rem 1rem', background: 'rgba(0,0,0,0.5)', color: 'var(--nexus-text)', border: '1px solid var(--nexus-border)', borderRadius: '10px', fontSize: '0.875rem' }} />
+                    className="w-full rounded-lg px-4 py-2.5 text-sm outline-none transition-all duration-200"
+                    style={{ background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(212,149,86,0.15)', color: 'var(--nexus-text)' }}
+                    onFocus={(e) => e.target.style.borderColor = 'rgba(212,149,86,0.4)'}
+                    onBlur={(e) => e.target.style.borderColor = 'rgba(212,149,86,0.15)'}
+                  />
                 </div>
               </div>
-              <div style={{ marginBottom: '1rem' }}>
-                <label style={{ color: 'var(--nexus-text)', fontSize: '0.875rem', fontWeight: 500, marginBottom: '0.375rem', display: 'block' }}>URL da Imagem</label>
-                <input type="text" value={formData.image}
+              <div>
+                <label className="block text-sm font-medium mb-1" style={{ color: 'var(--nexus-muted-2)' }}>URL da Imagem</label>
+                <input
+                  type="text"
+                  value={formData.image}
                   onChange={(e) => setFormData({ ...formData, image: e.target.value })}
-                  style={{ width: '100%', padding: '0.625rem 1rem', background: 'rgba(0,0,0,0.5)', color: 'var(--nexus-text)', border: '1px solid var(--nexus-border)', borderRadius: '10px', fontSize: '0.875rem' }} />
+                  className="w-full rounded-lg px-4 py-2.5 text-sm outline-none transition-all duration-200"
+                  style={{ background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(212,149,86,0.15)', color: 'var(--nexus-text)' }}
+                  onFocus={(e) => e.target.style.borderColor = 'rgba(212,149,86,0.4)'}
+                  onBlur={(e) => e.target.style.borderColor = 'rgba(212,149,86,0.15)'}
+                />
               </div>
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', paddingTop: '0.5rem' }}>
-                <button type="button" onClick={() => setShowModal(false)} className="btn-secondary" style={{ background: 'var(--nexus-card)', color: 'var(--nexus-text)', border: '1px solid var(--nexus-border)', borderRadius: '10px', padding: '0.625rem 1.25rem', cursor: 'pointer', fontSize: '0.875rem', fontWeight: 500 }}>Cancelar</button>
-                <button type="submit" className="btn-primary" style={{ background: 'linear-gradient(135deg, #C65A71, #9d4e58)', color: '#fff', border: 'none', borderRadius: '10px', padding: '0.625rem 1.25rem', fontWeight: 500, fontSize: '0.875rem', cursor: 'pointer' }}>Salvar</button>
+              <div className="flex justify-end gap-3 pt-2">
+                <GradientButton variant="secondary" type="button" onClick={() => setShowModal(false)}>
+                  Cancelar
+                </GradientButton>
+                <GradientButton type="submit">
+                  Salvar
+                </GradientButton>
               </div>
             </form>
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
       )}
     </motion.div>
   );

@@ -6,7 +6,7 @@ export const createUserSchema = z.object({
   password: z.string().min(8, 'Senha deve ter no minimo 8 caracteres').max(64),
   role: z.enum(['admin', 'manager', 'operator', 'viewer']),
   avatarUrl: z.string().max(255).optional(),
-  themePreference: z.enum(['dark', 'light']).optional(),
+  themePreference: z.enum(['dark', 'light', 'auto']).optional(),
 });
 
 export const updateUserSchema = z.object({
@@ -16,7 +16,7 @@ export const updateUserSchema = z.object({
   role: z.enum(['admin', 'manager', 'operator', 'viewer']).optional(),
   active: z.boolean().optional(),
   avatarUrl: z.string().max(255).optional(),
-  themePreference: z.enum(['dark', 'light']).optional(),
+  themePreference: z.enum(['dark', 'light', 'auto']).optional(),
 });
 
 export type CreateUserInput = z.infer<typeof createUserSchema>;

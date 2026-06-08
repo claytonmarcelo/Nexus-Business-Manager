@@ -74,7 +74,7 @@ export async function uploadAvatarHandler(request: FastifyRequest, reply: Fastif
 export async function updateThemeHandler(request: FastifyRequest, reply: FastifyReply) {
   const user = request.user as { id: number; name: string; companyId: number };
   const { theme } = request.body as { theme: string };
-  if (!['dark', 'light'].includes(theme)) throw new AppError('Tema invalido. Use dark ou light.', 400);
+  if (!['dark', 'light', 'auto'].includes(theme)) throw new AppError('Tema invalido. Use dark, light ou auto.', 400);
   await userService.updateTheme(user.id, theme);
   return reply.send({ success: true, data: { theme_preference: theme } });
 }

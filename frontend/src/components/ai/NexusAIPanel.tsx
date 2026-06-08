@@ -56,14 +56,14 @@ export function NexusAIPanel() {
       <div style={{ background: 'var(--nexus-card)', border: '1px solid var(--nexus-border)', borderRadius: '14px', padding: '1.5rem' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
           <h3 style={{ fontSize: '1.125rem', fontWeight: 600, color: 'var(--nexus-text)' }}>Analisar Modulo</h3>
-          <ChartBarIcon style={{ width: '1.25rem', height: '1.25rem', color: '#C65A71' }} />
+          <ChartBarIcon style={{ width: '1.25rem', height: '1.25rem', color: 'var(--nexus-rose)' }} />
         </div>
 
         <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '1rem' }}>
           <select
             value={analyzeModuleName}
             onChange={(e) => setAnalyzeModuleName(e.target.value)}
-            style={{ flex: 1, padding: '0.625rem 1rem', background: 'rgba(0,0,0,0.5)', color: 'var(--nexus-text)', border: '1px solid var(--nexus-border)', borderRadius: '10px', fontSize: '0.875rem', outline: 'none' }}
+            style={{ flex: 1, padding: '0.625rem 1rem', background: 'var(--nexus-input-bg)', color: 'var(--nexus-text)', border: '1px solid var(--nexus-border)', borderRadius: '10px', fontSize: '0.875rem', outline: 'none' }}
           >
             {modules.map((m) => (
               <option key={m.value} value={m.value}>{m.label}</option>
@@ -72,14 +72,14 @@ export function NexusAIPanel() {
           <select
             value={period}
             onChange={(e) => setPeriod(e.target.value)}
-            style={{ width: '8rem', padding: '0.625rem 1rem', background: 'rgba(0,0,0,0.5)', color: 'var(--nexus-text)', border: '1px solid var(--nexus-border)', borderRadius: '10px', fontSize: '0.875rem', outline: 'none' }}
+            style={{ width: '8rem', padding: '0.625rem 1rem', background: 'var(--nexus-input-bg)', color: 'var(--nexus-text)', border: '1px solid var(--nexus-border)', borderRadius: '10px', fontSize: '0.875rem', outline: 'none' }}
           >
             <option value="week">Semana</option>
             <option value="month">Mes</option>
             <option value="quarter">Trimestre</option>
             <option value="year">Ano</option>
           </select>
-          <button onClick={handleAnalyze} disabled={analyzing} style={{ background: 'linear-gradient(135deg, #C65A71, #9d4e58)', color: '#fff', border: 'none', borderRadius: '10px', padding: '0.625rem 1.25rem', fontWeight: 500, cursor: 'pointer', fontSize: '0.875rem', opacity: analyzing ? 0.5 : 1 }}>
+          <button onClick={handleAnalyze} disabled={analyzing} style={{ background: 'linear-gradient(135deg, var(--nexus-rose), var(--nexus-rose-dark))', color: 'var(--nexus-text)', border: 'none', borderRadius: '10px', padding: '0.625rem 1.25rem', fontWeight: 500, cursor: 'pointer', fontSize: '0.875rem', opacity: analyzing ? 0.5 : 1 }}>
             {analyzing ? 'Analisando...' : 'Analisar'}
           </button>
         </div>
@@ -93,7 +93,7 @@ export function NexusAIPanel() {
 
             {analysis.risks && analysis.risks.length > 0 && (
               <div style={{ padding: '0.75rem', borderRadius: '0.5rem', background: 'rgba(239,111,122,0.1)', border: '1px solid rgba(239,111,122,0.2)' }}>
-                <p style={{ fontWeight: 500, color: '#D84B5F', marginBottom: '0.25rem' }}>Riscos</p>
+                <p style={{ fontWeight: 500, color: 'var(--nexus-danger)', marginBottom: '0.25rem' }}>Riscos</p>
                 <ul style={{ listStyle: 'disc', listStylePosition: 'inside', color: 'var(--nexus-muted-2)', display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
                   {analysis.risks.map((r, i) => <li key={i}>{r}</li>)}
                 </ul>
@@ -102,7 +102,7 @@ export function NexusAIPanel() {
 
             {analysis.opportunities && analysis.opportunities.length > 0 && (
               <div style={{ padding: '0.75rem', borderRadius: '0.5rem', background: 'rgba(143,214,163,0.1)', border: '1px solid rgba(143,214,163,0.2)' }}>
-                <p style={{ fontWeight: 500, color: '#7DDA6A', marginBottom: '0.25rem' }}>Oportunidades</p>
+                <p style={{ fontWeight: 500, color: 'var(--nexus-success)', marginBottom: '0.25rem' }}>Oportunidades</p>
                 <ul style={{ listStyle: 'disc', listStylePosition: 'inside', color: 'var(--nexus-muted-2)', display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
                   {analysis.opportunities.map((o, i) => <li key={i}>{o}</li>)}
                 </ul>
@@ -111,7 +111,7 @@ export function NexusAIPanel() {
 
             {analysis.recommendedActions && analysis.recommendedActions.length > 0 && (
               <div style={{ padding: '0.75rem', borderRadius: '0.5rem', background: 'rgba(96,165,250,0.1)', border: '1px solid rgba(96,165,250,0.2)' }}>
-                <p style={{ fontWeight: 500, color: '#60a5fa', marginBottom: '0.25rem' }}>Acoes Recomendadas</p>
+                <p style={{ fontWeight: 500, color: 'var(--nexus-muted)', marginBottom: '0.25rem' }}>Acoes Recomendadas</p>
                 <ul style={{ listStyle: 'disc', listStylePosition: 'inside', color: 'var(--nexus-muted-2)', display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
                   {analysis.recommendedActions.map((a, i) => <li key={i}>{a}</li>)}
                 </ul>

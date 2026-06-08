@@ -1,9 +1,5 @@
-import { useState, useCallback, useRef } from 'react';
 import { NavLink } from 'react-router-dom';
-import { ArrowLeftOnRectangleIcon } from '@heroicons/react/24/solid';
-import api from '../../services/api';
 import { useAuth } from '../../contexts/AuthContext';
-import { useToast } from '../../contexts/ToastContext';
 import {
   ChartBarIcon,
   UserGroupIcon,
@@ -52,52 +48,7 @@ interface SidebarProps {
 }
 
 export function Sidebar({ open, onClose }: SidebarProps) {
-  const { user, signOut, updateUser } = useAuth();
-  const { showToast } = useToast();
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const [cacheLoading, setCacheLoading] = useState(false);
-  const [avatarLoading, setAvatarLoading] = useState(false);
-  const [confirmLogout, setConfirmLogout] = useState(false);
-
-  const handleAvatarClick = useCallback(() => {
-    fileInputRef.current?.click();
-  }, []);
-
-  const handleAvatarUpload = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
-    if (!allowedTypes.includes(file.type)) {
-      showToast('Tipo de arquivo nao permitido. Use jpg, png ou webp.', 'error');
-      return;
-    }
-    if (file.size > 5 * 1024 * 1024) {
-      showToast('Arquivo muito grande. Maximo 5MB.', 'error');
-      return;
-    }
-    setAvatarLoading(true);
-    try {
-      const formData = new FormData();
-      formData.append('avatar', file);
-      const res = await api.post('/users/avatar', formData);
-      const avatarUrl = res.data.data?.avatar_url;
-      if (avatarUrl) {
-        updateUser({ avatar_url: avatarUrl, avatarUrl });
-      }
-      showToast('Avatar atualizado com sucesso.');
-    } catch (error) {
-      console.error('Erro ao atualizar avatar:', error);
-      showToast('Erro ao atualizar avatar.', 'error');
-    } finally {
-      setAvatarLoading(false);
-      if (fileInputRef.current) fileInputRef.current.value = '';
-    }
-  }, [showToast, updateUser]);
-
-  const handleLogout = () => signOut();
-
-  const avatarSrc = user?.avatar_url || user?.avatarUrl || null;
-  const initials = user?.name?.charAt(0).toUpperCase() || '?';
+  const { user } = useAuth();
 
   const sidebarContent = (
     <>
@@ -131,40 +82,6 @@ export function Sidebar({ open, onClose }: SidebarProps) {
             );
           })}
       </nav>
-
-      <div className="px-3 pb-4">
-        {confirmLogout ? (
-          <div className="nexus-sidebar-item flex-col items-stretch gap-2">
-            <p className="text-xs text-nexus-muted text-center">Sair do sistema?</p>
-            <div className="flex gap-2">
-              <button
-                onClick={handleLogout}
-                className="flex-1 text-xs font-medium py-1.5 px-3 rounded-lg transition-colors"
-                style={{ background: 'rgba(216, 75, 95, 0.2)', color: '#D84B5F' }}
-              >
-                Sim, sair
-              </button>
-              <button
-                onClick={() => setConfirmLogout(false)}
-                className="flex-1 text-xs font-medium py-1.5 px-3 rounded-lg transition-colors"
-                style={{ background: 'var(--nexus-card)', color: 'var(--nexus-muted)' }}
-              >
-                Cancelar
-              </button>
-            </div>
-          </div>
-        ) : (
-          <button
-            onClick={() => setConfirmLogout(true)}
-            className="sidebar-logout-btn w-full"
-          >
-            <span className="w-[42px] h-[42px] flex items-center justify-center rounded-lg flex-shrink-0" style={{ background: 'rgba(216, 75, 95, 0.1)', border: '1px solid rgba(216, 75, 95, 0.2)' }}>
-              <ArrowLeftOnRectangleIcon className="w-5 h-5" />
-            </span>
-            <span className="text-sm font-medium">Sair do sistema</span>
-          </button>
-        )}
-      </div>
     </>
   );
 

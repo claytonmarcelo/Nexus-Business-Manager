@@ -5,11 +5,11 @@ interface PremiumBadgeProps {
 }
 
 const variants = {
-  success: { bg: 'rgba(125, 218, 106, 0.12)', color: '#7DDA6A' },
-  warning: { bg: 'rgba(216, 154, 40, 0.12)', color: '#D89A28' },
-  danger: { bg: 'rgba(216, 75, 95, 0.12)', color: '#D84B5F' },
-  info: { bg: 'rgba(212, 149, 86, 0.12)', color: '#D49556' },
-  default: { bg: 'rgba(168, 168, 168, 0.12)', color: '#A8A8A8' },
+  success: { bg: 'rgba(125, 218, 106, 0.12)', color: 'var(--nexus-success)' },
+  warning: { bg: 'rgba(216, 154, 40, 0.12)', color: 'var(--nexus-warning)' },
+  danger: { bg: 'rgba(216, 75, 95, 0.12)', color: 'var(--nexus-danger)' },
+  info: { bg: 'rgba(212, 149, 86, 0.12)', color: 'var(--nexus-gold)' },
+  default: { bg: 'rgba(168, 168, 168, 0.12)', color: 'var(--nexus-muted)' },
 };
 
 export function PremiumBadge({ variant, children, size = 'sm' }: PremiumBadgeProps) {

@@ -1,7 +1,11 @@
 import { useState, useEffect, FormEvent } from 'react';
 import { motion } from 'framer-motion';
+import { BuildingOfficeIcon, PlusIcon } from '@heroicons/react/24/outline';
 import api from '../../services/api';
 import { Company } from '../../types';
+import { StatsCard } from '../../components/ui/StatsCard';
+import { PremiumTable, Column } from '../../components/ui/PremiumTable';
+import { GradientButton } from '../../components/ui/GradientButton';
 
 export function Companies() {
   const [companies, setCompanies] = useState<Company[]>([]);
@@ -51,127 +55,195 @@ export function Companies() {
     }
   }
 
-  const inputStyle: React.CSSProperties = {
-    width: '100%', padding: '0.625rem 1rem', background: 'rgba(0,0,0,0.5)', color: 'var(--nexus-text)',
-    border: '1px solid var(--nexus-border)', borderRadius: '10px', fontSize: '0.875rem', outline: 'none',
-  };
+
+  const columns: Column<Company>[] = [
+    {
+      key: 'name',
+      header: 'Empresa',
+      render: (c) => (
+        <span className="font-medium" style={{ color: 'var(--nexus-text)' }}>{c.name}</span>
+      ),
+    },
+    {
+      key: 'slug',
+      header: 'Slug',
+      render: (c) => (
+        <span className="font-mono text-xs" style={{ color: 'var(--nexus-muted-2)' }}>{c.slug}</span>
+      ),
+    },
+    {
+      key: 'document',
+      header: 'Documento',
+      render: (c) => (
+        <span style={{ color: 'var(--nexus-muted-2)' }}>{c.document || '-'}</span>
+      ),
+    },
+    {
+      key: 'contact',
+      header: 'Contato',
+      render: (c) => (
+        <span style={{ color: 'var(--nexus-muted-2)' }}>{c.email || c.phone || '-'}</span>
+      ),
+    },
+    {
+      key: 'actions',
+      header: 'Acoes',
+      render: (c) => (
+        <div className="flex items-center gap-2 justify-end">
+          <button
+            onClick={() => openEdit(c)}
+            className="text-xs font-medium px-3 py-1.5 rounded-lg transition-all duration-200"
+            style={{
+              color: '#D49556',
+              background: 'rgba(212, 149, 86, 0.1)',
+              border: '1px solid rgba(212, 149, 86, 0.2)',
+            }}
+            onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(212, 149, 86, 0.2)'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(212, 149, 86, 0.1)'; }}
+          >
+            Editar
+          </button>
+        </div>
+      ),
+    },
+  ];
 
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
-      <div className="page-header">
+      <div className="flex justify-between items-center mb-8">
         <div>
-          <h1 style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--nexus-text)' }}>Empresas</h1>
-          <p style={{ fontSize: '0.875rem', color: 'var(--nexus-muted-2)', marginTop: '0.25rem' }}>Gerenciamento multiempresa</p>
+          <h1 className="text-2xl font-bold" style={{ color: 'var(--nexus-text)' }}>Empresas</h1>
+          <p className="text-sm mt-1" style={{ color: 'var(--nexus-muted-2)' }}>Gerenciamento multiempresa</p>
         </div>
-        <button
-          onClick={openCreate}
-          style={{
-            background: 'linear-gradient(135deg, #C65A71, #9d4e58)', color: '#fff', border: 'none',
-            borderRadius: '10px', padding: '0.625rem 1.25rem', fontWeight: 500, cursor: 'pointer',
-          }}
-        >
+        <GradientButton onClick={openCreate} icon={<PlusIcon className="w-5 h-5" />}>
           Nova Empresa
-        </button>
+        </GradientButton>
       </div>
 
-      <div style={{ background: 'var(--nexus-card)', border: '1px solid var(--nexus-border)', borderRadius: '14px', overflow: 'hidden' }}>
-        {loading ? (
-          <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--nexus-muted-2)' }}>Carregando...</div>
-        ) : companies.length === 0 ? (
-          <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--nexus-muted-2)' }}>Nenhuma empresa cadastrada</div>
-        ) : (
-          <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', fontSize: '0.875rem', borderCollapse: 'collapse' }}>
-              <thead>
-                <tr>
-                  <th style={{ textAlign: 'left', padding: '0.75rem 1rem', fontSize: '0.75rem', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--nexus-muted-2)', borderBottom: '1px solid rgba(212, 149, 86, 0.1)' }}>Empresa</th>
-                  <th style={{ textAlign: 'left', padding: '0.75rem 1rem', fontSize: '0.75rem', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--nexus-muted-2)', borderBottom: '1px solid rgba(212, 149, 86, 0.1)' }}>Slug</th>
-                  <th style={{ textAlign: 'left', padding: '0.75rem 1rem', fontSize: '0.75rem', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--nexus-muted-2)', borderBottom: '1px solid rgba(212, 149, 86, 0.1)' }}>Documento</th>
-                  <th style={{ textAlign: 'left', padding: '0.75rem 1rem', fontSize: '0.75rem', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--nexus-muted-2)', borderBottom: '1px solid rgba(212, 149, 86, 0.1)' }}>Contato</th>
-                  <th style={{ textAlign: 'right', padding: '0.75rem 1rem', fontSize: '0.75rem', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--nexus-muted-2)', borderBottom: '1px solid rgba(212, 149, 86, 0.1)' }}>Acoes</th>
-                </tr>
-              </thead>
-              <tbody>
-                {companies.map((c) => (
-                  <tr
-                    key={c.id}
-                    onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(212,149,86,0.04)'}
-                    onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
-                  >
-                    <td style={{ padding: '0.75rem 1rem', borderBottom: '1px solid rgba(212,149,86,0.05)', color: 'var(--nexus-text)', fontSize: '0.875rem', fontWeight: 500 }}>{c.name}</td>
-                    <td style={{ padding: '0.75rem 1rem', borderBottom: '1px solid rgba(212,149,86,0.05)', color: 'var(--nexus-text)', fontSize: '0.875rem', fontFamily: 'monospace' }}>{c.slug}</td>
-                    <td style={{ padding: '0.75rem 1rem', borderBottom: '1px solid rgba(212,149,86,0.05)', color: 'var(--nexus-text)', fontSize: '0.875rem' }}>{c.document || '-'}</td>
-                    <td style={{ padding: '0.75rem 1rem', borderBottom: '1px solid rgba(212,149,86,0.05)', color: 'var(--nexus-text)', fontSize: '0.875rem' }}>{c.email || c.phone || '-'}</td>
-                    <td style={{ padding: '0.75rem 1rem', borderBottom: '1px solid rgba(212,149,86,0.05)', color: 'var(--nexus-text)', fontSize: '0.875rem', textAlign: 'right' }}>
-                      <button
-                        onClick={() => openEdit(c)}
-                        style={{ color: '#D49556', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 500, fontSize: '0.875rem' }}
-                      >
-                        Editar
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <StatsCard
+          label="Total Empresas"
+          value={String(companies.length)}
+          icon={<BuildingOfficeIcon className="w-5 h-5" />}
+          color="gold"
+        />
+      </div>
+
+      <div className="rounded-xl overflow-hidden" style={{ background: 'var(--nexus-card)', border: '1px solid var(--nexus-border)' }}>
+        <PremiumTable columns={columns} data={companies} loading={loading} emptyMessage="Nenhuma empresa cadastrada." />
       </div>
 
       {showModal && (
-        <div style={{ position: 'fixed', inset: 0, zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem', background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }}>
-          <div style={{ background: 'var(--nexus-card-strong)', border: '1px solid var(--nexus-border)', borderRadius: '18px', padding: '2rem', width: '100%', maxWidth: '32rem' }}>
-            <h2 style={{ fontSize: '1.25rem', fontWeight: 600, color: 'var(--nexus-text)', marginBottom: '1.5rem' }}>
-              {editing ? 'Editar Empresa' : 'Nova Empresa'}
-            </h2>
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          style={{ background: 'rgba(5, 7, 10, 0.8)' }}
+          onClick={() => setShowModal(false)}
+        >
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95, y: 10 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            transition={{ duration: 0.2 }}
+            onClick={(e) => e.stopPropagation()}
+            className="w-full max-w-lg rounded-xl p-6"
+            style={{ background: 'var(--nexus-card)', border: '1px solid var(--nexus-border)' }}
+          >
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-lg font-bold" style={{ color: 'var(--nexus-text)' }}>
+                {editing ? 'Editar Empresa' : 'Nova Empresa'}
+              </h2>
+              <button
+                onClick={() => setShowModal(false)}
+                className="w-8 h-8 flex items-center justify-center rounded-lg transition-colors"
+                style={{ color: 'var(--nexus-muted-2)', background: 'rgba(0,0,0,0.3)' }}
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
             {error && (
-              <div style={{ background: 'rgba(216, 75, 95, 0.12)', color: '#D84B5F', border: '1px solid rgba(216, 75, 95, 0.2)', borderRadius: '10px', padding: '0.75rem 1rem', fontSize: '0.875rem', marginBottom: '1rem' }}>{error}</div>
+              <div className="px-4 py-3 rounded-lg mb-4 text-sm" style={{ background: 'rgba(216, 75, 95, 0.12)', color: '#D84B5F', border: '1px solid rgba(216, 75, 95, 0.2)' }}>
+                {error}
+              </div>
             )}
-            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+
+            <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label style={{ color: 'var(--nexus-text)', fontSize: '0.875rem', fontWeight: 500, marginBottom: '0.375rem', display: 'block' }}>Nome</label>
-                <input type="text" style={inputStyle} required value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })} />
+                <label className="block text-sm font-medium mb-1" style={{ color: 'var(--nexus-muted-2)' }}>Nome *</label>
+                <input
+                  type="text" required
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  className="w-full rounded-lg px-4 py-2.5 text-sm outline-none transition-all duration-200"
+                  style={{ background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(212,149,86,0.15)', color: 'var(--nexus-text)' }}
+                  onFocus={(e) => e.target.style.borderColor = 'rgba(212,149,86,0.4)'}
+                  onBlur={(e) => e.target.style.borderColor = 'rgba(212,149,86,0.15)'}
+                />
               </div>
               <div>
-                <label style={{ color: 'var(--nexus-text)', fontSize: '0.875rem', fontWeight: 500, marginBottom: '0.375rem', display: 'block' }}>Slug (identificador unico)</label>
-                <input type="text" style={inputStyle} required value={formData.slug}
-                  onChange={(e) => setFormData({ ...formData, slug: e.target.value })} />
+                <label className="block text-sm font-medium mb-1" style={{ color: 'var(--nexus-muted-2)' }}>Slug (identificador unico) *</label>
+                <input
+                  type="text" required
+                  value={formData.slug}
+                  onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
+                  className="w-full rounded-lg px-4 py-2.5 text-sm outline-none transition-all duration-200"
+                  style={{ background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(212,149,86,0.15)', color: 'var(--nexus-text)' }}
+                  onFocus={(e) => e.target.style.borderColor = 'rgba(212,149,86,0.4)'}
+                  onBlur={(e) => e.target.style.borderColor = 'rgba(212,149,86,0.15)'}
+                />
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+              <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label style={{ color: 'var(--nexus-text)', fontSize: '0.875rem', fontWeight: 500, marginBottom: '0.375rem', display: 'block' }}>CNPJ</label>
-                  <input type="text" style={inputStyle} value={formData.document}
-                    onChange={(e) => setFormData({ ...formData, document: e.target.value })} />
+                  <label className="block text-sm font-medium mb-1" style={{ color: 'var(--nexus-muted-2)' }}>CNPJ</label>
+                  <input
+                    type="text"
+                    value={formData.document}
+                    onChange={(e) => setFormData({ ...formData, document: e.target.value })}
+                    className="w-full rounded-lg px-4 py-2.5 text-sm outline-none transition-all duration-200"
+                    style={{ background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(212,149,86,0.15)', color: 'var(--nexus-text)' }}
+                    onFocus={(e) => e.target.style.borderColor = 'rgba(212,149,86,0.4)'}
+                    onBlur={(e) => e.target.style.borderColor = 'rgba(212,149,86,0.15)'}
+                  />
                 </div>
                 <div>
-                  <label style={{ color: 'var(--nexus-text)', fontSize: '0.875rem', fontWeight: 500, marginBottom: '0.375rem', display: 'block' }}>Telefone</label>
-                  <input type="text" style={inputStyle} value={formData.phone}
-                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })} />
+                  <label className="block text-sm font-medium mb-1" style={{ color: 'var(--nexus-muted-2)' }}>Telefone</label>
+                  <input
+                    type="text"
+                    value={formData.phone}
+                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                    className="w-full rounded-lg px-4 py-2.5 text-sm outline-none transition-all duration-200"
+                    style={{ background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(212,149,86,0.15)', color: 'var(--nexus-text)' }}
+                    onFocus={(e) => e.target.style.borderColor = 'rgba(212,149,86,0.4)'}
+                    onBlur={(e) => e.target.style.borderColor = 'rgba(212,149,86,0.15)'}
+                  />
                 </div>
               </div>
               <div>
-                <label style={{ color: 'var(--nexus-text)', fontSize: '0.875rem', fontWeight: 500, marginBottom: '0.375rem', display: 'block' }}>Email</label>
-                <input type="email" style={inputStyle} value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })} />
+                <label className="block text-sm font-medium mb-1" style={{ color: 'var(--nexus-muted-2)' }}>Email</label>
+                <input
+                  type="email"
+                  value={formData.email}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  className="w-full rounded-lg px-4 py-2.5 text-sm outline-none transition-all duration-200"
+                  style={{ background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(212,149,86,0.15)', color: 'var(--nexus-text)' }}
+                  onFocus={(e) => e.target.style.borderColor = 'rgba(212,149,86,0.4)'}
+                  onBlur={(e) => e.target.style.borderColor = 'rgba(212,149,86,0.15)'}
+                />
               </div>
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', paddingTop: '0.5rem' }}>
-                <button
-                  type="button" onClick={() => setShowModal(false)}
-                  style={{ background: 'var(--nexus-card)', color: 'var(--nexus-text)', border: '1px solid var(--nexus-border)', borderRadius: '10px', padding: '0.625rem 1.25rem', cursor: 'pointer' }}
-                >
+              <div className="flex justify-end gap-3 pt-2">
+                <GradientButton variant="secondary" type="button" onClick={() => setShowModal(false)}>
                   Cancelar
-                </button>
-                <button
-                  type="submit"
-                  style={{ background: 'linear-gradient(135deg, #C65A71, #9d4e58)', color: '#fff', border: 'none', borderRadius: '10px', padding: '0.625rem 1.25rem', fontWeight: 500, cursor: 'pointer' }}
-                >
+                </GradientButton>
+                <GradientButton type="submit">
                   Salvar
-                </button>
+                </GradientButton>
               </div>
             </form>
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
       )}
     </motion.div>
   );
