@@ -52,14 +52,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   async function signUp(name: string, email: string, password: string, username?: string, phone?: string) {
-    const response = await api.post<AuthResponse>('/auth/register', { name, email, password, username, phone });
-    const { token: newToken, user: userData } = response.data;
-
-    localStorage.setItem('@nexus:token', newToken);
-    localStorage.setItem('@nexus:user', JSON.stringify(userData));
-
-    setToken(newToken);
-    setUser(userData);
+    // Apenas criar o usuário, sem fazer login automático
+    await api.post('/auth/register', { name, email, password, username, phone });
+    // Não salvar token nem usuário no localStorage
+    // O usuário deve fazer login manualmente na tela de login
   }
 
   function signOut() {

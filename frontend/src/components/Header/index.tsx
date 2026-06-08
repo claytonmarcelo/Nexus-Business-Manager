@@ -1,9 +1,10 @@
 import { useState, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { MagnifyingGlassIcon, BellIcon, Bars3Icon } from '@heroicons/react/24/outline';
+import { MagnifyingGlassIcon, BellIcon, Bars3Icon, SunIcon, MoonIcon } from '@heroicons/react/24/outline';
 import api from '../../services/api';
 import { useAuth } from '../../contexts/AuthContext';
 import { useToast } from '../../contexts/ToastContext';
+import { useTheme } from '../../contexts/ThemeContext';
 
 const STORAGE_KEYS_TO_KEEP = ['@nexus:token', '@nexus:user', '@nexus:theme'];
 
@@ -14,6 +15,7 @@ interface HeaderProps {
 export function Header({ toggleSidebar }: HeaderProps) {
   const { user, signOut, updateUser } = useAuth();
   const { showToast } = useToast();
+  const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [avatarLoading, setAvatarLoading] = useState(false);
@@ -111,6 +113,18 @@ export function Header({ toggleSidebar }: HeaderProps) {
         </div>
 
         <div className="flex items-center gap-3">
+          <button
+            onClick={toggleTheme}
+            className="header-notification"
+            title={theme === 'dark' ? 'Modo Claro' : theme === 'light' ? 'Modo Escuro' : 'Alternar tema'}
+          >
+            {theme === 'dark' ? (
+              <SunIcon className="w-5 h-5" />
+            ) : (
+              <MoonIcon className="w-5 h-5" />
+            )}
+          </button>
+
           <button
             onClick={() => navigate('/notifications')}
             className="header-notification"

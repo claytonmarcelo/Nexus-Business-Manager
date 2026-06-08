@@ -37,7 +37,8 @@ export function Register() {
     setLoading(true);
     try {
       await signUp(name, email, password, username, phone);
-      navigate('/dashboard');
+      // Redirecionar para login após cadastro bem-sucedido
+      navigate('/login?message=cadastro-sucesso');
     } catch (err: any) {
       setError(err.response?.data?.message || err.response?.data?.error || 'Erro ao cadastrar');
     } finally {

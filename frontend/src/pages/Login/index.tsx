@@ -1,5 +1,5 @@
-import { useState, FormEvent } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useState, FormEvent, useEffect } from 'react';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { AuthLogo } from '../../components/AuthLogo';
 
@@ -26,8 +26,16 @@ export function Login() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
   const { signIn } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+
+  useEffect(() => {
+    if (searchParams.get('message') === 'cadastro-sucesso') {
+      setSuccessMessage('Cadastro realizado com sucesso! Faça login para acessar o sistema.');
+    }
+  }, [searchParams]);
 
   const strength = getPasswordStrength(password);
 
@@ -54,6 +62,10 @@ export function Login() {
         <div className="nexus-auth-card mx-4">
           <h2 className="text-2xl font-semibold mb-2" style={{ color: 'var(--nexus-text)' }}>Acessar sistema</h2>
           <p className="mb-6" style={{ color: 'var(--nexus-muted)' }}>Informe seus dados para entrar</p>
+
+          {successMessage && (
+            <div className="px-4 py-3 rounded-lg mb-4 text-sm" style={{ background: 'rgba(76, 175, 80, 0.12)', color: '#4CAF50', border: '1px solid rgba(76, 175, 80, 0.2)' }}>{successMessage}</div>
+          )}
 
           {error && (
             <div className="px-4 py-3 rounded-lg mb-4 text-sm" style={{ background: 'rgba(216, 75, 95, 0.12)', color: '#D84B5F', border: '1px solid rgba(216, 75, 95, 0.2)' }}>{error}</div>
