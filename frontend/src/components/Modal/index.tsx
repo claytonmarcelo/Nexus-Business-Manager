@@ -68,9 +68,9 @@ export function Modal({
         };
       default:
         return {
-          titleColor: 'text-brand-blackCherry dark:text-brand-ivorySmoke',
-          messageColor: 'text-brand-graphiteWine dark:text-brand-ivorySmoke/80',
-          borderColor: 'border-brand-primary/30',
+          titleColor: 'text-nexus-text',
+          messageColor: 'text-nexus-muted',
+          borderColor: 'border-nexus-border',
           bgColor: ''
         };
     }
@@ -84,7 +84,7 @@ export function Modal({
         {showCloseButton && (
           <button
             onClick={onClose}
-            className="absolute top-4 right-4 text-brand-graphiteWine/60 dark:text-brand-ivorySmoke/60 hover:text-brand-graphiteWine dark:hover:text-brand-ivorySmoke transition-colors"
+            className="absolute top-4 right-4 text-nexus-muted/60 hover:text-nexus-text transition-colors"
           >
             <XMarkIcon className="w-5 h-5" />
           </button>

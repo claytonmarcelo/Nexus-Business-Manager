@@ -34,7 +34,7 @@ function PrivateRoute({ children }: { children: React.ReactNode }) {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="text-brand-graphiteWine/60">Carregando...</div>
+        <div className="text-nexus-muted">Carregando...</div>
       </div>
     );
   }
@@ -48,7 +48,7 @@ function PublicRoute({ children }: { children: React.ReactNode }) {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="text-brand-graphiteWine/60">Carregando...</div>
+        <div className="text-nexus-muted">Carregando...</div>
       </div>
     );
   }
