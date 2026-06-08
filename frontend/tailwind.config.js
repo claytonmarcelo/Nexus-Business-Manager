@@ -6,7 +6,7 @@ export default {
     extend: {
       colors: {
         nexus: {
-          // Dark Mode (Default)
+          // Dark Mode (Default - Official Theme)
           bg: '#05070A',
           'bg-soft': '#0B0D10',
           'bg-panel': '#0B0D10',
@@ -33,18 +33,25 @@ export default {
           // Bordas (Dark)
           border: 'rgba(212, 149, 86, 0.24)',
           'border-strong': 'rgba(212, 149, 86, 0.38)',
-          // Light Mode
+          // Light Mode (Official Premium Corporate Theme)
           'light-bg': '#F8F5F0',
           'light-bg-soft': '#F2ECE4',
+          'light-bg-panel': '#F2ECE4',
           'light-card': '#FFFFFF',
+          'light-card-strong': '#FFFFFF',
+          'light-card-soft': '#FAF4EC',
           'light-sidebar': '#EFE6DA',
           'light-border': '#D8C5AE',
+          'light-border-strong': '#C9B896',
           'light-gold': '#C48A43',
           'light-gold-light': '#D9A866',
+          'light-bronze': '#8B6914',
           'light-rose': '#C65A71',
           'light-rose-light': '#D97F91',
+          'light-rose-dark': '#A04A5A',
           'light-text': '#2B2B2B',
           'light-muted': '#5A5A5A',
+          'light-muted-2': '#7A7A7A',
           'light-success': '#2F9E44',
           'light-danger': '#C92A2A',
           'light-warning': '#D89A28',

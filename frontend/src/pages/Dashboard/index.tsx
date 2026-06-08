@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import api from '../../services/api';
 import { useAuth } from '../../contexts/AuthContext';
+import { useTheme } from '../../contexts/ThemeContext';
 import { DashboardData } from '../../types';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -12,14 +13,19 @@ import { NexusAIInsights } from '../../components/ai/NexusAIInsights';
 import { StatsCard } from '../../components/ui/StatsCard';
 
 const GOLD = '#D49556';
+const LIGHT_GOLD = '#C48A43';
 const SUCCESS = '#7DDA6A';
+const LIGHT_SUCCESS = '#2F9E44';
 const ROSE = '#C65A71';
 const GRAY = '#A8A8A8';
+const LIGHT_GRAY = '#5A5A5A';
 const WHITE = '#FFFFFF';
 const DANGER = '#D84B5F';
+const LIGHT_DANGER = '#C92A2A';
 const WARNING = '#D89A28';
 
 const chartColors = [GOLD, ROSE, '#60a5fa', SUCCESS, '#a78bfa', '#f472b6', GRAY];
+const lightChartColors = [LIGHT_GOLD, ROSE, '#60a5fa', LIGHT_SUCCESS, '#a78bfa', '#f472b6', LIGHT_GRAY];
 
 
 
@@ -65,7 +71,9 @@ interface ActivityItem {
 
 export function Dashboard() {
   const { user } = useAuth();
+  const { theme } = useTheme();
   const navigate = useNavigate();
+  const isLight = theme === 'light' || (theme === 'auto' && window.matchMedia('(prefers-color-scheme: light)').matches);
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -229,18 +237,18 @@ export function Dashboard() {
           <ResponsiveContainer width="100%" height={280}>
             <AreaChart data={areaData}>
               <AreaChartGradient />
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(212, 149, 86, 0.08)" />
-              <XAxis dataKey="name" fontSize={12} tick={{ fill: GRAY }} axisLine={false} tickLine={false} />
-              <YAxis fontSize={12} tick={{ fill: GRAY }} axisLine={false} tickLine={false} />
+              <CartesianGrid strokeDasharray="3 3" stroke={isLight ? 'rgba(216, 197, 174, 0.3)' : 'rgba(212, 149, 86, 0.08)'} />
+              <XAxis dataKey="name" fontSize={12} tick={{ fill: isLight ? LIGHT_GRAY : GRAY }} axisLine={false} tickLine={false} />
+              <YAxis fontSize={12} tick={{ fill: isLight ? LIGHT_GRAY : GRAY }} axisLine={false} tickLine={false} />
               <Tooltip
                 contentStyle={{
-                  background: 'rgba(11, 13, 16, 0.95)',
-                  border: '1px solid rgba(212, 149, 86, 0.3)',
+                  background: isLight ? 'rgba(255, 255, 255, 0.95)' : 'rgba(11, 13, 16, 0.95)',
+                  border: isLight ? '1px solid #D8C5AE' : '1px solid rgba(212, 149, 86, 0.3)',
                   borderRadius: '10px',
-                  color: '#f5f1ec',
+                  color: isLight ? '#2B2B2B' : '#f5f1ec',
                 }}
               />
-              <Area type="monotone" dataKey="Vendas" stroke={GOLD} fill="url(#salesGrad)" strokeWidth={2} />
+              <Area type="monotone" dataKey="Vendas" stroke={isLight ? LIGHT_GOLD : GOLD} fill="url(#salesGrad)" strokeWidth={2} />
             </AreaChart>
           </ResponsiveContainer>
         </div>
@@ -260,15 +268,15 @@ export function Dashboard() {
                 paddingAngle={3}
               >
                 {donutData.map((_entry, index) => (
-                  <Cell key={index} fill={chartColors[index % chartColors.length]} />
+                  <Cell key={index} fill={isLight ? lightChartColors[index % lightChartColors.length] : chartColors[index % chartColors.length]} />
                 ))}
               </Pie>
               <Tooltip
                 contentStyle={{
-                  background: 'rgba(11, 13, 16, 0.95)',
-                  border: '1px solid rgba(212, 149, 86, 0.3)',
+                  background: isLight ? 'rgba(255, 255, 255, 0.95)' : 'rgba(11, 13, 16, 0.95)',
+                  border: isLight ? '1px solid #D8C5AE' : '1px solid rgba(212, 149, 86, 0.3)',
                   borderRadius: '10px',
-                  color: '#f5f1ec',
+                  color: isLight ? '#2B2B2B' : '#f5f1ec',
                 }}
               />
             </PieChart>
@@ -276,7 +284,7 @@ export function Dashboard() {
           <div className="flex flex-wrap gap-3 mt-2 justify-center">
             {donutData.map((entry, index) => (
               <div key={entry.label} className="flex items-center gap-1.5">
-                <span className="w-2.5 h-2.5 rounded-full" style={{ background: chartColors[index % chartColors.length] }} />
+                <span className="w-2.5 h-2.5 rounded-full" style={{ background: isLight ? lightChartColors[index % lightChartColors.length] : chartColors[index % chartColors.length] }} />
                 <span className="text-xs" style={{color: 'var(--nexus-muted)'}}>{entry.label}</span>
               </div>
             ))}
