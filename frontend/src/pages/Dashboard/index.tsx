@@ -4,17 +4,24 @@ import {
   UserGroupIcon, 
   CurrencyDollarIcon, 
   ArrowTrendingUpIcon,
-  Cog6ToothIcon,
   MagnifyingGlassIcon,
   BellIcon,
   ChevronDownIcon,
   ShoppingCartIcon,
   ArrowUpIcon,
-  ArrowDownIcon
+  ArrowDownIcon,
+  EllipsisVerticalIcon,
+  CalendarIcon,
+  ComputerDesktopIcon,
+  ArchiveBoxIcon,
+  ArrowRightIcon
 } from '@heroicons/react/24/outline';
 import { useAuth } from '../../contexts/AuthContext';
+import { 
+  AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+  PieChart, Pie, Cell
+} from 'recharts';
 
-// Dados mockados para demonstração (substituir pela API quando funcionar)
 const mockData = {
   stats: {
     total_clients: 1250,
@@ -23,33 +30,33 @@ const mockData = {
     profit: 28200.00
   },
   salesData: [
-    { name: '05 Mai', value: 20 },
-    { name: '06 Mai', value: 15 },
-    { name: '07 Mai', value: 25 },
-    { name: '08 Mai', value: 40 },
-    { name: '09 Mai', value: 30 },
-    { name: '10 Mai', value: 35 },
-    { name: '11 Mai', value: 22 }
+    { name: '05 Mai', value: 9000 },
+    { name: '06 Mai', value: 14000 },
+    { name: '07 Mai', value: 8000 },
+    { name: '08 Mai', value: 23000 },
+    { name: '09 Mai', value: 13000 },
+    { name: '10 Mai', value: 16000 },
+    { name: '11 Mai', value: 5000 }
   ],
   categoryData: [
-    { name: 'Eletrônicos', value: 35, color: '#B76E79' },
-    { name: 'Informática', value: 25, color: '#D6B370' },
-    { name: 'Casa', value: 20, color: '#32252B' },
-    { name: 'Acessórios', value: 20, color: '#F7F2EC' }
+    { name: 'Eletrônicos', value: 35, color: '#C65A71', rawValue: 'R$ 29.480,00' },
+    { name: 'Informática', value: 25, color: '#D49556', rawValue: 'R$ 21.150,00' },
+    { name: 'Acessórios', value: 20, color: '#9a6a42', rawValue: 'R$ 16.860,00' },
+    { name: 'Outros', value: 20, color: '#5A5A5A', rawValue: 'R$ 16.740,00' }
   ],
   products: [
-    { name: 'Notebook Dell Inspiron 15', stock: 8, status: 'Baixo', image: '💻' },
-    { name: 'Mouse Gamer Logitech G502', stock: 15, status: 'Normal', image: '🖱️' },
-    { name: 'Teclado Mecânico Kedragon', stock: 3, status: 'Baixo', image: '⌨️' },
-    { name: 'Monitor LG 24" Full HD', stock: 12, status: 'Normal', image: '🖥️' },
-    { name: 'Cadeira Gamer ThunderX3', stock: 2, status: 'Crítico', image: '🪑' }
+    { name: 'Notebook Dell Inspiron 15', stock: 8, status: 'Baixo', icon: ComputerDesktopIcon },
+    { name: 'Mouse Gamer Logitech G502', stock: 15, status: 'Normal', icon: ArchiveBoxIcon },
+    { name: 'Teclado Mecânico Redragon', stock: 3, status: 'Baixo', icon: ArchiveBoxIcon },
+    { name: 'Monitor LG 24" Full HD', stock: 12, status: 'Normal', icon: ComputerDesktopIcon },
+    { name: 'Cadeira Gamer ThunderX3', stock: 2, status: 'Crítico', icon: ArchiveBoxIcon }
   ],
   activities: [
-    { type: 'sale', description: 'Nova venda realizada', details: 'Venda #VDA-2024-1587', time: 'Agora', icon: '🛒' },
-    { type: 'client', description: 'Novo cliente cadastrado', details: 'João Silva', time: '5 min atrás', icon: '👤' },
-    { type: 'stock', description: 'Produto com estoque baixo', details: 'Teclado Mecânico Kedragon', time: '15 min atrás', icon: '📦' },
-    { type: 'purchase', description: 'Nova compra realizada', details: 'Compra #CMP-2024-964', time: '1 hora atrás', icon: '🛍️' },
-    { type: 'payment', description: 'Pagamento recebido', details: 'Venda #VDA-2024-1586', time: '2 horas atrás', icon: '💳' }
+    { type: 'sale', description: 'Nova venda realizada', details: 'Venda #VDA-2024-1587', time: 'Agora', icon: ShoppingCartIcon, iconColor: 'text-[var(--nexus-rose)]', iconBg: 'bg-[rgba(var(--nexus-rose-rgb),0.15)]' },
+    { type: 'client', description: 'Novo cliente cadastrado', details: 'João Silva', time: '5 min atrás', icon: UserGroupIcon, iconColor: 'text-[var(--nexus-gold)]', iconBg: 'bg-[rgba(var(--nexus-gold-rgb),0.15)]' },
+    { type: 'stock', description: 'Produto com estoque baixo', details: 'Teclado Mecânico Redragon', time: '15 min atrás', icon: ChartBarIcon, iconColor: 'text-[var(--nexus-gold)]', iconBg: 'bg-[rgba(var(--nexus-gold-rgb),0.15)]' },
+    { type: 'purchase', description: 'Nova compra realizada', details: 'Compra #CMP-2024-984', time: '1 hora atrás', icon: ShoppingCartIcon, iconColor: 'text-[var(--nexus-muted)]', iconBg: 'bg-[rgba(var(--nexus-muted-rgb),0.15)]' },
+    { type: 'payment', description: 'Pagamento recebido', details: 'Venda #VDA-2024-1586', time: '2 horas atrás', icon: CalendarIcon, iconColor: 'text-[var(--nexus-success)]', iconBg: 'bg-[rgba(var(--nexus-success-rgb),0.15)]' }
   ]
 };
 
@@ -58,65 +65,68 @@ export function Dashboard() {
   const [loading, setLoading] = useState(false);
 
   const StatCard = ({ title, value, change, icon: Icon, trend }: any) => (
-    <div className="bg-gradient-to-br from-brand-blackCherry/95 to-brand-graphiteWine/95 dark:from-brand-blackCherry dark:to-brand-graphiteWine rounded-2xl p-6 border border-brand-roseGold/20">
-      <div className="flex items-center justify-between mb-4">
-        <div className="p-3 bg-gradient-to-r from-brand-roseGold to-brand-champagneGold rounded-xl">
-          <Icon className="w-6 h-6 text-white" />
+    <div className="bg-[var(--nexus-card)] rounded-2xl p-6 border border-[var(--nexus-border)] flex items-start justify-between transition-all hover:border-[var(--nexus-gold)] hover:shadow-[var(--nexus-glow)] relative overflow-hidden group">
+      <div className="flex items-center gap-5 z-10">
+        <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[rgba(0,0,0,0.4)] to-[rgba(212,149,86,0.1)] dark:from-[#111] dark:to-[rgba(212,149,86,0.15)] flex items-center justify-center border border-[var(--nexus-border-strong)] flex-shrink-0 shadow-inner group-hover:scale-105 transition-transform">
+          <Icon className="w-7 h-7 text-[var(--nexus-gold)]" />
         </div>
-        <div className="flex items-center space-x-2">
-          <span className="text-xs text-brand-ivorySmoke/60">Últimos 7 dias</span>
-          <Cog6ToothIcon className="w-4 h-4 text-brand-ivorySmoke/40" />
-        </div>
-      </div>
-      <h3 className="text-sm font-medium text-brand-ivorySmoke/80 mb-1">{title}</h3>
-      <div className="flex items-baseline space-x-2">
-        <span className="text-2xl font-bold text-brand-ivorySmoke">{value}</span>
-        <div className={`flex items-center text-xs ${trend === 'up' ? 'text-green-400' : 'text-red-400'}`}>
-          {trend === 'up' ? <ArrowUpIcon className="w-3 h-3 mr-1" /> : <ArrowDownIcon className="w-3 h-3 mr-1" />}
-          {change}
+        <div className="flex flex-col">
+          <h3 className="text-sm font-semibold text-[var(--nexus-gold)] tracking-wide mb-1">{title}</h3>
+          <span className="text-2xl font-bold text-[var(--nexus-text)] tracking-tight">{value}</span>
+          <div className={`flex items-center text-xs mt-1 font-medium ${trend === 'up' ? 'text-[var(--nexus-success)]' : 'text-[var(--nexus-danger)]'}`}>
+            {trend === 'up' ? <ArrowUpIcon className="w-3 h-3 mr-1" /> : <ArrowDownIcon className="w-3 h-3 mr-1" />}
+            {change}
+          </div>
         </div>
       </div>
+      <button className="text-[var(--nexus-muted)] hover:text-[var(--nexus-text)] transition-colors p-1 z-10">
+        <EllipsisVerticalIcon className="w-5 h-5" />
+      </button>
     </div>
   );
 
   return (
-    <div className="p-6 space-y-6 bg-gradient-to-br from-brand-blackCherry to-brand-graphiteWine min-h-screen">
+    <div className="p-6 space-y-6 min-h-screen bg-transparent">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-brand-ivorySmoke">Dashboard</h1>
-          <p className="text-brand-ivorySmoke/70">Visão geral do seu negócio</p>
+          <h1 className="text-2xl font-bold text-[var(--nexus-text)]">Dashboard</h1>
+          <p className="text-[var(--nexus-muted)] text-sm mt-1">Visão geral do seu negócio</p>
         </div>
-        <div className="flex items-center space-x-4">
+        <div className="flex items-center space-x-5">
           {/* Search */}
           <div className="relative">
             <input 
               type="text" 
               placeholder="Buscar no sistema..." 
-              className="bg-brand-blackCherry/50 border border-brand-roseGold/30 rounded-xl px-4 py-2 pl-10 text-brand-ivorySmoke placeholder-brand-ivorySmoke/50 focus:outline-none focus:border-brand-champagneGold w-80"
+              className="bg-[var(--nexus-bg-soft)] border border-[var(--nexus-border)] rounded-xl px-4 py-2.5 pl-11 text-[var(--nexus-text)] placeholder-[var(--nexus-muted)] focus:outline-none focus:border-[var(--nexus-gold)] w-80 text-sm transition-colors"
             />
-            <MagnifyingGlassIcon className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-brand-ivorySmoke/50" />
-            <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-xs text-brand-ivorySmoke/40">Ctrl + K</span>
+            <MagnifyingGlassIcon className="w-5 h-5 absolute left-4 top-1/2 transform -translate-y-1/2 text-[var(--nexus-muted)]" />
+            <div className="absolute right-3 top-1/2 transform -translate-y-1/2 bg-[var(--nexus-card)] border border-[var(--nexus-border)] rounded px-1.5 py-0.5">
+              <span className="text-[10px] text-[var(--nexus-muted)] font-medium">Ctrl + K</span>
+            </div>
           </div>
           
           {/* Notifications */}
           <div className="relative">
-            <button className="p-2 bg-brand-blackCherry/50 border border-brand-roseGold/30 rounded-xl hover:bg-brand-roseGold/20 transition-colors">
-              <BellIcon className="w-5 h-5 text-brand-ivorySmoke" />
-              <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full text-xs flex items-center justify-center text-white">3</span>
+            <button className="p-2.5 bg-[var(--nexus-bg-soft)] border border-[var(--nexus-border)] rounded-xl hover:border-[var(--nexus-gold)] transition-colors relative group">
+              <BellIcon className="w-5 h-5 text-[var(--nexus-muted)] group-hover:text-[var(--nexus-text)] transition-colors" />
+              <span className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-[var(--nexus-danger)] border-2 border-[var(--nexus-bg)] rounded-full text-[9px] font-bold flex items-center justify-center text-white">1</span>
             </button>
           </div>
           
           {/* User Menu */}
-          <div className="flex items-center space-x-3">
-            <div className="w-8 h-8 bg-gradient-to-r from-brand-roseGold to-brand-champagneGold rounded-full flex items-center justify-center text-white font-semibold">
-              {user?.name?.charAt(0) || 'U'}
+          <div className="flex items-center space-x-3 cursor-pointer pl-2">
+            <div className="w-10 h-10 rounded-full bg-[var(--nexus-bg-soft)] border border-[var(--nexus-border)] flex items-center justify-center overflow-hidden">
+              <span className="text-[var(--nexus-text)] font-semibold text-sm">
+                {user?.name?.charAt(0) || 'A'}
+              </span>
             </div>
-            <div className="text-right">
-              <p className="text-sm font-medium text-brand-ivorySmoke">{user?.name || 'Usuário'}</p>
-              <p className="text-xs text-brand-ivorySmoke/60 capitalize">{user?.role || 'Admin'}</p>
+            <div className="text-left hidden sm:block">
+              <p className="text-sm font-semibold text-[var(--nexus-text)] leading-tight">{user?.name || 'Administrador'}</p>
+              <p className="text-xs text-[var(--nexus-muted)] capitalize mt-0.5">{user?.role || 'Admin'}</p>
             </div>
-            <ChevronDownIcon className="w-4 h-4 text-brand-ivorySmoke/60" />
+            <ChevronDownIcon className="w-4 h-4 text-[var(--nexus-muted)] ml-1" />
           </div>
         </div>
       </div>
@@ -155,105 +165,211 @@ export function Dashboard() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Sales Chart */}
-        <div className="lg:col-span-2 bg-gradient-to-br from-brand-blackCherry/95 to-brand-graphiteWine/95 rounded-2xl p-6 border border-brand-roseGold/20">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-lg font-semibold text-brand-ivorySmoke">Vendas nos últimos 7 dias</h2>
-            <select className="bg-brand-blackCherry/50 border border-brand-roseGold/30 rounded-lg px-3 py-1 text-sm text-brand-ivorySmoke">
-              <option>Últimos 7 dias</option>
-            </select>
+        <div className="lg:col-span-2 bg-[var(--nexus-card)] rounded-2xl p-6 border border-[var(--nexus-border)] flex flex-col h-[400px]">
+          <div className="flex items-center justify-between mb-8">
+            <h2 className="text-lg font-semibold text-[var(--nexus-text)]">Vendas nos últimos 7 dias</h2>
+            <div className="relative">
+              <select className="appearance-none bg-transparent border border-[var(--nexus-border)] rounded-lg px-4 py-1.5 pr-8 text-sm text-[var(--nexus-muted)] focus:outline-none focus:border-[var(--nexus-gold)] cursor-pointer">
+                <option>Últimos 7 dias</option>
+                <option>Últimos 30 dias</option>
+              </select>
+              <CalendarIcon className="w-4 h-4 text-[var(--nexus-muted)] absolute right-2.5 top-1/2 transform -translate-y-1/2 pointer-events-none" />
+            </div>
           </div>
           
-          {/* Simple Line Chart */}
-          <div className="h-64 flex items-end space-x-4">
-            {mockData.salesData.map((item, index) => (
-              <div key={index} className="flex-1 flex flex-col items-center">
-                <div 
-                  className="w-full bg-gradient-to-t from-brand-roseGold to-brand-champagneGold rounded-t-lg"
-                  style={{ height: `${(item.value / 40) * 100}%` }}
+          <div className="flex-1 w-full min-h-0">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={mockData.salesData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                <defs>
+                  <linearGradient id="colorSales" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="var(--nexus-rose)" stopOpacity={0.3}/>
+                    <stop offset="95%" stopColor="var(--nexus-rose)" stopOpacity={0}/>
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--nexus-chart-grid)" />
+                <XAxis 
+                  dataKey="name" 
+                  axisLine={false} 
+                  tickLine={false} 
+                  tick={{ fill: 'var(--nexus-muted)', fontSize: 12 }}
+                  dy={10}
                 />
-                <span className="text-xs text-brand-ivorySmoke/60 mt-2">{item.name}</span>
-              </div>
-            ))}
+                <YAxis 
+                  axisLine={false} 
+                  tickLine={false} 
+                  tick={{ fill: 'var(--nexus-muted)', fontSize: 12 }}
+                  tickFormatter={(value) => `R$ ${value >= 1000 ? `${value / 1000}k` : value}`}
+                />
+                <Tooltip 
+                  contentStyle={{ 
+                    backgroundColor: 'var(--nexus-card)', 
+                    borderColor: 'var(--nexus-border)',
+                    borderRadius: '8px',
+                    color: 'var(--nexus-text)'
+                  }}
+                  itemStyle={{ color: 'var(--nexus-rose)' }}
+                  formatter={(value: any) => [`R$ ${value.toLocaleString('pt-BR')}`, 'Vendas']}
+                />
+                <Area 
+                  type="monotone" 
+                  dataKey="value" 
+                  stroke="var(--nexus-rose)" 
+                  strokeWidth={3}
+                  fillOpacity={1} 
+                  fill="url(#colorSales)" 
+                  activeDot={{ r: 6, fill: 'var(--nexus-rose)', stroke: 'var(--nexus-bg)', strokeWidth: 2 }}
+                />
+              </AreaChart>
+            </ResponsiveContainer>
           </div>
         </div>
 
         {/* Category Chart */}
-        <div className="bg-gradient-to-br from-brand-blackCherry/95 to-brand-graphiteWine/95 rounded-2xl p-6 border border-brand-roseGold/20">
-          <h2 className="text-lg font-semibold text-brand-ivorySmoke mb-6">Vendas por categoria</h2>
+        <div className="bg-[var(--nexus-card)] rounded-2xl p-6 border border-[var(--nexus-border)] flex flex-col h-[400px]">
+          <div className="flex items-center justify-between mb-8">
+            <h2 className="text-lg font-semibold text-[var(--nexus-text)]">Vendas por categoria</h2>
+            <button className="text-[var(--nexus-muted)] hover:text-[var(--nexus-text)] transition-colors">
+              <EllipsisVerticalIcon className="w-5 h-5" />
+            </button>
+          </div>
           
-          {/* Simple Pie Chart */}
-          <div className="space-y-4">
-            {mockData.categoryData.map((item, index) => (
-              <div key={index} className="flex items-center justify-between">
-                <div className="flex items-center space-x-3">
-                  <div 
-                    className="w-3 h-3 rounded-full" 
-                    style={{ backgroundColor: item.color }}
+          <div className="flex-1 flex flex-col justify-center gap-6 pb-2">
+            <div className="h-48 w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={mockData.categoryData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={55}
+                    outerRadius={80}
+                    paddingAngle={2}
+                    dataKey="value"
+                    stroke="none"
+                  >
+                    {mockData.categoryData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <Tooltip 
+                    contentStyle={{ 
+                      backgroundColor: 'var(--nexus-card)', 
+                      borderColor: 'var(--nexus-border)',
+                      borderRadius: '8px'
+                    }}
+                    itemStyle={{ color: 'var(--nexus-text)' }}
                   />
-                  <span className="text-sm text-brand-ivorySmoke">{item.name}</span>
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+
+            <div className="space-y-3 mt-auto px-2">
+              {mockData.categoryData.map((item, index) => (
+                <div key={index} className="flex items-start justify-between">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-2.5 h-2.5 rounded-full mt-1.5" style={{ backgroundColor: item.color }} />
+                    <div className="flex flex-col">
+                      <span className="text-sm font-medium text-[var(--nexus-text)]">{item.name}</span>
+                      <span className="text-xs text-[var(--nexus-muted)] mt-0.5">{item.rawValue}</span>
+                    </div>
+                  </div>
+                  <span className="text-sm font-bold text-[var(--nexus-text)] mt-1">{item.value}%</span>
                 </div>
-                <span className="text-sm font-medium text-brand-ivorySmoke">{item.value}%</span>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Products in Stock */}
-        <div className="bg-gradient-to-br from-brand-blackCherry/95 to-brand-graphiteWine/95 rounded-2xl p-6 border border-brand-roseGold/20">
+        <div className="bg-[var(--nexus-card)] rounded-2xl p-6 border border-[var(--nexus-border)] flex flex-col min-h-[380px]">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-lg font-semibold text-brand-ivorySmoke">Produtos em estoque</h2>
-            <button className="text-brand-champagneGold text-sm hover:underline">Ver todos os produtos →</button>
+            <h2 className="text-lg font-semibold text-[var(--nexus-text)]">Produtos em estoque</h2>
+            <button className="text-[var(--nexus-muted)] hover:text-[var(--nexus-text)] transition-colors">
+              <EllipsisVerticalIcon className="w-5 h-5" />
+            </button>
           </div>
           
-          <div className="space-y-4">
-            {mockData.products.map((product, index) => (
-              <div key={index} className="flex items-center justify-between p-3 bg-brand-blackCherry/30 rounded-xl">
-                <div className="flex items-center space-x-3">
-                  <span className="text-2xl">{product.image}</span>
-                  <div>
-                    <h3 className="text-sm font-medium text-brand-ivorySmoke">{product.name}</h3>
-                    <p className="text-xs text-brand-ivorySmoke/60">{product.stock} unidades</p>
-                  </div>
-                </div>
-                <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                  product.status === 'Crítico' ? 'bg-red-500/20 text-red-400' :
-                  product.status === 'Baixo' ? 'bg-yellow-500/20 text-yellow-400' :
-                  'bg-green-500/20 text-green-400'
-                }`}>
-                  {product.status}
-                </span>
-              </div>
-            ))}
+          <div className="flex-1 w-full overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="border-b border-[var(--nexus-border)]">
+                  <th className="pb-4 text-xs font-semibold text-[var(--nexus-muted)] uppercase tracking-wider pl-2">Produto</th>
+                  <th className="pb-4 text-xs font-semibold text-[var(--nexus-muted)] uppercase tracking-wider text-center">Estoque</th>
+                  <th className="pb-4 text-xs font-semibold text-[var(--nexus-muted)] uppercase tracking-wider text-right pr-2">Status</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[var(--nexus-border)]/50">
+                {mockData.products.map((product, index) => (
+                  <tr key={index} className="hover:bg-[var(--nexus-bg-soft)] transition-colors group">
+                    <td className="py-3 pl-2">
+                      <div className="flex items-center space-x-4">
+                        <div className="w-10 h-10 rounded-lg bg-[var(--nexus-bg-soft)] border border-[var(--nexus-border)] flex items-center justify-center text-[var(--nexus-muted)] group-hover:border-[var(--nexus-gold)] transition-colors">
+                          <product.icon className="w-5 h-5" />
+                        </div>
+                        <span className="text-sm font-medium text-[var(--nexus-text)]">{product.name}</span>
+                      </div>
+                    </td>
+                    <td className="py-3 text-center">
+                      <span className="text-sm text-[var(--nexus-muted)]">{product.stock} unidades</span>
+                    </td>
+                    <td className="py-3 pr-2 text-right">
+                      <span className={`inline-flex px-2.5 py-1 rounded-md text-[11px] font-bold uppercase tracking-wider border ${
+                        product.status === 'Crítico' ? 'bg-[rgba(var(--nexus-danger-rgb),0.1)] text-[var(--nexus-danger)] border-[rgba(var(--nexus-danger-rgb),0.2)]' :
+                        product.status === 'Baixo' ? 'bg-[rgba(212,149,86,0.1)] text-[var(--nexus-gold)] border-[rgba(212,149,86,0.2)]' :
+                        'bg-[rgba(var(--nexus-success-rgb),0.1)] text-[var(--nexus-success)] border-[rgba(var(--nexus-success-rgb),0.2)]'
+                      }`}>
+                        {product.status}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          
+          <div className="mt-4 pt-4 border-t border-[var(--nexus-border)] flex justify-end">
+            <button className="flex items-center text-xs font-medium text-[var(--nexus-gold)] hover:text-[var(--nexus-gold-light)] transition-colors group">
+              Ver todos os produtos
+              <ArrowRightIcon className="w-3.5 h-3.5 ml-1.5 transform group-hover:translate-x-1 transition-transform" />
+            </button>
           </div>
         </div>
 
         {/* Recent Activities */}
-        <div className="bg-gradient-to-br from-brand-blackCherry/95 to-brand-graphiteWine/95 rounded-2xl p-6 border border-brand-roseGold/20">
+        <div className="bg-[var(--nexus-card)] rounded-2xl p-6 border border-[var(--nexus-border)] flex flex-col min-h-[380px]">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-lg font-semibold text-brand-ivorySmoke">Atividades recentes</h2>
-            <button className="text-brand-champagneGold text-sm hover:underline">Ver todas as atividades →</button>
+            <h2 className="text-lg font-semibold text-[var(--nexus-text)]">Atividades recentes</h2>
+            <button className="text-[var(--nexus-muted)] hover:text-[var(--nexus-text)] transition-colors">
+              <EllipsisVerticalIcon className="w-5 h-5" />
+            </button>
           </div>
           
-          <div className="space-y-4">
+          <div className="flex-1 space-y-1">
             {mockData.activities.map((activity, index) => (
-              <div key={index} className="flex items-start space-x-3 p-3 bg-brand-blackCherry/30 rounded-xl">
-                <span className="text-xl">{activity.icon}</span>
-                <div className="flex-1">
-                  <h3 className="text-sm font-medium text-brand-ivorySmoke">{activity.description}</h3>
-                  <p className="text-xs text-brand-champagneGold">{activity.details}</p>
-                  <p className="text-xs text-brand-ivorySmoke/60 mt-1">{activity.time}</p>
+              <div key={index} className="flex items-start space-x-4 p-3 hover:bg-[var(--nexus-bg-soft)] rounded-xl transition-colors group cursor-pointer">
+                <div className={`w-10 h-10 rounded-lg ${activity.iconBg} flex items-center justify-center flex-shrink-0 border border-transparent group-hover:border-[var(--nexus-border)] transition-all`}>
+                  <activity.icon className={`w-5 h-5 ${activity.iconColor}`} />
+                </div>
+                <div className="flex-1 min-w-0 flex flex-col justify-center py-0.5">
+                  <div className="flex items-center justify-between mb-1">
+                    <h3 className="text-sm font-semibold text-[var(--nexus-text)] truncate pr-4">{activity.description}</h3>
+                    <span className="text-[11px] text-[var(--nexus-muted)] whitespace-nowrap">{activity.time}</span>
+                  </div>
+                  <p className="text-xs text-[var(--nexus-muted)] truncate group-hover:text-[var(--nexus-text)] transition-colors">{activity.details}</p>
                 </div>
               </div>
             ))}
           </div>
-        </div>
-      </div>
 
-      {/* Footer */}
-      <div className="text-center py-4">
-        <p className="text-sm text-brand-ivorySmoke/60">© 2024 Nexus Business Manager. Todos os direitos reservados.</p>
+          <div className="mt-4 pt-4 border-t border-[var(--nexus-border)] flex justify-end">
+            <button className="flex items-center text-xs font-medium text-[var(--nexus-gold)] hover:text-[var(--nexus-gold-light)] transition-colors group">
+              Ver todas as atividades
+              <ArrowRightIcon className="w-3.5 h-3.5 ml-1.5 transform group-hover:translate-x-1 transition-transform" />
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   );
