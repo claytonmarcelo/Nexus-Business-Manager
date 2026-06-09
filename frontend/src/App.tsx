@@ -28,6 +28,18 @@ import { CRM } from './pages/CRM';
 import { SuggestionsList } from './pages/Suggestions/List';
 import { Profile } from './pages/Profile';
 import { Settings } from './pages/Settings';
+import { PublicLayout } from './layouts/PublicLayout';
+import { Landing } from './pages/Landing';
+import { ForgotPassword } from './pages/ForgotPassword';
+import { ResetPassword } from './pages/ResetPassword';
+import { Terms } from './pages/Terms';
+import { Privacy } from './pages/Privacy';
+import { Contact } from './pages/Contact';
+import { Pricing } from './pages/Pricing';
+import { Onboarding } from './pages/Onboarding';
+import { Import } from './pages/Import';
+import { Backup } from './pages/Backup';
+import { Logs } from './pages/Logs';
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, loading } = useAuth();
@@ -60,6 +72,17 @@ function PublicRoute({ children }: { children: React.ReactNode }) {
 function AppRoutes() {
   return (
     <Routes>
+      {/* Public routes - PublicLayout */}
+      <Route element={<PublicLayout />}>
+        <Route path="/" element={<Landing />} />
+        <Route path="/about" element={<About />} />
+        <Route path="/terms" element={<Terms />} />
+        <Route path="/privacy" element={<Privacy />} />
+        <Route path="/contact" element={<Contact />} />
+        <Route path="/pricing" element={<Pricing />} />
+      </Route>
+
+      {/* Public routes - standalone (no layout) */}
       <Route
         path="/login"
         element={
@@ -76,6 +99,24 @@ function AppRoutes() {
           </PublicRoute>
         }
       />
+      <Route
+        path="/forgot-password"
+        element={
+          <PublicRoute>
+            <ForgotPassword />
+          </PublicRoute>
+        }
+      />
+      <Route
+        path="/reset-password/:token"
+        element={
+          <PublicRoute>
+            <ResetPassword />
+          </PublicRoute>
+        }
+      />
+
+      {/* Private routes - internal layout */}
       <Route
         path="/"
         element={
@@ -102,13 +143,16 @@ function AppRoutes() {
         <Route path="suggestions/admin" element={<AdminSuggestions />} />
         <Route path="nexus-ai" element={<NexusAI />} />
         <Route path="crm" element={<CRM />} />
-        <Route path="audit"        element={<Audit />} />
+        <Route path="audit" element={<Audit />} />
         <Route path="companies" element={<Companies />} />
-        <Route path="about" element={<About />} />
         <Route path="profile" element={<Profile />} />
         <Route path="settings" element={<Settings />} />
+        <Route path="welcome" element={<Onboarding />} />
+        <Route path="import" element={<Import />} />
+        <Route path="backup" element={<Backup />} />
+        <Route path="logs" element={<Logs />} />
       </Route>
-      <Route path="*" element={<Navigate to="/dashboard" replace />} />
+      <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
 }

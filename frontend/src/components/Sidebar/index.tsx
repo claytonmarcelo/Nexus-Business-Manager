@@ -19,6 +19,9 @@ import {
   BuildingOfficeIcon,
   LightBulbIcon,
   SparklesIcon,
+  ArrowUpTrayIcon,
+  ArrowPathIcon,
+  DocumentTextIcon,
 } from '@heroicons/react/24/solid';
 
 const navItems = [
@@ -37,6 +40,9 @@ const navItems = [
   { to: '/reports', label: 'Relatorios', icon: ChartPieIcon },
   { to: '/notifications', label: 'Notificacoes', icon: BellIcon },
   { to: '/audit', label: 'Auditoria', icon: ShieldCheckIcon, roles: ['admin', 'manager'] },
+  { to: '/logs', label: 'Logs', icon: DocumentTextIcon, roles: ['admin', 'manager'] },
+  { to: '/import', label: 'Importacao', icon: ArrowUpTrayIcon, roles: ['admin', 'manager'] },
+  { to: '/backup', label: 'Backup', icon: ArrowPathIcon, roles: ['admin'] },
   { to: '/users', label: 'Usuarios', icon: UsersIcon, roles: ['admin', 'manager'] },
   { to: '/companies', label: 'Configuracoes', icon: Cog6ToothIcon, roles: ['admin'] },
   { to: '/about', label: 'Sobre', icon: InformationCircleIcon },
