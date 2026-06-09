@@ -146,43 +146,43 @@ export function Audit() {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-          <div className="rounded-xl p-6 transition-all duration-200 hover:scale-105"
+          <div className="rounded-xl p-4 transition-all duration-200 hover:scale-105"
             style={{ background: 'var(--nexus-card)', border: '1px solid rgba(var(--nexus-gold-rgb), 0.2)', boxShadow: '0 4px 20px rgba(var(--nexus-gold-rgb), 0.1)' }}>
-            <div className="flex items-center justify-between mb-4">
-              <ClipboardDocumentListIcon className="w-6 h-6" style={{ color: 'var(--nexus-gold)' }} />
+            <div className="flex items-center justify-between mb-3">
+              <ClipboardDocumentListIcon className="w-5 h-5" style={{ color: 'var(--nexus-gold)' }} />
               <span className="text-xs font-semibold px-2 py-1 rounded-full" style={{ background: 'rgba(34, 197, 94, 0.15)', color: '#22C55E' }}>↑ 15,7% este mês</span>
             </div>
-            <p className="text-sm mb-1" style={{ color: 'var(--nexus-muted-2)' }}>Total de eventos</p>
-            <p className="text-2xl font-bold" style={{ color: 'var(--nexus-text)' }}>18.732</p>
+            <p className="text-xs mb-1" style={{ color: 'var(--nexus-muted-2)' }}>Total de eventos</p>
+            <p className="text-lg font-bold" style={{ color: 'var(--nexus-text)' }}>18.732</p>
           </div>
 
-          <div className="rounded-xl p-6 transition-all duration-200 hover:scale-105"
+          <div className="rounded-xl p-4 transition-all duration-200 hover:scale-105"
             style={{ background: 'var(--nexus-card)', border: '1px solid rgba(var(--nexus-gold-rgb), 0.2)', boxShadow: '0 4px 20px rgba(var(--nexus-gold-rgb), 0.1)' }}>
-            <div className="flex items-center justify-between mb-4">
-              <UserGroupIcon className="w-6 h-6" style={{ color: 'var(--nexus-gold)' }} />
+            <div className="flex items-center justify-between mb-3">
+              <UserGroupIcon className="w-5 h-5" style={{ color: 'var(--nexus-gold)' }} />
               <span className="text-xs font-semibold px-2 py-1 rounded-full" style={{ background: 'rgba(34, 197, 94, 0.15)', color: '#22C55E' }}>↑ 9,1% este mês</span>
             </div>
-            <p className="text-sm mb-1" style={{ color: 'var(--nexus-muted-2)' }}>Usuários ativos</p>
-            <p className="text-2xl font-bold" style={{ color: 'var(--nexus-text)' }}>24</p>
+            <p className="text-xs mb-1" style={{ color: 'var(--nexus-muted-2)' }}>Usuários ativos</p>
+            <p className="text-lg font-bold" style={{ color: 'var(--nexus-text)' }}>24</p>
           </div>
 
-          <div className="rounded-xl p-6 transition-all duration-200 hover:scale-105"
+          <div className="rounded-xl p-4 transition-all duration-200 hover:scale-105"
             style={{ background: 'var(--nexus-card)', border: '1px solid rgba(var(--nexus-gold-rgb), 0.2)', boxShadow: '0 4px 20px rgba(var(--nexus-gold-rgb), 0.1)' }}>
-            <div className="flex items-center justify-between mb-4">
-              <ExclamationTriangleIcon className="w-6 h-6" style={{ color: 'var(--nexus-gold)' }} />
+            <div className="flex items-center justify-between mb-3">
+              <ExclamationTriangleIcon className="w-5 h-5" style={{ color: 'var(--nexus-gold)' }} />
               <span className="text-xs font-semibold px-2 py-1 rounded-full" style={{ background: 'rgba(239, 68, 68, 0.15)', color: '#EF4444' }}>↓ 8,3% este mês</span>
             </div>
-            <p className="text-sm mb-1" style={{ color: 'var(--nexus-muted-2)' }}>Ações críticas</p>
-            <p className="text-2xl font-bold" style={{ color: 'var(--nexus-text)' }}>128</p>
+            <p className="text-xs mb-1" style={{ color: 'var(--nexus-muted-2)' }}>Ações críticas</p>
+            <p className="text-lg font-bold" style={{ color: 'var(--nexus-text)' }}>128</p>
           </div>
 
-          <div className="rounded-xl p-6 transition-all duration-200 hover:scale-105"
+          <div className="rounded-xl p-4 transition-all duration-200 hover:scale-105"
             style={{ background: 'var(--nexus-card)', border: '1px solid rgba(var(--nexus-gold-rgb), 0.2)', boxShadow: '0 4px 20px rgba(var(--nexus-gold-rgb), 0.1)' }}>
-            <div className="flex items-center justify-between mb-4">
-              <ClockIcon className="w-6 h-6" style={{ color: 'var(--nexus-gold)' }} />
+            <div className="flex items-center justify-between mb-3">
+              <ClockIcon className="w-5 h-5" style={{ color: 'var(--nexus-gold)' }} />
             </div>
-            <p className="text-sm mb-1" style={{ color: 'var(--nexus-muted-2)' }}>Último acesso</p>
-            <p className="text-2xl font-bold" style={{ color: 'var(--nexus-text)' }}>05/06/2026 14:32</p>
+            <p className="text-xs mb-1" style={{ color: 'var(--nexus-muted-2)' }}>Último acesso</p>
+            <p className="text-sm font-bold" style={{ color: 'var(--nexus-text)' }}>05/06/2026 14:32</p>
             <p className="text-xs mt-1" style={{ color: 'var(--nexus-muted-2)' }}>Há 2 minutos</p>
           </div>
         </div>
