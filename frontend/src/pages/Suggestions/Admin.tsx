@@ -7,7 +7,7 @@ import { useToast } from '../../contexts/ToastContext';
 
 const statusLabels: Record<string, string> = {
   pending: 'Pendente',
-  under_review: 'Em Analise',
+  under_review: 'Em Análise',
   approved: 'Aprovada',
   rejected: 'Rejeitada',
   implemented: 'Implementada',
@@ -25,14 +25,14 @@ const categoryLabels: Record<string, string> = {
   general: 'Geral',
   improvement: 'Melhoria',
   feature: 'Funcionalidade',
-  complaint: 'Reclamacao',
+  complaint: 'Reclamação',
   praise: 'Elogio',
 };
 
 const statusFilterOptions = [
   { value: '', label: 'Todos' },
   { value: 'pending', label: 'Pendentes' },
-  { value: 'under_review', label: 'Em Analise' },
+  { value: 'under_review', label: 'Em Análise' },
   { value: 'approved', label: 'Aprovadas' },
   { value: 'rejected', label: 'Rejeitadas' },
   { value: 'implemented', label: 'Implementadas' },
@@ -79,7 +79,7 @@ export function AdminSuggestions() {
     if (!selected) return;
     try {
       await updateSuggestion(selected.id, { status: newStatus, admin_notes: adminNotes || null });
-      showToast('Sugestao atualizada com sucesso.');
+      showToast('Sugestão atualizada com sucesso.');
       setSelected(null);
       load();
     } catch (err: any) {
@@ -88,10 +88,10 @@ export function AdminSuggestions() {
   }
 
   async function handleDelete(id: number) {
-    if (!window.confirm('Tem certeza que deseja excluir esta sugestao?')) return;
+    if (!window.confirm('Tem certeza que deseja excluir esta sugestão?')) return;
     try {
       await deleteSuggestion(id);
-      showToast('Sugestao excluida.');
+      showToast('Sugestão excluida.');
       load();
     } catch {
       showToast('Erro ao excluir.', 'error');
@@ -106,7 +106,7 @@ export function AdminSuggestions() {
         <h1 style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--nexus-text)' }}>
           Gerenciar <span style={{ color: 'var(--nexus-gold)' }}>Sugestoes</span>
         </h1>
-        <p style={{ fontSize: '0.875rem', color: 'var(--nexus-muted-2)', marginTop: '0.25rem' }}>{total} sugestao(oes) encontrada(s)</p>
+        <p style={{ fontSize: '0.875rem', color: 'var(--nexus-muted-2)', marginTop: '0.25rem' }}>{total} sugestão(oes) encontrada(s)</p>
       </div>
 
       <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginBottom: '1.5rem' }}>
@@ -134,7 +134,7 @@ export function AdminSuggestions() {
       {loading ? (
         <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--nexus-muted-2)' }}>Carregando...</div>
       ) : suggestions.length === 0 ? (
-        <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--nexus-muted-2)' }}>Nenhuma sugestao encontrada.</div>
+        <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--nexus-muted-2)' }}>Nenhuma sugestão encontrada.</div>
       ) : (
         <div style={{ background: 'var(--nexus-card)', border: '1px solid var(--nexus-border)', borderRadius: '14px', overflow: 'hidden' }}>
           {suggestions.map((s) => (
@@ -228,7 +228,7 @@ export function AdminSuggestions() {
             onClick={(e) => e.stopPropagation()}
           >
             <h2 style={{ fontSize: '1.125rem', fontWeight: 600, color: 'var(--nexus-text)', marginBottom: '1rem' }}>
-              Editar Sugestao <span style={{ color: 'var(--nexus-gold)' }}>#{selected.id}</span>
+              Editar Sugestão <span style={{ color: 'var(--nexus-gold)' }}>#{selected.id}</span>
             </h2>
 
             <div style={{ marginBottom: '1rem' }}>
@@ -250,7 +250,7 @@ export function AdminSuggestions() {
                 value={adminNotes}
                 onChange={(e) => setAdminNotes(e.target.value)}
                 style={{ width: '100%', padding: '0.75rem 1rem', background: 'var(--nexus-input-bg)', color: 'var(--nexus-text)', border: '1px solid var(--nexus-border)', borderRadius: '10px', fontSize: '0.875rem', resize: 'vertical', minHeight: '100px' }}
-                placeholder="Adicione uma observacao sobre esta sugestao..."
+                placeholder="Adicione uma observação sobre esta sugestão..."
               />
             </div>
 

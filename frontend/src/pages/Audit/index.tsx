@@ -6,8 +6,10 @@ import { AuditLog } from '../../types';
 import { StatsCard } from '../../components/ui/StatsCard';
 import { PremiumTable, Column } from '../../components/ui/PremiumTable';
 import { PremiumBadge } from '../../components/ui/PremiumBadge';
+import { useToast } from '../../contexts/ToastContext';
 
 export function Audit() {
+  const { showToast } = useToast();
   const [logs, setLogs] = useState<AuditLog[]>([]);
   const [loading, setLoading] = useState(true);
   const [hoveredRowId, setHoveredRowId] = useState<number | null>(null);
@@ -18,15 +20,15 @@ export function Audit() {
     try {
       const res = await api.get('/audit');
       setLogs(res.data?.data || []);
-    } catch { console.error('Erro ao carregar auditoria'); }
+    } catch { showToast('Erro ao carregar auditoria', 'error'); }
     finally { setLoading(false); }
   }
 
   function actionLabel(action: string) {
     const map: Record<string, string> = {
-      create: 'Criacao',
-      update: 'Alteracao',
-      delete: 'Exclusao',
+      create: 'Criação',
+      update: 'Alteração',
+      delete: 'Exclusão',
       login: 'Login',
     };
     return map[action] || action;
@@ -52,14 +54,14 @@ export function Audit() {
     },
     {
       key: 'user',
-      header: 'Usuario',
+      header: 'Usuário',
       render: (log) => (
         <span className="font-medium" style={{ color: 'var(--nexus-text)' }}>{log.user_name}</span>
       ),
     },
     {
       key: 'action',
-      header: 'Acao',
+      header: 'Ação',
       render: (log) => (
         <PremiumBadge variant={actionVariant(log.action)}>{actionLabel(log.action)}</PremiumBadge>
       ),
@@ -85,7 +87,7 @@ export function Audit() {
       <div className="flex justify-between items-center mb-8">
         <div>
           <h1 className="text-2xl font-bold" style={{ color: 'var(--nexus-text)' }}>Auditoria</h1>
-          <p className="text-sm mt-1" style={{ color: 'var(--nexus-muted-2)' }}>Historico de acoes no sistema</p>
+          <p className="text-sm mt-1" style={{ color: 'var(--nexus-muted-2)' }}>Histórico de ações no sistema</p>
         </div>
       </div>
 

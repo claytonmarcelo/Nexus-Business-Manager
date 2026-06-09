@@ -6,8 +6,10 @@ import { Company } from '../../types';
 import { StatsCard } from '../../components/ui/StatsCard';
 import { PremiumTable, Column } from '../../components/ui/PremiumTable';
 import { GradientButton } from '../../components/ui/GradientButton';
+import { useToast } from '../../contexts/ToastContext';
 
 export function Companies() {
+  const { showToast } = useToast();
   const [companies, setCompanies] = useState<Company[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
@@ -21,7 +23,7 @@ export function Companies() {
     try {
       const res = await api.get('/companies');
       setCompanies(res.data?.data || []);
-    } catch { console.error('Erro ao carregar empresas'); }
+    } catch { showToast('Erro ao carregar empresas', 'error'); }
     finally { setLoading(false); }
   }
 

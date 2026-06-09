@@ -9,6 +9,7 @@ import {
 import api from '../../services/api';
 import { Client } from '../../types';
 import { StatsCard } from '../../components/ui/StatsCard';
+import { useToast } from '../../contexts/ToastContext';
 
 /* ─── helpers ─────────────────────────────────────────── */
 function extractCity(address: string | null): string {
@@ -42,6 +43,7 @@ const inputStyle = {
 
 /* ─── component ────────────────────────────────────────── */
 export function Clients() {
+  const { showToast } = useToast();
   const [clients, setClients]           = useState<Client[]>([]);
   const [loading, setLoading]           = useState(true);
   const [showModal, setShowModal]       = useState(false);
@@ -73,7 +75,7 @@ export function Clients() {
       setClients(res.data.data || []);
       setTotal(res.data.total || 0);
       setTotalPages(res.data.totalPages || 1);
-    } catch { console.error('Erro ao carregar clientes'); }
+    } catch { showToast('Erro ao carregar clientes', 'error'); }
     finally { setLoading(false); }
   }
 
@@ -126,7 +128,7 @@ export function Clients() {
     try {
       await api.delete(`/clients/${id}`);
       loadClients(search, page);
-    } catch { console.error('Erro ao excluir cliente'); }
+    } catch { showToast('Erro ao excluir cliente', 'error'); }
     setActionMenu(null);
   }
 

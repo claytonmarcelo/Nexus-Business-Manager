@@ -29,7 +29,7 @@ export function Import() {
       form.append('file', file);
       const res = await api.post(`/import/${importType}`, form);
       setResult(res.data.data || { imported: 0, errors: 0 });
-      showToast('Importacao concluida com sucesso.');
+      showToast('Importação concluida com sucesso.');
     } catch (err: any) {
       showToast(err.response?.data?.error || 'Erro ao importar arquivo.', 'error');
     } finally {
@@ -45,7 +45,7 @@ export function Import() {
       className="space-y-6"
     >
       <div>
-        <h1 className="page-title">Importacao de Dados</h1>
+        <h1 className="page-title">Importação de Dados</h1>
         <p className="mt-1 text-sm" style={{ color: 'var(--nexus-muted-2)' }}>
           Importe dados de arquivos CSV ou Excel para o sistema
         </p>
@@ -124,7 +124,7 @@ export function Import() {
         {result && (
           <div className="mt-6 p-4 rounded-lg" style={{ background: 'rgba(var(--nexus-success-rgb), 0.08)', border: '1px solid rgba(var(--nexus-success-rgb), 0.2)' }}>
             <p className="text-sm font-medium" style={{ color: 'var(--nexus-success)' }}>
-              Importacao concluida: {result.imported} registros importados
+              Importação concluida: {result.imported} registros importados
               {result.errors > 0 && `, ${result.errors} erros`}
             </p>
           </div>

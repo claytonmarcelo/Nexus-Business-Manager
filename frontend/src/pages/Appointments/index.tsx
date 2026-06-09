@@ -2,8 +2,10 @@ import { useState, useEffect, FormEvent } from 'react';
 import { motion } from 'framer-motion';
 import api from '../../services/api';
 import { Appointment, Client } from '../../types';
+import { useToast } from '../../contexts/ToastContext';
 
 export function Appointments() {
+  const { showToast } = useToast();
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [clients, setClients] = useState<Client[]>([]);
   const [loading, setLoading] = useState(true);
@@ -25,7 +27,7 @@ export function Appointments() {
       const [appRes, cliRes] = await Promise.all([api.get(url), api.get('/clients')]);
       setAppointments(appRes.data?.data || []);
       setClients(cliRes.data?.data || []);
-    } catch { console.error('Erro ao carregar agendamentos'); }
+    } catch { showToast('Erro ao carregar agendamentos', 'error'); }
     finally { setLoading(false); }
   }
 
@@ -69,14 +71,14 @@ export function Appointments() {
     try {
       await api.delete(`/appointments/${id}`);
       loadData(filterDate || undefined);
-    } catch { console.error('Erro ao excluir agendamento'); }
+    } catch { showToast('Erro ao excluir agendamento', 'error'); }
   }
 
   async function handleStatusChange(id: number, status: string) {
     try {
       await api.put(`/appointments/${id}`, { status });
       loadData(filterDate || undefined);
-    } catch { console.error('Erro ao alterar status do agendamento'); }
+    } catch { showToast('Erro ao alterar status do agendamento', 'error'); }
   }
 
   function handleFilter(date: string) {

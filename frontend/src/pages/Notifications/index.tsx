@@ -2,8 +2,10 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import api from '../../services/api';
 import { Notification } from '../../types';
+import { useToast } from '../../contexts/ToastContext';
 
 export function Notifications() {
+  const { showToast } = useToast();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -15,7 +17,7 @@ export function Notifications() {
       const res = await api.get('/notifications');
       setNotifications(res.data.data || []);
       setUnreadCount(res.data.unreadCount);
-    } catch { console.error('Erro ao carregar notificacoes'); }
+    } catch { showToast('Erro ao carregar notificações', 'error'); }
     finally { setLoading(false); }
   }
 
@@ -23,21 +25,21 @@ export function Notifications() {
     try {
       await api.put(`/notifications/${id}/read`);
       load();
-    } catch { console.error('Erro ao marcar notificacao como lida'); }
+    } catch { showToast('Erro ao marcar notificação como lida', 'error'); }
   }
 
   async function handleMarkAllRead() {
     try {
       await api.put('/notifications/read-all');
       load();
-    } catch { console.error('Erro ao marcar todas como lidas'); }
+    } catch { showToast('Erro ao marcar todas como lidas', 'error'); }
   }
 
   async function handleGenerate() {
     try {
       await api.post('/notifications/generate');
       load();
-    } catch { console.error('Erro ao gerar notificacoes'); }
+    } catch { showToast('Erro ao gerar notificações', 'error'); }
   }
 
   const iconMap: Record<string, string> = {
@@ -50,9 +52,9 @@ export function Notifications() {
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.5rem' }}>
         <div>
-          <h1 style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--nexus-text)' }}>Notificacoes</h1>
+          <h1 style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--nexus-text)' }}>Notificações</h1>
           <p style={{ fontSize: '0.875rem', color: 'var(--nexus-muted-2)', marginTop: '0.25rem' }}>
-            {unreadCount > 0 ? `${unreadCount} nao lida(s)` : 'Todas lidas'}
+            {unreadCount > 0 ? `${unreadCount} não lida(s)` : 'Todas lidas'}
           </p>
         </div>
         <div style={{ display: 'flex', gap: '0.75rem' }}>

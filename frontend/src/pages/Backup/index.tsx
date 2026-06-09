@@ -72,7 +72,7 @@ export function Backup() {
     >
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="page-title">Backup e Restauracao</h1>
+          <h1 className="page-title">Backup e Restauração</h1>
           <p className="mt-1 text-sm" style={{ color: 'var(--nexus-muted-2)' }}>
             Gerencie backups do banco de dados da sua empresa
           </p>
@@ -135,13 +135,13 @@ export function Backup() {
       </div>
 
       <div className="nexus-card p-6">
-        <h2 className="text-base font-semibold mb-2" style={{ color: 'var(--nexus-text)' }}>Restauracao</h2>
+        <h2 className="text-base font-semibold mb-2" style={{ color: 'var(--nexus-text)' }}>Restauração</h2>
         <p className="text-sm mb-4" style={{ color: 'var(--nexus-muted)' }}>
-          Para restaurar um backup, baixe o arquivo desejado e utilize a ferramenta de restauracao do banco de dados.
+          Para restaurar um backup, baixe o arquivo desejado e utilize a ferramenta de restauração do banco de dados.
         </p>
         <div className="p-4 rounded-lg" style={{ background: 'rgba(var(--nexus-gold-rgb), 0.06)', border: '1px solid rgba(var(--nexus-gold-rgb), 0.15)' }}>
           <p className="text-xs" style={{ color: 'var(--nexus-muted-2)' }}>
-            A restauracao de backups deve ser realizada por um administrador do sistema.
+            A restauração de backups deve ser realizada por um administrador do sistema.
             O processo substituira todos os dados atuais pelos dados do backup.
           </p>
         </div>

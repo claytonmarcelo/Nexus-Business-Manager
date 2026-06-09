@@ -7,6 +7,7 @@ import { StatsCard } from '../../components/ui/StatsCard';
 import { PremiumTable, Column } from '../../components/ui/PremiumTable';
 import { PremiumBadge } from '../../components/ui/PremiumBadge';
 import { GradientButton } from '../../components/ui/GradientButton';
+import { useToast } from '../../contexts/ToastContext';
 
 const roleLabels: Record<string, string> = {
   admin: 'Administrador',
@@ -16,6 +17,7 @@ const roleLabels: Record<string, string> = {
 };
 
 export function Users() {
+  const { showToast } = useToast();
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
@@ -34,7 +36,7 @@ export function Users() {
     try {
       const res = await api.get('/users');
       setUsers(res.data?.data || []);
-    } catch { console.error('Erro ao carregar usuarios'); }
+    } catch { showToast('Erro ao carregar usuários', 'error'); }
     finally { setLoading(false); }
   }
 
@@ -67,7 +69,7 @@ export function Users() {
       setShowModal(false);
       loadUsers();
     } catch (err: any) {
-      setError(err.response?.data?.error || 'Erro ao salvar usuario');
+      setError(err.response?.data?.error || 'Erro ao salvar usuário');
     }
   }
 
@@ -75,7 +77,7 @@ export function Users() {
     try {
       await api.put(`/users/${user.id}`, { active: !user.active });
       loadUsers();
-    } catch { console.error('Erro ao alternar status do usuario'); }
+    } catch { showToast('Erro ao alterar status do usuário', 'error'); }
   }
 
   function getRoleBadgeStyle(role: string) {
@@ -166,23 +168,23 @@ export function Users() {
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
       <div className="flex justify-between items-center mb-8">
         <div>
-          <h1 className="text-2xl font-bold" style={{ color: 'var(--nexus-text)' }}>Usuarios</h1>
-          <p className="text-sm mt-1" style={{ color: 'var(--nexus-muted-2)' }}>Gerenciar usuarios do sistema</p>
+          <h1 className="text-2xl font-bold" style={{ color: 'var(--nexus-text)' }}>Usuários</h1>
+          <p className="text-sm mt-1" style={{ color: 'var(--nexus-muted-2)' }}>Gerenciar usuários do sistema</p>
         </div>
         <GradientButton onClick={openCreate} icon={<UserPlusIcon className="w-5 h-5" />}>
-          Novo Usuario
+          Novo Usuário
         </GradientButton>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         <StatsCard
-          label="Total Usuarios"
+          label="Total Usuários"
           value={String(users.length)}
           icon={<UserGroupIcon className="w-5 h-5" />}
           color="gold"
         />
         <StatsCard
-          label="Usuarios Ativos"
+          label="Usuários Ativos"
           value={String(users.filter(u => u.active).length)}
           icon={<UserGroupIcon className="w-5 h-5" />}
           color="green"
@@ -191,7 +193,7 @@ export function Users() {
       </div>
 
       <div className="rounded-xl overflow-hidden" style={{ background: 'var(--nexus-card)', border: '1px solid var(--nexus-border)' }}>
-        <PremiumTable columns={columns} data={users} loading={loading} emptyMessage="Nenhum usuario encontrado." />
+        <PremiumTable columns={columns} data={users} loading={loading} emptyMessage="Nenhum usuário encontrado." />
       </div>
 
       {showModal && (
@@ -212,7 +214,7 @@ export function Users() {
           >
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-lg font-bold" style={{ color: 'var(--nexus-text)' }}>
-                {editingUser ? 'Editar Usuario' : 'Novo Usuario'}
+                {editingUser ? 'Editar Usuário' : 'Novo Usuário'}
               </h2>
               <button
                 onClick={() => setShowModal(false)}

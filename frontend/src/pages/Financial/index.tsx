@@ -14,6 +14,7 @@ import {
 } from '@heroicons/react/24/outline';
 import api from '../../services/api';
 import { Transaction, CashFlow } from '../../types';
+import { useToast } from '../../contexts/ToastContext';
 
 /* ─── helpers ──────────────────────────────────────────── */
 const fmtBRL = (v: number) =>
@@ -34,6 +35,7 @@ const PIE_COLORS = [
 
 /* ─── component ────────────────────────────────────────── */
 export function Financial() {
+  const { showToast } = useToast();
   const [transactions, setTransactions]   = useState<Transaction[]>([]);
   const [cashFlow, setCashFlow]           = useState<CashFlow>({ total_revenue: 0, total_expense: 0, balance: 0 });
   const [loading, setLoading]             = useState(true);
@@ -65,7 +67,7 @@ export function Financial() {
         total_expense: Number(cfData?.total_expense) || 0,
         balance: Number(cfData?.balance) || 0
       });
-    } catch { console.error('Erro ao carregar dados financeiros'); }
+    } catch { showToast('Erro ao carregar dados financeiros', 'error'); }
     finally { setLoading(false); }
   }
 
@@ -82,7 +84,7 @@ export function Financial() {
   async function handleDelete(id: number) {
     if (!confirm('Tem certeza?')) return;
     try { await api.delete(`/financial/${id}`); loadData(); }
-    catch { console.error('Erro ao excluir transação'); }
+    catch { showToast('Erro ao excluir transação', 'error'); }
   }
 
   const revenueCategories = ['Vendas','Serviços','Investimentos','Outros'];

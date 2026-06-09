@@ -26,7 +26,7 @@ export function Sales() {
       setSales(salRes.data?.data || []);
       setClients(cliRes.data?.data || []);
       setProducts(prodRes.data?.data || []);
-    } catch { console.error('Erro ao carregar vendas'); }
+    } catch { showToast('Erro ao carregar vendas', 'error'); }
     finally { setLoading(false); }
   }
 

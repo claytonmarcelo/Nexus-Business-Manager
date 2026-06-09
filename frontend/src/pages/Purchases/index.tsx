@@ -29,7 +29,7 @@ export function Purchases() {
       setPurchases(purRes.data?.data || []);
       setSuppliers(supRes.data?.data || []);
       setProducts(prodRes.data?.data || []);
-    } catch { console.error('Erro ao carregar compras'); }
+    } catch { showToast('Erro ao carregar compras', 'error'); }
     finally { setLoading(false); }
   }
 

@@ -6,7 +6,7 @@ import { Suggestion } from '../../types';
 import { useAuth } from '../../contexts/AuthContext';
 
 const statusLabels: Record<string, string> = {
-  pending: 'Pendente', under_review: 'Em Analise', approved: 'Aprovada',
+  pending: 'Pendente', under_review: 'Em Análise', approved: 'Aprovada',
   rejected: 'Rejeitada', implemented: 'Implementada',
 };
 
@@ -20,7 +20,7 @@ const statusBadgeStyles: Record<string, React.CSSProperties> = {
 
 const categoryLabels: Record<string, string> = {
   general: 'Geral', improvement: 'Melhoria', feature: 'Funcionalidade',
-  complaint: 'Reclamacao', praise: 'Elogio',
+  complaint: 'Reclamação', praise: 'Elogio',
 };
 
 export function SuggestionsList() {
@@ -49,10 +49,10 @@ export function SuggestionsList() {
       <div style={{ marginBottom: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>
           <h1 style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--nexus-text)' }}>
-            <span style={{ color: 'var(--nexus-gold)' }}>Sugestoes</span>
+            <span style={{ color: 'var(--nexus-gold)' }}>Sugestões</span>
           </h1>
           <p style={{ fontSize: '0.875rem', color: 'var(--nexus-muted-2)', marginTop: '0.25rem' }}>
-            {isAdminOrManager ? 'Todas as sugestoes recebidas' : 'Minhas sugestoes'}
+            {isAdminOrManager ? 'Todas as sugestões recebidas' : 'Minhas sugestões'}
           </p>
         </div>
         <div style={{ display: 'flex', gap: '0.75rem' }}>
@@ -68,7 +68,7 @@ export function SuggestionsList() {
             onClick={() => navigate('/suggestions/new')}
             style={{ background: 'linear-gradient(135deg, var(--nexus-rose), var(--nexus-rose-dark))', color: 'var(--nexus-text)', border: 'none', borderRadius: '10px', padding: '0.75rem 1.5rem', fontWeight: 500, cursor: 'pointer' }}
           >
-            Nova Sugestao
+            Nova Sugestão
           </button>
         </div>
       </div>
@@ -78,12 +78,12 @@ export function SuggestionsList() {
           <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--nexus-muted-2)' }}>Carregando...</div>
         ) : displaySuggestions.length === 0 ? (
           <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--nexus-muted-2)' }}>
-            <p>Nenhuma sugestao encontrada.</p>
+            <p>Nenhuma sugestão encontrada.</p>
             <button
               onClick={() => navigate('/suggestions/new')}
               style={{ background: 'linear-gradient(135deg, var(--nexus-rose), var(--nexus-rose-dark))', color: 'var(--nexus-text)', border: 'none', borderRadius: '10px', padding: '0.75rem 1.5rem', fontWeight: 500, cursor: 'pointer', marginTop: '1rem' }}
             >
-              Enviar primeira sugestao
+              Enviar primeira sugestão
             </button>
           </div>
         ) : (

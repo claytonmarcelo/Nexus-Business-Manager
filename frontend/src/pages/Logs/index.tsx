@@ -13,13 +13,13 @@ interface LogEntry {
 }
 
 const logTypes = [
-  { value: '', label: 'Todos' },
-  { value: 'create', label: 'Criacao' },
-  { value: 'update', label: 'Alteracao' },
-  { value: 'delete', label: 'Exclusao' },
+  { value: '', label: 'Todas' },
+  { value: 'create', label: 'Criação' },
+  { value: 'update', label: 'Alteração' },
+  { value: 'delete', label: 'Exclusão' },
   { value: 'login', label: 'Login' },
   { value: 'logout', label: 'Logout' },
-  { value: 'export', label: 'Exportacao' },
+  { value: 'export', label: 'Exportação' },
 ];
 
 export function Logs() {
@@ -56,7 +56,7 @@ export function Logs() {
       <div>
         <h1 className="page-title">Logs do Sistema</h1>
         <p className="mt-1 text-sm" style={{ color: 'var(--nexus-muted-2)' }}>
-          Registro detalhado de todas as acoes realizadas no sistema
+          Registro detalhado de todas as ações realizadas no sistema
         </p>
       </div>
 
@@ -97,9 +97,9 @@ export function Logs() {
               <thead className="sticky top-0" style={{ background: 'var(--nexus-bg)' }}>
                 <tr>
                   <th>Data/Hora</th>
-                  <th>Usuario</th>
-                  <th>Acai</th>
-                  <th className="hidden md:table-cell">Descricao</th>
+                  <th>Usuário</th>
+                  <th>Ação</th>
+                  <th className="hidden md:table-cell">Descrição</th>
                   <th className="hidden sm:table-cell">IP</th>
                 </tr>
               </thead>

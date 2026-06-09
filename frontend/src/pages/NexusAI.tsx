@@ -49,7 +49,7 @@ export function NexusAI() {
           onMouseEnter={(e) => e.currentTarget.style.color = 'var(--nexus-text)'}
           onMouseLeave={(e) => e.currentTarget.style.color = tab === 'insights' ? 'var(--nexus-gold)' : 'var(--nexus-muted-2)'}
         >
-          Insights & Analise
+          Insights & Análise
         </button>
       </div>
 
