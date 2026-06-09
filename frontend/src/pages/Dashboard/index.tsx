@@ -1,11 +1,11 @@
-import { memo, useMemo } from 'react';
+import { memo } from 'react';
 import { motion } from 'framer-motion';
 import {
   UserGroupIcon, ShoppingCartIcon, CurrencyDollarIcon,
   ArrowTrendingUpIcon, TagIcon, BellIcon, CalendarDaysIcon,
   ArrowRightIcon, EllipsisVerticalIcon,
-  ComputerDesktopIcon, ArchiveBoxIcon, CheckCircleIcon,
-  ClockIcon, ExclamationCircleIcon, ArrowUpIcon, ArrowDownIcon,
+  ArchiveBoxIcon, CheckCircleIcon,
+  ClockIcon, ExclamationCircleIcon, ArrowUpIcon,
 } from '@heroicons/react/24/outline';
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
@@ -13,19 +13,20 @@ import {
 } from 'recharts';
 import { StatsCard } from '../../components/ui/StatsCard';
 
-/* ── helpers ─────────────────────────────────────────────── */
 const fmtBRL = (v: number) =>
   new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v);
-
-const fmtDate = (d: string) =>
-  new Date(d).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
 
 const PIE_COLORS = [
   'var(--nexus-rose)', 'var(--nexus-gold)',
   'var(--nexus-bronze)', 'var(--nexus-muted)',
 ];
 
-/* ── mock data ───────────────────────────────────────────── */
+const cardStyle = {
+  background: 'var(--nexus-card)',
+  border: '1px solid var(--nexus-border)',
+  boxShadow: 'var(--nexus-shadow)',
+} as const;
+
 const mock = {
   kpis: {
     clients: { value: '1.250', trend: '+12,5%', up: true },
@@ -34,7 +35,6 @@ const mock = {
     profit: { value: 'R$ 28.200,00', trend: '+11,8%', up: true },
     avgTicket: { value: 'R$ 1.420,35', trend: '+8,2%', up: true },
   },
-
   sales12months: [
     { name: 'Jan', value: 32000 }, { name: 'Fev', value: 28000 },
     { name: 'Mar', value: 45000 }, { name: 'Abr', value: 38000 },
@@ -43,7 +43,6 @@ const mock = {
     { name: 'Set', value: 49000 }, { name: 'Out', value: 62000 },
     { name: 'Nov', value: 58000 }, { name: 'Dez', value: 72000 },
   ],
-
   financialFlow: [
     { name: 'Jan', receitas: 42000, despesas: 28000, lucro: 14000 },
     { name: 'Fev', receitas: 38000, despesas: 25000, lucro: 13000 },
@@ -52,14 +51,12 @@ const mock = {
     { name: 'Mai', receitas: 62000, despesas: 35000, lucro: 27000 },
     { name: 'Jun', receitas: 58000, despesas: 33000, lucro: 25000 },
   ],
-
   revenueByCategory: [
     { name: 'Serviços', value: 42, raw: 'R$ 53.100,00' },
     { name: 'Produtos', value: 31, raw: 'R$ 39.200,00' },
     { name: 'Assinaturas', value: 18, raw: 'R$ 22.760,00' },
     { name: 'Outros', value: 9, raw: 'R$ 11.370,00' },
   ],
-
   recentSales: [
     { id: '#VDA-1592', client: 'João Silva', date: '09/06/2026', value: 12840, status: 'Concluída' },
     { id: '#VDA-1591', client: 'Maria Oliveira', date: '08/06/2026', value: 5620, status: 'Concluída' },
@@ -67,58 +64,52 @@ const mock = {
     { id: '#VDA-1589', client: 'Ana Costa', date: '07/06/2026', value: 8900, status: 'Concluída' },
     { id: '#VDA-1588', client: 'Pedro Santos', date: '07/06/2026', value: 2340, status: 'Concluída' },
   ],
-
   newClients: [
     { name: 'Fernanda Lima', city: 'São Paulo', date: '09/06/2026' },
     { name: 'Roberto Alves', city: 'Rio de Janeiro', date: '08/06/2026' },
     { name: 'Juliana Mendes', city: 'Belo Horizonte', date: '08/06/2026' },
     { name: 'Lucas Pereira', city: 'Curitiba', date: '07/06/2026' },
   ],
-
   lowStock: [
     { product: 'Teclado Mecânico Redragon', stock: 3, min: 10, status: 'Crítico' as const },
     { product: 'Mouse Gamer Logitech G502', stock: 5, min: 8, status: 'Atenção' as const },
     { product: 'Monitor LG 24" Full HD', stock: 2, min: 5, status: 'Crítico' as const },
     { product: 'Cadeira ThunderX3', stock: 1, min: 3, status: 'Crítico' as const },
   ],
-
   receivables: [
     { client: 'Tech Solutions Ltda', value: 15840, due: '15/06/2026' },
     { client: 'Mega Suprimentos', value: 9200, due: '18/06/2026' },
     { client: 'Inova Distribuidora', value: 6450, due: '20/06/2026' },
     { client: 'Global Materiais', value: 12300, due: '25/06/2026' },
   ],
-
   activities: [
     { icon: ShoppingCartIcon, color: 'var(--nexus-rose)', text: 'Nova venda realizada', detail: '#VDA-1592 - R$ 12.840,00', time: 'Agora' },
     { icon: UserGroupIcon, color: 'var(--nexus-gold)', text: 'Cliente cadastrado', detail: 'Fernanda Lima', time: '5 min' },
-    { icon: ShoppingCartIcon, color: 'var(--nexus-muted)', text: 'Compra realizada', detail: 'CMP-2024-984 - Fornecedor Tech', time: '1h' },
+    { icon: ShoppingCartIcon, color: 'var(--nexus-muted)', text: 'Compra realizada', detail: 'CMP-2024-984', time: '1h' },
     { icon: ArchiveBoxIcon, color: 'var(--nexus-gold)', text: 'Produto atualizado', detail: 'Teclado Mecânico Redragon', time: '2h' },
     { icon: CurrencyDollarIcon, color: 'var(--nexus-success)', text: 'Pagamento recebido', detail: 'R$ 8.900,00 - Ana Costa', time: '3h' },
   ],
-
   notifications: [
     { icon: ExclamationCircleIcon, color: 'var(--nexus-danger)', text: 'Estoque baixo', detail: '4 produtos precisam de reposição' },
     { icon: ClockIcon, color: 'var(--nexus-warning)', text: 'Conta vencendo', detail: 'Fatura #FAT-001 vence em 3 dias' },
-    { icon: BellIcon, color: 'var(--nexus-gold)', text: 'Mensagem CRM', detail: 'Novo lead qualificado: Tech Solutions' },
-    { icon: CheckCircleIcon, color: 'var(--nexus-success)', text: 'Backup realizado', detail: 'Backup diário concluído com sucesso' },
-    { icon: ArrowUpIcon, color: 'var(--nexus-rose)', text: 'Atualização disponível', detail: 'Nexus v1.2.0 disponível para download' },
+    { icon: BellIcon, color: 'var(--nexus-gold)', text: 'Mensagem CRM', detail: 'Novo lead qualificado' },
+    { icon: CheckCircleIcon, color: 'var(--nexus-success)', text: 'Backup realizado', detail: 'Backup diário concluído' },
+    { icon: ArrowUpIcon, color: 'var(--nexus-rose)', text: 'Atualização disponível', detail: 'Nexus v1.2.0 disponível' },
   ],
-
   executive: {
     totalRevenue: 1248530,
-    growth: 23,
     activeClients: 942,
     conversion: 18.7,
     avgTicket: 1420.35,
   },
 };
 
-/* ── sub-components (memoized) ──────────────────────────── */
+const MotionCard = motion.div;
 
+/* ── KPI Row ──────────────────────────────────────────────── */
 const KpiRow = memo(function KpiRow() {
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
       <StatsCard label="Clientes" value={mock.kpis.clients.value}
         icon={<UserGroupIcon className="w-5 h-5" />} color="gold"
         trend={{ value: mock.kpis.clients.trend, direction: 'up' }} subtitle="este mês" />
@@ -138,10 +129,35 @@ const KpiRow = memo(function KpiRow() {
   );
 });
 
+/* ── Section Header ───────────────────────────────────────── */
+const SectionHeader = memo(function SectionHeader({ title, link }: { title: string; link?: string }) {
+  return (
+    <div className="flex items-center justify-between mb-4">
+      <h2 className="text-sm font-semibold" style={{ color: 'var(--nexus-text)' }}>{title}</h2>
+      {link && (
+        <button className="flex items-center gap-1 text-xs font-medium transition-colors"
+          style={{ color: 'var(--nexus-gold)' }}
+          onMouseEnter={e => { e.currentTarget.style.color = 'var(--nexus-gold-light)'; }}
+          onMouseLeave={e => { e.currentTarget.style.color = 'var(--nexus-gold)'; }}>
+          {link}
+          <ArrowRightIcon className="w-3 h-3" />
+        </button>
+      )}
+    </div>
+  );
+});
+
+/* ── Sales Chart (12 months AreaChart) ────────────────────── */
 const SalesChart = memo(function SalesChart() {
   return (
-    <div className="lg:col-span-2 rounded-2xl p-5 flex flex-col"
-      style={{ background: 'var(--nexus-card)', border: '1px solid var(--nexus-border)' }}>
+    <MotionCard initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.35 }} whileHover={{ y: -2 }}
+      className="lg:col-span-2 rounded-2xl p-6 flex flex-col relative overflow-hidden"
+      style={cardStyle}>
+      <div className="absolute top-0 left-0 w-full h-px" style={{
+        background: 'linear-gradient(90deg, transparent, var(--nexus-gold), transparent)',
+        opacity: 0.3,
+      }} />
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-sm font-semibold" style={{ color: 'var(--nexus-text)' }}>Vendas dos últimos 12 meses</h2>
         <div className="relative">
@@ -176,14 +192,21 @@ const SalesChart = memo(function SalesChart() {
           </AreaChart>
         </ResponsiveContainer>
       </div>
-    </div>
+    </MotionCard>
   );
 });
 
+/* ── Financial Flow (BarChart) ────────────────────────────── */
 const FinancialChart = memo(function FinancialChart() {
   return (
-    <div className="rounded-2xl p-5 flex flex-col"
-      style={{ background: 'var(--nexus-card)', border: '1px solid var(--nexus-border)' }}>
+    <MotionCard initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.35, delay: 0.05 }} whileHover={{ y: -2 }}
+      className="rounded-2xl p-6 flex flex-col relative overflow-hidden"
+      style={cardStyle}>
+      <div className="absolute top-0 left-0 w-full h-px" style={{
+        background: 'linear-gradient(90deg, transparent, var(--nexus-gold), transparent)',
+        opacity: 0.3,
+      }} />
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-sm font-semibold" style={{ color: 'var(--nexus-text)' }}>Fluxo Financeiro</h2>
         <div className="relative">
@@ -212,14 +235,21 @@ const FinancialChart = memo(function FinancialChart() {
           </BarChart>
         </ResponsiveContainer>
       </div>
-    </div>
+    </MotionCard>
   );
 });
 
+/* ── Revenue Donut ─────────────────────────────────────────── */
 const CategoryDonut = memo(function CategoryDonut() {
   return (
-    <div className="rounded-2xl p-5 flex flex-col"
-      style={{ background: 'var(--nexus-card)', border: '1px solid var(--nexus-border)' }}>
+    <MotionCard initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.35, delay: 0.1 }} whileHover={{ y: -2 }}
+      className="rounded-2xl p-6 flex flex-col relative overflow-hidden"
+      style={cardStyle}>
+      <div className="absolute top-0 left-0 w-full h-px" style={{
+        background: 'linear-gradient(90deg, transparent, var(--nexus-gold), transparent)',
+        opacity: 0.3,
+      }} />
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-sm font-semibold" style={{ color: 'var(--nexus-text)' }}>Receita por Categoria</h2>
         <button style={{ color: 'var(--nexus-muted)' }}><EllipsisVerticalIcon className="w-4 h-4" /></button>
@@ -238,7 +268,9 @@ const CategoryDonut = memo(function CategoryDonut() {
             </PieChart>
           </ResponsiveContainer>
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-            <p className="text-xs font-bold" style={{ color: 'var(--nexus-gold)' }}>Total<br />{fmtBRL(126430.20)}</p>
+            <p className="text-xs font-bold leading-tight text-center" style={{ color: 'var(--nexus-gold)' }}>
+              Total<br />{fmtBRL(126430.20)}
+            </p>
           </div>
         </div>
         <div className="w-full space-y-2 px-1">
@@ -253,32 +285,16 @@ const CategoryDonut = memo(function CategoryDonut() {
           ))}
         </div>
       </div>
-    </div>
+    </MotionCard>
   );
 });
 
-const SectionHeader = memo(function SectionHeader({ title, link }: { title: string; link?: string }) {
-  return (
-    <div className="flex items-center justify-between mb-4">
-      <h2 className="text-sm font-semibold" style={{ color: 'var(--nexus-text)' }}>{title}</h2>
-      {link && (
-        <button className="flex items-center gap-1 text-xs font-medium transition-colors"
-          style={{ color: 'var(--nexus-gold)' }}
-          onMouseEnter={e => { e.currentTarget.style.color = 'var(--nexus-gold-light)'; }}
-          onMouseLeave={e => { e.currentTarget.style.color = 'var(--nexus-gold)'; }}>
-          {link}
-          <ArrowRightIcon className="w-3 h-3" />
-        </button>
-      )}
-    </div>
-  );
-});
-
+/* ── Tables ────────────────────────────────────────────────── */
 const SalesTable = memo(function SalesTable() {
-  const statusBadge = (s: string) => {
+  const badge = (s: string) => {
     const isOk = s === 'Concluída';
     return (
-      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium"
+      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium whitespace-nowrap"
         style={{
           background: isOk ? 'rgba(var(--nexus-success-rgb),0.12)' : 'rgba(var(--nexus-warning-rgb),0.12)',
           color: isOk ? 'var(--nexus-success)' : 'var(--nexus-warning)',
@@ -290,56 +306,64 @@ const SalesTable = memo(function SalesTable() {
   };
 
   return (
-    <div className="rounded-2xl p-5 flex flex-col"
-      style={{ background: 'var(--nexus-card)', border: '1px solid var(--nexus-border)' }}>
+    <MotionCard initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3, delay: 0.1 }} whileHover={{ y: -2 }}
+      className="rounded-2xl p-6 flex flex-col relative overflow-hidden"
+      style={cardStyle}>
+      <div className="absolute top-0 left-0 w-1 h-12 rounded-r" style={{ background: 'var(--nexus-rose)' }} />
       <SectionHeader title="Últimas Vendas" link="Ver todas" />
-      <div className="flex-1 overflow-x-auto">
+      <div className="flex-1 overflow-x-auto -mx-6 px-6">
         <table className="w-full text-left text-xs">
           <thead>
             <tr style={{ borderBottom: '1px solid var(--nexus-border)' }}>
               {['Pedido', 'Cliente', 'Data', 'Valor', 'Status'].map(h => (
-                <th key={h} className="pb-2.5 font-semibold uppercase tracking-wider"
-                  style={{ color: 'var(--nexus-muted-2)', paddingRight: '12px' }}>{h}</th>
+                <th key={h} className="pb-2.5 pr-3 font-semibold uppercase tracking-wider"
+                  style={{ color: 'var(--nexus-muted-2)' }}>{h}</th>
               ))}
             </tr>
           </thead>
           <tbody>
             {mock.recentSales.map(s => (
-              <tr key={s.id} className="transition-colors hover:opacity-80"
-                style={{ borderBottom: '1px solid var(--nexus-border)' }}>
+              <tr key={s.id} className="transition-colors" style={{ borderBottom: '1px solid var(--nexus-border)' }}
+                onMouseEnter={e => { e.currentTarget.style.background = 'var(--nexus-bg-soft)'; }}
+                onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; }}>
                 <td className="py-2.5 pr-3 font-medium" style={{ color: 'var(--nexus-text)' }}>{s.id}</td>
                 <td className="py-2.5 pr-3" style={{ color: 'var(--nexus-muted)' }}>{s.client}</td>
                 <td className="py-2.5 pr-3" style={{ color: 'var(--nexus-muted)' }}>{s.date}</td>
                 <td className="py-2.5 pr-3 font-medium" style={{ color: 'var(--nexus-text)' }}>{fmtBRL(s.value)}</td>
-                <td className="py-2.5">{statusBadge(s.status)}</td>
+                <td className="py-2.5">{badge(s.status)}</td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
-    </div>
+    </MotionCard>
   );
 });
 
 const NewClientsTable = memo(function NewClientsTable() {
   return (
-    <div className="rounded-2xl p-5 flex flex-col"
-      style={{ background: 'var(--nexus-card)', border: '1px solid var(--nexus-border)' }}>
+    <MotionCard initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3, delay: 0.15 }} whileHover={{ y: -2 }}
+      className="rounded-2xl p-6 flex flex-col relative overflow-hidden"
+      style={cardStyle}>
+      <div className="absolute top-0 left-0 w-1 h-12 rounded-r" style={{ background: 'var(--nexus-gold)' }} />
       <SectionHeader title="Novos Clientes" link="Ver todas" />
-      <div className="flex-1 overflow-x-auto">
+      <div className="flex-1 overflow-x-auto -mx-6 px-6">
         <table className="w-full text-left text-xs">
           <thead>
             <tr style={{ borderBottom: '1px solid var(--nexus-border)' }}>
               {['Cliente', 'Cidade', 'Data'].map(h => (
-                <th key={h} className="pb-2.5 font-semibold uppercase tracking-wider"
-                  style={{ color: 'var(--nexus-muted-2)', paddingRight: '12px' }}>{h}</th>
+                <th key={h} className="pb-2.5 pr-3 font-semibold uppercase tracking-wider"
+                  style={{ color: 'var(--nexus-muted-2)' }}>{h}</th>
               ))}
             </tr>
           </thead>
           <tbody>
             {mock.newClients.map((c, i) => (
-              <tr key={i} className="transition-colors hover:opacity-80"
-                style={{ borderBottom: '1px solid var(--nexus-border)' }}>
+              <tr key={i} className="transition-colors" style={{ borderBottom: '1px solid var(--nexus-border)' }}
+                onMouseEnter={e => { e.currentTarget.style.background = 'var(--nexus-bg-soft)'; }}
+                onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; }}>
                 <td className="py-2.5 pr-3 font-medium" style={{ color: 'var(--nexus-text)' }}>{c.name}</td>
                 <td className="py-2.5 pr-3" style={{ color: 'var(--nexus-muted)' }}>{c.city}</td>
                 <td className="py-2.5" style={{ color: 'var(--nexus-muted)' }}>{c.date}</td>
@@ -348,15 +372,15 @@ const NewClientsTable = memo(function NewClientsTable() {
           </tbody>
         </table>
       </div>
-    </div>
+    </MotionCard>
   );
 });
 
 const LowStockTable = memo(function LowStockTable() {
-  const statusBadge = (s: 'Crítico' | 'Atenção') => {
+  const badge = (s: 'Crítico' | 'Atenção') => {
     const isCrit = s === 'Crítico';
     return (
-      <span className="text-[10px] font-bold px-2 py-0.5 rounded-md uppercase tracking-wider"
+      <span className="text-[10px] font-bold px-2 py-0.5 rounded-md uppercase tracking-wider whitespace-nowrap"
         style={{
           background: isCrit ? 'rgba(var(--nexus-danger-rgb),0.12)' : 'rgba(var(--nexus-warning-rgb),0.12)',
           color: isCrit ? 'var(--nexus-danger)' : 'var(--nexus-warning)',
@@ -367,55 +391,63 @@ const LowStockTable = memo(function LowStockTable() {
   };
 
   return (
-    <div className="rounded-2xl p-5 flex flex-col"
-      style={{ background: 'var(--nexus-card)', border: '1px solid var(--nexus-border)' }}>
+    <MotionCard initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3, delay: 0.2 }} whileHover={{ y: -2 }}
+      className="rounded-2xl p-6 flex flex-col relative overflow-hidden"
+      style={cardStyle}>
+      <div className="absolute top-0 left-0 w-1 h-12 rounded-r" style={{ background: 'var(--nexus-danger)' }} />
       <SectionHeader title="Estoque Baixo" link="Ver todas" />
-      <div className="flex-1 overflow-x-auto">
+      <div className="flex-1 overflow-x-auto -mx-6 px-6">
         <table className="w-full text-left text-xs">
           <thead>
             <tr style={{ borderBottom: '1px solid var(--nexus-border)' }}>
               {['Produto', 'Estoque', 'Mínimo', 'Status'].map(h => (
-                <th key={h} className="pb-2.5 font-semibold uppercase tracking-wider"
-                  style={{ color: 'var(--nexus-muted-2)', paddingRight: '12px' }}>{h}</th>
+                <th key={h} className="pb-2.5 pr-3 font-semibold uppercase tracking-wider"
+                  style={{ color: 'var(--nexus-muted-2)' }}>{h}</th>
               ))}
             </tr>
           </thead>
           <tbody>
             {mock.lowStock.map((p, i) => (
-              <tr key={i} className="transition-colors hover:opacity-80"
-                style={{ borderBottom: '1px solid var(--nexus-border)' }}>
+              <tr key={i} className="transition-colors" style={{ borderBottom: '1px solid var(--nexus-border)' }}
+                onMouseEnter={e => { e.currentTarget.style.background = 'var(--nexus-bg-soft)'; }}
+                onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; }}>
                 <td className="py-2.5 pr-3 font-medium" style={{ color: 'var(--nexus-text)' }}>{p.product}</td>
                 <td className="py-2.5 pr-3" style={{ color: 'var(--nexus-muted)' }}>{p.stock}</td>
                 <td className="py-2.5 pr-3" style={{ color: 'var(--nexus-muted)' }}>{p.min}</td>
-                <td className="py-2.5">{statusBadge(p.status)}</td>
+                <td className="py-2.5">{badge(p.status)}</td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
-    </div>
+    </MotionCard>
   );
 });
 
 const ReceivablesTable = memo(function ReceivablesTable() {
   return (
-    <div className="rounded-2xl p-5 flex flex-col"
-      style={{ background: 'var(--nexus-card)', border: '1px solid var(--nexus-border)' }}>
+    <MotionCard initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3, delay: 0.25 }} whileHover={{ y: -2 }}
+      className="rounded-2xl p-6 flex flex-col relative overflow-hidden"
+      style={cardStyle}>
+      <div className="absolute top-0 left-0 w-1 h-12 rounded-r" style={{ background: 'var(--nexus-success)' }} />
       <SectionHeader title="Contas a Receber" link="Ver todas" />
-      <div className="flex-1 overflow-x-auto">
+      <div className="flex-1 overflow-x-auto -mx-6 px-6">
         <table className="w-full text-left text-xs">
           <thead>
             <tr style={{ borderBottom: '1px solid var(--nexus-border)' }}>
               {['Cliente', 'Valor', 'Vencimento'].map(h => (
-                <th key={h} className="pb-2.5 font-semibold uppercase tracking-wider"
-                  style={{ color: 'var(--nexus-muted-2)', paddingRight: '12px' }}>{h}</th>
+                <th key={h} className="pb-2.5 pr-3 font-semibold uppercase tracking-wider"
+                  style={{ color: 'var(--nexus-muted-2)' }}>{h}</th>
               ))}
             </tr>
           </thead>
           <tbody>
             {mock.receivables.map((r, i) => (
-              <tr key={i} className="transition-colors hover:opacity-80"
-                style={{ borderBottom: '1px solid var(--nexus-border)' }}>
+              <tr key={i} className="transition-colors" style={{ borderBottom: '1px solid var(--nexus-border)' }}
+                onMouseEnter={e => { e.currentTarget.style.background = 'var(--nexus-bg-soft)'; }}
+                onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; }}>
                 <td className="py-2.5 pr-3 font-medium" style={{ color: 'var(--nexus-text)' }}>{r.client}</td>
                 <td className="py-2.5 pr-3 font-medium" style={{ color: 'var(--nexus-gold)' }}>{fmtBRL(r.value)}</td>
                 <td className="py-2.5" style={{ color: 'var(--nexus-muted)' }}>{r.due}</td>
@@ -424,23 +456,38 @@ const ReceivablesTable = memo(function ReceivablesTable() {
           </tbody>
         </table>
       </div>
-    </div>
+    </MotionCard>
   );
 });
 
+/* ── Activities Timeline ──────────────────────────────────── */
 const ActivitiesTimeline = memo(function ActivitiesTimeline() {
   return (
-    <div className="rounded-2xl p-5 flex flex-col"
-      style={{ background: 'var(--nexus-card)', border: '1px solid var(--nexus-border)' }}>
+    <MotionCard initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3, delay: 0.15 }} whileHover={{ y: -2 }}
+      className="rounded-2xl p-6 flex flex-col relative overflow-hidden"
+      style={cardStyle}>
+      <div className="absolute top-0 left-0 w-full h-px" style={{
+        background: 'linear-gradient(90deg, transparent, var(--nexus-gold), transparent)',
+        opacity: 0.3,
+      }} />
       <SectionHeader title="Atividades Recentes" link="Ver todas" />
       <div className="flex-1 space-y-0.5">
         {mock.activities.map((a, i) => {
           const Icon = a.icon;
           return (
-            <div key={i} className="flex items-start gap-3 p-2.5 rounded-xl transition-colors group cursor-pointer"
-              style={{ borderLeft: '2px solid transparent' }}
-              onMouseEnter={e => { e.currentTarget.style.background = 'var(--nexus-bg-soft)'; e.currentTarget.style.borderLeftColor = a.color; }}
-              onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.borderLeftColor = 'transparent'; }}>
+            <div key={i} className="flex items-start gap-3 p-2.5 rounded-xl transition-all cursor-pointer"
+              onMouseEnter={e => {
+                e.currentTarget.style.background = 'var(--nexus-bg-soft)';
+                e.currentTarget.style.paddingLeft = '16px';
+                e.currentTarget.style.borderLeftColor = a.color;
+              }}
+              onMouseLeave={e => {
+                e.currentTarget.style.background = 'transparent';
+                e.currentTarget.style.paddingLeft = '10px';
+                e.currentTarget.style.borderLeftColor = 'transparent';
+              }}
+              style={{ borderLeft: '3px solid transparent', paddingLeft: '10px' }}>
               <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
                 style={{ background: `rgba(var(--nexus-gold-rgb),0.08)`, color: a.color }}>
                 <Icon className="w-4 h-4" />
@@ -454,14 +501,21 @@ const ActivitiesTimeline = memo(function ActivitiesTimeline() {
           );
         })}
       </div>
-    </div>
+    </MotionCard>
   );
 });
 
+/* ── Notifications Panel ──────────────────────────────────── */
 const NotificationsPanel = memo(function NotificationsPanel() {
   return (
-    <div className="rounded-2xl p-5 flex flex-col"
-      style={{ background: 'var(--nexus-card)', border: '1px solid var(--nexus-border)' }}>
+    <MotionCard initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3, delay: 0.2 }} whileHover={{ y: -2 }}
+      className="rounded-2xl p-6 flex flex-col relative overflow-hidden"
+      style={cardStyle}>
+      <div className="absolute top-0 left-0 w-full h-px" style={{
+        background: 'linear-gradient(90deg, transparent, var(--nexus-gold), transparent)',
+        opacity: 0.3,
+      }} />
       <SectionHeader title="Notificações" link="Ver todas" />
       <div className="flex-1 space-y-0.5">
         {mock.notifications.map((n, i) => {
@@ -482,10 +536,11 @@ const NotificationsPanel = memo(function NotificationsPanel() {
           );
         })}
       </div>
-    </div>
+    </MotionCard>
   );
 });
 
+/* ── Executive Panel ──────────────────────────────────────── */
 const ExecutivePanel = memo(function ExecutivePanel() {
   const cards = [
     { label: 'Receita Total', value: fmtBRL(mock.executive.totalRevenue), trend: '+23%', color: 'var(--nexus-gold)' },
@@ -496,16 +551,22 @@ const ExecutivePanel = memo(function ExecutivePanel() {
   ];
 
   return (
-    <div className="rounded-2xl p-5 flex flex-col"
-      style={{ background: 'var(--nexus-card)', border: '1px solid var(--nexus-border)' }}>
+    <MotionCard initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3, delay: 0.25 }} whileHover={{ y: -2 }}
+      className="rounded-2xl p-6 flex flex-col relative overflow-hidden"
+      style={cardStyle}>
+      <div className="absolute top-0 left-0 w-full h-px" style={{
+        background: 'linear-gradient(90deg, transparent, var(--nexus-gold), transparent)',
+        opacity: 0.3,
+      }} />
       <SectionHeader title="Painel Executivo" />
       <div className="flex-1 grid grid-cols-1 gap-3">
         {cards.map((c, i) => (
           <motion.div key={i} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.05 }}
-            className="flex items-center justify-between p-3 rounded-xl transition-all"
-            style={{ background: 'var(--nexus-bg-soft)' }}
-            onMouseEnter={e => { e.currentTarget.style.borderLeft = `3px solid ${c.color}`; }}
-            onMouseLeave={e => { e.currentTarget.style.borderLeft = '3px solid transparent'; }}>
+            className="flex items-center justify-between p-3 rounded-xl"
+            style={{ background: 'var(--nexus-bg-soft)', borderLeft: `3px solid transparent` }}
+            onMouseEnter={e => { e.currentTarget.style.borderLeftColor = c.color; }}
+            onMouseLeave={e => { e.currentTarget.style.borderLeftColor = 'transparent'; }}>
             <div>
               <p className="text-[11px] font-medium uppercase tracking-wider" style={{ color: 'var(--nexus-muted-2)' }}>{c.label}</p>
               <p className="text-sm font-bold mt-0.5" style={{ color: 'var(--nexus-text)' }}>{c.value}</p>
@@ -518,11 +579,11 @@ const ExecutivePanel = memo(function ExecutivePanel() {
           </motion.div>
         ))}
       </div>
-    </div>
+    </MotionCard>
   );
 });
 
-/* ── main dashboard ──────────────────────────────────────── */
+/* ── Main Dashboard ────────────────────────────────────────── */
 export function Dashboard() {
   return (
     <div className="p-6 space-y-6 min-h-screen bg-transparent">
@@ -533,20 +594,20 @@ export function Dashboard() {
 
       <KpiRow />
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5" style={{ minHeight: 320 }}>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6" style={{ minHeight: 340 }}>
         <SalesChart />
         <FinancialChart />
         <CategoryDonut />
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         <SalesTable />
         <NewClientsTable />
         <LowStockTable />
         <ReceivablesTable />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <ActivitiesTimeline />
         <NotificationsPanel />
         <ExecutivePanel />
