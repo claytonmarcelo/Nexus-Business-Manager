@@ -6,10 +6,11 @@ import {
   ArrowRightIcon, EllipsisVerticalIcon,
   ArchiveBoxIcon, CheckCircleIcon,
   ClockIcon, ExclamationCircleIcon, ArrowUpIcon,
+  UsersIcon
 } from '@heroicons/react/24/outline';
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
-  ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell,
+  ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell
 } from 'recharts';
 import { StatsCard } from '../../components/ui/StatsCard';
 
@@ -18,7 +19,7 @@ const fmtBRL = (v: number) =>
 
 const PIE_COLORS = [
   'var(--nexus-rose)', 'var(--nexus-gold)',
-  'var(--nexus-bronze)', 'var(--nexus-muted)',
+  'var(--nexus-chart-blue)', 'var(--nexus-chart-purple)',
 ];
 
 const cardStyle = {
@@ -27,112 +28,125 @@ const cardStyle = {
   boxShadow: 'var(--nexus-shadow)',
 } as const;
 
+const topAccentStyle = {
+  background: 'linear-gradient(90deg, transparent, var(--nexus-gold), transparent)',
+  opacity: 0.3,
+} as const;
+
 const mock = {
   kpis: {
-    clients: { value: '1.250', trend: '+12,5%', up: true },
-    sales: { value: 'R$ 84.230,50', trend: '+18,7%', up: true },
-    revenue: { value: 'R$ 126.430,20', trend: '+15,3%', up: true },
-    profit: { value: 'R$ 28.200,00', trend: '+11,8%', up: true },
-    avgTicket: { value: 'R$ 1.420,35', trend: '+8,2%', up: true },
+    clients:  { value: '1.250',          trend: '+12,5%', up: true, sparkline: [1000,1050,1020,1100,1150,1200,1250] },
+    sales:    { value: 'R$ 84.230,50',   trend: '+18,7%', up: true, sparkline: [60000,65000,62000,70000,75000,80000,84230] },
+    revenue:  { value: 'R$ 126.430,20',  trend: '+15,3%', up: true, sparkline: [90000,95000,92000,105000,110000,118000,126430] },
+    profit:   { value: 'R$ 28.200,00',   trend: '+11,8%', up: true, sparkline: [20000,21000,20500,24000,25000,26500,28200] },
+    avgTicket:{ value: 'R$ 1.420,35',    trend: '+8,2%',  up: true, sparkline: [1200,1250,1220,1300,1350,1380,1420] },
   },
   sales12months: [
-    { name: 'Jan', value: 32000 }, { name: 'Fev', value: 28000 },
-    { name: 'Mar', value: 45000 }, { name: 'Abr', value: 38000 },
-    { name: 'Mai', value: 52000 }, { name: 'Jun', value: 48000 },
-    { name: 'Jul', value: 41000 }, { name: 'Ago', value: 56000 },
-    { name: 'Set', value: 49000 }, { name: 'Out', value: 62000 },
+    { name: 'Jan', value: 10000 }, { name: 'Fev', value: 35000 },
+    { name: 'Mar', value: 34000 }, { name: 'Abr', value: 35000 },
+    { name: 'Mai', value: 45000 }, { name: 'Jun', value: 85000 },
+    { name: 'Jul', value: 65000 }, { name: 'Ago', value: 60000 },
+    { name: 'Set', value: 72000 }, { name: 'Out', value: 62000 },
     { name: 'Nov', value: 58000 }, { name: 'Dez', value: 72000 },
   ],
   financialFlow: [
-    { name: 'Jan', receitas: 42000, despesas: 28000, lucro: 14000 },
-    { name: 'Fev', receitas: 38000, despesas: 25000, lucro: 13000 },
-    { name: 'Mar', receitas: 55000, despesas: 31000, lucro: 24000 },
-    { name: 'Abr', receitas: 48000, despesas: 29000, lucro: 19000 },
-    { name: 'Mai', receitas: 62000, despesas: 35000, lucro: 27000 },
-    { name: 'Jun', receitas: 58000, despesas: 33000, lucro: 25000 },
+    { name: 'Semana 1', receitas: 42000, despesas: 28000, lucro: 14000 },
+    { name: 'Semana 2', receitas: 58000, despesas: 35000, lucro: 23000 },
+    { name: 'Semana 3', receitas: 65000, despesas: 21000, lucro: 44000 },
+    { name: 'Semana 4', receitas: 48000, despesas: 39000, lucro: 9000 },
+    { name: 'Semana 5', receitas: 62000, despesas: 35000, lucro: 27000 },
   ],
   revenueByCategory: [
-    { name: 'Serviços', value: 42, raw: 'R$ 53.100,00' },
-    { name: 'Produtos', value: 31, raw: 'R$ 39.200,00' },
-    { name: 'Assinaturas', value: 18, raw: 'R$ 22.760,00' },
-    { name: 'Outros', value: 9, raw: 'R$ 11.370,00' },
+    { name: 'Servicos', value: 45, raw: '45%' },
+    { name: 'Produtos', value: 30, raw: '30%' },
+    { name: 'Assinaturas', value: 15, raw: '15%' },
+    { name: 'Outros', value: 10, raw: '10%' },
   ],
   recentSales: [
-    { id: '#VDA-1592', client: 'João Silva', date: '09/06/2026', value: 12840, status: 'Concluída' },
-    { id: '#VDA-1591', client: 'Maria Oliveira', date: '08/06/2026', value: 5620, status: 'Concluída' },
-    { id: '#VDA-1590', client: 'Carlos Souza', date: '08/06/2026', value: 3450, status: 'Pendente' },
-    { id: '#VDA-1589', client: 'Ana Costa', date: '07/06/2026', value: 8900, status: 'Concluída' },
-    { id: '#VDA-1588', client: 'Pedro Santos', date: '07/06/2026', value: 2340, status: 'Concluída' },
+    { id: '#VEN-2540', client: 'Joao Silva',      date: '05/06/2026', value: 2450,  status: 'Concluida' },
+    { id: '#VEN-2539', client: 'Maria Costa',     date: '05/06/2026', value: 1280,  status: 'Concluida' },
+    { id: '#VEN-2538', client: 'Roberto Pereira', date: '04/06/2026', value: 3750,  status: 'Concluida' },
+    { id: '#VEN-2537', client: 'Ana Ferreira',    date: '04/06/2026', value: 980,   status: 'Pendente' },
+    { id: '#VEN-2536', client: 'Carlos Lima',     date: '04/06/2026', value: 1450,  status: 'Concluida' },
   ],
   newClients: [
-    { name: 'Fernanda Lima', city: 'São Paulo', date: '09/06/2026' },
-    { name: 'Roberto Alves', city: 'Rio de Janeiro', date: '08/06/2026' },
-    { name: 'Juliana Mendes', city: 'Belo Horizonte', date: '08/06/2026' },
-    { name: 'Lucas Pereira', city: 'Curitiba', date: '07/06/2026' },
+    { name: 'Juliana Martins',  city: 'Sao Paulo - SP',        date: '05/06/2026' },
+    { name: 'Lucas Almeida',    city: 'Rio de Janeiro - RJ',   date: '05/06/2026' },
+    { name: 'Fernanda Souza',   city: 'Belo Horizonte - MG',   date: '04/06/2026' },
+    { name: 'Bruno Santos',     city: 'Curitiba - PR',         date: '04/06/2026' },
+    { name: 'Patricia Oliveira',city: 'Salvador - BA',         date: '03/06/2026' },
   ],
   lowStock: [
-    { product: 'Teclado Mecânico Redragon', stock: 3, min: 10, status: 'Crítico' as const },
-    { product: 'Mouse Gamer Logitech G502', stock: 5, min: 8, status: 'Atenção' as const },
-    { product: 'Monitor LG 24" Full HD', stock: 2, min: 5, status: 'Crítico' as const },
-    { product: 'Cadeira ThunderX3', stock: 1, min: 3, status: 'Crítico' as const },
+    { product: 'Teclado Mecanico',  stock: 3, min: 10, status: 'Critico'  as const },
+    { product: 'Mouse Gamer',        stock: 5, min: 15, status: 'Critico'  as const },
+    { product: 'Monitor 24"',        stock: 2, min: 8,  status: 'Critico'  as const },
+    { product: 'Cadeira Office',     stock: 4, min: 10, status: 'Atencao' as const },
+    { product: 'Impressora Laser',   stock: 6, min: 12, status: 'Atencao' as const },
   ],
   receivables: [
-    { client: 'Tech Solutions Ltda', value: 15840, due: '15/06/2026' },
-    { client: 'Mega Suprimentos', value: 9200, due: '18/06/2026' },
-    { client: 'Inova Distribuidora', value: 6450, due: '20/06/2026' },
-    { client: 'Global Materiais', value: 12300, due: '25/06/2026' },
+    { client: 'Joao Silva',      value: 2450, due: '10/06/2026' },
+    { client: 'Maria Costa',     value: 1280, due: '12/06/2026' },
+    { client: 'Roberto Pereira', value: 3750, due: '15/06/2026' },
+    { client: 'Ana Ferreira',    value: 980,  due: '18/06/2026' },
+    { client: 'Carlos Lima',     value: 1450, due: '20/06/2026' },
   ],
   activities: [
-    { icon: ShoppingCartIcon, color: 'var(--nexus-rose)', text: 'Nova venda realizada', detail: '#VDA-1592 - R$ 12.840,00', time: 'Agora' },
-    { icon: UserGroupIcon, color: 'var(--nexus-gold)', text: 'Cliente cadastrado', detail: 'Fernanda Lima', time: '5 min' },
-    { icon: ShoppingCartIcon, color: 'var(--nexus-muted)', text: 'Compra realizada', detail: 'CMP-2024-984', time: '1h' },
-    { icon: ArchiveBoxIcon, color: 'var(--nexus-gold)', text: 'Produto atualizado', detail: 'Teclado Mecânico Redragon', time: '2h' },
-    { icon: CurrencyDollarIcon, color: 'var(--nexus-success)', text: 'Pagamento recebido', detail: 'R$ 8.900,00 - Ana Costa', time: '3h' },
+    { icon: ShoppingCartIcon,    color: 'var(--nexus-chart-blue)', text: 'Nova venda realizada #VEN-2540',       time: '05/06/2026 14:32' },
+    { icon: UserGroupIcon,       color: 'var(--nexus-rose)',       text: 'Cliente cadastrado: Juliana Martins',  time: '05/06/2026 13:10' },
+    { icon: ShoppingCartIcon,    color: 'var(--nexus-success)',    text: 'Compra realizada #COM-1530',           time: '05/06/2026 11:45' },
+    { icon: ArchiveBoxIcon,      color: 'var(--nexus-gold)',       text: 'Produto atualizado: Teclado Mecanico', time: '05/06/2026 10:20' },
+    { icon: CurrencyDollarIcon,  color: 'var(--nexus-success)',    text: 'Pagamento recebido de Joao Silva',     time: '05/06/2026 09:15' },
   ],
   notifications: [
-    { icon: ExclamationCircleIcon, color: 'var(--nexus-danger)', text: 'Estoque baixo', detail: '4 produtos precisam de reposição' },
-    { icon: ClockIcon, color: 'var(--nexus-warning)', text: 'Conta vencendo', detail: 'Fatura #FAT-001 vence em 3 dias' },
-    { icon: BellIcon, color: 'var(--nexus-gold)', text: 'Mensagem CRM', detail: 'Novo lead qualificado' },
-    { icon: CheckCircleIcon, color: 'var(--nexus-success)', text: 'Backup realizado', detail: 'Backup diário concluído' },
-    { icon: ArrowUpIcon, color: 'var(--nexus-rose)', text: 'Atualização disponível', detail: 'Nexus v1.2.0 disponível' },
+    { icon: ExclamationCircleIcon, color: 'var(--nexus-danger)',      text: 'Estoque baixo: Teclado Mecanico',         time: 'Ha 5 minutos' },
+    { icon: ClockIcon,             color: 'var(--nexus-warning)',     text: 'Conta a receber vencendo: Joao Silva',    time: 'Ha 1 hora' },
+    { icon: BellIcon,              color: 'var(--nexus-chart-blue)',  text: 'Nova mensagem de Ana Beatriz no CRM',     time: 'Ha 2 horas' },
+    { icon: CheckCircleIcon,       color: 'var(--nexus-success)',     text: 'Backup realizado com sucesso',            time: 'Ha 3 horas' },
+    { icon: ArrowUpIcon,           color: 'var(--nexus-chart-blue)', text: 'Atualizacao do sistema disponivel',       time: 'Ha 5 horas' },
   ],
   executive: {
     totalRevenue: 1248530,
+    growth: '+23%',
     activeClients: 942,
-    conversion: 18.7,
+    conversion: '18,7%',
     avgTicket: 1420.35,
   },
 };
 
 const MotionCard = motion.div;
 
-/* ── KPI Row ──────────────────────────────────────────────── */
+/* ── KPI Row ────────────────────────────────────────────── */
 const KpiRow = memo(function KpiRow() {
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
       <StatsCard label="Clientes" value={mock.kpis.clients.value}
-        icon={<UserGroupIcon className="w-5 h-5" />} color="gold"
-        trend={{ value: mock.kpis.clients.trend, direction: 'up' }} subtitle="este mês" />
+        icon={<UserGroupIcon className="w-4 h-4" />} color="gold"
+        trend={{ value: mock.kpis.clients.trend, direction: 'up' }} subtitle="este mes"
+        sparklineData={mock.kpis.clients.sparkline} />
       <StatsCard label="Vendas" value={mock.kpis.sales.value}
-        icon={<ShoppingCartIcon className="w-5 h-5" />} color="gold"
-        trend={{ value: mock.kpis.sales.trend, direction: 'up' }} subtitle="este mês" />
+        icon={<ShoppingCartIcon className="w-4 h-4" />} color="rose"
+        trend={{ value: mock.kpis.sales.trend, direction: 'up' }} subtitle="este mes"
+        sparklineData={mock.kpis.sales.sparkline} />
       <StatsCard label="Receitas" value={mock.kpis.revenue.value}
-        icon={<CurrencyDollarIcon className="w-5 h-5" />} color="green"
-        trend={{ value: mock.kpis.revenue.trend, direction: 'up' }} subtitle="este mês" />
-      <StatsCard label="Lucro Líquido" value={mock.kpis.profit.value}
-        icon={<ArrowTrendingUpIcon className="w-5 h-5" />} color="gold"
-        trend={{ value: mock.kpis.profit.trend, direction: 'up' }} subtitle="este mês" />
-      <StatsCard label="Ticket Médio" value={mock.kpis.avgTicket.value}
-        icon={<TagIcon className="w-5 h-5" />} color="blue"
-        trend={{ value: mock.kpis.avgTicket.trend, direction: 'up' }} subtitle="este mês" />
+        icon={<CurrencyDollarIcon className="w-4 h-4" />} color="gold"
+        trend={{ value: mock.kpis.revenue.trend, direction: 'up' }} subtitle="este mes"
+        sparklineData={mock.kpis.revenue.sparkline} />
+      <StatsCard label="Lucro Liquido" value={mock.kpis.profit.value}
+        icon={<ArrowTrendingUpIcon className="w-4 h-4" />} color="rose"
+        trend={{ value: mock.kpis.profit.trend, direction: 'up' }} subtitle="este mes"
+        sparklineData={mock.kpis.profit.sparkline} />
+      <StatsCard label="Ticket Medio" value={mock.kpis.avgTicket.value}
+        icon={<TagIcon className="w-4 h-4" />} color="gold"
+        trend={{ value: mock.kpis.avgTicket.trend, direction: 'up' }} subtitle="este mes"
+        sparklineData={mock.kpis.avgTicket.sparkline} />
     </div>
   );
 });
 
-/* ── Section Header ───────────────────────────────────────── */
+/* ── Section Header ─────────────────────────────────────── */
 const SectionHeader = memo(function SectionHeader({ title, link }: { title: string; link?: string }) {
   return (
-    <div className="flex items-center justify-between mb-4">
+    <div className="flex items-center justify-between mb-3">
       <h2 className="text-sm font-semibold" style={{ color: 'var(--nexus-text)' }}>{title}</h2>
       {link && (
         <button className="flex items-center gap-1 text-xs font-medium transition-colors"
@@ -147,34 +161,46 @@ const SectionHeader = memo(function SectionHeader({ title, link }: { title: stri
   );
 });
 
-/* ── Sales Chart (12 months AreaChart) ────────────────────── */
+/* ── Custom Tooltip ─────────────────────────────────────── */
+const ChartTooltip = ({ active, payload, label }: any) => {
+  if (!active || !payload?.length) return null;
+  return (
+    <div style={{ background: 'var(--nexus-card-strong)', border: '1px solid var(--nexus-border)', borderRadius: 8, padding: '8px 12px' }}>
+      <p style={{ color: 'var(--nexus-muted)', fontSize: 11, marginBottom: 4 }}>{label}</p>
+      {payload.map((p: any, i: number) => (
+        <p key={i} style={{ color: p.color, fontSize: 12, fontWeight: 600 }}>
+          {p.name}: {typeof p.value === 'number' && p.value > 999 ? fmtBRL(p.value) : p.value}
+        </p>
+      ))}
+    </div>
+  );
+};
+
+/* ── Sales Chart (12 months AreaChart) ──────────────────── */
 const SalesChart = memo(function SalesChart() {
   return (
     <MotionCard initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.35 }} whileHover={{ y: -2 }}
-      className="lg:col-span-2 rounded-2xl p-6 flex flex-col relative overflow-hidden"
+      className="rounded-2xl p-5 flex flex-col relative overflow-hidden h-full"
       style={cardStyle}>
-      <div className="absolute top-0 left-0 w-full h-px" style={{
-        background: 'linear-gradient(90deg, transparent, var(--nexus-gold), transparent)',
-        opacity: 0.3,
-      }} />
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-sm font-semibold" style={{ color: 'var(--nexus-text)' }}>Vendas dos últimos 12 meses</h2>
+      <div className="absolute top-0 left-0 w-full h-px" style={topAccentStyle} />
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-sm font-semibold" style={{ color: 'var(--nexus-text)' }}>Vendas dos ultimos 12 meses</h2>
         <div className="relative">
-          <select className="appearance-none bg-transparent border rounded-lg px-3 py-1.5 pr-7 text-xs cursor-pointer"
-            style={{ borderColor: 'var(--nexus-border)', color: 'var(--nexus-muted)' }}>
-            <option>Últimos 12 meses</option>
+          <select className="appearance-none border rounded-lg px-3 py-1 pr-7 text-xs cursor-pointer"
+            style={{ borderColor: 'var(--nexus-border)', color: 'var(--nexus-muted)', background: 'var(--nexus-bg-soft)' }}>
+            <option>Ultimos 12 meses</option>
           </select>
-          <CalendarDaysIcon className="w-3.5 h-3.5 absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none"
+          <CalendarDaysIcon className="w-3 h-3 absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none"
             style={{ color: 'var(--nexus-muted)' }} />
         </div>
       </div>
-      <div className="flex-1 min-h-0">
+      <div className="flex-1" style={{ minHeight: 200 }}>
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart data={mock.sales12months} margin={{ top: 6, right: 6, left: -18, bottom: 0 }}>
             <defs>
               <linearGradient id="salesGrad" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="var(--nexus-rose)" stopOpacity={0.25} />
+                <stop offset="5%" stopColor="var(--nexus-rose)" stopOpacity={0.3} />
                 <stop offset="95%" stopColor="var(--nexus-rose)" stopOpacity={0} />
               </linearGradient>
             </defs>
@@ -183,12 +209,11 @@ const SalesChart = memo(function SalesChart() {
               tick={{ fill: 'var(--nexus-muted)', fontSize: 11 }} dy={8} />
             <YAxis axisLine={false} tickLine={false}
               tick={{ fill: 'var(--nexus-muted)', fontSize: 11 }}
-              tickFormatter={(v: number) => `R$${v >= 1000 ? `${(v / 1000).toFixed(0)}k` : v}`} />
-            <Tooltip contentStyle={{ background: 'var(--nexus-card)', border: '1px solid var(--nexus-border)', borderRadius: 10, color: 'var(--nexus-text)' }}
-              itemStyle={{ color: 'var(--nexus-rose)' }}
-              formatter={(v: any) => [fmtBRL(Number(v)), 'Vendas']} />
-            <Area type="monotone" dataKey="value" stroke="var(--nexus-rose)" strokeWidth={2.5}
-              fill="url(#salesGrad)" activeDot={{ r: 5, fill: 'var(--nexus-rose)', stroke: 'var(--nexus-bg)', strokeWidth: 2 }} />
+              tickFormatter={(v: number) => `${v >= 1000 ? `${(v / 1000).toFixed(0)}k` : v}`} />
+            <Tooltip content={<ChartTooltip />} />
+            <Area type="monotone" dataKey="value" name="Vendas" stroke="var(--nexus-rose)" strokeWidth={2}
+              fill="url(#salesGrad)" dot={false}
+              activeDot={{ r: 4, fill: 'var(--nexus-rose)', stroke: 'var(--nexus-bg)', strokeWidth: 2 }} />
           </AreaChart>
         </ResponsiveContainer>
       </div>
@@ -196,42 +221,52 @@ const SalesChart = memo(function SalesChart() {
   );
 });
 
-/* ── Financial Flow (BarChart) ────────────────────────────── */
+/* ── Financial Flow (BarChart) ──────────────────────────── */
 const FinancialChart = memo(function FinancialChart() {
+  const legendItems = [
+    { key: 'receitas', label: 'Receitas', color: 'var(--nexus-success)' },
+    { key: 'despesas', label: 'Despesas', color: 'var(--nexus-danger)' },
+    { key: 'lucro',    label: 'Lucro',    color: 'var(--nexus-gold)' },
+  ];
   return (
     <MotionCard initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.35, delay: 0.05 }} whileHover={{ y: -2 }}
-      className="rounded-2xl p-6 flex flex-col relative overflow-hidden"
+      className="rounded-2xl p-5 flex flex-col relative overflow-hidden h-full"
       style={cardStyle}>
-      <div className="absolute top-0 left-0 w-full h-px" style={{
-        background: 'linear-gradient(90deg, transparent, var(--nexus-gold), transparent)',
-        opacity: 0.3,
-      }} />
-      <div className="flex items-center justify-between mb-6">
+      <div className="absolute top-0 left-0 w-full h-px" style={topAccentStyle} />
+      <div className="flex items-center justify-between mb-3">
         <h2 className="text-sm font-semibold" style={{ color: 'var(--nexus-text)' }}>Fluxo Financeiro</h2>
         <div className="relative">
-          <select className="appearance-none bg-transparent border rounded-lg px-3 py-1.5 pr-7 text-xs cursor-pointer"
-            style={{ borderColor: 'var(--nexus-border)', color: 'var(--nexus-muted)' }}>
-            <option>Este mês</option>
+          <select className="appearance-none border rounded-lg px-3 py-1 pr-7 text-xs cursor-pointer"
+            style={{ borderColor: 'var(--nexus-border)', color: 'var(--nexus-muted)', background: 'var(--nexus-bg-soft)' }}>
+            <option>Este mes</option>
           </select>
-          <CalendarDaysIcon className="w-3.5 h-3.5 absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none"
+          <CalendarDaysIcon className="w-3 h-3 absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none"
             style={{ color: 'var(--nexus-muted)' }} />
         </div>
       </div>
-      <div className="flex-1 min-h-0">
+      {/* Legend */}
+      <div className="flex items-center gap-4 mb-3">
+        {legendItems.map(l => (
+          <div key={l.key} className="flex items-center gap-1.5">
+            <span className="w-2.5 h-2.5 rounded-sm" style={{ background: l.color }} />
+            <span className="text-[10px]" style={{ color: 'var(--nexus-muted)' }}>{l.label}</span>
+          </div>
+        ))}
+      </div>
+      <div className="flex-1" style={{ minHeight: 170 }}>
         <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={mock.financialFlow} margin={{ top: 6, right: 6, left: -18, bottom: 0 }}>
+          <BarChart data={mock.financialFlow} margin={{ top: 6, right: 6, left: -18, bottom: 0 }} barGap={2}>
             <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--nexus-chart-grid)" />
             <XAxis dataKey="name" axisLine={false} tickLine={false}
-              tick={{ fill: 'var(--nexus-muted)', fontSize: 11 }} dy={8} />
+              tick={{ fill: 'var(--nexus-muted)', fontSize: 10 }} dy={8} />
             <YAxis axisLine={false} tickLine={false}
-              tick={{ fill: 'var(--nexus-muted)', fontSize: 11 }}
-              tickFormatter={(v: number) => `R$${v >= 1000 ? `${(v / 1000).toFixed(0)}k` : v}`} />
-            <Tooltip contentStyle={{ background: 'var(--nexus-card)', border: '1px solid var(--nexus-border)', borderRadius: 10 }}
-              formatter={(v: any) => [fmtBRL(Number(v)), '']} />
-            <Bar dataKey="receitas" name="Receitas" fill="var(--nexus-success)" radius={[4, 4, 0, 0]} maxBarSize={18} />
-            <Bar dataKey="despesas" name="Despesas" fill="var(--nexus-danger)" radius={[4, 4, 0, 0]} maxBarSize={18} />
-            <Bar dataKey="lucro" name="Lucro" fill="var(--nexus-gold)" radius={[4, 4, 0, 0]} maxBarSize={18} />
+              tick={{ fill: 'var(--nexus-muted)', fontSize: 10 }}
+              tickFormatter={(v: number) => `${v >= 1000 ? `${(v / 1000).toFixed(0)}k` : v}`} />
+            <Tooltip content={<ChartTooltip />} />
+            <Bar dataKey="receitas" name="Receitas" fill="var(--nexus-success)" radius={[3, 3, 0, 0]} maxBarSize={14} />
+            <Bar dataKey="despesas" name="Despesas" fill="var(--nexus-danger)"  radius={[3, 3, 0, 0]} maxBarSize={14} />
+            <Bar dataKey="lucro"    name="Lucro"    fill="var(--nexus-gold)"    radius={[3, 3, 0, 0]} maxBarSize={14} />
           </BarChart>
         </ResponsiveContainer>
       </div>
@@ -239,48 +274,44 @@ const FinancialChart = memo(function FinancialChart() {
   );
 });
 
-/* ── Revenue Donut ─────────────────────────────────────────── */
+/* ── Revenue Donut ──────────────────────────────────────── */
 const CategoryDonut = memo(function CategoryDonut() {
   return (
     <MotionCard initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.35, delay: 0.1 }} whileHover={{ y: -2 }}
-      className="rounded-2xl p-6 flex flex-col relative overflow-hidden"
+      className="rounded-2xl p-5 flex flex-col relative overflow-hidden h-full"
       style={cardStyle}>
-      <div className="absolute top-0 left-0 w-full h-px" style={{
-        background: 'linear-gradient(90deg, transparent, var(--nexus-gold), transparent)',
-        opacity: 0.3,
-      }} />
+      <div className="absolute top-0 left-0 w-full h-px" style={topAccentStyle} />
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-sm font-semibold" style={{ color: 'var(--nexus-text)' }}>Receita por Categoria</h2>
         <button style={{ color: 'var(--nexus-muted)' }}><EllipsisVerticalIcon className="w-4 h-4" /></button>
       </div>
-      <div className="flex-1 flex flex-col items-center justify-center gap-3">
-        <div className="relative w-full max-w-[180px]">
-          <ResponsiveContainer width="100%" height={180}>
+      <div className="flex-1 flex flex-col items-center gap-3">
+        <div className="relative w-full" style={{ height: 150 }}>
+          <ResponsiveContainer width="100%" height="100%">
             <PieChart>
-              <Pie data={mock.revenueByCategory} cx="50%" cy="50%" innerRadius={55} outerRadius={80}
+              <Pie data={mock.revenueByCategory} cx="50%" cy="50%" innerRadius={45} outerRadius={68}
                 paddingAngle={3} dataKey="value" stroke="none">
                 {mock.revenueByCategory.map((_, i) => (
                   <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />
                 ))}
               </Pie>
-              <Tooltip contentStyle={{ background: 'var(--nexus-card)', border: '1px solid var(--nexus-border)', borderRadius: 10 }} />
+              <Tooltip contentStyle={{ background: 'var(--nexus-card-strong)', border: '1px solid var(--nexus-border)', borderRadius: 8, fontSize: 12 }} />
             </PieChart>
           </ResponsiveContainer>
-          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-            <p className="text-xs font-bold leading-tight text-center" style={{ color: 'var(--nexus-gold)' }}>
-              Total<br />{fmtBRL(126430.20)}
-            </p>
+          <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+            <span className="text-[9px] uppercase tracking-wider" style={{ color: 'var(--nexus-muted)' }}>Total</span>
+            <span className="text-xs font-bold" style={{ color: 'var(--nexus-text)' }}>{fmtBRL(126430.20)}</span>
           </div>
         </div>
-        <div className="w-full space-y-2 px-1">
+        <div className="w-full space-y-2">
           {mock.revenueByCategory.map((cat, i) => (
-            <div key={cat.name} className="flex items-center justify-between text-xs">
+            <div key={cat.name} className="flex items-center justify-between text-[11px]">
               <div className="flex items-center gap-2">
                 <span className="w-2.5 h-2.5 rounded-full" style={{ background: PIE_COLORS[i] }} />
                 <span style={{ color: 'var(--nexus-muted)' }}>{cat.name}</span>
               </div>
-              <span className="font-medium" style={{ color: 'var(--nexus-text)' }}>{cat.raw}</span>
+              <span className="font-semibold" style={{ color: 'var(--nexus-text)' }}>{cat.raw}</span>
             </div>
           ))}
         </div>
@@ -289,14 +320,14 @@ const CategoryDonut = memo(function CategoryDonut() {
   );
 });
 
-/* ── Tables ────────────────────────────────────────────────── */
+/* ── Tables ─────────────────────────────────────────────── */
 const SalesTable = memo(function SalesTable() {
   const badge = (s: string) => {
-    const isOk = s === 'Concluída';
+    const isOk = s === 'Concluida';
     return (
       <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium whitespace-nowrap"
         style={{
-          background: isOk ? 'rgba(var(--nexus-success-rgb),0.12)' : 'rgba(var(--nexus-warning-rgb),0.12)',
+          background: isOk ? 'rgba(125,218,106,0.12)' : 'rgba(216,154,40,0.12)',
           color: isOk ? 'var(--nexus-success)' : 'var(--nexus-warning)',
         }}>
         {isOk ? <CheckCircleIcon className="w-3 h-3" /> : <ClockIcon className="w-3 h-3" />}
@@ -304,21 +335,20 @@ const SalesTable = memo(function SalesTable() {
       </span>
     );
   };
-
   return (
     <MotionCard initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3, delay: 0.1 }} whileHover={{ y: -2 }}
-      className="rounded-2xl p-6 flex flex-col relative overflow-hidden"
+      className="rounded-2xl p-5 flex flex-col relative overflow-hidden"
       style={cardStyle}>
-      <div className="absolute top-0 left-0 w-1 h-12 rounded-r" style={{ background: 'var(--nexus-rose)' }} />
-      <SectionHeader title="Últimas Vendas" link="Ver todas" />
-      <div className="flex-1 overflow-x-auto -mx-6 px-6">
-        <table className="w-full text-left text-xs">
+      <div className="absolute top-0 left-0 w-full h-px" style={topAccentStyle} />
+      <SectionHeader title="Ultimas Vendas" link="Ver todas" />
+      <div className="flex-1 overflow-x-auto">
+        <table className="w-full text-left" style={{ fontSize: 11 }}>
           <thead>
             <tr style={{ borderBottom: '1px solid var(--nexus-border)' }}>
               {['Pedido', 'Cliente', 'Data', 'Valor', 'Status'].map(h => (
-                <th key={h} className="pb-2.5 pr-3 font-semibold uppercase tracking-wider"
-                  style={{ color: 'var(--nexus-muted-2)' }}>{h}</th>
+                <th key={h} className="pb-2 pr-2 font-semibold uppercase tracking-wider whitespace-nowrap"
+                  style={{ color: 'var(--nexus-muted-2)', fontSize: 10 }}>{h}</th>
               ))}
             </tr>
           </thead>
@@ -327,11 +357,11 @@ const SalesTable = memo(function SalesTable() {
               <tr key={s.id} className="transition-colors" style={{ borderBottom: '1px solid var(--nexus-border)' }}
                 onMouseEnter={e => { e.currentTarget.style.background = 'var(--nexus-bg-soft)'; }}
                 onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; }}>
-                <td className="py-2.5 pr-3 font-medium" style={{ color: 'var(--nexus-text)' }}>{s.id}</td>
-                <td className="py-2.5 pr-3" style={{ color: 'var(--nexus-muted)' }}>{s.client}</td>
-                <td className="py-2.5 pr-3" style={{ color: 'var(--nexus-muted)' }}>{s.date}</td>
-                <td className="py-2.5 pr-3 font-medium" style={{ color: 'var(--nexus-text)' }}>{fmtBRL(s.value)}</td>
-                <td className="py-2.5">{badge(s.status)}</td>
+                <td className="py-2 pr-2 font-medium whitespace-nowrap" style={{ color: 'var(--nexus-text)' }}>{s.id}</td>
+                <td className="py-2 pr-2 whitespace-nowrap" style={{ color: 'var(--nexus-muted)' }}>{s.client}</td>
+                <td className="py-2 pr-2 whitespace-nowrap" style={{ color: 'var(--nexus-muted)' }}>{s.date}</td>
+                <td className="py-2 pr-2 font-medium whitespace-nowrap" style={{ color: 'var(--nexus-text)' }}>{fmtBRL(s.value)}</td>
+                <td className="py-2">{badge(s.status)}</td>
               </tr>
             ))}
           </tbody>
@@ -345,17 +375,17 @@ const NewClientsTable = memo(function NewClientsTable() {
   return (
     <MotionCard initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3, delay: 0.15 }} whileHover={{ y: -2 }}
-      className="rounded-2xl p-6 flex flex-col relative overflow-hidden"
+      className="rounded-2xl p-5 flex flex-col relative overflow-hidden"
       style={cardStyle}>
-      <div className="absolute top-0 left-0 w-1 h-12 rounded-r" style={{ background: 'var(--nexus-gold)' }} />
+      <div className="absolute top-0 left-0 w-full h-px" style={topAccentStyle} />
       <SectionHeader title="Novos Clientes" link="Ver todas" />
-      <div className="flex-1 overflow-x-auto -mx-6 px-6">
-        <table className="w-full text-left text-xs">
+      <div className="flex-1 overflow-x-auto">
+        <table className="w-full text-left" style={{ fontSize: 11 }}>
           <thead>
             <tr style={{ borderBottom: '1px solid var(--nexus-border)' }}>
               {['Cliente', 'Cidade', 'Data'].map(h => (
-                <th key={h} className="pb-2.5 pr-3 font-semibold uppercase tracking-wider"
-                  style={{ color: 'var(--nexus-muted-2)' }}>{h}</th>
+                <th key={h} className="pb-2 pr-2 font-semibold uppercase tracking-wider whitespace-nowrap"
+                  style={{ color: 'var(--nexus-muted-2)', fontSize: 10 }}>{h}</th>
               ))}
             </tr>
           </thead>
@@ -364,9 +394,9 @@ const NewClientsTable = memo(function NewClientsTable() {
               <tr key={i} className="transition-colors" style={{ borderBottom: '1px solid var(--nexus-border)' }}
                 onMouseEnter={e => { e.currentTarget.style.background = 'var(--nexus-bg-soft)'; }}
                 onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; }}>
-                <td className="py-2.5 pr-3 font-medium" style={{ color: 'var(--nexus-text)' }}>{c.name}</td>
-                <td className="py-2.5 pr-3" style={{ color: 'var(--nexus-muted)' }}>{c.city}</td>
-                <td className="py-2.5" style={{ color: 'var(--nexus-muted)' }}>{c.date}</td>
+                <td className="py-2 pr-2 font-medium whitespace-nowrap" style={{ color: 'var(--nexus-text)' }}>{c.name}</td>
+                <td className="py-2 pr-2 whitespace-nowrap" style={{ color: 'var(--nexus-muted)' }}>{c.city}</td>
+                <td className="py-2 whitespace-nowrap" style={{ color: 'var(--nexus-muted)' }}>{c.date}</td>
               </tr>
             ))}
           </tbody>
@@ -377,33 +407,32 @@ const NewClientsTable = memo(function NewClientsTable() {
 });
 
 const LowStockTable = memo(function LowStockTable() {
-  const badge = (s: 'Crítico' | 'Atenção') => {
-    const isCrit = s === 'Crítico';
+  const badge = (s: 'Critico' | 'Atencao') => {
+    const isCrit = s === 'Critico';
     return (
-      <span className="text-[10px] font-bold px-2 py-0.5 rounded-md uppercase tracking-wider whitespace-nowrap"
+      <span className="text-[10px] font-bold px-1.5 py-0.5 rounded whitespace-nowrap"
         style={{
-          background: isCrit ? 'rgba(var(--nexus-danger-rgb),0.12)' : 'rgba(var(--nexus-warning-rgb),0.12)',
+          background: isCrit ? 'rgba(216,75,95,0.12)' : 'rgba(216,154,40,0.12)',
           color: isCrit ? 'var(--nexus-danger)' : 'var(--nexus-warning)',
         }}>
-        {s}
+        {s === 'Critico' ? 'Critico' : 'Atencao'}
       </span>
     );
   };
-
   return (
     <MotionCard initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3, delay: 0.2 }} whileHover={{ y: -2 }}
-      className="rounded-2xl p-6 flex flex-col relative overflow-hidden"
+      className="rounded-2xl p-5 flex flex-col relative overflow-hidden"
       style={cardStyle}>
-      <div className="absolute top-0 left-0 w-1 h-12 rounded-r" style={{ background: 'var(--nexus-danger)' }} />
+      <div className="absolute top-0 left-0 w-full h-px" style={topAccentStyle} />
       <SectionHeader title="Estoque Baixo" link="Ver todas" />
-      <div className="flex-1 overflow-x-auto -mx-6 px-6">
-        <table className="w-full text-left text-xs">
+      <div className="flex-1 overflow-x-auto">
+        <table className="w-full text-left" style={{ fontSize: 11 }}>
           <thead>
             <tr style={{ borderBottom: '1px solid var(--nexus-border)' }}>
-              {['Produto', 'Estoque', 'Mínimo', 'Status'].map(h => (
-                <th key={h} className="pb-2.5 pr-3 font-semibold uppercase tracking-wider"
-                  style={{ color: 'var(--nexus-muted-2)' }}>{h}</th>
+              {['Produto', 'Estoque', 'Minimo', 'Status'].map(h => (
+                <th key={h} className="pb-2 pr-2 font-semibold uppercase tracking-wider whitespace-nowrap"
+                  style={{ color: 'var(--nexus-muted-2)', fontSize: 10 }}>{h}</th>
               ))}
             </tr>
           </thead>
@@ -412,10 +441,10 @@ const LowStockTable = memo(function LowStockTable() {
               <tr key={i} className="transition-colors" style={{ borderBottom: '1px solid var(--nexus-border)' }}
                 onMouseEnter={e => { e.currentTarget.style.background = 'var(--nexus-bg-soft)'; }}
                 onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; }}>
-                <td className="py-2.5 pr-3 font-medium" style={{ color: 'var(--nexus-text)' }}>{p.product}</td>
-                <td className="py-2.5 pr-3" style={{ color: 'var(--nexus-muted)' }}>{p.stock}</td>
-                <td className="py-2.5 pr-3" style={{ color: 'var(--nexus-muted)' }}>{p.min}</td>
-                <td className="py-2.5">{badge(p.status)}</td>
+                <td className="py-2 pr-2 font-medium whitespace-nowrap" style={{ color: 'var(--nexus-text)' }}>{p.product}</td>
+                <td className="py-2 pr-2 font-bold" style={{ color: 'var(--nexus-danger)' }}>{p.stock}</td>
+                <td className="py-2 pr-2" style={{ color: 'var(--nexus-muted)' }}>{p.min}</td>
+                <td className="py-2">{badge(p.status)}</td>
               </tr>
             ))}
           </tbody>
@@ -426,20 +455,27 @@ const LowStockTable = memo(function LowStockTable() {
 });
 
 const ReceivablesTable = memo(function ReceivablesTable() {
+  const isDue = (due: string) => {
+    const parts = due.split('/');
+    const dueDate = new Date(+parts[2], +parts[1] - 1, +parts[0]);
+    const today = new Date();
+    const diff = (dueDate.getTime() - today.getTime()) / 86400000;
+    return diff < 3;
+  };
   return (
     <MotionCard initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3, delay: 0.25 }} whileHover={{ y: -2 }}
-      className="rounded-2xl p-6 flex flex-col relative overflow-hidden"
+      className="rounded-2xl p-5 flex flex-col relative overflow-hidden"
       style={cardStyle}>
-      <div className="absolute top-0 left-0 w-1 h-12 rounded-r" style={{ background: 'var(--nexus-success)' }} />
+      <div className="absolute top-0 left-0 w-full h-px" style={topAccentStyle} />
       <SectionHeader title="Contas a Receber" link="Ver todas" />
-      <div className="flex-1 overflow-x-auto -mx-6 px-6">
-        <table className="w-full text-left text-xs">
+      <div className="flex-1 overflow-x-auto">
+        <table className="w-full text-left" style={{ fontSize: 11 }}>
           <thead>
             <tr style={{ borderBottom: '1px solid var(--nexus-border)' }}>
               {['Cliente', 'Valor', 'Vencimento'].map(h => (
-                <th key={h} className="pb-2.5 pr-3 font-semibold uppercase tracking-wider"
-                  style={{ color: 'var(--nexus-muted-2)' }}>{h}</th>
+                <th key={h} className="pb-2 pr-2 font-semibold uppercase tracking-wider whitespace-nowrap"
+                  style={{ color: 'var(--nexus-muted-2)', fontSize: 10 }}>{h}</th>
               ))}
             </tr>
           </thead>
@@ -448,9 +484,9 @@ const ReceivablesTable = memo(function ReceivablesTable() {
               <tr key={i} className="transition-colors" style={{ borderBottom: '1px solid var(--nexus-border)' }}
                 onMouseEnter={e => { e.currentTarget.style.background = 'var(--nexus-bg-soft)'; }}
                 onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; }}>
-                <td className="py-2.5 pr-3 font-medium" style={{ color: 'var(--nexus-text)' }}>{r.client}</td>
-                <td className="py-2.5 pr-3 font-medium" style={{ color: 'var(--nexus-gold)' }}>{fmtBRL(r.value)}</td>
-                <td className="py-2.5" style={{ color: 'var(--nexus-muted)' }}>{r.due}</td>
+                <td className="py-2 pr-2 font-medium whitespace-nowrap" style={{ color: 'var(--nexus-text)' }}>{r.client}</td>
+                <td className="py-2 pr-2 font-medium whitespace-nowrap" style={{ color: 'var(--nexus-text)' }}>{fmtBRL(r.value)}</td>
+                <td className="py-2 whitespace-nowrap font-semibold" style={{ color: isDue(r.due) ? 'var(--nexus-danger)' : 'var(--nexus-warning)' }}>{r.due}</td>
               </tr>
             ))}
           </tbody>
@@ -460,41 +496,26 @@ const ReceivablesTable = memo(function ReceivablesTable() {
   );
 });
 
-/* ── Activities Timeline ──────────────────────────────────── */
+/* ── Activities Timeline ─────────────────────────────────── */
 const ActivitiesTimeline = memo(function ActivitiesTimeline() {
   return (
     <MotionCard initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3, delay: 0.15 }} whileHover={{ y: -2 }}
-      className="rounded-2xl p-6 flex flex-col relative overflow-hidden"
+      className="rounded-2xl p-5 flex flex-col relative overflow-hidden h-full"
       style={cardStyle}>
-      <div className="absolute top-0 left-0 w-full h-px" style={{
-        background: 'linear-gradient(90deg, transparent, var(--nexus-gold), transparent)',
-        opacity: 0.3,
-      }} />
-      <SectionHeader title="Atividades Recentes" link="Ver todas" />
-      <div className="flex-1 space-y-0.5">
+      <div className="absolute top-0 left-0 w-full h-px" style={topAccentStyle} />
+      <SectionHeader title="Atividades Recentes" />
+      <div className="flex-1 space-y-3">
         {mock.activities.map((a, i) => {
           const Icon = a.icon;
           return (
-            <div key={i} className="flex items-start gap-3 p-2.5 rounded-xl transition-all cursor-pointer"
-              onMouseEnter={e => {
-                e.currentTarget.style.background = 'var(--nexus-bg-soft)';
-                e.currentTarget.style.paddingLeft = '16px';
-                e.currentTarget.style.borderLeftColor = a.color;
-              }}
-              onMouseLeave={e => {
-                e.currentTarget.style.background = 'transparent';
-                e.currentTarget.style.paddingLeft = '10px';
-                e.currentTarget.style.borderLeftColor = 'transparent';
-              }}
-              style={{ borderLeft: '3px solid transparent', paddingLeft: '10px' }}>
-              <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
-                style={{ background: `rgba(var(--nexus-gold-rgb),0.08)`, color: a.color }}>
-                <Icon className="w-4 h-4" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-xs font-medium" style={{ color: 'var(--nexus-text)' }}>{a.text}</p>
-                <p className="text-[11px] mt-0.5 truncate" style={{ color: 'var(--nexus-muted)' }}>{a.detail}</p>
+            <div key={i} className="flex items-center justify-between gap-3 cursor-pointer">
+              <div className="flex items-center gap-3 flex-1 min-w-0">
+                <div className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0"
+                  style={{ border: `1.5px solid ${a.color}`, color: a.color }}>
+                  <Icon className="w-3 h-3" />
+                </div>
+                <p className="text-xs font-medium truncate" style={{ color: 'var(--nexus-text)' }}>{a.text}</p>
               </div>
               <span className="text-[10px] flex-shrink-0" style={{ color: 'var(--nexus-muted-2)' }}>{a.time}</span>
             </div>
@@ -505,33 +526,28 @@ const ActivitiesTimeline = memo(function ActivitiesTimeline() {
   );
 });
 
-/* ── Notifications Panel ──────────────────────────────────── */
+/* ── Notifications Panel ─────────────────────────────────── */
 const NotificationsPanel = memo(function NotificationsPanel() {
   return (
     <MotionCard initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3, delay: 0.2 }} whileHover={{ y: -2 }}
-      className="rounded-2xl p-6 flex flex-col relative overflow-hidden"
+      className="rounded-2xl p-5 flex flex-col relative overflow-hidden h-full"
       style={cardStyle}>
-      <div className="absolute top-0 left-0 w-full h-px" style={{
-        background: 'linear-gradient(90deg, transparent, var(--nexus-gold), transparent)',
-        opacity: 0.3,
-      }} />
-      <SectionHeader title="Notificações" link="Ver todas" />
-      <div className="flex-1 space-y-0.5">
+      <div className="absolute top-0 left-0 w-full h-px" style={topAccentStyle} />
+      <SectionHeader title="Notificacoes" link="Ver todas" />
+      <div className="flex-1 space-y-3">
         {mock.notifications.map((n, i) => {
           const Icon = n.icon;
           return (
-            <div key={i} className="flex items-start gap-3 p-2.5 rounded-xl transition-colors cursor-pointer"
-              onMouseEnter={e => { e.currentTarget.style.background = 'var(--nexus-bg-soft)'; }}
-              onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; }}>
-              <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
-                style={{ background: `rgba(var(--nexus-gold-rgb),0.08)`, color: n.color }}>
-                <Icon className="w-4 h-4" />
+            <div key={i} className="flex items-center justify-between gap-3 cursor-pointer">
+              <div className="flex items-center gap-3 flex-1 min-w-0">
+                <div className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0"
+                  style={{ background: n.color, color: '#fff' }}>
+                  <Icon className="w-3 h-3" />
+                </div>
+                <p className="text-xs font-medium truncate" style={{ color: 'var(--nexus-text)' }}>{n.text}</p>
               </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-xs font-medium" style={{ color: 'var(--nexus-text)' }}>{n.text}</p>
-                <p className="text-[11px] mt-0.5 truncate" style={{ color: 'var(--nexus-muted)' }}>{n.detail}</p>
-              </div>
+              <span className="text-[10px] flex-shrink-0" style={{ color: 'var(--nexus-muted-2)' }}>{n.time}</span>
             </div>
           );
         })}
@@ -540,78 +556,95 @@ const NotificationsPanel = memo(function NotificationsPanel() {
   );
 });
 
-/* ── Executive Panel ──────────────────────────────────────── */
+/* ── Executive Panel ─────────────────────────────────────── */
 const ExecutivePanel = memo(function ExecutivePanel() {
   const cards = [
-    { label: 'Receita Total', value: fmtBRL(mock.executive.totalRevenue), trend: '+23%', color: 'var(--nexus-gold)' },
-    { label: 'Crescimento', value: '+23%', trend: '', color: 'var(--nexus-success)' },
-    { label: 'Clientes Ativos', value: '942', trend: '', color: 'var(--nexus-rose)' },
-    { label: 'Conversão', value: '18,7%', trend: '', color: 'var(--nexus-chart-blue)' },
-    { label: 'Ticket Médio', value: fmtBRL(mock.executive.avgTicket), trend: '', color: 'var(--nexus-bronze)' },
+    { label: 'Receita Total',   value: 'R$ 1.248.530,00', sub: '+23% vs mes anterior', color: 'var(--nexus-gold)',        icon: CurrencyDollarIcon },
+    { label: 'Crescimento',     value: '+23%',            sub: 'vs mes anterior',       color: 'var(--nexus-success)',     icon: ArrowTrendingUpIcon },
+    { label: 'Clientes Ativos', value: '942',             sub: '+18% vs mes anterior',  color: 'var(--nexus-rose)',        icon: UsersIcon },
+    { label: 'Conversao',       value: '18,7%',           sub: '+5% vs mes anterior',   color: 'var(--nexus-chart-blue)', icon: ArrowUpIcon },
+    { label: 'Ticket Medio',    value: 'R$ 1.420,35',     sub: '+8,2% vs mes anterior', color: 'var(--nexus-gold)',       icon: TagIcon },
   ];
-
   return (
     <MotionCard initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3, delay: 0.25 }} whileHover={{ y: -2 }}
-      className="rounded-2xl p-6 flex flex-col relative overflow-hidden"
+      className="rounded-2xl p-5 flex flex-col relative overflow-hidden h-full"
       style={cardStyle}>
-      <div className="absolute top-0 left-0 w-full h-px" style={{
-        background: 'linear-gradient(90deg, transparent, var(--nexus-gold), transparent)',
-        opacity: 0.3,
-      }} />
+      <div className="absolute top-0 left-0 w-full h-px" style={topAccentStyle} />
       <SectionHeader title="Painel Executivo" />
-      <div className="flex-1 grid grid-cols-1 gap-3">
-        {cards.map((c, i) => (
-          <motion.div key={i} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.05 }}
-            className="flex items-center justify-between p-3 rounded-xl"
-            style={{ background: 'var(--nexus-bg-soft)', borderLeft: `3px solid transparent` }}
-            onMouseEnter={e => { e.currentTarget.style.borderLeftColor = c.color; }}
-            onMouseLeave={e => { e.currentTarget.style.borderLeftColor = 'transparent'; }}>
-            <div>
-              <p className="text-[11px] font-medium uppercase tracking-wider" style={{ color: 'var(--nexus-muted-2)' }}>{c.label}</p>
-              <p className="text-sm font-bold mt-0.5" style={{ color: 'var(--nexus-text)' }}>{c.value}</p>
-            </div>
-            {c.trend && (
-              <span className="text-xs font-semibold flex items-center gap-0.5" style={{ color: 'var(--nexus-success)' }}>
-                <ArrowUpIcon className="w-3 h-3" />{c.trend}
-              </span>
-            )}
-          </motion.div>
-        ))}
+      <div className="flex-1 grid grid-cols-2 md:grid-cols-5 gap-3">
+        {cards.map((c, i) => {
+          const Icon = c.icon;
+          const valSize = c.value.length > 10 ? 'text-sm' : 'text-base';
+          return (
+            <motion.div key={i}
+              initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: i * 0.05 }}
+              className="flex flex-col items-center justify-center p-3 rounded-xl text-center gap-1"
+              style={{ background: 'var(--nexus-bg-soft)', border: '1px solid var(--nexus-border)' }}>
+              <div className="w-9 h-9 rounded-lg flex items-center justify-center mb-1"
+                style={{ background: 'rgba(212,149,86,0.10)', color: 'var(--nexus-gold)' }}>
+                <Icon className="w-4 h-4" />
+              </div>
+              <p className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: 'var(--nexus-muted)' }}>{c.label}</p>
+              <p className={`${valSize} font-bold leading-tight`} style={{ color: 'var(--nexus-text)' }}>{c.value}</p>
+              <span className="text-[10px] font-semibold" style={{ color: c.color }}>{c.sub}</span>
+            </motion.div>
+          );
+        })}
       </div>
     </MotionCard>
   );
 });
 
-/* ── Main Dashboard ────────────────────────────────────────── */
+/* ── Main Dashboard ──────────────────────────────────────── */
 export function Dashboard() {
   return (
-    <div className="p-6 space-y-6 min-h-screen bg-transparent">
+    <div className="p-5 space-y-5 min-h-screen bg-transparent">
+
+      {/* Page header */}
       <div>
         <h1 className="text-2xl font-bold" style={{ color: 'var(--nexus-text)' }}>Dashboard</h1>
-        <p className="text-sm mt-1" style={{ color: 'var(--nexus-muted)' }}>Visão geral do seu negócio em tempo real</p>
+        <p className="text-sm mt-0.5" style={{ color: 'var(--nexus-muted)' }}>Visao geral do seu negocio em tempo real</p>
       </div>
 
+      {/* KPI Row */}
       <KpiRow />
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6" style={{ minHeight: 340 }}>
-        <SalesChart />
-        <FinancialChart />
-        <CategoryDonut />
+      {/* Charts row: 2cols SalesChart | 1col FinancialChart | 1col CategoryDonut */}
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-4" style={{ minHeight: 280 }}>
+        <div className="lg:col-span-2 flex flex-col">
+          <SalesChart />
+        </div>
+        <div className="lg:col-span-1 flex flex-col">
+          <FinancialChart />
+        </div>
+        <div className="lg:col-span-1 flex flex-col">
+          <CategoryDonut />
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      {/* Data tables row */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
         <SalesTable />
         <NewClientsTable />
         <LowStockTable />
         <ReceivablesTable />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <ActivitiesTimeline />
-        <NotificationsPanel />
-        <ExecutivePanel />
+      {/* Bottom row: Activities | Notifications | Executive Panel */}
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
+        <div className="lg:col-span-1 flex flex-col">
+          <ActivitiesTimeline />
+        </div>
+        <div className="lg:col-span-1 flex flex-col">
+          <NotificationsPanel />
+        </div>
+        <div className="lg:col-span-2 flex flex-col">
+          <ExecutivePanel />
+        </div>
       </div>
+
     </div>
   );
 }

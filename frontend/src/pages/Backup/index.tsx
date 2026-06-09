@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { ArrowDownTrayIcon, ClockIcon } from '@heroicons/react/24/outline';
 import api from '../../services/api';
@@ -15,15 +15,17 @@ export function Backup() {
   const [backups, setBackups] = useState<BackupItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [creating, setCreating] = useState(false);
-  const [loaded, setLoaded] = useState(false);
   const { showToast } = useToast();
+
+  useEffect(() => {
+    loadBackups();
+  }, []);
 
   async function loadBackups() {
     setLoading(true);
     try {
       const res = await api.get('/backups');
       setBackups(res.data.data || []);
-      setLoaded(true);
     } catch {
       showToast('Erro ao carregar backups.', 'error');
     } finally {
@@ -57,10 +59,6 @@ export function Backup() {
     } catch {
       showToast('Erro ao baixar backup.', 'error');
     }
-  }
-
-  if (!loaded && !loading) {
-    loadBackups();
   }
 
   return (

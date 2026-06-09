@@ -16,7 +16,7 @@ export function PremiumBadge({ variant, children, size = 'sm' }: PremiumBadgePro
   const v = variants[variant];
   return (
     <span
-      className={`inline-flex items-center gap-1.5 font-medium rounded-full ${size === 'sm' ? 'text-xs px-2.5 py-1' : 'text-sm px-3 py-1.5'}`}
+      className={`inline-flex items-center gap-1.5 font-medium rounded-full ${size === 'sm' ? 'text-xs px-2.5 py-1' : 'text-sm px-3 py-1.5'} animate-scale-in`}
       style={{ background: v.bg, color: v.color }}
     >
       <span className="w-1.5 h-1.5 rounded-full" style={{ background: v.color }} />

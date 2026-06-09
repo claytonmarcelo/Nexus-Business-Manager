@@ -163,7 +163,11 @@ export function CRM() {
     try {
       const res = await api.get('/crm', { params: { status: statusFilter || undefined } });
       setLeads(res.data.data || []);
-    } catch { showToast('Erro ao carregar leads.', 'error'); }
+    } catch (err: any) {
+      console.error('Erro ao carregar leads:', err);
+      const errorMsg = err?.response?.data?.message || err?.response?.data?.error || 'Erro ao carregar leads';
+      showToast(errorMsg, 'error');
+    }
     finally { setLoading(false); }
   }
 

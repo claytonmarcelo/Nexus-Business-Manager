@@ -21,6 +21,10 @@ api.interceptors.response.use(
       localStorage.removeItem('@nexus:user');
       window.location.href = '/login';
     }
+    if (error.response?.status === 403) {
+      console.error('Acesso negado: permissao insuficiente', error);
+      // Não redirecionar, apenas mostrar o erro
+    }
     return Promise.reject(error);
   }
 );

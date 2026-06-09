@@ -1,8 +1,16 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import api from '../../services/api';
-import { Notification } from '../../types';
 import { useToast } from '../../contexts/ToastContext';
+
+interface Notification {
+  id: number;
+  title: string;
+  message?: string;
+  icon?: string;
+  read: boolean;
+  created_at: string;
+}
 
 export function Notifications() {
   const { showToast } = useToast();
@@ -17,7 +25,11 @@ export function Notifications() {
       const res = await api.get('/notifications');
       setNotifications(res.data.data || []);
       setUnreadCount(res.data.unreadCount);
-    } catch { showToast('Erro ao carregar notificações', 'error'); }
+    } catch (err: any) {
+      console.error('Erro ao carregar notificações:', err);
+      const errorMsg = err?.response?.data?.message || err?.response?.data?.error || 'Erro ao carregar notificações';
+      showToast(errorMsg, 'error');
+    }
     finally { setLoading(false); }
   }
 

@@ -8,21 +8,16 @@ import {
   ClipboardDocumentListIcon,
   ShoppingCartIcon,
   CurrencyDollarIcon,
+  BuildingOfficeIcon,
   CreditCardIcon,
   CalendarDaysIcon,
   ChartPieIcon,
   BellIcon,
   ShieldCheckIcon,
-  UsersIcon,
   Cog6ToothIcon,
-  InformationCircleIcon,
-  BuildingOfficeIcon,
   LightBulbIcon,
-  SparklesIcon,
-  ArrowUpTrayIcon,
-  ArrowPathIcon,
-  DocumentTextIcon,
-  CircleStackIcon,
+  InformationCircleIcon,
+  ArrowRightOnRectangleIcon
 } from '@heroicons/react/24/solid';
 
 const navItems = [
@@ -33,22 +28,14 @@ const navItems = [
   { to: '/stock', label: 'Estoque', icon: ClipboardDocumentListIcon },
   { to: '/purchases', label: 'Compras', icon: ShoppingCartIcon },
   { to: '/sales', label: 'Vendas', icon: CurrencyDollarIcon },
-  { to: '/financial', label: 'Financeiro', icon: CreditCardIcon },
   { to: '/crm', label: 'CRM', icon: BuildingOfficeIcon },
-  { to: '/nexus-ai', label: 'Nexus AI', icon: SparklesIcon },
-  { to: '/suggestions', label: 'Sugestões', icon: LightBulbIcon },
+  { to: '/financial', label: 'Financeiro', icon: CreditCardIcon },
   { to: '/appointments', label: 'Agenda', icon: CalendarDaysIcon },
   { to: '/reports', label: 'Relatórios', icon: ChartPieIcon },
   { to: '/notifications', label: 'Notificações', icon: BellIcon },
   { to: '/audit', label: 'Auditoria', icon: ShieldCheckIcon, roles: ['admin', 'manager'] },
-  { to: '/logs', label: 'Logs', icon: DocumentTextIcon, roles: ['admin', 'manager'] },
-  { to: '/import', label: 'Importação', icon: ArrowUpTrayIcon, roles: ['admin', 'manager'] },
-  { to: '/backup', label: 'Backup', icon: ArrowPathIcon, roles: ['admin'] },
-  { to: '/users', label: 'Usuários', icon: UsersIcon, roles: ['admin', 'manager'] },
   { to: '/companies', label: 'Configurações', icon: Cog6ToothIcon, roles: ['admin'] },
-  { to: '/plans', label: 'Planos', icon: CurrencyDollarIcon },
-  { to: '/subscription', label: 'Assinatura', icon: CreditCardIcon },
-  { to: '/status', label: 'Status', icon: CircleStackIcon, roles: ['admin'] },
+  { to: '/suggestions', label: 'Sugestões', icon: LightBulbIcon },
   { to: '/about', label: 'Sobre', icon: InformationCircleIcon },
 ];
 
@@ -58,10 +45,10 @@ interface SidebarProps {
 }
 
 export function Sidebar({ open, onClose }: SidebarProps) {
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
 
   const sidebarContent = (
-    <>
+    <div className="flex flex-col h-full">
       <div className="p-6 flex items-center justify-center border-b" style={{ borderColor: 'var(--nexus-border)' }}>
         <img
           src="/logo.png"
@@ -70,7 +57,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
         />
       </div>
 
-      <nav className="flex-1 px-3 py-3 space-y-1 overflow-y-auto">
+      <nav className="flex-1 px-3 py-3 space-y-1 overflow-y-auto custom-scrollbar">
         {navItems
           .filter((item) => !item.roles || item.roles.includes((user?.role || '').toLowerCase()))
           .map((item) => {
@@ -87,18 +74,35 @@ export function Sidebar({ open, onClose }: SidebarProps) {
                 <span className="nexus-sidebar-icon">
                   <Icon className="w-5 h-5" />
                 </span>
-                <span className="text-sm font-medium">{item.label}</span>
+                <span className="text-sm font-medium flex-1">{item.label}</span>
+                {item.to === '/notifications' && (
+                  <span className="ml-auto text-[10px] font-bold px-1.5 py-0.5 rounded-full"
+                    style={{ background: 'var(--nexus-danger)', color: '#fff', minWidth: 18, textAlign: 'center' }}>
+                    3
+                  </span>
+                )}
               </NavLink>
             );
           })}
       </nav>
-    </>
+
+      <div className="p-4 border-t" style={{ borderColor: 'var(--nexus-border)' }}>
+        <button
+          onClick={signOut}
+          className="flex items-center gap-3 w-full px-4 py-2.5 text-sm font-medium transition-colors rounded-lg hover:bg-nexus-bg"
+          style={{ color: 'var(--nexus-gold)' }}
+        >
+          <ArrowRightOnRectangleIcon className="w-5 h-5" />
+          Sair do sistema
+        </button>
+      </div>
+    </div>
   );
 
   return (
     <>
       {/* Desktop sidebar - always visible on md+ screens */}
-      <aside className="nexus-sidebar w-64 min-h-screen flex-col hidden md:flex">
+      <aside className="nexus-sidebar w-64 min-h-screen flex flex-col hidden md:flex border-r" style={{ borderColor: 'var(--nexus-border)', background: 'var(--nexus-sidebar)' }}>
         {sidebarContent}
       </aside>
 
@@ -106,10 +110,11 @@ export function Sidebar({ open, onClose }: SidebarProps) {
       {open !== undefined && (
         <>
           {open && (
-            <div className="nexus-sidebar-overlay" onClick={onClose} />
+            <div className="nexus-sidebar-overlay fixed inset-0 z-40 bg-black/50" onClick={onClose} />
           )}
           <aside
-            className={`nexus-sidebar w-64 min-h-screen flex flex-col md:hidden ${open ? 'nexus-sidebar-mobile open' : 'nexus-sidebar-mobile'}`}
+            className={`nexus-sidebar w-64 h-full fixed top-0 left-0 z-50 flex flex-col md:hidden transition-transform transform ${open ? 'translate-x-0' : '-translate-x-full'}`}
+            style={{ borderRight: '1px solid var(--nexus-border)', background: 'var(--nexus-sidebar)' }}
           >
             {sidebarContent}
           </aside>

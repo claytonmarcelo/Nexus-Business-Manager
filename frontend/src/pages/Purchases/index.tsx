@@ -8,7 +8,6 @@ import { StatsCard } from '../../components/ui/StatsCard';
 import { PremiumTable, Column } from '../../components/ui/PremiumTable';
 import { PremiumBadge } from '../../components/ui/PremiumBadge';
 import { GradientButton } from '../../components/ui/GradientButton';
-import { PremiumInput } from '../../components/ui/PremiumInput';
 import { CubeIcon, CurrencyDollarIcon, TruckIcon } from '@heroicons/react/24/outline';
 
 export function Purchases() {
@@ -29,7 +28,11 @@ export function Purchases() {
       setPurchases(purRes.data?.data || []);
       setSuppliers(supRes.data?.data || []);
       setProducts(prodRes.data?.data || []);
-    } catch { showToast('Erro ao carregar compras', 'error'); }
+    } catch (err: any) {
+      console.error('Erro ao carregar compras:', err);
+      const errorMsg = err?.response?.data?.message || err?.response?.data?.error || 'Erro ao carregar compras';
+      showToast(errorMsg, 'error');
+    }
     finally { setLoading(false); }
   }
 

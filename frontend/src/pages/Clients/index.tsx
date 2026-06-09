@@ -75,7 +75,11 @@ export function Clients() {
       setClients(res.data.data || []);
       setTotal(res.data.total || 0);
       setTotalPages(res.data.totalPages || 1);
-    } catch { showToast('Erro ao carregar clientes', 'error'); }
+    } catch (err: any) {
+      console.error('Erro ao carregar clientes:', err);
+      const errorMsg = err?.response?.data?.message || err?.response?.data?.error || 'Erro ao carregar clientes';
+      showToast(errorMsg, 'error');
+    }
     finally { setLoading(false); }
   }
 

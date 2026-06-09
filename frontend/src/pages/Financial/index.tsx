@@ -67,7 +67,11 @@ export function Financial() {
         total_expense: Number(cfData?.total_expense) || 0,
         balance: Number(cfData?.balance) || 0
       });
-    } catch { showToast('Erro ao carregar dados financeiros', 'error'); }
+    } catch (err: any) {
+      console.error('Erro ao carregar dados financeiros:', err);
+      const errorMsg = err?.response?.data?.message || err?.response?.data?.error || 'Erro ao carregar dados financeiros';
+      showToast(errorMsg, 'error');
+    }
     finally { setLoading(false); }
   }
 

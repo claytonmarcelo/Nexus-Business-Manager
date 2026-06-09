@@ -27,7 +27,11 @@ export function Appointments() {
       const [appRes, cliRes] = await Promise.all([api.get(url), api.get('/clients')]);
       setAppointments(appRes.data?.data || []);
       setClients(cliRes.data?.data || []);
-    } catch { showToast('Erro ao carregar agendamentos', 'error'); }
+    } catch (err: any) {
+      console.error('Erro ao carregar agendamentos:', err);
+      const errorMsg = err?.response?.data?.message || err?.response?.data?.error || 'Erro ao carregar agendamentos';
+      showToast(errorMsg, 'error');
+    }
     finally { setLoading(false); }
   }
 

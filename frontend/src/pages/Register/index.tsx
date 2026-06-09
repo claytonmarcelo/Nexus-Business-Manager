@@ -40,7 +40,9 @@ export function Register() {
       // Redirecionar para login apÃ³s cadastro bem-sucedido
       navigate('/login?message=cadastro-sucesso');
     } catch (err: any) {
-      setError(err.response?.data?.message || err.response?.data?.error || 'Erro ao cadastrar');
+      console.error('Erro ao cadastrar:', err);
+      const errorMsg = err?.response?.data?.message || err?.response?.data?.error || err?.message || 'Erro interno do servidor';
+      setError(errorMsg);
     } finally {
       setLoading(false);
     }

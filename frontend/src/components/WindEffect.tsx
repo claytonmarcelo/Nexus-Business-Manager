@@ -4,6 +4,11 @@ export function WindEffect() {
       <span />
       <span />
       <span />
+      <span />
+      <span />
+      <span />
+      <span />
+      <span />
     </div>
   );
 }
