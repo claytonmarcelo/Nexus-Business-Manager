@@ -52,9 +52,9 @@ function StarRating({ rating }: { rating: number }) {
           const filled = rating >= i;
           const half   = !filled && rating >= i - 0.5;
           return filled || half ? (
-            <StarSolid key={i} className="w-3.5 h-3.5" style={{ color: '#D49556' }} />
+            <StarSolid key={i} className="w-3.5 h-3.5" style={{ color: 'var(--nexus-gold)' }} />
           ) : (
-            <StarOutline key={i} className="w-3.5 h-3.5" style={{ color: '#D49556', opacity: 0.3 }} />
+            <StarOutline key={i} className="w-3.5 h-3.5" style={{ color: 'var(--nexus-gold)', opacity: 0.3 }} />
           );
         })}
       </div>
@@ -181,11 +181,11 @@ function GradBtn({ onClick, children, secondary, type = 'button' }: {
           }
         : {
             background: hov
-              ? 'linear-gradient(135deg, #D49556, #C65A71)'
-              : 'linear-gradient(135deg, #C65A71, #9d4e58)',
+              ? 'linear-gradient(135deg, var(--nexus-gold), var(--nexus-rose))'
+              : 'linear-gradient(135deg, var(--nexus-rose), var(--nexus-rose-dark))',
             color: '#fff',
             border: 'none',
-            boxShadow: hov ? '0 0 18px rgba(198,90,113,0.35)' : 'none',
+            boxShadow: hov ? '0 0 18px rgba(var(--nexus-rose-rgb),0.35)' : 'none',
           }
       }
     >
@@ -304,12 +304,14 @@ export function Suppliers() {
       onClick={() => setOpenMenu(null)}
     >
       {/* ── Page header ─────────────────────────────────────────── */}
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold" style={{ color: 'var(--nexus-text)' }}>Fornecedores</h1>
-        <div className="flex items-center gap-2 text-sm mt-1.5" style={{ color: 'var(--nexus-muted-2)' }}>
-          <span>Dashboard</span>
-          <ChevronRightIcon className="w-3 h-3" />
-          <span style={{ color: 'var(--nexus-gold)' }}>Fornecedores</span>
+      <div className="mb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div>
+          <h1 className="text-2xl font-bold mb-1" style={{ color: 'var(--nexus-text)' }}>Fornecedores</h1>
+          <div className="text-sm flex items-center gap-2" style={{ color: 'var(--nexus-muted)' }}>
+            <span>Dashboard</span>
+            <ChevronRightIcon className="w-3 h-3" />
+            <span style={{ color: 'var(--nexus-muted-2)' }}>Fornecedores</span>
+          </div>
         </div>
       </div>
 

@@ -113,8 +113,8 @@ export function Logs() {
                     <td>
                       <span className="text-xs font-medium px-2 py-0.5 rounded-full"
                         style={{
-                          background: log.action === 'create' ? 'rgba(125, 218, 106, 0.12)' :
-                            log.action === 'delete' ? 'rgba(216, 75, 95, 0.12)' :
+                          background: log.action === 'create' ? 'rgba(var(--nexus-success-rgb), 0.12)' :
+                            log.action === 'delete' ? 'rgba(var(--nexus-danger-rgb), 0.12)' :
                             'rgba(var(--nexus-gold-rgb), 0.12)',
                           color: log.action === 'create' ? 'var(--nexus-success)' :
                             log.action === 'delete' ? 'var(--nexus-danger)' :

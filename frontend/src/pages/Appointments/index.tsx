@@ -97,7 +97,7 @@ export function Appointments() {
 
   const statusBadgeStyle: Record<string, ReturnType<typeof badge>> = {
     scheduled: badge('rgba(var(--nexus-gold-rgb),0.12)', 'var(--nexus-gold)'),
-    completed: badge('rgba(var(--nexus-success-rgb),0.12)', '#7DDA6A'),
+    completed: badge('rgba(var(--nexus-success-rgb),0.12)', 'var(--nexus-success)'),
     cancelled: badge('rgba(var(--nexus-danger-rgb),0.12)', 'var(--nexus-danger)'),
   };
 
@@ -108,7 +108,7 @@ export function Appointments() {
           <h1 style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--nexus-text)' }}>Agenda</h1>
           <p style={{ fontSize: '0.875rem', color: 'var(--nexus-muted-2)', marginTop: '0.25rem' }}>Compromissos e agendamentos</p>
         </div>
-        <button onClick={openCreate} style={{ background: 'linear-gradient(135deg, #C65A71, #9d4e58)', color: '#fff', border: 'none', borderRadius: '10px', padding: '0.75rem 1.5rem', fontWeight: 500, cursor: 'pointer' }}>Novo Agendamento</button>
+        <button onClick={openCreate} style={{ background: 'linear-gradient(135deg, var(--nexus-rose), var(--nexus-rose-dark))', color: '#fff', border: 'none', borderRadius: '10px', padding: '0.75rem 1.5rem', fontWeight: 500, cursor: 'pointer' }}>Novo Agendamento</button>
       </div>
 
       <div style={{ marginBottom: '1.5rem', display: 'flex', gap: '1rem', alignItems: 'center' }}>
@@ -218,7 +218,7 @@ export function Appointments() {
               </div>
               <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', paddingTop: '0.5rem' }}>
                 <button type="button" onClick={() => setShowModal(false)} style={{ background: 'var(--nexus-card)', color: 'var(--nexus-text)', border: '1px solid var(--nexus-border)', borderRadius: '10px', padding: '0.5rem 1rem', cursor: 'pointer', fontSize: '0.875rem' }}>Cancelar</button>
-                <button type="submit" style={{ background: 'linear-gradient(135deg, #C65A71, #9d4e58)', color: '#fff', border: 'none', borderRadius: '10px', padding: '0.5rem 1rem', fontWeight: 500, cursor: 'pointer', fontSize: '0.875rem' }}>Salvar</button>
+                <button type="submit" style={{ background: 'linear-gradient(135deg, var(--nexus-rose), var(--nexus-rose-dark))', color: '#fff', border: 'none', borderRadius: '10px', padding: '0.5rem 1rem', fontWeight: 500, cursor: 'pointer', fontSize: '0.875rem' }}>Salvar</button>
               </div>
             </form>
           </div>

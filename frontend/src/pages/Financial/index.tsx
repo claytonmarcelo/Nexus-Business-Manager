@@ -29,7 +29,7 @@ const inputStyle = {
 };
 
 const PIE_COLORS = [
-  '#C65A71', '#9a6a42', '#D49556', '#8c7355', '#6b5744', '#524335', '#A8A8A8'
+  'var(--nexus-rose)', 'var(--nexus-bronze)', 'var(--nexus-gold)', 'var(--nexus-muted)', 'var(--nexus-card-strong)', 'var(--nexus-border)', 'var(--nexus-muted-2)'
 ];
 
 /* ─── component ────────────────────────────────────────── */
@@ -466,7 +466,7 @@ export function Financial() {
             <div className="space-y-4">
               {[
                 { name: 'Conta Principal', bank: 'Banco do Brasil', suffix: '•••• 1234', value: 18450.75, color: 'var(--nexus-gold)', icon: <BuildingLibraryIcon className="w-5 h-5"/> },
-                { name: 'Conta Secundária', bank: 'Itaú Unibanco', suffix: '•••• 5678', value: 9780.30, color: '#3B82F6', icon: <BuildingLibraryIcon className="w-5 h-5"/> },
+                { name: 'Conta Secundária', bank: 'Itaú Unibanco', suffix: '•••• 5678', value: 9780.30, color: 'var(--nexus-chart-blue)', icon: <BuildingLibraryIcon className="w-5 h-5"/> },
               ].map((acc, i) => (
                 <div key={i} className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"

@@ -1,8 +1,8 @@
 import { useState } from 'react';
-import { 
-  ChartBarIcon, 
-  UserGroupIcon, 
-  CurrencyDollarIcon, 
+import {
+  ChartBarIcon,
+  UserGroupIcon,
+  CurrencyDollarIcon,
   ArrowTrendingUpIcon,
   ShoppingCartIcon,
   ArrowUpIcon,
@@ -13,10 +13,11 @@ import {
   ArchiveBoxIcon,
   ArrowRightIcon
 } from '@heroicons/react/24/outline';
-import { 
+import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell
 } from 'recharts';
+import { StatsCard } from '../../components/ui/StatsCard';
 
 const mockData = {
   stats: {
@@ -35,10 +36,10 @@ const mockData = {
     { name: '11 Mai', value: 5000 }
   ],
   categoryData: [
-    { name: 'Eletrônicos', value: 35, color: '#C65A71', rawValue: 'R$ 29.480,00' },
-    { name: 'Informática', value: 25, color: '#D49556', rawValue: 'R$ 21.150,00' },
-    { name: 'Acessórios', value: 20, color: '#9a6a42', rawValue: 'R$ 16.860,00' },
-    { name: 'Outros', value: 20, color: '#5A5A5A', rawValue: 'R$ 16.740,00' }
+    { name: 'Eletrônicos', value: 35, color: 'var(--nexus-rose)', rawValue: 'R$ 29.480,00' },
+    { name: 'Informática', value: 25, color: 'var(--nexus-gold)', rawValue: 'R$ 21.150,00' },
+    { name: 'Acessórios', value: 20, color: 'var(--nexus-bronze)', rawValue: 'R$ 16.860,00' },
+    { name: 'Outros', value: 20, color: 'var(--nexus-muted)', rawValue: 'R$ 16.740,00' }
   ],
   products: [
     { name: 'Notebook Dell Inspiron 15', stock: 8, status: 'Baixo', icon: ComputerDesktopIcon },
@@ -59,27 +60,6 @@ const mockData = {
 export function Dashboard() {
   const [loading, setLoading] = useState(false);
 
-  const StatCard = ({ title, value, change, icon: Icon, trend }: any) => (
-    <div className="bg-[var(--nexus-card)] rounded-2xl p-6 border border-[var(--nexus-border)] flex items-start justify-between transition-all hover:border-[var(--nexus-gold)] hover:shadow-[var(--nexus-glow)] relative overflow-hidden group">
-      <div className="flex items-center gap-5 z-10">
-        <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[rgba(0,0,0,0.4)] to-[rgba(212,149,86,0.1)] dark:from-[#111] dark:to-[rgba(212,149,86,0.15)] flex items-center justify-center border border-[var(--nexus-border-strong)] flex-shrink-0 shadow-inner group-hover:scale-105 transition-transform">
-          <Icon className="w-7 h-7 text-[var(--nexus-gold)]" />
-        </div>
-        <div className="flex flex-col">
-          <h3 className="text-sm font-semibold text-[var(--nexus-gold)] tracking-wide mb-1">{title}</h3>
-          <span className="text-2xl font-bold text-[var(--nexus-text)] tracking-tight">{value}</span>
-          <div className={`flex items-center text-xs mt-1 font-medium ${trend === 'up' ? 'text-[var(--nexus-success)]' : 'text-[var(--nexus-danger)]'}`}>
-            {trend === 'up' ? <ArrowUpIcon className="w-3 h-3 mr-1" /> : <ArrowDownIcon className="w-3 h-3 mr-1" />}
-            {change}
-          </div>
-        </div>
-      </div>
-      <button className="text-[var(--nexus-muted)] hover:text-[var(--nexus-text)] transition-colors p-1 z-10">
-        <EllipsisVerticalIcon className="w-5 h-5" />
-      </button>
-    </div>
-  );
-
   return (
     <div className="p-6 space-y-6 min-h-screen bg-transparent">
       {/* Header */}
@@ -92,33 +72,37 @@ export function Dashboard() {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <StatCard 
-          title="Clientes" 
-          value="1.250" 
-          change="12,5% este mês" 
-          icon={UserGroupIcon}
-          trend="up"
+        <StatsCard
+          label="Clientes"
+          value="1.250"
+          icon={<UserGroupIcon className="w-5 h-5" />}
+          color="gold"
+          trend={{ value: '12,5%', direction: 'up' }}
+          subtitle="este mês"
         />
-        <StatCard 
-          title="Vendas" 
-          value="R$ 84.230,50" 
-          change="18,7% este mês" 
-          icon={ShoppingCartIcon}
-          trend="up"
+        <StatsCard
+          label="Vendas"
+          value="R$ 84.230,50"
+          icon={<ShoppingCartIcon className="w-5 h-5" />}
+          color="gold"
+          trend={{ value: '18,7%', direction: 'up' }}
+          subtitle="este mês"
         />
-        <StatCard 
-          title="Receitas" 
-          value="R$ 126.430,20" 
-          change="15,3% este mês" 
-          icon={CurrencyDollarIcon}
-          trend="up"
+        <StatsCard
+          label="Receitas"
+          value="R$ 126.430,20"
+          icon={<CurrencyDollarIcon className="w-5 h-5" />}
+          color="gold"
+          trend={{ value: '15,3%', direction: 'up' }}
+          subtitle="este mês"
         />
-        <StatCard 
-          title="Lucro Líquido" 
-          value="R$ 28.200,00" 
-          change="11,8% este mês" 
-          icon={ArrowTrendingUpIcon}
-          trend="up"
+        <StatsCard
+          label="Lucro Líquido"
+          value="R$ 28.200,00"
+          icon={<ArrowTrendingUpIcon className="w-5 h-5" />}
+          color="gold"
+          trend={{ value: '11,8%', direction: 'up' }}
+          subtitle="este mês"
         />
       </div>
 

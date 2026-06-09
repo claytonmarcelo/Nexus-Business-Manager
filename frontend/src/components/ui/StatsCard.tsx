@@ -11,10 +11,10 @@ interface StatsCardProps {
 
 const colorMap = {
   gold: { bar: 'var(--nexus-gold)', iconBg: 'rgba(var(--nexus-gold-rgb), 0.12)', iconColor: 'var(--nexus-gold)' },
-  rose: { bar: '#C65A71', iconBg: 'rgba(var(--nexus-rose-rgb), 0.12)', iconColor: '#C65A71' },
-  green: { bar: '#7DDA6A', iconBg: 'rgba(var(--nexus-success-rgb), 0.12)', iconColor: '#7DDA6A' },
+  rose: { bar: 'var(--nexus-rose)', iconBg: 'rgba(var(--nexus-rose-rgb), 0.12)', iconColor: 'var(--nexus-rose)' },
+  green: { bar: 'var(--nexus-success)', iconBg: 'rgba(var(--nexus-success-rgb), 0.12)', iconColor: 'var(--nexus-success)' },
   blue: { bar: 'var(--nexus-chart-blue)', iconBg: 'rgba(var(--nexus-blue-rgb), 0.12)', iconColor: 'var(--nexus-chart-blue)' },
-  purple: { bar: '#a78bfa', iconBg: 'rgba(167, 139, 250, 0.12)', iconColor: '#a78bfa' },
+  purple: { bar: 'var(--nexus-rose)', iconBg: 'rgba(var(--nexus-rose-rgb), 0.12)', iconColor: 'var(--nexus-rose)' },
 };
 
 export function StatsCard({ label, value, icon, color, trend, subtitle }: StatsCardProps) {
@@ -54,7 +54,7 @@ export function StatsCard({ label, value, icon, color, trend, subtitle }: StatsC
         {trend && (
           <span
             className="text-xs font-medium"
-            style={{ color: trend.direction === 'up' ? '#7DDA6A' : 'var(--nexus-danger)' }}
+            style={{ color: trend.direction === 'up' ? 'var(--nexus-success)' : 'var(--nexus-danger)' }}
           >
             {trend.direction === 'up' ? '\u2191' : '\u2193'} {trend.value}
           </span>

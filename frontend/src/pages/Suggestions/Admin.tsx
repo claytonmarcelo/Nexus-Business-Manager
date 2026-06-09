@@ -16,9 +16,9 @@ const statusLabels: Record<string, string> = {
 const statusBadgeStyles: Record<string, React.CSSProperties> = {
   pending: { background: 'rgba(var(--nexus-gold-rgb),0.12)', color: 'var(--nexus-gold)' },
   under_review: { background: 'rgba(var(--nexus-blue-rgb),0.12)', color: 'var(--nexus-chart-blue)' },
-  approved: { background: 'rgba(var(--nexus-success-rgb),0.12)', color: '#7DDA6A' },
+  approved: { background: 'rgba(var(--nexus-success-rgb),0.12)', color: 'var(--nexus-success)' },
   rejected: { background: 'rgba(var(--nexus-danger-rgb),0.12)', color: 'var(--nexus-danger)' },
-  implemented: { background: 'rgba(var(--nexus-success-rgb),0.12)', color: '#7DDA6A' },
+  implemented: { background: 'rgba(var(--nexus-success-rgb),0.12)', color: 'var(--nexus-success)' },
 };
 
 const categoryLabels: Record<string, string> = {
@@ -119,7 +119,7 @@ export function AdminSuggestions() {
               fontSize: '0.75rem',
               borderRadius: '8px',
               border: '1px solid',
-              background: statusFilter === opt.value ? 'linear-gradient(135deg, #C65A71, #9d4e58)' : 'var(--nexus-card)',
+              background: statusFilter === opt.value ? 'linear-gradient(135deg, var(--nexus-rose), var(--nexus-rose-dark))' : 'var(--nexus-card)',
               color: statusFilter === opt.value ? '#fff' : 'var(--nexus-text)',
               borderColor: statusFilter === opt.value ? 'transparent' : 'var(--nexus-border)',
               cursor: 'pointer',
@@ -257,7 +257,7 @@ export function AdminSuggestions() {
             <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.5rem' }}>
               <button
                 onClick={handleUpdate}
-                style={{ background: 'linear-gradient(135deg, #C65A71, #9d4e58)', color: '#fff', border: 'none', borderRadius: '10px', padding: '0.75rem 1.5rem', fontWeight: 500, cursor: 'pointer' }}
+                style={{ background: 'linear-gradient(135deg, var(--nexus-rose), var(--nexus-rose-dark))', color: '#fff', border: 'none', borderRadius: '10px', padding: '0.75rem 1.5rem', fontWeight: 500, cursor: 'pointer' }}
               >
                 Salvar
               </button>

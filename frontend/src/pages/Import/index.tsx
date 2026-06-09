@@ -122,7 +122,7 @@ export function Import() {
         )}
 
         {result && (
-          <div className="mt-6 p-4 rounded-lg" style={{ background: 'rgba(var(--nexus-success-rgb), 0.08)', border: '1px solid rgba(125, 218, 106, 0.2)' }}>
+          <div className="mt-6 p-4 rounded-lg" style={{ background: 'rgba(var(--nexus-success-rgb), 0.08)', border: '1px solid rgba(var(--nexus-success-rgb), 0.2)' }}>
             <p className="text-sm font-medium" style={{ color: 'var(--nexus-success)' }}>
               Importacao concluida: {result.imported} registros importados
               {result.errors > 0 && `, ${result.errors} erros`}

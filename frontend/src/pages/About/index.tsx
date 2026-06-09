@@ -98,10 +98,10 @@ export function About() {
       <motion.div variants={itemVariants} className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
         {/* Coluna Esquerda - Logo e Informações */}
         <div className="lg:col-span-2 rounded-2xl p-6 relative"
-          style={{ background: 'var(--nexus-card)', border: '1px solid rgba(212,149,86,0.25)' }}>
+          style={{ background: 'var(--nexus-card)', border: '1px solid rgba(var(--nexus-gold-rgb),0.25)' }}>
           {/* Badge de Versão */}
           <div className="absolute top-4 right-4 px-3 py-1 rounded-lg text-xs font-semibold"
-            style={{ background: '#0B0D10', border: '1px solid #D49556', color: '#D49556' }}>
+            style={{ background: 'var(--nexus-card-strong)', border: '1px solid var(--nexus-gold)', color: 'var(--nexus-gold)' }}>
             Versão 1.0.0
           </div>
 
@@ -116,13 +116,13 @@ export function About() {
               <h2 className="text-2xl font-bold mb-1" style={{ color: '#FFFFFF' }}>
                 Nexus Business Manager
               </h2>
-              <p className="text-sm mb-4" style={{ color: '#A8A8A8' }}>
+              <p className="text-sm mb-4" style={{ color: 'var(--nexus-muted)' }}>
                 Sistema de Gestão Empresarial
               </p>
-              <p className="text-sm leading-relaxed mb-4" style={{ color: '#A8A8A8' }}>
+              <p className="text-sm leading-relaxed mb-4" style={{ color: 'var(--nexus-muted)' }}>
                 O Nexus Business Manager é uma plataforma completa e integrada para gestão empresarial, desenvolvida para ajudar empresas a controlar e otimizar todos os seus processos de forma eficiente.
               </p>
-              <p className="text-xs" style={{ color: '#A8A8A8' }}>
+              <p className="text-xs" style={{ color: 'var(--nexus-muted)' }}>
                 © 2026 Nexus Solutions. Todos os direitos reservados.
               </p>
             </div>
@@ -138,10 +138,10 @@ export function About() {
               const Icon = item.icon;
               return (
                 <div key={item.label} className="rounded-lg p-3 flex items-center gap-3"
-                  style={{ background: 'rgba(212,149,86,0.08)', border: '1px solid rgba(212,149,86,0.15)' }}>
-                  <Icon className="w-5 h-5" style={{ color: '#D49556' }} />
+                  style={{ background: 'rgba(var(--nexus-gold-rgb),0.08)', border: '1px solid rgba(var(--nexus-gold-rgb),0.15)' }}>
+                  <Icon className="w-5 h-5" style={{ color: 'var(--nexus-gold)' }} />
                   <div>
-                    <p className="text-xs" style={{ color: '#A8A8A8' }}>{item.label}</p>
+                    <p className="text-xs" style={{ color: 'var(--nexus-muted)' }}>{item.label}</p>
                     <p className="text-sm font-medium" style={{ color: '#FFFFFF' }}>{item.value}</p>
                   </div>
                 </div>
@@ -152,7 +152,7 @@ export function About() {
 
         {/* Coluna Direita - Informações do Sistema */}
         <div className="rounded-2xl p-6"
-          style={{ background: 'var(--nexus-card)', border: '1px solid rgba(212,149,86,0.25)' }}>
+          style={{ background: 'var(--nexus-card)', border: '1px solid rgba(var(--nexus-gold-rgb),0.25)' }}>
           <h3 className="text-lg font-semibold mb-4" style={{ color: '#FFFFFF' }}>
             Informações do Sistema
           </h3>
@@ -167,8 +167,8 @@ export function About() {
               { label: 'Banco de dados', value: 'MariaDB' },
             ].map((item) => (
               <div key={item.label} className="flex justify-between items-center py-2"
-                style={{ borderBottom: '1px solid rgba(212,149,86,0.1)' }}>
-                <span className="text-sm" style={{ color: '#A8A8A8' }}>{item.label}</span>
+                style={{ borderBottom: '1px solid rgba(var(--nexus-gold-rgb),0.1)' }}>
+                <span className="text-sm" style={{ color: 'var(--nexus-muted)' }}>{item.label}</span>
                 <span className="text-sm font-medium" style={{ color: '#FFFFFF' }}>{item.value}</span>
               </div>
             ))}
@@ -176,22 +176,22 @@ export function About() {
             {/* Armazenamento */}
             <div className="py-2">
               <div className="flex justify-between items-center mb-2">
-                <span className="text-sm" style={{ color: '#A8A8A8' }}>Armazenamento</span>
+                <span className="text-sm" style={{ color: 'var(--nexus-muted)' }}>Armazenamento</span>
                 <span className="text-sm font-medium" style={{ color: '#FFFFFF' }}>256 GB / 500 GB (51%)</span>
               </div>
-              <div className="w-full h-2 rounded-full overflow-hidden" style={{ background: 'rgba(212,149,86,0.1)' }}>
-                <div className="h-full rounded-full" style={{ width: '51%', background: '#D49556' }} />
+              <div className="w-full h-2 rounded-full overflow-hidden" style={{ background: 'rgba(var(--nexus-gold-rgb),0.1)' }}>
+                <div className="h-full rounded-full" style={{ width: '51%', background: 'var(--nexus-gold)' }} />
               </div>
             </div>
 
             {/* Licença e Status */}
             <div className="flex gap-2 pt-2">
               <span className="px-3 py-1 rounded-full text-xs font-semibold"
-                style={{ background: 'rgba(125,218,106,0.15)', color: '#7DDA6A', border: '1px solid rgba(125,218,106,0.3)' }}>
+                style={{ background: 'rgba(var(--nexus-success-rgb), 0.15)', color: 'var(--nexus-success)', border: '1px solid rgba(var(--nexus-success-rgb), 0.3)' }}>
                 Empresarial
               </span>
               <span className="px-3 py-1 rounded-full text-xs font-semibold"
-                style={{ background: 'rgba(125,218,106,0.15)', color: '#7DDA6A', border: '1px solid rgba(125,218,106,0.3)' }}>
+                style={{ background: 'rgba(var(--nexus-success-rgb), 0.15)', color: 'var(--nexus-success)', border: '1px solid rgba(var(--nexus-success-rgb), 0.3)' }}>
                 Operacional
               </span>
             </div>
@@ -209,10 +209,10 @@ export function About() {
             const Icon = module.icon;
             return (
               <div key={module.name} className="rounded-xl p-4 transition-all duration-200 hover:scale-105 flex flex-col items-center text-center"
-                style={{ background: 'var(--nexus-card)', border: '1px solid rgba(212,149,86,0.15)', minHeight: '120px' }}>
-                <Icon className="w-8 h-8 mb-3" style={{ color: '#D49556' }} />
+                style={{ background: 'var(--nexus-card)', border: '1px solid rgba(var(--nexus-gold-rgb),0.15)', minHeight: '120px' }}>
+                <Icon className="w-8 h-8 mb-3" style={{ color: 'var(--nexus-gold)' }} />
                 <h4 className="text-sm font-semibold mb-1" style={{ color: '#FFFFFF' }}>{module.name}</h4>
-                <p className="text-xs leading-tight" style={{ color: '#A8A8A8' }}>{module.desc}</p>
+                <p className="text-xs leading-tight" style={{ color: 'var(--nexus-muted)' }}>{module.desc}</p>
               </div>
             );
           })}
@@ -229,10 +229,10 @@ export function About() {
             const Icon = tech.icon;
             return (
               <div key={tech.name} className="rounded-xl p-4 transition-all duration-200 hover:scale-105 flex flex-col items-center text-center"
-                style={{ background: 'var(--nexus-card)', border: '1px solid rgba(212,149,86,0.15)', minHeight: '120px' }}>
-                <Icon className="w-8 h-8 mb-3" style={{ color: '#D49556' }} />
+                style={{ background: 'var(--nexus-card)', border: '1px solid rgba(var(--nexus-gold-rgb),0.15)', minHeight: '120px' }}>
+                <Icon className="w-8 h-8 mb-3" style={{ color: 'var(--nexus-gold)' }} />
                 <h4 className="text-sm font-semibold mb-1" style={{ color: '#FFFFFF' }}>{tech.name}</h4>
-                <p className="text-xs leading-tight" style={{ color: '#A8A8A8' }}>{tech.desc}</p>
+                <p className="text-xs leading-tight" style={{ color: 'var(--nexus-muted)' }}>{tech.desc}</p>
               </div>
             );
           })}
@@ -253,14 +253,14 @@ export function About() {
             const Icon = item.icon;
             return (
               <div key={item.title} className="rounded-xl p-5 transition-all duration-200 hover:scale-105 flex flex-col items-center text-center"
-                style={{ background: 'var(--nexus-card)', border: '1px solid rgba(212,149,86,0.15)', minHeight: '180px' }}>
-                <Icon className="w-10 h-10 mb-3" style={{ color: '#D49556' }} />
+                style={{ background: 'var(--nexus-card)', border: '1px solid rgba(var(--nexus-gold-rgb),0.15)', minHeight: '180px' }}>
+                <Icon className="w-10 h-10 mb-3" style={{ color: 'var(--nexus-gold)' }} />
                 <h4 className="text-base font-semibold mb-2" style={{ color: '#FFFFFF' }}>{item.title}</h4>
-                <p className="text-sm mb-4 leading-tight" style={{ color: '#A8A8A8' }}>{item.desc}</p>
+                <p className="text-sm mb-4 leading-tight" style={{ color: 'var(--nexus-muted)' }}>{item.desc}</p>
                 <button className="w-full py-2 rounded-lg text-sm font-semibold transition-all duration-200 mt-auto"
-                  style={{ background: 'rgba(212,149,86,0.15)', color: '#D49556', border: '1px solid rgba(212,149,86,0.25)' }}
-                  onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(212,149,86,0.25)'}
-                  onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(212,149,86,0.15)'}>
+                  style={{ background: 'rgba(var(--nexus-gold-rgb),0.15)', color: 'var(--nexus-gold)', border: '1px solid rgba(var(--nexus-gold-rgb),0.25)' }}
+                  onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(var(--nexus-gold-rgb),0.25)'}
+                  onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(var(--nexus-gold-rgb),0.15)'}>
                   {item.btn}
                 </button>
               </div>
@@ -271,23 +271,23 @@ export function About() {
 
       {/* Sexto Bloco - Rodapé Institucional */}
       <motion.div variants={itemVariants} className="rounded-2xl p-6"
-        style={{ background: 'var(--nexus-card)', border: '1px solid rgba(212,149,86,0.25)' }}>
+        style={{ background: 'var(--nexus-card)', border: '1px solid rgba(var(--nexus-gold-rgb),0.25)' }}>
         <div className="flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <HeartIcon className="w-6 h-6" style={{ color: '#C65A71' }} />
+            <HeartIcon className="w-6 h-6" style={{ color: 'var(--nexus-rose)' }} />
             <div>
               <p className="text-sm font-semibold" style={{ color: '#FFFFFF' }}>
                 Desenvolvido com ❤️ por Nexus Solutions
               </p>
-              <p className="text-xs" style={{ color: '#A8A8A8' }}>
+              <p className="text-xs" style={{ color: 'var(--nexus-muted)' }}>
                 Nosso compromisso é fornecer soluções inovadoras que impulsionam o sucesso do seu negócio.
               </p>
             </div>
           </div>
           <button className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-200"
-            style={{ background: 'rgba(212,149,86,0.15)', color: '#D49556', border: '1px solid rgba(212,149,86,0.25)' }}
-            onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(212,149,86,0.25)'}
-            onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(212,149,86,0.15)'}>
+            style={{ background: 'rgba(var(--nexus-gold-rgb),0.15)', color: 'var(--nexus-gold)', border: '1px solid rgba(var(--nexus-gold-rgb),0.25)' }}
+            onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(var(--nexus-gold-rgb),0.25)'}
+            onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(var(--nexus-gold-rgb),0.15)'}>
             Saiba mais sobre nós
             <ArrowRightIcon className="w-4 h-4" />
           </button>

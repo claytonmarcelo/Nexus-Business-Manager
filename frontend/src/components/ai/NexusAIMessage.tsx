@@ -14,14 +14,14 @@ export function NexusAIMessage({ text, isUser, suggestions, onSuggestionClick }:
         {isUser ? (
           <UserIcon style={{ width: '1rem', height: '1rem', color: 'var(--nexus-gold)' }} />
         ) : (
-          <SparklesIcon style={{ width: '1rem', height: '1rem', color: '#C65A71' }} />
+          <SparklesIcon style={{ width: '1rem', height: '1rem', color: 'var(--nexus-rose)' }} />
         )}
       </div>
       <div style={{ maxWidth: '80%', display: 'flex', flexDirection: 'column', alignItems: isUser ? 'flex-end' : 'flex-start' }}>
         <div
           style={{
             borderRadius: '1rem', padding: '0.625rem 1rem', fontSize: '0.875rem', lineHeight: 1.5,
-            background: isUser ? 'rgba(var(--nexus-gold-rgb), 0.2)' : 'rgba(11, 13, 16, 0.94)',
+            background: isUser ? 'rgba(var(--nexus-gold-rgb), 0.2)' : 'var(--nexus-card-strong)',
             color: 'var(--nexus-text)', border: '1px solid',
             borderColor: isUser ? 'rgba(var(--nexus-gold-rgb), 0.3)' : 'var(--nexus-border)',
           }}

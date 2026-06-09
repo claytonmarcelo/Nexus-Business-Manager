@@ -237,7 +237,7 @@ export function Stock() {
       header: 'Valor Total',
       hide: 'lg',
       render: (p) => (
-        <span className="text-sm font-semibold" style={{ color: 'var(--nexus-gold, #D49556)' }}>
+        <span className="text-sm font-semibold" style={{ color: 'var(--nexus-gold)' }}>
           {formatPrice(p.price * p.quantity)}
         </span>
       ),
@@ -477,7 +477,7 @@ export function Stock() {
                       className="flex-1 py-2.5 rounded-xl text-sm font-medium transition-all duration-200"
                       style={{
                         background: formData.type === 'in' ? 'rgba(var(--nexus-success-rgb), 0.15)' : 'var(--nexus-card-soft)',
-                        color: formData.type === 'in' ? '#7DDA6A' : 'var(--nexus-muted)',
+                        color: formData.type === 'in' ? 'var(--nexus-success)' : 'var(--nexus-muted)',
                         border: formData.type === 'in' ? '1px solid rgba(var(--nexus-success-rgb), 0.3)' : '1px solid rgba(var(--nexus-gold-rgb),0.15)',
                       }}
                     >

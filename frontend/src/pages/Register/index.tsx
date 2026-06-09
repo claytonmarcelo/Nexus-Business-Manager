@@ -10,9 +10,9 @@ function getPasswordStrength(password: string): { level: string; label: string; 
   if (!password) return { level: 'none', label: '', color: '', width: '0%' };
   if (password.length < 8) return { level: 'weak', label: 'Fraca', color: 'var(--nexus-danger)', width: '25%' };
   const score = [/[A-Z]/, /[a-z]/, /[0-9]/, /[^A-Za-z0-9]/].filter((r) => r.test(password)).length;
-  if (score === 4) return { level: 'very_strong', label: 'Muito Forte', color: '#7DDA6A', width: '100%' };
+  if (score === 4) return { level: 'very_strong', label: 'Muito Forte', color: 'var(--nexus-success)', width: '100%' };
   if (score === 3) return { level: 'strong', label: 'Forte', color: 'var(--nexus-gold)', width: '75%' };
-  if (score === 2) return { level: 'medium', label: 'Media', color: '#E18A9D', width: '50%' };
+  if (score === 2) return { level: 'medium', label: 'Media', color: 'var(--nexus-rose)', width: '50%' };
   return { level: 'weak', label: 'Fraca', color: 'var(--nexus-danger)', width: '25%' };
 }
 

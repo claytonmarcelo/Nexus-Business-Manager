@@ -15,7 +15,7 @@ const fmtBRL = (v: number) =>
   new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v);
 
 const PIE_COLORS = [
-  'var(--nexus-rose)', '#D49556', '#9a6a42', '#8c7355', '#A8A8A8'
+  'var(--nexus-rose)', 'var(--nexus-gold)', 'var(--nexus-bronze)', 'var(--nexus-muted)', 'var(--nexus-muted-2)'
 ];
 
 /* ─── component ────────────────────────────────────────── */
@@ -41,10 +41,10 @@ export function Reports() {
   // Fake Pie Data
   const pieData = [
     { name: 'Eletrônicos', value: 45680.50, pct: 36, color: 'var(--nexus-rose)' },
-    { name: 'Informática', value: 32450.00, pct: 26, color: '#D49556' },
-    { name: 'Móveis', value: 21780.00, pct: 17, color: '#9a6a42' },
-    { name: 'Acessórios', value: 15320.00, pct: 12, color: '#8c7355' },
-    { name: 'Outros', value: 11199.70, pct: 9, color: '#A8A8A8' },
+    { name: 'Informática', value: 32450.00, pct: 26, color: 'var(--nexus-gold)' },
+    { name: 'Móveis', value: 21780.00, pct: 17, color: 'var(--nexus-bronze)' },
+    { name: 'Acessórios', value: 15320.00, pct: 12, color: 'var(--nexus-muted)' },
+    { name: 'Outros', value: 11199.70, pct: 9, color: 'var(--nexus-muted-2)' },
   ];
 
   // Sparkline data
@@ -235,8 +235,8 @@ export function Reports() {
                 { name: 'Relatório de Vendas', desc: 'Análise completa de vendas por período, produtos e clientes', cat: 'Vendas', catColor: 'var(--nexus-rose)', date: '31/05/2024 08:45', icon: <ChartBarIcon className="w-4 h-4"/> },
                 { name: 'Relatório de Compras', desc: 'Análise de compras, fornecedores e custos', cat: 'Compras', catColor: 'var(--nexus-gold)', date: '31/05/2024 08:30', icon: <ShoppingCartIcon className="w-4 h-4"/> },
                 { name: 'Relatório Financeiro', desc: 'Receitas, despesas, lucros e fluxo de caixa', cat: 'Financeiro', catColor: 'var(--nexus-danger)', date: '31/05/2024 08:15', icon: <CurrencyDollarIcon className="w-4 h-4"/> },
-                { name: 'Relatório de Estoque', desc: 'Movimentações, produtos e níveis de estoque', cat: 'Estoque', catColor: '#D49556', date: '31/05/2024 08:00', icon: <ArchiveBoxIcon className="w-4 h-4"/> },
-                { name: 'Relatório de Clientes', desc: 'Análise de clientes, cadastros e vendas', cat: 'Clientes', catColor: '#a78bfa', date: '30/05/2024 17:40', icon: <UserGroupIcon className="w-4 h-4"/> },
+                { name: 'Relatório de Estoque', desc: 'Movimentações, produtos e níveis de estoque', cat: 'Estoque', catColor: 'var(--nexus-gold)', date: '31/05/2024 08:00', icon: <ArchiveBoxIcon className="w-4 h-4"/> },
+                { name: 'Relatório de Clientes', desc: 'Análise de clientes, cadastros e vendas', cat: 'Clientes', catColor: 'var(--nexus-rose)', date: '30/05/2024 17:40', icon: <UserGroupIcon className="w-4 h-4"/> },
               ].map((t, i) => (
                 <div key={i}
                   className="grid grid-cols-[minmax(200px,1fr)_minmax(250px,1fr)_120px_140px_100px] gap-4 px-6 py-4 items-center transition-colors hover:bg-black/5 dark:hover:bg-white/5"
@@ -323,7 +323,7 @@ export function Reports() {
             ].map((item, i) => (
               <button key={i} className="w-full flex items-center justify-between p-2.5 rounded-xl transition-colors hover:bg-black/5 dark:hover:bg-white/5 group">
                 <div className="flex items-center gap-3 text-[13px]" style={{ color: 'var(--nexus-muted)' }}>
-                  <div style={{ color: '#8c7355' }}>
+                  <div style={{ color: 'var(--nexus-bronze)' }}>
                     {item.icon}
                   </div>
                   <span className="group-hover:text-[var(--nexus-text)] transition-colors">{item.name}</span>

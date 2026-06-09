@@ -8,6 +8,7 @@ import {
 } from '@heroicons/react/24/outline';
 import api from '../../services/api';
 import { Client } from '../../types';
+import { StatsCard } from '../../components/ui/StatsCard';
 
 /* ─── helpers ─────────────────────────────────────────── */
 function extractCity(address: string | null): string {
@@ -21,7 +22,7 @@ function getInitials(name: string): string {
 }
 
 const AVATAR_COLORS = [
-  '#8B5CF6','#C65A71','#D49556','#3B82F6','#10B981','#F59E0B',
+  '#8B5CF6','var(--nexus-rose)','var(--nexus-gold)','#3B82F6','#10B981','#F59E0B',
   '#EC4899','#6366F1','#14B8A6','#EF4444',
 ];
 
@@ -167,27 +168,38 @@ export function Clients() {
         initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}
         className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4"
       >
-        {[
-          { label: 'Total de Clientes', value: total.toLocaleString('pt-BR'), icon: <UserGroupIcon className="w-7 h-7" />, change: '+12,5% este mês', up: true },
-          { label: 'Novos Clientes', value: String(newClientsThisMonth), icon: <UserPlusIcon className="w-7 h-7" />, change: '+8,3% este mês', up: true },
-          { label: 'Clientes Ativos', value: activeClients.toLocaleString('pt-BR'), icon: <CheckBadgeIcon className="w-7 h-7" />, change: '+15,7% este mês', up: true },
-          { label: 'Ticket Médio', value: 'R$ 528,40', icon: <CurrencyDollarIcon className="w-7 h-7" />, change: '+9,4% este mês', up: true },
-        ].map((kpi, i) => (
-          <div key={i} className="rounded-2xl p-5 flex items-start gap-4 border transition-all hover:shadow-[var(--nexus-glow)] group"
-            style={{ background: 'var(--nexus-card)', borderColor: 'var(--nexus-border)' }}>
-            <div className="w-14 h-14 rounded-xl flex items-center justify-center flex-shrink-0 border transition-transform group-hover:scale-105"
-              style={{ background: 'rgba(var(--nexus-gold-rgb),0.1)', borderColor: 'rgba(var(--nexus-gold-rgb),0.2)', color: 'var(--nexus-gold)' }}>
-              {kpi.icon}
-            </div>
-            <div className="flex flex-col min-w-0">
-              <span className="text-xs font-semibold tracking-wide" style={{ color: 'var(--nexus-gold)' }}>{kpi.label}</span>
-              <span className="text-2xl font-bold mt-0.5" style={{ color: 'var(--nexus-text)' }}>{kpi.value}</span>
-              <span className="text-xs mt-1 font-medium" style={{ color: kpi.up ? 'var(--nexus-success)' : 'var(--nexus-danger)' }}>
-                {kpi.up ? '▲' : '▼'} {kpi.change}
-              </span>
-            </div>
-          </div>
-        ))}
+        <StatsCard
+          label="Total de Clientes"
+          value={total.toLocaleString('pt-BR')}
+          icon={<UserGroupIcon className="w-5 h-5" />}
+          color="gold"
+          trend={{ value: '12,5%', direction: 'up' }}
+          subtitle="este mês"
+        />
+        <StatsCard
+          label="Novos Clientes"
+          value={String(newClientsThisMonth)}
+          icon={<UserPlusIcon className="w-5 h-5" />}
+          color="gold"
+          trend={{ value: '8,3%', direction: 'up' }}
+          subtitle="este mês"
+        />
+        <StatsCard
+          label="Clientes Ativos"
+          value={activeClients.toLocaleString('pt-BR')}
+          icon={<CheckBadgeIcon className="w-5 h-5" />}
+          color="gold"
+          trend={{ value: '15,7%', direction: 'up' }}
+          subtitle="este mês"
+        />
+        <StatsCard
+          label="Ticket Médio"
+          value="R$ 528,40"
+          icon={<CurrencyDollarIcon className="w-5 h-5" />}
+          color="gold"
+          trend={{ value: '9,4%', direction: 'up' }}
+          subtitle="este mês"
+        />
       </motion.div>
 
       {/* ── Toolbar ── */}

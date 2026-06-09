@@ -22,9 +22,9 @@ export function GradientButton({ children, variant = 'primary', loading, icon, c
   };
 
   const bgStyles: Record<string, React.CSSProperties> = {
-    primary: { background: 'linear-gradient(135deg, #C65A71, #9d4e58)' },
-    secondary: { background: 'rgba(11, 13, 16, 0.86)' },
-    danger: { background: 'linear-gradient(135deg, #D84B5F, #b03e4f)' },
+    primary: { background: 'linear-gradient(135deg, var(--nexus-rose), var(--nexus-rose-dark))' },
+    secondary: { background: 'var(--nexus-card-strong)' },
+    danger: { background: 'linear-gradient(135deg, var(--nexus-danger), #b03e4f)' },
   };
 
   return (

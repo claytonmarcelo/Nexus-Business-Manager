@@ -6,7 +6,7 @@ interface PremiumBadgeProps {
 
 const variants = {
   success: { bg: 'rgba(var(--nexus-success-rgb), 0.12)', color: 'var(--nexus-success)' },
-  warning: { bg: 'rgba(216, 154, 40, 0.12)', color: 'var(--nexus-warning)' },
+  warning: { bg: 'rgba(var(--nexus-warning-rgb), 0.12)', color: 'var(--nexus-warning)' },
   danger: { bg: 'rgba(var(--nexus-danger-rgb), 0.12)', color: 'var(--nexus-danger)' },
   info: { bg: 'rgba(var(--nexus-gold-rgb), 0.12)', color: 'var(--nexus-gold)' },
   default: { bg: 'rgba(var(--nexus-muted-rgb), 0.12)', color: 'var(--nexus-muted)' },
