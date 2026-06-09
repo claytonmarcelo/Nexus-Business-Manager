@@ -139,7 +139,7 @@ export function Backup() {
         <p className="text-sm mb-4" style={{ color: 'var(--nexus-muted)' }}>
           Para restaurar um backup, baixe o arquivo desejado e utilize a ferramenta de restauracao do banco de dados.
         </p>
-        <div className="p-4 rounded-lg" style={{ background: 'rgba(212, 149, 86, 0.06)', border: '1px solid rgba(212, 149, 86, 0.15)' }}>
+        <div className="p-4 rounded-lg" style={{ background: 'rgba(var(--nexus-gold-rgb), 0.06)', border: '1px solid rgba(var(--nexus-gold-rgb), 0.15)' }}>
           <p className="text-xs" style={{ color: 'var(--nexus-muted-2)' }}>
             A restauracao de backups deve ser realizada por um administrador do sistema.
             O processo substituira todos os dados atuais pelos dados do backup.

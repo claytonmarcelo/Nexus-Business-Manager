@@ -64,7 +64,7 @@ export function CreateSuggestion() {
           <select
             value={category}
             onChange={(e) => setCategory(e.target.value)}
-            style={{ width: '100%', padding: '0.75rem 1rem', background: 'rgba(0,0,0,0.5)', color: 'var(--nexus-text)', border: '1px solid var(--nexus-border)', borderRadius: '10px', fontSize: '0.875rem' }}
+            style={{ width: '100%', padding: '0.75rem 1rem', background: 'var(--nexus-input-bg)', color: 'var(--nexus-text)', border: '1px solid var(--nexus-border)', borderRadius: '10px', fontSize: '0.875rem' }}
           >
             {categories.map((c) => (
               <option key={c.value} value={c.value}>{c.label}</option>
@@ -78,7 +78,7 @@ export function CreateSuggestion() {
             type="text"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            style={{ width: '100%', padding: '0.75rem 1rem', background: 'rgba(0,0,0,0.5)', color: 'var(--nexus-text)', border: '1px solid var(--nexus-border)', borderRadius: '10px', fontSize: '0.875rem' }}
+            style={{ width: '100%', padding: '0.75rem 1rem', background: 'var(--nexus-input-bg)', color: 'var(--nexus-text)', border: '1px solid var(--nexus-border)', borderRadius: '10px', fontSize: '0.875rem' }}
             placeholder="Ex: Melhorar relatorio de vendas"
             required
             minLength={5}
@@ -90,7 +90,7 @@ export function CreateSuggestion() {
           <textarea
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            style={{ width: '100%', padding: '0.75rem 1rem', background: 'rgba(0,0,0,0.5)', color: 'var(--nexus-text)', border: '1px solid var(--nexus-border)', borderRadius: '10px', fontSize: '0.875rem', resize: 'vertical', minHeight: '100px' }}
+            style={{ width: '100%', padding: '0.75rem 1rem', background: 'var(--nexus-input-bg)', color: 'var(--nexus-text)', border: '1px solid var(--nexus-border)', borderRadius: '10px', fontSize: '0.875rem', resize: 'vertical', minHeight: '100px' }}
             placeholder="Descreva sua sugestao em detalhes (minimo 20 caracteres)..."
             required
             minLength={20}

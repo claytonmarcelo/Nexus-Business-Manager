@@ -955,6 +955,6 @@ input:focus, textarea:focus, select:focus {
   border-radius: 3px 3px 0 0;
   transition: height 0.3s;
 }
-.sparkline-bar.gold { background: linear-gradient(to top, rgba(212,149,86,0.3), rgba(212,149,86,0.7)); }
-.sparkline-bar.green { background: linear-gradient(to top, rgba(125,218,106,0.3), rgba(125,218,106,0.7)); }
+.sparkline-bar.gold { background: linear-gradient(to top, rgba(var(--nexus-gold-rgb),0.3), rgba(var(--nexus-gold-rgb),0.7)); }
+.sparkline-bar.green { background: linear-gradient(to top, rgba(var(--nexus-success-rgb),0.3), rgba(var(--nexus-success-rgb),0.7)); }
 .sparkline-bar.rose { background: linear-gradient(to top, rgba(198,90,113,0.3), rgba(198,90,113,0.7)); }

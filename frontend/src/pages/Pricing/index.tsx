@@ -84,7 +84,7 @@ export function Pricing() {
             className="rounded-2xl p-8 flex flex-col relative overflow-hidden transition-all duration-200"
             style={{
               background: plan.highlighted
-                ? 'linear-gradient(135deg, rgba(212, 149, 86, 0.10), rgba(198, 90, 113, 0.06))'
+                ? 'linear-gradient(135deg, rgba(var(--nexus-gold-rgb), 0.10), rgba(var(--nexus-rose-rgb), 0.06))'
                 : 'var(--nexus-card)',
               border: plan.highlighted
                 ? '1px solid var(--nexus-gold)'
@@ -95,7 +95,7 @@ export function Pricing() {
             {plan.highlighted && (
               <div
                 className="absolute top-4 right-4 px-3 py-1 rounded-full text-xs font-semibold"
-                style={{ background: 'var(--nexus-gold)', color: '#050505' }}
+                style={{ background: 'var(--nexus-gold)', color: '#000000' }}
               >
                 Popular
               </div>
@@ -125,7 +125,7 @@ export function Pricing() {
                 background: plan.highlighted
                   ? 'linear-gradient(135deg, var(--nexus-gold), var(--nexus-rose))'
                   : 'var(--nexus-card-soft)',
-                color: plan.highlighted ? '#FFFFFF' : 'var(--nexus-text)',
+                color: plan.highlighted ? '#000000' : 'var(--nexus-text)',
                 border: plan.highlighted ? 'none' : '1px solid var(--nexus-border)',
               }}
               onMouseEnter={(e) => { if (plan.highlighted) { e.currentTarget.style.transform = 'scale(1.02)'; } }}

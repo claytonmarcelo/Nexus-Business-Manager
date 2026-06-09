@@ -46,7 +46,7 @@ export function Landing() {
         <div
           className="absolute inset-0 pointer-events-none"
           style={{
-            background: 'radial-gradient(circle at 20% 30%, rgba(212, 149, 86, 0.10), transparent 50%), radial-gradient(circle at 80% 70%, rgba(198, 90, 113, 0.08), transparent 50%)',
+            background: 'radial-gradient(circle at 20% 30%, rgba(var(--nexus-gold-rgb), 0.10), transparent 50%), radial-gradient(circle at 80% 70%, rgba(var(--nexus-rose-rgb), 0.08), transparent 50%)',
           }}
         />
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 sm:py-32">
@@ -74,10 +74,10 @@ export function Landing() {
                 style={{
                   background: 'linear-gradient(135deg, var(--nexus-gold), var(--nexus-rose))',
                   color: '#FFFFFF',
-                  boxShadow: '0 0 30px rgba(212, 149, 86, 0.3)',
-                }}
-                onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 0 40px rgba(212, 149, 86, 0.4)'; }}
-                onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 0 30px rgba(212, 149, 86, 0.3)'; }}
+              boxShadow: 'var(--nexus-glow)',
+            }}
+            onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 0 40px rgba(var(--nexus-gold-rgb), 0.4)'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'var(--nexus-glow)'; }}
               >
                 Comece Gratuitamente
                 <ArrowRightIcon className="w-5 h-5" />
@@ -94,7 +94,7 @@ export function Landing() {
         </div>
       </section>
 
-      <motion.section variants={itemVariants} className="py-20" style={{ background: 'rgba(0, 0, 0, 0.2)' }}>
+      <motion.section variants={itemVariants} className="py-20" style={{ background: 'var(--nexus-bg-soft)' }}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-3xl sm:text-4xl font-bold mb-4" style={{ color: 'var(--nexus-text)' }}>
@@ -111,12 +111,12 @@ export function Landing() {
                 <motion.div
                   key={feat.title}
                   whileHover={{ y: -4, transition: { duration: 0.2 } }}
-                  className="rounded-xl p-6 transition-all duration-200"
-                  style={{ background: 'var(--nexus-card)', border: '1px solid var(--nexus-border)' }}
-                >
-                  <div
-                    className="w-12 h-12 rounded-xl flex items-center justify-center mb-4"
-                    style={{ background: 'rgba(212, 149, 86, 0.12)', color: 'var(--nexus-gold)' }}
+                className="rounded-xl p-6 transition-all duration-200"
+                style={{ background: 'var(--nexus-card)', border: '1px solid var(--nexus-border)' }}
+              >
+                <div
+                  className="w-12 h-12 rounded-xl flex items-center justify-center mb-4"
+                  style={{ background: 'rgba(var(--nexus-gold-rgb), 0.12)', color: 'var(--nexus-gold)' }}
                   >
                     <Icon className="w-6 h-6" />
                   </div>
@@ -133,7 +133,7 @@ export function Landing() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="rounded-2xl p-10 sm:p-16 text-center relative overflow-hidden"
             style={{
-              background: 'linear-gradient(135deg, rgba(212, 149, 86, 0.08), rgba(198, 90, 113, 0.06))',
+              background: 'linear-gradient(135deg, rgba(var(--nexus-gold-rgb), 0.08), rgba(var(--nexus-rose-rgb), 0.06))',
               border: '1px solid var(--nexus-border)',
             }}
           >
@@ -160,7 +160,7 @@ export function Landing() {
         </div>
       </motion.section>
 
-      <motion.section variants={itemVariants} className="py-16" style={{ background: 'rgba(0, 0, 0, 0.15)' }}>
+      <motion.section variants={itemVariants} className="py-16" style={{ background: 'var(--nexus-bg-soft)' }}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h2 className="text-2xl sm:text-3xl font-bold mb-4" style={{ color: 'var(--nexus-text)' }}>

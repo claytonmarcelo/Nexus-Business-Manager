@@ -59,7 +59,7 @@ export function Import() {
               onClick={() => { setImportType(opt.type); setFile(null); setResult(null); }}
               className="px-4 py-2 text-sm font-medium rounded-lg transition-all"
               style={{
-                background: importType === opt.type ? 'rgba(212, 149, 86, 0.12)' : 'var(--nexus-card-soft)',
+                background: importType === opt.type ? 'rgba(var(--nexus-gold-rgb), 0.12)' : 'var(--nexus-card-soft)',
                 color: importType === opt.type ? 'var(--nexus-gold)' : 'var(--nexus-muted)',
                 border: importType === opt.type ? '1px solid var(--nexus-gold)' : '1px solid var(--nexus-border)',
               }}
@@ -122,7 +122,7 @@ export function Import() {
         )}
 
         {result && (
-          <div className="mt-6 p-4 rounded-lg" style={{ background: 'rgba(125, 218, 106, 0.08)', border: '1px solid rgba(125, 218, 106, 0.2)' }}>
+          <div className="mt-6 p-4 rounded-lg" style={{ background: 'rgba(var(--nexus-success-rgb), 0.08)', border: '1px solid rgba(125, 218, 106, 0.2)' }}>
             <p className="text-sm font-medium" style={{ color: 'var(--nexus-success)' }}>
               Importacao concluida: {result.imported} registros importados
               {result.errors > 0 && `, ${result.errors} erros`}

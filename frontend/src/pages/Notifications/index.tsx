@@ -58,7 +58,7 @@ export function Notifications() {
         <div style={{ display: 'flex', gap: '0.75rem' }}>
           <button onClick={handleGenerate} style={{ background: 'var(--nexus-card)', color: 'var(--nexus-text)', border: '1px solid var(--nexus-border)', borderRadius: '10px', padding: '0.5rem 1rem', cursor: 'pointer', fontSize: '0.875rem' }}>Gerar Alertas</button>
           {unreadCount > 0 && (
-            <button onClick={handleMarkAllRead} style={{ background: 'linear-gradient(135deg, #C65A71, #9d4e58)', color: '#fff', border: 'none', borderRadius: '10px', padding: '0.5rem 1rem', fontWeight: 500, cursor: 'pointer', fontSize: '0.875rem' }}>Marcar todas lidas</button>
+            <button onClick={handleMarkAllRead} style={{ background: 'linear-gradient(135deg, var(--nexus-rose), var(--nexus-rose-dark))', color: 'var(--nexus-text)', border: 'none', borderRadius: '10px', padding: '0.5rem 1rem', fontWeight: 500, cursor: 'pointer', fontSize: '0.875rem' }}>Marcar todas lidas</button>
           )}
         </div>
       </div>

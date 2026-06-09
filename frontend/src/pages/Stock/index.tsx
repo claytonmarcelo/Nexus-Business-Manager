@@ -412,7 +412,7 @@ export function Stock() {
             style={{
               background: 'var(--nexus-card)',
               border: '1px solid var(--nexus-border)',
-              boxShadow: '0 25px 60px rgba(0,0,0,0.5)',
+              boxShadow: 'var(--nexus-shadow)',
             }}
           >
             <div

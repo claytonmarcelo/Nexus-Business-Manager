@@ -115,7 +115,7 @@ export function Appointments() {
         <div>
           <label style={{ color: 'var(--nexus-text)', fontSize: '0.875rem', fontWeight: 500, marginBottom: '0.375rem', display: 'block' }}>Filtrar por data</label>
           <input type="date" value={filterDate}
-            style={{ padding: '0.625rem 1rem', background: 'rgba(0,0,0,0.5)', color: 'var(--nexus-text)', border: '1px solid var(--nexus-border)', borderRadius: '10px', fontSize: '0.875rem' }}
+            style={{ padding: '0.625rem 1rem', background: 'var(--nexus-input-bg)', color: 'var(--nexus-text)', border: '1px solid var(--nexus-border)', borderRadius: '10px', fontSize: '0.875rem' }}
             onChange={(e) => handleFilter(e.target.value)} />
         </div>
         {filterDate && (
@@ -176,7 +176,7 @@ export function Appointments() {
       </div>
 
       {showModal && (
-        <div style={{ position: 'fixed', inset: 0, zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem', background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }}>
+        <div style={{ position: 'fixed', inset: 0, zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem', background: 'var(--nexus-overlay)', backdropFilter: 'blur(4px)' }}>
           <div style={{ background: 'var(--nexus-card-strong)', border: '1px solid var(--nexus-border)', borderRadius: '18px', padding: '2rem', width: '100%', maxWidth: '32rem' }}>
             <h2 style={{ fontSize: '1.25rem', fontWeight: 600, color: 'var(--nexus-text)', marginBottom: '1.5rem' }}>{editing ? 'Editar Agendamento' : 'Novo Agendamento'}</h2>
             {error && <div style={{ background: 'rgba(var(--nexus-danger-rgb),0.12)', color: 'var(--nexus-danger)', border: '1px solid rgba(var(--nexus-danger-rgb),0.2)', borderRadius: '10px', padding: '0.75rem 1rem', fontSize: '0.875rem', marginBottom: '1rem' }}>{error}</div>}
@@ -184,27 +184,27 @@ export function Appointments() {
               <div style={{ marginBottom: '1rem' }}>
                 <label style={{ color: 'var(--nexus-text)', fontSize: '0.875rem', fontWeight: 500, marginBottom: '0.375rem', display: 'block' }}>Titulo</label>
                 <input type="text" required value={formData.title}
-                  style={{ padding: '0.625rem 1rem', background: 'rgba(0,0,0,0.5)', color: 'var(--nexus-text)', border: '1px solid var(--nexus-border)', borderRadius: '10px', fontSize: '0.875rem', width: '100%', boxSizing: 'border-box' }}
+                  style={{ padding: '0.625rem 1rem', background: 'var(--nexus-input-bg)', color: 'var(--nexus-text)', border: '1px solid var(--nexus-border)', borderRadius: '10px', fontSize: '0.875rem', width: '100%', boxSizing: 'border-box' }}
                   onChange={(e) => setFormData({ ...formData, title: e.target.value })} />
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
                 <div>
                   <label style={{ color: 'var(--nexus-text)', fontSize: '0.875rem', fontWeight: 500, marginBottom: '0.375rem', display: 'block' }}>Data</label>
                   <input type="date" required value={formData.appointment_date}
-                    style={{ padding: '0.625rem 1rem', background: 'rgba(0,0,0,0.5)', color: 'var(--nexus-text)', border: '1px solid var(--nexus-border)', borderRadius: '10px', fontSize: '0.875rem', width: '100%', boxSizing: 'border-box' }}
+                    style={{ padding: '0.625rem 1rem', background: 'var(--nexus-input-bg)', color: 'var(--nexus-text)', border: '1px solid var(--nexus-border)', borderRadius: '10px', fontSize: '0.875rem', width: '100%', boxSizing: 'border-box' }}
                     onChange={(e) => setFormData({ ...formData, appointment_date: e.target.value })} />
                 </div>
                 <div>
                   <label style={{ color: 'var(--nexus-text)', fontSize: '0.875rem', fontWeight: 500, marginBottom: '0.375rem', display: 'block' }}>Horario</label>
                   <input type="time" value={formData.appointment_time}
-                    style={{ padding: '0.625rem 1rem', background: 'rgba(0,0,0,0.5)', color: 'var(--nexus-text)', border: '1px solid var(--nexus-border)', borderRadius: '10px', fontSize: '0.875rem', width: '100%', boxSizing: 'border-box' }}
+                    style={{ padding: '0.625rem 1rem', background: 'var(--nexus-input-bg)', color: 'var(--nexus-text)', border: '1px solid var(--nexus-border)', borderRadius: '10px', fontSize: '0.875rem', width: '100%', boxSizing: 'border-box' }}
                     onChange={(e) => setFormData({ ...formData, appointment_time: e.target.value })} />
                 </div>
               </div>
               <div style={{ marginBottom: '1rem' }}>
                 <label style={{ color: 'var(--nexus-text)', fontSize: '0.875rem', fontWeight: 500, marginBottom: '0.375rem', display: 'block' }}>Cliente</label>
                 <select value={formData.client_id}
-                  style={{ padding: '0.625rem 1rem', background: 'rgba(0,0,0,0.5)', color: 'var(--nexus-text)', border: '1px solid var(--nexus-border)', borderRadius: '10px', fontSize: '0.875rem', width: '100%', boxSizing: 'border-box' }}
+                  style={{ padding: '0.625rem 1rem', background: 'var(--nexus-input-bg)', color: 'var(--nexus-text)', border: '1px solid var(--nexus-border)', borderRadius: '10px', fontSize: '0.875rem', width: '100%', boxSizing: 'border-box' }}
                   onChange={(e) => setFormData({ ...formData, client_id: Number(e.target.value) })}>
                   <option value={0}>Nenhum</option>
                   {clients.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
@@ -213,7 +213,7 @@ export function Appointments() {
               <div style={{ marginBottom: '1rem' }}>
                 <label style={{ color: 'var(--nexus-text)', fontSize: '0.875rem', fontWeight: 500, marginBottom: '0.375rem', display: 'block' }}>Descricao</label>
                 <textarea rows={3} value={formData.description}
-                  style={{ padding: '0.625rem 1rem', background: 'rgba(0,0,0,0.5)', color: 'var(--nexus-text)', border: '1px solid var(--nexus-border)', borderRadius: '10px', fontSize: '0.875rem', width: '100%', boxSizing: 'border-box', resize: 'vertical' }}
+                  style={{ padding: '0.625rem 1rem', background: 'var(--nexus-input-bg)', color: 'var(--nexus-text)', border: '1px solid var(--nexus-border)', borderRadius: '10px', fontSize: '0.875rem', width: '100%', boxSizing: 'border-box', resize: 'vertical' }}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })} />
               </div>
               <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', paddingTop: '0.5rem' }}>

@@ -1,393 +1,344 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-  PieChart, Pie, Cell,
+  AreaChart, Area, XAxis, YAxis, Tooltip,
+  ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line
 } from 'recharts';
 import {
-  CurrencyDollarIcon, ArrowTrendingUpIcon, BanknotesIcon,
-  UserGroupIcon, ChartBarIcon, DocumentArrowDownIcon,
-} from '@heroicons/react/24/solid';
-import { StatsCard } from '../../components/ui/StatsCard';
-import { PremiumTable, Column } from '../../components/ui/PremiumTable';
-import { ChartCard } from '../../components/ui/ChartCard';
-import { GradientButton } from '../../components/ui/GradientButton';
+  ArrowDownTrayIcon, CalendarIcon, EyeIcon, EllipsisVerticalIcon,
+  CurrencyDollarIcon, ShoppingCartIcon, ArchiveBoxIcon, UserGroupIcon,
+  ChevronRightIcon, ChevronLeftIcon, ChartBarIcon, TruckIcon
+} from '@heroicons/react/24/outline';
 
-type ReportType = 'clients' | 'products' | 'financial' | 'stock';
+/* ─── helpers ──────────────────────────────────────────── */
+const fmtBRL = (v: number) =>
+  new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v);
 
-const reportLabels: Record<ReportType, string> = {
-  clients: 'Clientes',
-  products: 'Produtos',
-  financial: 'Financeiro',
-  stock: 'Estoque',
-};
-
-interface ReportRow {
-  id: number;
-  type: ReportType;
-  description: string;
-  ultimaGeracao: string;
-}
-
-const monthlyData = [
-  { month: 'Jan', value: 8200 },
-  { month: 'Fev', value: 9500 },
-  { month: 'Mar', value: 11200 },
-  { month: 'Abr', value: 10800 },
-  { month: 'Mai', value: 12500 },
-  { month: 'Jun', value: 14100 },
-  { month: 'Jul', value: 13600 },
-  { month: 'Ago', value: 15200 },
-  { month: 'Set', value: 14800 },
-  { month: 'Out', value: 16300 },
-  { month: 'Nov', value: 18100 },
-  { month: 'Dez', value: 20500 },
+const PIE_COLORS = [
+  'var(--nexus-rose)', '#D49556', '#9a6a42', '#8c7355', '#A8A8A8'
 ];
 
-const categoryData = [
-  { name: 'Produtos', value: 45, color: 'var(--nexus-gold)' },
-  { name: 'Servicos', value: 30, color: 'var(--nexus-rose)' },
-  { name: 'Consultorias', value: 25, color: 'var(--nexus-chart-blue)' },
-];
-
-const reportRows: ReportRow[] = [
-  { id: 1, type: 'clients', description: 'Lista completa de clientes cadastrados', ultimaGeracao: '15/05/2026' },
-  { id: 2, type: 'products', description: 'Catalogo de produtos com precos e quantidades', ultimaGeracao: '14/05/2026' },
-  { id: 3, type: 'financial', description: 'Todas as receitas e despesas registradas', ultimaGeracao: '13/05/2026' },
-  { id: 4, type: 'stock', description: 'Movimentacoes e saldo atual do estoque', ultimaGeracao: '12/05/2026' },
-];
-
-const quickActions = [
-  { label: 'Vendas do Mes', type: 'products' as ReportType, format: 'pdf' },
-  { label: 'Clientes Ativos', type: 'clients' as ReportType, format: 'xlsx' },
-  { label: 'Resumo Financeiro', type: 'financial' as ReportType, format: 'pdf' },
-  { label: 'Mov. Estoque', type: 'stock' as ReportType, format: 'xlsx' },
-];
-
-function formatCurrency(value: number): string {
-  return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-}
-
-function CustomBarTooltip({ active, payload, label }: { active?: boolean; payload?: Array<{ value: number }>; label?: string }) {
-  if (!active || !payload?.length) return null;
-  return (
-    <div className="rounded-lg px-3 py-2 text-sm shadow-lg" style={{ background: 'var(--nexus-card-strong)', border: '1px solid var(--nexus-border)' }}>
-      <p style={{ color: 'var(--nexus-muted-2)' }}>{label}</p>
-      <p className="font-semibold" style={{ color: 'var(--nexus-gold)' }}>{formatCurrency(payload[0].value)}</p>
-    </div>
-  );
-}
-
-function CustomPieTooltip({ active, payload }: { active?: boolean; payload?: Array<{ name: string; value: number }> }) {
-  if (!active || !payload?.length) return null;
-  return (
-    <div className="rounded-lg px-3 py-2 text-sm shadow-lg" style={{ background: 'var(--nexus-card-strong)', border: '1px solid var(--nexus-border)' }}>
-      <p style={{ color: 'var(--nexus-text)' }}>{payload[0].name}</p>
-      <p className="font-semibold" style={{ color: 'var(--nexus-gold)' }}>{payload[0].value}%</p>
-    </div>
-  );
-}
-
+/* ─── component ────────────────────────────────────────── */
 export function Reports() {
-  const [loading, setLoading] = useState<{ type: ReportType; format: string } | null>(null);
+  const [page, setPage] = useState(1);
 
-  async function handleDownload(type: ReportType, format: string) {
-    setLoading({ type, format });
-    try {
-      const token = localStorage.getItem('@nexus:token');
-      const baseUrl = '/api';
-      const url = format === 'pdf'
-        ? `${baseUrl}/reports/pdf/${type}`
-        : `${baseUrl}/reports/xlsx/${type}`;
-
-      const res = await fetch(url, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      if (!res.ok) {
-        const err = await res.json();
-        alert(err.error || 'Erro ao baixar relatorio');
-        return;
-      }
-
-      const blob = await res.blob();
-      const downloadUrl = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = downloadUrl;
-      a.download = `relatorio_${type}_${new Date().toISOString().split('T')[0]}.${format}`;
-      a.click();
-      URL.revokeObjectURL(downloadUrl);
-    } catch {
-      alert('Erro ao baixar relatorio');
-    } finally {
-      setLoading(null);
-    }
-  }
-
-  const columns: Column<ReportRow>[] = [
-    {
-      key: 'relatorio',
-      header: 'Relatorio',
-      render: (row) => (
-        <div>
-          <p className="font-medium text-sm" style={{ color: 'var(--nexus-text)' }}>
-            {reportLabels[row.type]}
-          </p>
-          <p className="text-xs mt-0.5" style={{ color: 'var(--nexus-muted-2)' }}>{row.description}</p>
-        </div>
-      ),
-    },
-    {
-      key: 'ultimaGeracao',
-      header: 'Ultima Geracao',
-      hide: 'sm',
-      render: (row) => (
-        <span className="text-sm" style={{ color: 'var(--nexus-muted)' }}>{row.ultimaGeracao}</span>
-      ),
-    },
-    {
-      key: 'formato',
-      header: 'Formato',
-      hide: 'md',
-      render: () => (
-        <div className="flex gap-2">
-          <span className="text-xs font-medium px-2 py-0.5 rounded" style={{ background: 'rgba(var(--nexus-gold-rgb), 0.12)', color: 'var(--nexus-gold)' }}>PDF</span>
-          <span className="text-xs font-medium px-2 py-0.5 rounded" style={{ background: 'rgba(var(--nexus-rose-rgb), 0.12)', color: 'var(--nexus-rose)' }}>XLSX</span>
-        </div>
-      ),
-    },
-    {
-      key: 'acoes',
-      header: 'Acoes',
-      render: (row) => {
-        const isLoading = loading?.type === row.type;
-        return (
-          <div className="flex gap-2">
-            <button
-              onClick={(e) => { e.stopPropagation(); handleDownload(row.type, 'pdf'); }}
-              disabled={!!isLoading}
-              className="px-3 py-1.5 text-xs font-medium rounded-lg transition-all duration-200"
-              style={{
-                background: isLoading && loading?.format === 'pdf'
-                  ? 'rgba(var(--nexus-gold-rgb), 0.1)'
-                  : 'rgba(var(--nexus-gold-rgb), 0.12)',
-                color: 'var(--nexus-gold)',
-                border: '1px solid rgba(var(--nexus-gold-rgb), 0.2)',
-                opacity: isLoading && loading?.format === 'pdf' ? 0.6 : 1,
-              }}
-              onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(var(--nexus-gold-rgb), 0.2)'; }}
-              onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(var(--nexus-gold-rgb), 0.12)'; }}
-            >
-              {isLoading && loading?.format === 'pdf' ? '...' : 'PDF'}
-            </button>
-            <button
-              onClick={(e) => { e.stopPropagation(); handleDownload(row.type, 'xlsx'); }}
-              disabled={!!isLoading}
-              className="px-3 py-1.5 text-xs font-medium rounded-lg transition-all duration-200"
-              style={{
-                background: isLoading && loading?.format === 'xlsx'
-                  ? 'rgba(var(--nexus-rose-rgb), 0.1)'
-                  : 'rgba(var(--nexus-rose-rgb), 0.12)',
-                color: 'var(--nexus-rose)',
-                border: '1px solid rgba(var(--nexus-rose-rgb), 0.2)',
-                opacity: isLoading && loading?.format === 'xlsx' ? 0.6 : 1,
-              }}
-              onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(var(--nexus-rose-rgb), 0.2)'; }}
-              onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(var(--nexus-rose-rgb), 0.12)'; }}
-            >
-              {isLoading && loading?.format === 'xlsx' ? '...' : 'Excel'}
-            </button>
-          </div>
-        );
-      },
-    },
+  // Fake Area Chart Data
+  const areaData = [
+    { label: '01 Mai', value: 18000 },
+    { label: '06 Mai', value: 34000 },
+    { label: '11 Mai', value: 26000 },
+    { label: '16 Mai', value: 46000 },
+    { label: '21 Mai', value: 32000 },
+    { label: '26 Mai', value: 24000 },
+    { label: '31 Mai', value: 42000 },
+    { label: '05 Jun', value: 58000 },
+    { label: '10 Jun', value: 38000 },
+    { label: '15 Jun', value: 54000 },
+    { label: '20 Jun', value: 51000 },
+    { label: '25 Jun', value: 72000 },
   ];
 
+  // Fake Pie Data
+  const pieData = [
+    { name: 'Eletrônicos', value: 45680.50, pct: 36, color: 'var(--nexus-rose)' },
+    { name: 'Informática', value: 32450.00, pct: 26, color: '#D49556' },
+    { name: 'Móveis', value: 21780.00, pct: 17, color: '#9a6a42' },
+    { name: 'Acessórios', value: 15320.00, pct: 12, color: '#8c7355' },
+    { name: 'Outros', value: 11199.70, pct: 9, color: '#A8A8A8' },
+  ];
+
+  // Sparkline data
+  const spark1 = [{v:10},{v:15},{v:12},{v:18},{v:16},{v:22},{v:19},{v:25},{v:22},{v:28}];
+  const spark2 = [{v:5},{v:12},{v:9},{v:16},{v:13},{v:20},{v:18},{v:22},{v:15},{v:20}];
+  const spark3 = [{v:5},{v:8},{v:6},{v:10},{v:13},{v:11},{v:18},{v:14},{v:22},{v:25}];
+  const spark4 = [{v:8},{v:10},{v:12},{v:11},{v:16},{v:15},{v:19},{v:22},{v:20},{v:28}];
+  const spark5 = [{v:12},{v:10},{v:18},{v:15},{v:22},{v:20},{v:28},{v:25},{v:30},{v:35}];
+
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.3 }}
-    >
-      <motion.div
-        initial={{ opacity: 0, y: -10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3, delay: 0.05 }}
-        className="mb-8"
-      >
-        <h1 className="page-title">Relatorios</h1>
-        <p className="mt-1 text-sm" style={{ color: 'var(--nexus-muted-2)' }}>
-          Visualize indicadores, analise dados e exporte relatorios em PDF ou Excel
-        </p>
+    <div className="p-6 space-y-6 min-h-screen" style={{ background: 'var(--nexus-bg)' }}>
+
+      {/* ── Header ── */}
+      <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}>
+        <div className="flex items-center justify-between flex-wrap gap-4">
+          <div>
+            <h1 className="text-[28px] font-medium" style={{ color: 'var(--nexus-text)' }}>Relatórios</h1>
+            <p className="text-[13px] mt-1" style={{ color: 'var(--nexus-muted)' }}>Análises e relatórios detalhados do seu negócio</p>
+          </div>
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm border cursor-pointer transition-colors"
+              style={{ background: 'var(--nexus-card)', borderColor: 'var(--nexus-border)', color: 'var(--nexus-muted)' }}>
+              <CalendarIcon className="w-4 h-4" />
+              <span>01/05/2024 - 31/05/2024</span>
+              <ChevronRightIcon className="w-3 h-3 rotate-90" />
+            </div>
+            <button className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium border transition-all hover:bg-black/5 dark:hover:bg-white/5"
+              style={{ background: 'var(--nexus-card)', borderColor: 'var(--nexus-border)', color: 'var(--nexus-text)' }}>
+              <ArrowDownTrayIcon className="w-4 h-4" />
+              Exportar
+            </button>
+          </div>
+        </div>
       </motion.div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
-        <StatsCard
-          label="Faturamento Total"
-          value="R$ 126,5k"
-          icon={<CurrencyDollarIcon className="w-5 h-5" />}
-          color="gold"
-          trend={{ value: '12,5%', direction: 'up' }}
-          subtitle="vs. mes anterior"
-        />
-        <StatsCard
-          label="Total de Vendas"
-          value="2.847"
-          icon={<ArrowTrendingUpIcon className="w-5 h-5" />}
-          color="rose"
-          trend={{ value: '8,3%', direction: 'up' }}
-          subtitle="vs. mes anterior"
-        />
-        <StatsCard
-          label="Compras"
-          value="1.234"
-          icon={<BanknotesIcon className="w-5 h-5" />}
-          color="blue"
-          trend={{ value: '2,1%', direction: 'down' }}
-          subtitle="vs. mes anterior"
-        />
-        <StatsCard
-          label="Novos Clientes"
-          value="456"
-          icon={<UserGroupIcon className="w-5 h-5" />}
-          color="green"
-          trend={{ value: '15,7%', direction: 'up' }}
-          subtitle="vs. mes anterior"
-        />
-        <StatsCard
-          label="Produtos Vendidos"
-          value="5.321"
-          icon={<ChartBarIcon className="w-5 h-5" />}
-          color="purple"
-          trend={{ value: '5,4%', direction: 'up' }}
-          subtitle="vs. mes anterior"
-        />
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-        <ChartCard title="Faturamento por Periodo">
-          <div className="h-72">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={monthlyData} margin={{ top: 5, right: 5, left: -10, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="var(--nexus-chart-grid)" vertical={false} />
-                <XAxis
-                  dataKey="month"
-                  axisLine={false}
-                  tickLine={false}
-                  tick={{ fill: 'var(--nexus-muted-2)', fontSize: 11 }}
-                />
-                <YAxis
-                  axisLine={false}
-                  tickLine={false}
-                  tick={{ fill: 'var(--nexus-muted-2)', fontSize: 11 }}
-                  tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`}
-                />
-                <Tooltip content={<CustomBarTooltip />} cursor={{ fill: 'var(--nexus-chart-grid)' }} />
-                <defs>
-                  <linearGradient id="barGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="var(--nexus-gold)" stopOpacity={0.9} />
-                    <stop offset="100%" stopColor="var(--nexus-bronze)" stopOpacity={0.7} />
-                  </linearGradient>
-                </defs>
-                <Bar dataKey="value" radius={[4, 4, 0, 0]} fill="url(#barGradient)" style={{ filter: 'drop-shadow(0 0 6px rgba(var(--nexus-gold-rgb), 0.25))' }} />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </ChartCard>
-
-        <ChartCard title="Faturamento por Categoria">
-          <div className="h-72 relative">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={categoryData}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={65}
-                  outerRadius={100}
-                  paddingAngle={4}
-                  dataKey="value"
-                  cornerRadius={6}
-                >
-                  {categoryData.map((entry, i) => (
-                    <Cell key={i} fill={entry.color} />
-                  ))}
-                </Pie>
-                <Tooltip content={<CustomPieTooltip />} />
-              </PieChart>
-            </ResponsiveContainer>
-            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-              <div className="flex flex-col items-center">
-                <span className="text-xs" style={{ color: 'var(--nexus-muted-2)' }}>Total</span>
-                <span className="text-lg font-bold" style={{ color: 'var(--nexus-text)' }}>R$ 126,5k</span>
+      {/* ── KPI Cards ── */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}
+        className="grid grid-cols-5 gap-3 lg:gap-4"
+      >
+        {[
+          { label: 'Faturamento Total', value: 'R$ 126.430,20', icon: <CurrencyDollarIcon className="w-4 h-4 lg:w-5 lg:h-5" />, change: '↑ 15,3% em relação ao período anterior', spark: spark1 },
+          { label: 'Total de Vendas', value: '215', icon: <ShoppingCartIcon className="w-4 h-4 lg:w-5 lg:h-5" />, change: '↑ 12,8% em relação ao período anterior', spark: spark2 },
+          { label: 'Total de Compras', value: '98', icon: <ArchiveBoxIcon className="w-4 h-4 lg:w-5 lg:h-5" />, change: '↑ 8,6% em relação ao período anterior', spark: spark3 },
+          { label: 'Novos Clientes', value: '32', icon: <UserGroupIcon className="w-4 h-4 lg:w-5 lg:h-5" />, change: '↑ 23,4% em relação ao período anterior', spark: spark4 },
+          { label: 'Produtos Vendidos', value: '1.430', icon: <ArchiveBoxIcon className="w-4 h-4 lg:w-5 lg:h-5" />, change: '↑ 17,2% em relação ao período anterior', spark: spark5 },
+        ].map((kpi, i) => (
+          <div key={i} className="rounded-2xl border overflow-hidden flex flex-col"
+            style={{ background: 'var(--nexus-card)', borderColor: 'var(--nexus-border)' }}>
+            <div className="p-4 lg:p-5 flex-1 min-w-0">
+              <div className="flex items-center gap-2 lg:gap-3 min-w-0 mb-3">
+                <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 border"
+                  style={{ background: 'var(--nexus-bg-soft)', borderColor: 'var(--nexus-border)', color: 'var(--nexus-gold)' }}>
+                  {kpi.icon}
+                </div>
+                <span className="text-[11px] lg:text-[13px] font-medium truncate" style={{ color: 'var(--nexus-muted)' }}>{kpi.label}</span>
+              </div>
+              <div className="min-w-0 mb-1">
+                <span className="text-[16px] xl:text-[20px] 2xl:text-[24px] font-semibold tracking-tight truncate block" style={{ color: 'var(--nexus-text)' }}>{kpi.value}</span>
+              </div>
+              <div className="min-w-0">
+                <span className="text-[9px] lg:text-[10px] font-medium truncate block" style={{ color: 'var(--nexus-success)' }}>
+                  {kpi.change}
+                </span>
               </div>
             </div>
+            {/* Sparkline */}
+            <div className="h-10 w-full mt-auto opacity-80" style={{ filter: `drop-shadow(0 4px 6px rgba(0,0,0,0.1))` }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={kpi.spark} margin={{ top: 5, right: 0, left: 0, bottom: 0 }}>
+                  <Line type="monotone" dataKey="v" stroke="var(--nexus-rose)" strokeWidth={2} dot={{ r: 2, fill: 'var(--nexus-rose)', strokeWidth: 0 }} activeDot={false} isAnimationActive={false} />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
           </div>
-          <div className="flex justify-center gap-6 mt-2">
-            {categoryData.map((entry) => (
-              <div key={entry.name} className="flex items-center gap-2">
-                <span className="w-2.5 h-2.5 rounded-full" style={{ background: entry.color }} />
-                <span className="text-xs" style={{ color: 'var(--nexus-muted)' }}>{entry.name} ({entry.value}%)</span>
-              </div>
+        ))}
+      </motion.div>
+
+      {/* ── Charts Row ── */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
+        className="grid grid-cols-1 lg:grid-cols-[60%_40%] gap-4"
+      >
+        {/* Faturamento por período */}
+        <div className="rounded-2xl p-6 border flex flex-col"
+          style={{ background: 'var(--nexus-card)', borderColor: 'var(--nexus-border)', minHeight: '380px' }}>
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-[15px] font-medium" style={{ color: 'var(--nexus-text)' }}>Faturamento por período</h2>
+            <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs border cursor-pointer"
+              style={{ borderColor: 'var(--nexus-border)', color: 'var(--nexus-muted)' }}>
+              Diário
+              <ChevronRightIcon className="w-3 h-3 rotate-90" />
+            </div>
+          </div>
+          
+          <div className="flex-1 min-h-0 relative">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={areaData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                <defs>
+                  <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="var(--nexus-rose)" stopOpacity={0.3}/>
+                    <stop offset="95%" stopColor="var(--nexus-rose)" stopOpacity={0}/>
+                  </linearGradient>
+                </defs>
+                <XAxis dataKey="label" axisLine={false} tickLine={false}
+                  tick={{ fill: 'var(--nexus-muted)', fontSize: 10 }} dy={10} 
+                  interval="preserveStartEnd" minTickGap={20} />
+                <YAxis axisLine={false} tickLine={false}
+                  tick={{ fill: 'var(--nexus-muted)', fontSize: 10 }}
+                  tickFormatter={(v) => `R$ ${v >= 1000 ? `${v / 1000}k` : v}`} />
+                <Tooltip
+                  contentStyle={{ background: 'var(--nexus-card)', borderColor: 'var(--nexus-border)', borderRadius: 8, color: 'var(--nexus-text)', fontSize: 12 }}
+                  formatter={(v: any) => fmtBRL(v)} />
+                <Area type="monotone" dataKey="value" stroke="var(--nexus-rose)" strokeWidth={3}
+                  fillOpacity={1} fill="url(#colorValue)" 
+                  activeDot={{ r: 6, fill: 'var(--nexus-rose)', stroke: 'var(--nexus-bg)', strokeWidth: 2 }} />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
+        {/* Faturamento por categoria */}
+        <div className="rounded-2xl p-6 border flex flex-col"
+          style={{ background: 'var(--nexus-card)', borderColor: 'var(--nexus-border)', minHeight: '380px' }}>
+          <h2 className="text-[15px] font-medium mb-6" style={{ color: 'var(--nexus-text)' }}>Faturamento por categoria</h2>
+
+          <div className="flex-1 flex items-center">
+            <div className="w-[180px] h-[180px] flex-shrink-0 relative">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie data={pieData} cx="50%" cy="50%" innerRadius={50} outerRadius={85}
+                    paddingAngle={0} dataKey="value" stroke="none"
+                    labelLine={false}
+                    label={({ cx, cy, midAngle, innerRadius, outerRadius, pct }) => {
+                      const rad = Math.PI / 180;
+                      const r = innerRadius + (outerRadius - innerRadius) * 0.5;
+                      const x = cx + r * Math.cos(-midAngle * rad);
+                      const y = cy + r * Math.sin(-midAngle * rad);
+                      return <text x={x} y={y} fill="#fff" textAnchor="middle" dominantBaseline="central" fontSize={11}>{pct}%</text>;
+                    }}>
+                    {pieData.map((item, idx) => (
+                      <Cell key={idx} fill={item.color} />
+                    ))}
+                  </Pie>
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+            <div className="flex-1 ml-6 space-y-4">
+              {pieData.map((item, idx) => (
+                <div key={idx} className="flex items-center justify-between text-sm">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-2.5 h-2.5 rounded-full" style={{ background: item.color }} />
+                    <div>
+                      <p className="text-[13px] font-medium" style={{ color: 'var(--nexus-text)' }}>{item.name}</p>
+                      <p className="text-[11px]" style={{ color: 'var(--nexus-muted)' }}>{fmtBRL(item.value)}</p>
+                    </div>
+                  </div>
+                  <span className="text-[13px] font-medium" style={{ color: 'var(--nexus-text)' }}>{item.pct}%</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </motion.div>
+
+      {/* ── Table + Sidebar Row ── */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}
+        className="grid grid-cols-1 lg:grid-cols-[70%_30%] gap-4"
+      >
+        {/* Relatórios disponíveis */}
+        <div className="rounded-2xl border overflow-hidden flex flex-col"
+          style={{ background: 'var(--nexus-card)', borderColor: 'var(--nexus-border)', minHeight: '400px' }}>
+          <div className="px-6 py-5">
+            <h2 className="text-[15px] font-medium" style={{ color: 'var(--nexus-text)' }}>Relatórios disponíveis</h2>
+          </div>
+          <div className="flex-1 flex flex-col">
+            {/* Header */}
+            <div className="grid grid-cols-[minmax(200px,1fr)_minmax(250px,1fr)_120px_140px_100px] gap-4 px-6 py-3" style={{ borderBottom: '1px solid var(--nexus-border)' }}>
+              {['Relatório','Descrição','Categoria','Última geração','Ações'].map(h => (
+                <div key={h} className="text-[11px] font-medium" style={{ color: 'var(--nexus-muted)' }}>{h}</div>
+              ))}
+            </div>
+
+            {/* List Body */}
+            <div className="flex-1 overflow-y-auto">
+              {[
+                { name: 'Relatório de Vendas', desc: 'Análise completa de vendas por período, produtos e clientes', cat: 'Vendas', catColor: 'var(--nexus-rose)', date: '31/05/2024 08:45', icon: <ChartBarIcon className="w-4 h-4"/> },
+                { name: 'Relatório de Compras', desc: 'Análise de compras, fornecedores e custos', cat: 'Compras', catColor: 'var(--nexus-gold)', date: '31/05/2024 08:30', icon: <ShoppingCartIcon className="w-4 h-4"/> },
+                { name: 'Relatório Financeiro', desc: 'Receitas, despesas, lucros e fluxo de caixa', cat: 'Financeiro', catColor: 'var(--nexus-danger)', date: '31/05/2024 08:15', icon: <CurrencyDollarIcon className="w-4 h-4"/> },
+                { name: 'Relatório de Estoque', desc: 'Movimentações, produtos e níveis de estoque', cat: 'Estoque', catColor: '#D49556', date: '31/05/2024 08:00', icon: <ArchiveBoxIcon className="w-4 h-4"/> },
+                { name: 'Relatório de Clientes', desc: 'Análise de clientes, cadastros e vendas', cat: 'Clientes', catColor: '#a78bfa', date: '30/05/2024 17:40', icon: <UserGroupIcon className="w-4 h-4"/> },
+              ].map((t, i) => (
+                <div key={i}
+                  className="grid grid-cols-[minmax(200px,1fr)_minmax(250px,1fr)_120px_140px_100px] gap-4 px-6 py-4 items-center transition-colors hover:bg-black/5 dark:hover:bg-white/5"
+                  style={{ borderBottom: '1px solid var(--nexus-border)' }}>
+                  
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+                      style={{ background: 'var(--nexus-bg-soft)', color: t.catColor }}>
+                      {t.icon}
+                    </div>
+                    <span className="text-[13px] font-medium truncate" style={{ color: 'var(--nexus-muted)' }}>{t.name}</span>
+                  </div>
+                  
+                  <div className="text-[12px] truncate" style={{ color: 'var(--nexus-muted)' }}>{t.desc}</div>
+                  
+                  <div>
+                    <span className="inline-flex px-2.5 py-1 rounded-[6px] text-[10px] font-medium"
+                      style={{ background: 'var(--nexus-bg-soft)', color: t.catColor, border: `1px solid var(--nexus-border)` }}>
+                      {t.cat}
+                    </span>
+                  </div>
+                  
+                  <div className="text-[12px]" style={{ color: 'var(--nexus-muted)' }}>{t.date}</div>
+                  
+                  <div className="flex items-center gap-1">
+                    <button className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
+                      style={{ color: 'var(--nexus-gold)' }}>
+                      <EyeIcon className="w-4 h-4" />
+                    </button>
+                    <button className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
+                      style={{ color: 'var(--nexus-gold)' }}>
+                      <ArrowDownTrayIcon className="w-4 h-4" />
+                    </button>
+                    <button className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
+                      style={{ color: 'var(--nexus-muted)' }}>
+                      <EllipsisVerticalIcon className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+          {/* Pagination */}
+          <div className="flex items-center justify-between px-6 py-4 mt-auto">
+            <p className="text-[12px]" style={{ color: 'var(--nexus-muted)' }}>
+              Mostrando 1 a 5 de 12 relatórios
+            </p>
+            <div className="flex items-center gap-1.5">
+              <button disabled className="w-8 h-8 rounded-lg flex items-center justify-center border disabled:opacity-30 transition-colors"
+                style={{ color: 'var(--nexus-text)', background: 'var(--nexus-bg)', borderColor: 'var(--nexus-border)' }}>
+                1
+              </button>
+              {[2, 3, '...'].map((p, i) =>
+                p === '...' ? (
+                  <span key={i} className="w-8 h-8 flex items-center justify-center text-[12px]" style={{ color: 'var(--nexus-muted)' }}>…</span>
+                ) : (
+                  <button key={i} className="w-8 h-8 rounded-lg flex items-center justify-center text-[12px] transition-colors"
+                    style={{ background: 'transparent', color: 'var(--nexus-muted)' }}>
+                    {p}
+                  </button>
+                )
+              )}
+              <button className="w-8 h-8 rounded-lg flex items-center justify-center border transition-colors"
+                style={{ color: 'var(--nexus-text)', background: 'var(--nexus-bg)', borderColor: 'var(--nexus-border)' }}>
+                <ChevronRightIcon className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Relatórios rápidos */}
+        <div className="rounded-2xl p-6 border flex flex-col" style={{ background: 'var(--nexus-card)', borderColor: 'var(--nexus-border)' }}>
+          <h3 className="text-[15px] font-medium mb-6" style={{ color: 'var(--nexus-text)' }}>Relatórios rápidos</h3>
+          
+          <div className="flex-1 space-y-1 mb-6">
+            {[
+              { name: 'Vendas por período', icon: <ChartBarIcon className="w-4 h-4" /> },
+              { name: 'Vendas por produto', icon: <ChartBarIcon className="w-4 h-4" /> },
+              { name: 'Vendas por cliente', icon: <UserGroupIcon className="w-4 h-4" /> },
+              { name: 'Compras por fornecedor', icon: <TruckIcon className="w-4 h-4" /> },
+              { name: 'Produtos mais vendidos', icon: <ArchiveBoxIcon className="w-4 h-4" /> },
+              { name: 'Movimentação de estoque', icon: <ArchiveBoxIcon className="w-4 h-4" /> },
+              { name: 'Fluxo de caixa', icon: <CurrencyDollarIcon className="w-4 h-4" /> },
+            ].map((item, i) => (
+              <button key={i} className="w-full flex items-center justify-between p-2.5 rounded-xl transition-colors hover:bg-black/5 dark:hover:bg-white/5 group">
+                <div className="flex items-center gap-3 text-[13px]" style={{ color: 'var(--nexus-muted)' }}>
+                  <div style={{ color: '#8c7355' }}>
+                    {item.icon}
+                  </div>
+                  <span className="group-hover:text-[var(--nexus-text)] transition-colors">{item.name}</span>
+                </div>
+                <ChevronRightIcon className="w-4 h-4" style={{ color: 'var(--nexus-muted)' }} />
+              </button>
             ))}
           </div>
-        </ChartCard>
-      </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-        <ChartCard title="Relatorios Disponiveis">
-          <PremiumTable columns={columns} data={reportRows} />
-        </ChartCard>
-
-        <ChartCard title="Relatorios Rapidos">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {quickActions.map((action) => {
-              const isBusy = loading?.type === action.type && loading?.format === action.format;
-              return (
-                <motion.button
-                  key={`${action.type}-${action.format}`}
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={() => handleDownload(action.type, action.format)}
-                  disabled={!!isBusy}
-                  className="flex items-center gap-3 p-4 rounded-xl text-left transition-all duration-200"
-                  style={{
-                    background: 'var(--nexus-card)',
-                    border: '1px solid var(--nexus-border)',
-                    opacity: isBusy ? 0.6 : 1,
-                  }}
-                >
-                  <div
-                    className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0"
-                    style={{ background: 'rgba(var(--nexus-gold-rgb), 0.1)', color: 'var(--nexus-gold)' }}
-                  >
-                    <DocumentArrowDownIcon className="w-5 h-5" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate" style={{ color: 'var(--nexus-text)' }}>
-                      {action.label}
-                    </p>
-                    <p className="text-xs mt-0.5" style={{ color: 'var(--nexus-muted-2)' }}>
-                      {action.format.toUpperCase()}
-                    </p>
-                  </div>
-                </motion.button>
-              );
-            })}
-          </div>
-        </ChartCard>
-      </div>
-
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3, delay: 0.2 }}
-        className="flex justify-center"
-      >
-        <GradientButton icon={<DocumentArrowDownIcon className="w-5 h-5" />}>
-          Gerar Relatorio Personalizado
-        </GradientButton>
+          <button className="w-full py-3 rounded-xl text-sm font-semibold transition-all hover:opacity-90 flex items-center justify-center gap-2"
+            style={{ background: 'var(--nexus-rose)', color: '#fff' }}>
+            + Gerar relatório personalizado
+          </button>
+        </div>
       </motion.div>
-    </motion.div>
+    </div>
   );
 }

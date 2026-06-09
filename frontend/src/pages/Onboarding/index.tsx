@@ -65,7 +65,7 @@ export function Onboarding() {
       <div className="text-center mb-8">
         <div
           className="w-20 h-20 rounded-2xl flex items-center justify-center mx-auto mb-4"
-          style={{ background: 'linear-gradient(135deg, rgba(212, 149, 86, 0.15), rgba(198, 90, 113, 0.10))' }}
+          style={{ background: 'linear-gradient(135deg, rgba(var(--nexus-gold-rgb), 0.15), rgba(var(--nexus-rose-rgb), 0.10))' }}
         >
           <svg className="w-10 h-10" style={{ color: 'var(--nexus-gold)' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13 10V3L4 14h7v7l9-11h-7z" />
@@ -93,7 +93,7 @@ export function Onboarding() {
                 <div
                   className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 text-sm font-bold"
                   style={{
-                    background: done ? 'rgba(125, 218, 106, 0.15)' : 'rgba(212, 149, 86, 0.12)',
+                    background: done ? 'rgba(var(--nexus-success-rgb), 0.15)' : 'rgba(var(--nexus-gold-rgb), 0.12)',
                     color: done ? 'var(--nexus-success)' : 'var(--nexus-gold)',
                   }}
                 >
@@ -110,7 +110,7 @@ export function Onboarding() {
                       navigate(step.route);
                     }}
                     className="px-4 py-2 text-xs font-medium rounded-lg transition-colors"
-                    style={{ background: 'rgba(212, 149, 86, 0.12)', color: 'var(--nexus-gold)' }}
+                    style={{ background: 'rgba(var(--nexus-gold-rgb), 0.12)', color: 'var(--nexus-gold)' }}
                   >
                     {step.action}
                   </button>

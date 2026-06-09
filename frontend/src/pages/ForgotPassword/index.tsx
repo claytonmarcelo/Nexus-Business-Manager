@@ -35,7 +35,7 @@ export function ForgotPassword() {
 
           {sent ? (
             <div className="text-center py-4">
-              <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4" style={{ background: 'rgba(125, 218, 106, 0.12)' }}>
+              <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4" style={{ background: 'rgba(var(--nexus-success-rgb), 0.12)' }}>
                 <svg className="w-8 h-8" style={{ color: 'var(--nexus-success)' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>
@@ -50,7 +50,7 @@ export function ForgotPassword() {
           ) : (
             <form onSubmit={handleSubmit} className="space-y-4">
               {error && (
-                <div className="px-4 py-3 rounded-lg text-sm" style={{ background: 'rgba(216, 75, 95, 0.12)', color: 'var(--nexus-danger)', border: '1px solid rgba(216, 75, 95, 0.2)' }}>
+                <div className="px-4 py-3 rounded-lg text-sm" style={{ background: 'rgba(var(--nexus-danger-rgb), 0.12)', color: 'var(--nexus-danger)', border: '1px solid rgba(var(--nexus-danger-rgb), 0.2)' }}>
                   {error}
                 </div>
               )}

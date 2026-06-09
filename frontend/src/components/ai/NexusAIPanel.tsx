@@ -86,7 +86,7 @@ export function NexusAIPanel() {
 
         {analysis && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', fontSize: '0.875rem' }}>
-            <div style={{ padding: '0.75rem', borderRadius: '0.5rem', background: 'rgba(214,168,93,0.1)', border: '1px solid rgba(214,168,93,0.2)' }}>
+            <div style={{ padding: '0.75rem', borderRadius: '0.5rem', background: 'rgba(var(--nexus-gold-rgb),0.1)', border: '1px solid rgba(var(--nexus-gold-rgb),0.2)' }}>
               <p style={{ fontWeight: 500, color: 'var(--nexus-text)', marginBottom: '0.25rem' }}>Resumo</p>
               <p style={{ color: 'var(--nexus-muted-2)' }}>{analysis.summary}</p>
             </div>

@@ -274,8 +274,8 @@ export function About() {
                 return (
                   <div
                     key={i}
-                    className="flex gap-2.5 p-3 rounded-lg transition-colors hover:bg-white/5"
-                    style={{ background: 'rgba(0,0,0,0.18)', border: '1px solid var(--nexus-border)' }}
+                    className="flex gap-2.5 p-3 rounded-lg transition-colors hover:bg-nexus-card"
+                    style={{ background: 'var(--nexus-card)', border: '1px solid var(--nexus-border)' }}
                   >
                     <div className="mt-0.5 flex-shrink-0">
                       <Icon className="w-4 h-4" style={{ color: 'var(--nexus-gold)' }} />
@@ -320,7 +320,7 @@ export function About() {
                   <div
                     key={i}
                     className="flex gap-3 p-3 rounded-lg"
-                    style={{ background: 'rgba(0,0,0,0.15)', border: '1px solid var(--nexus-border)' }}
+                    style={{ background: 'var(--nexus-card)', border: '1px solid var(--nexus-border)' }}
                   >
                     <Icon className="w-4 h-4 flex-shrink-0 mt-0.5" style={{ color: 'var(--nexus-gold)' }} />
                     <div>
@@ -377,7 +377,7 @@ export function About() {
               {/* Usuário Comum */}
               <div
                 className="rounded-lg p-4"
-                style={{ background: 'rgba(0,0,0,0.15)', border: '1px solid var(--nexus-border)' }}
+                style={{ background: 'var(--nexus-card)', border: '1px solid var(--nexus-border)' }}
               >
                 <h4
                   className="text-sm font-semibold mb-3 flex items-center gap-1.5"
@@ -430,7 +430,7 @@ export function About() {
               {/* Administrador */}
               <div
                 className="rounded-lg p-4"
-                style={{ background: 'rgba(0,0,0,0.15)', border: '1px solid var(--nexus-border)' }}
+                style={{ background: 'var(--nexus-card)', border: '1px solid var(--nexus-border)' }}
               >
                 <h4
                   className="text-sm font-semibold mb-3 flex items-center gap-1.5"
@@ -520,7 +520,7 @@ export function About() {
                 <div
                   key={i}
                   className="p-4 rounded-lg text-xs"
-                  style={{ borderColor: u.border, border: `1px solid ${u.border}`, background: 'rgba(0,0,0,0.1)' }}
+                  style={{ borderColor: u.border, border: `1px solid ${u.border}`, background: 'var(--nexus-card)' }}
                 >
                   <h4 className="font-semibold mb-1.5" style={{ color: u.color }}>
                     {u.role}

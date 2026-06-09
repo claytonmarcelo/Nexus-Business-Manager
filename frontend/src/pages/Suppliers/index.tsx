@@ -72,7 +72,7 @@ function KpiCard({ label, value, icon, trend, subtitle }: {
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
-      whileHover={{ y: -2, boxShadow: '0 0 28px rgba(212,149,86,0.12)' }}
+      whileHover={{ y: -2, boxShadow: '0 0 28px rgba(var(--nexus-gold-rgb),0.12)' }}
       className="relative rounded-xl p-5 overflow-hidden"
       style={{ background: 'var(--nexus-card)', border: '1px solid var(--nexus-border)' }}
     >
@@ -82,7 +82,7 @@ function KpiCard({ label, value, icon, trend, subtitle }: {
           {label}
         </span>
         <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
-          style={{ background: 'rgba(212,149,86,0.12)', color: 'var(--nexus-gold)' }}>
+          style={{ background: 'rgba(var(--nexus-gold-rgb),0.12)', color: 'var(--nexus-gold)' }}>
           {icon}
         </div>
       </div>
@@ -103,7 +103,7 @@ function FilterSelect({ label, options }: { label: string; options: string[] }) 
         className="appearance-none rounded-lg pl-3 pr-8 py-2.5 text-sm outline-none cursor-pointer transition-all"
         style={{
           background: 'var(--nexus-input-bg)',
-          border: '1px solid rgba(212,149,86,0.18)',
+          border: '1px solid rgba(var(--nexus-gold-rgb),0.18)',
           color: 'var(--nexus-muted-2)',
           minWidth: 120,
         }}
@@ -128,8 +128,8 @@ function StatusBadge({ active }: { active: boolean }) {
     <span
       className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium"
       style={active
-        ? { background: 'rgba(125,218,106,0.12)', color: 'var(--nexus-success)', border: '1px solid rgba(125,218,106,0.25)' }
-        : { background: 'rgba(216,75,95,0.12)', color: 'var(--nexus-danger)', border: '1px solid rgba(216,75,95,0.25)' }
+        ? { background: 'rgba(var(--nexus-success-rgb),0.12)', color: 'var(--nexus-success)', border: '1px solid rgba(var(--nexus-success-rgb),0.25)' }
+        : { background: 'rgba(var(--nexus-danger-rgb),0.12)', color: 'var(--nexus-danger)', border: '1px solid rgba(var(--nexus-danger-rgb),0.25)' }
       }
     >
       <span className="w-1.5 h-1.5 rounded-full" style={{ background: active ? 'var(--nexus-success)' : 'var(--nexus-danger)' }} />
@@ -152,8 +152,8 @@ function ActionBtn({ onClick, title, gold, children }: {
       className="w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-150"
       style={{
         color: gold ? 'var(--nexus-gold)' : 'var(--nexus-muted-2)',
-        border: gold ? '1px solid rgba(212,149,86,0.22)' : '1px solid rgba(212,149,86,0.1)',
-        background: hovered ? (gold ? 'rgba(212,149,86,0.1)' : 'rgba(212,149,86,0.05)') : 'transparent',
+        border: gold ? '1px solid rgba(var(--nexus-gold-rgb),0.22)' : '1px solid rgba(var(--nexus-gold-rgb),0.1)',
+        background: hovered ? (gold ? 'rgba(var(--nexus-gold-rgb),0.1)' : 'rgba(var(--nexus-gold-rgb),0.05)') : 'transparent',
       }}
     >
       {children}
@@ -177,7 +177,7 @@ function GradBtn({ onClick, children, secondary, type = 'button' }: {
         ? {
             background: 'transparent',
             color: 'var(--nexus-muted-2)',
-            border: '1px solid rgba(212,149,86,0.2)',
+            border: '1px solid rgba(var(--nexus-gold-rgb),0.2)',
           }
         : {
             background: hov
@@ -214,9 +214,9 @@ function Field({ label, value, onChange, type = 'text', required }: {
         className="w-full rounded-lg px-3.5 py-2.5 text-sm outline-none transition-all duration-200"
         style={{
           background: 'var(--nexus-input-bg)',
-          border: `1px solid ${focus ? 'rgba(212,149,86,0.5)' : 'rgba(212,149,86,0.15)'}`,
+          border: `1px solid ${focus ? 'rgba(var(--nexus-gold-rgb),0.5)' : 'rgba(var(--nexus-gold-rgb),0.15)'}`,
           color: 'var(--nexus-text)',
-          boxShadow: focus ? '0 0 0 3px rgba(212,149,86,0.08)' : 'none',
+          boxShadow: focus ? '0 0 0 3px rgba(var(--nexus-gold-rgb),0.08)' : 'none',
         }}
       />
     </div>
@@ -341,11 +341,11 @@ export function Suppliers() {
               className="w-full rounded-lg pl-9 pr-4 py-2.5 text-sm outline-none transition-all"
               style={{
                 background: 'var(--nexus-input-bg)',
-                border: '1px solid rgba(212,149,86,0.15)',
+                border: '1px solid rgba(var(--nexus-gold-rgb),0.15)',
                 color: 'var(--nexus-text)',
               }}
-              onFocus={(e) => (e.target.style.borderColor = 'rgba(212,149,86,0.4)')}
-              onBlur={(e)  => (e.target.style.borderColor = 'rgba(212,149,86,0.15)')}
+              onFocus={(e) => (e.target.style.borderColor = 'rgba(var(--nexus-gold-rgb),0.4)')}
+              onBlur={(e)  => (e.target.style.borderColor = 'rgba(var(--nexus-gold-rgb),0.15)')}
             />
           </div>
 
@@ -358,8 +358,8 @@ export function Suppliers() {
             {/* More filters */}
             <button
               className="flex items-center gap-2 px-3.5 py-2.5 rounded-lg text-sm font-medium transition-all"
-              style={{ color: 'var(--nexus-gold)', background: 'transparent', border: '1px solid rgba(212,149,86,0.22)' }}
-              onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(212,149,86,0.06)')}
+              style={{ color: 'var(--nexus-gold)', background: 'transparent', border: '1px solid rgba(var(--nexus-gold-rgb),0.22)' }}
+              onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(var(--nexus-gold-rgb),0.06)')}
               onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
             >
               <AdjustmentsHorizontalIcon className="w-4 h-4" />
@@ -420,7 +420,7 @@ export function Suppliers() {
                       borderBottom: isLast ? 'none' : '1px solid var(--nexus-border)',
                       transition: 'background 0.15s',
                     }}
-                    onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(212,149,86,0.04)')}
+                    onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(var(--nexus-gold-rgb),0.04)')}
                     onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
                   >
                     {/* Fornecedor */}
@@ -512,7 +512,7 @@ export function Suppliers() {
                                     key={opt}
                                     className="w-full text-left px-4 py-2 text-xs transition-colors"
                                     style={{ color: opt === 'Excluir' ? 'var(--nexus-danger)' : 'var(--nexus-muted-2)' }}
-                                    onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(212,149,86,0.06)')}
+                                    onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(var(--nexus-gold-rgb),0.06)')}
                                     onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
                                   >
                                     {opt}
@@ -555,7 +555,7 @@ export function Suppliers() {
             <div className="relative">
               <select
                 className="appearance-none rounded-lg pl-3 pr-7 py-1.5 text-sm outline-none cursor-pointer"
-                style={{ background: 'var(--nexus-input-bg)', border: '1px solid rgba(212,149,86,0.15)', color: 'var(--nexus-text)' }}
+                style={{ background: 'var(--nexus-input-bg)', border: '1px solid rgba(var(--nexus-gold-rgb),0.15)', color: 'var(--nexus-text)' }}
               >
                 <option>10</option>
                 <option>20</option>
@@ -591,7 +591,7 @@ export function Suppliers() {
               <div className="flex items-center justify-between mb-5">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-xl flex items-center justify-center"
-                    style={{ background: 'rgba(212,149,86,0.12)', color: 'var(--nexus-gold)' }}>
+                    style={{ background: 'rgba(var(--nexus-gold-rgb),0.12)', color: 'var(--nexus-gold)' }}>
                     <UserGroupIcon className="w-5 h-5" />
                   </div>
                   <div>
@@ -607,7 +607,7 @@ export function Suppliers() {
                   onClick={() => setShowModal(false)}
                   className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors"
                   style={{ color: 'var(--nexus-muted-2)', background: 'var(--nexus-card-soft)' }}
-                  onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(212,149,86,0.1)')}
+                  onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(var(--nexus-gold-rgb),0.1)')}
                   onMouseLeave={(e) => (e.currentTarget.style.background = 'var(--nexus-card-soft)')}
                 >
                   <XMarkIcon className="w-4 h-4" />
@@ -617,7 +617,7 @@ export function Suppliers() {
               {/* Error */}
               {error && (
                 <div className="px-4 py-3 rounded-lg mb-4 text-sm"
-                  style={{ background: 'rgba(216,75,95,0.1)', color: 'var(--nexus-danger)', border: '1px solid rgba(216,75,95,0.2)' }}>
+                  style={{ background: 'rgba(var(--nexus-danger-rgb),0.1)', color: 'var(--nexus-danger)', border: '1px solid rgba(var(--nexus-danger-rgb),0.2)' }}>
                   {error}
                 </div>
               )}
@@ -677,8 +677,8 @@ function PaginBtn({ children, active, icon }: { children: React.ReactNode; activ
       style={active
         ? { background: 'rgba(var(--nexus-rose-rgb),0.18)', color: 'var(--nexus-rose)', border: '1px solid rgba(var(--nexus-rose-rgb),0.3)' }
         : icon
-        ? { color: 'var(--nexus-muted-2)', border: '1px solid rgba(212,149,86,0.12)', background: hov ? 'rgba(212,149,86,0.06)' : 'transparent' }
-        : { color: hov ? 'var(--nexus-text)' : 'var(--nexus-muted-2)', border: '1px solid transparent', background: hov ? 'rgba(212,149,86,0.06)' : 'transparent' }
+        ? { color: 'var(--nexus-muted-2)', border: '1px solid rgba(var(--nexus-gold-rgb),0.12)', background: hov ? 'rgba(var(--nexus-gold-rgb),0.06)' : 'transparent' }
+        : { color: hov ? 'var(--nexus-text)' : 'var(--nexus-muted-2)', border: '1px solid transparent', background: hov ? 'rgba(var(--nexus-gold-rgb),0.06)' : 'transparent' }
       }
     >
       {children}

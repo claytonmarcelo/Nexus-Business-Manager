@@ -45,6 +45,9 @@ const navItems = [
   { to: '/backup', label: 'Backup', icon: ArrowPathIcon, roles: ['admin'] },
   { to: '/users', label: 'Usuarios', icon: UsersIcon, roles: ['admin', 'manager'] },
   { to: '/companies', label: 'Configuracoes', icon: Cog6ToothIcon, roles: ['admin'] },
+  { to: '/import', label: 'Importacao', icon: ArrowUpTrayIcon },
+  { to: '/backup', label: 'Backup', icon: ArrowPathIcon, roles: ['admin', 'manager'] },
+  { to: '/logs', label: 'Logs', icon: DocumentTextIcon, roles: ['admin'] },
   { to: '/about', label: 'Sobre', icon: InformationCircleIcon },
 ];
 

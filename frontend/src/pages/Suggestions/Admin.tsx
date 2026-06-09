@@ -220,7 +220,7 @@ export function AdminSuggestions() {
 
       {selected && (
         <div
-          style={{ position: 'fixed', inset: 0, zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem', background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }}
+          style={{ position: 'fixed', inset: 0, zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem', background: 'var(--nexus-overlay)', backdropFilter: 'blur(4px)' }}
           onClick={() => setSelected(null)}
         >
           <div
@@ -236,7 +236,7 @@ export function AdminSuggestions() {
               <select
                 value={newStatus}
                 onChange={(e) => setNewStatus(e.target.value)}
-                style={{ width: '100%', padding: '0.75rem 1rem', background: 'rgba(0,0,0,0.5)', color: 'var(--nexus-text)', border: '1px solid var(--nexus-border)', borderRadius: '10px', fontSize: '0.875rem' }}
+                style={{ width: '100%', padding: '0.75rem 1rem', background: 'var(--nexus-input-bg)', color: 'var(--nexus-text)', border: '1px solid var(--nexus-border)', borderRadius: '10px', fontSize: '0.875rem' }}
               >
                 {Object.entries(statusLabels).map(([key, label]) => (
                   <option key={key} value={key}>{label}</option>
@@ -249,7 +249,7 @@ export function AdminSuggestions() {
               <textarea
                 value={adminNotes}
                 onChange={(e) => setAdminNotes(e.target.value)}
-                style={{ width: '100%', padding: '0.75rem 1rem', background: 'rgba(0,0,0,0.5)', color: 'var(--nexus-text)', border: '1px solid var(--nexus-border)', borderRadius: '10px', fontSize: '0.875rem', resize: 'vertical', minHeight: '100px' }}
+                style={{ width: '100%', padding: '0.75rem 1rem', background: 'var(--nexus-input-bg)', color: 'var(--nexus-text)', border: '1px solid var(--nexus-border)', borderRadius: '10px', fontSize: '0.875rem', resize: 'vertical', minHeight: '100px' }}
                 placeholder="Adicione uma observacao sobre esta sugestao..."
               />
             </div>

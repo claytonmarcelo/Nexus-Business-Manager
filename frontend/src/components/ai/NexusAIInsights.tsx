@@ -9,7 +9,7 @@ import {
 } from '@heroicons/react/24/solid';
 
 const severityConfig: Record<string, { icon: any; bg: string; border: string }> = {
-  warning: { icon: ExclamationTriangleIcon, bg: 'rgba(214,168,93,0.12)', border: 'rgba(214,168,93,0.3)' },
+  warning: { icon: ExclamationTriangleIcon, bg: 'rgba(var(--nexus-gold-rgb),0.12)', border: 'rgba(var(--nexus-gold-rgb),0.3)' },
   danger: { icon: ExclamationTriangleIcon, bg: 'rgba(239,111,122,0.12)', border: 'rgba(239,111,122,0.3)' },
   success: { icon: CheckCircleIcon, bg: 'rgba(143,214,163,0.12)', border: 'rgba(143,214,163,0.3)' },
   info: { icon: InformationCircleIcon, bg: 'rgba(var(--nexus-blue-rgb),0.12)', border: 'rgba(var(--nexus-blue-rgb),0.3)' },
