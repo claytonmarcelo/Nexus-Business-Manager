@@ -1,4 +1,4 @@
-import { useState, FormEvent } from 'react';
+﻿import { useState, FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useAuth } from '../../contexts/AuthContext';
@@ -37,7 +37,7 @@ export function Register() {
     setLoading(true);
     try {
       await signUp(name, email, password, username, phone);
-      // Redirecionar para login após cadastro bem-sucedido
+      // Redirecionar para login apÃ³s cadastro bem-sucedido
       navigate('/login?message=cadastro-sucesso');
     } catch (err: any) {
       setError(err.response?.data?.message || err.response?.data?.error || 'Erro ao cadastrar');
@@ -116,7 +116,7 @@ export function Register() {
             />
 
             <PremiumInput
-              label="Usuario"
+              label="Usuário"
               placeholder="nome.usuario"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
@@ -212,3 +212,4 @@ export function Register() {
     </div>
   );
 }
+

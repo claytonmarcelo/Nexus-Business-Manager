@@ -1,4 +1,4 @@
-import { useState, FormEvent } from 'react';
+﻿import { useState, FormEvent } from 'react';
 import { motion } from 'framer-motion';
 import api from '../../services/api';
 
@@ -60,7 +60,7 @@ export function Contact() {
       <div className="text-center mb-10">
         <h1 className="text-3xl font-bold mb-2" style={{ color: 'var(--nexus-text)' }}>Fale Conosco</h1>
         <p className="text-lg" style={{ color: 'var(--nexus-muted)' }}>
-          Tire duvidas, envie sugestoes ou solicite suporte
+          Tire dúvidas, envie sugestões ou solicite suporte
         </p>
       </div>
 
@@ -119,7 +119,7 @@ export function Contact() {
               onChange={(e) => setMessage(e.target.value)}
               className="input-field"
               style={{ minHeight: '150px', paddingTop: '12px' }}
-              placeholder="Descreva sua duvida ou solicitacao..."
+              placeholder="Descreva sua dúvida ou solicitação..."
               required
             />
           </div>
@@ -137,3 +137,4 @@ export function Contact() {
     </motion.div>
   );
 }
+

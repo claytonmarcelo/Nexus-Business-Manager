@@ -6,6 +6,32 @@ O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.
 
 Este projeto segue [Semantic Versioning](https://semver.org/lang/pt-BR/).
 
+## [1.1.0] - 2026-06-09
+
+### Added
+
+- Area Comercial: pagina de Planos com upgrade/downgrade.
+- Area Comercial: pagina Minha Assinatura com detalhes do plano.
+- Area Comercial: pagina de Faturas com historico de pagamentos.
+- Pagina de Status do Sistema com health check.
+- Backend modulo subscription (rotas /api/subscription/*).
+- Sidebar: icones para Planos, Assinatura e Status.
+
+### Changed
+
+- console.error substituido por showToast em 11 paginas (19 ocorrencias).
+- Ortografia pt-BR corrigida em todas as paginas visiveis ao usuario.
+- Sidebar: labels duplicadas removidas, acentos corrigidos.
+- Backend .env.example: DB_PASSWORD corrigido para DB_PASS.
+- CHANGELOG.md e docs/roadmap.md atualizados.
+
+### Fixed
+
+- Labels duplicadas na Sidebar (Importacao, Backup, Logs apareciam 2x).
+- Acentos em Sugestoes, Notificacoes, Importacao, Usuarios, Configuracoes.
+- Erro ortografico "Acai" → "Acao" na pagina de Logs.
+- console.error silencioso substituido por Toast com feedback visual.
+
 ## [1.0.0] - 2026-06-06
 
 ### Added

@@ -43,10 +43,14 @@
 - Serviços
 - Eventos
 
-## Fase 8 — SaaS
-- Multiempresa
-- Planos
-- Assinaturas
+## Fase 8 — SaaS (Em Andamento)
+- [ ] Multiempresa (tenant_id — pendente de migracao)
+- [x] Pagina de Planos (frontend + backend)
+- [x] Pagina de Assinatura com detalhes do plano
+- [x] Pagina de Faturas com historico
+- [x] Backend modulo subscription (API REST)
+- [ ] Integracao com gateway de pagamento
+- [ ] White Label (logo/favicon/cores por empresa)
 
 ## Fase 9 — Marketplace de Aplicativos
 - Loja de módulos

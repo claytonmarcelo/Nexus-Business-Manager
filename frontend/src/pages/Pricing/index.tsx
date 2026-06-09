@@ -1,4 +1,4 @@
-import { motion } from 'framer-motion';
+﻿import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { CheckIcon, ArrowRightIcon } from '@heroicons/react/24/outline';
 
@@ -48,7 +48,7 @@ const plans = [
       'Auditoria completa',
       'API dedicada',
       'Backup automatico',
-      'Importacao em lote',
+      'Importação em lote',
       'Personalizacao',
       'Suporte 24/7',
       'SLA garantido',
@@ -149,3 +149,4 @@ export function Pricing() {
     </motion.div>
   );
 }
+

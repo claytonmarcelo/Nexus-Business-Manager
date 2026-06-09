@@ -24,7 +24,10 @@ const mockData = {
     total_clients: 1250,
     total_sales: 84230.50,
     total_revenue: 126430.20,
-    profit: 28200.00
+    profit: 28200.00,
+    cac: 125.40,
+    ltv: 1840.00,
+    avg_ticket: 287.50
   },
   salesData: [
     { name: '05 Mai', value: 9000 },
@@ -103,6 +106,33 @@ export function Dashboard() {
           color="gold"
           trend={{ value: '11,8%', direction: 'up' }}
           subtitle="este mês"
+        />
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <StatsCard
+          label="CAC (Custo de Aquisicao)"
+          value={mockData.stats.cac.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+          icon={<UserGroupIcon className="w-5 h-5" />}
+          color="rose"
+          trend={{ value: '5,2%', direction: 'down' }}
+          subtitle="por cliente"
+        />
+        <StatsCard
+          label="LTV (Lifetime Value)"
+          value={mockData.stats.ltv.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+          icon={<ArrowTrendingUpIcon className="w-5 h-5" />}
+          color="green"
+          trend={{ value: '22,8%', direction: 'up' }}
+          subtitle="media por cliente"
+        />
+        <StatsCard
+          label="Ticket Medio"
+          value={mockData.stats.avg_ticket.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+          icon={<ShoppingCartIcon className="w-5 h-5" />}
+          color="blue"
+          trend={{ value: '8,3%', direction: 'up' }}
+          subtitle="por venda"
         />
       </div>
 

@@ -1,4 +1,4 @@
-import { useState, FormEvent } from 'react';
+﻿import { useState, FormEvent } from 'react';
 import { Link } from 'react-router-dom';
 import { AuthLogo } from '../../components/AuthLogo';
 import api from '../../services/api';
@@ -30,7 +30,7 @@ export function ForgotPassword() {
         <div className="nexus-auth-card mx-4">
           <h2 className="text-2xl font-semibold mb-2" style={{ color: 'var(--nexus-text)' }}>Recuperar Senha</h2>
           <p className="mb-6" style={{ color: 'var(--nexus-muted)' }}>
-            {sent ? 'Verifique seu email para redefinir a senha.' : 'Informe seu email para receber o link de recuperacao.'}
+            {sent ? 'Verifique seu email para redefinir a senha.' : 'Informe seu email para receber o link de recuperação.'}
           </p>
 
           {sent ? (
@@ -77,7 +77,7 @@ export function ForgotPassword() {
                 className="btn-primary w-full"
                 style={{ height: '52px', fontSize: '1rem' }}
               >
-                {loading ? 'Enviando...' : 'Enviar link de recuperacao'}
+                {loading ? 'Enviando...' : 'Enviar link de recuperação'}
               </button>
             </form>
           )}
@@ -93,3 +93,4 @@ export function ForgotPassword() {
     </div>
   );
 }
+

@@ -22,6 +22,7 @@ import {
   ArrowUpTrayIcon,
   ArrowPathIcon,
   DocumentTextIcon,
+  CircleStackIcon,
 } from '@heroicons/react/24/solid';
 
 const navItems = [
@@ -45,6 +46,9 @@ const navItems = [
   { to: '/backup', label: 'Backup', icon: ArrowPathIcon, roles: ['admin'] },
   { to: '/users', label: 'Usuários', icon: UsersIcon, roles: ['admin', 'manager'] },
   { to: '/companies', label: 'Configurações', icon: Cog6ToothIcon, roles: ['admin'] },
+  { to: '/plans', label: 'Planos', icon: CurrencyDollarIcon },
+  { to: '/subscription', label: 'Assinatura', icon: CreditCardIcon },
+  { to: '/status', label: 'Status', icon: CircleStackIcon, roles: ['admin'] },
   { to: '/about', label: 'Sobre', icon: InformationCircleIcon },
 ];
 

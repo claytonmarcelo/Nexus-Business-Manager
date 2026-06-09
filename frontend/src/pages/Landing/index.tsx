@@ -19,8 +19,8 @@ const features = [
   { icon: ChartBarIcon, title: 'Relatorios Gerenciais', desc: 'Dashboard com KPIs, graficos e exportacao em PDF/Excel.' },
   { icon: BuildingOfficeIcon, title: 'Multiempresa', desc: 'Gerencie varias empresas em uma unica instalacao com dados isolados.' },
   { icon: ShieldCheckIcon, title: 'Seguranca e Auditoria', desc: 'Controle de permissoes, auditoria de acoes e criptografia.' },
-  { icon: CalendarDaysIcon, title: 'Agenda', desc: 'Agendamento de servicos, compromissos e notificacoes.' },
-  { icon: SparklesIcon, title: 'Nexus AI', desc: 'Assistente inteligente para analise de dados e suporte.' },
+  { icon: CalendarDaysIcon, title: 'Agenda', desc: 'Agendamento de servicos, compromissos e notificações.' },
+  { icon: SparklesIcon, title: 'Nexus AI', desc: 'Assistente inteligente para análise de dados e suporte.' },
 ];
 
 const containerVariants = {
@@ -185,3 +185,4 @@ export function Landing() {
     </motion.div>
   );
 }
+

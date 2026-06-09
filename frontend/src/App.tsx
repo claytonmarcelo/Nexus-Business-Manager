@@ -40,6 +40,10 @@ import { Onboarding } from './pages/Onboarding';
 import { Import } from './pages/Import';
 import { Backup } from './pages/Backup';
 import { Logs } from './pages/Logs';
+import { Plans } from './pages/Plans';
+import { Subscription } from './pages/Subscription';
+import { Invoices } from './pages/Invoices';
+import { Status } from './pages/Status';
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, loading } = useAuth();
@@ -151,6 +155,10 @@ function AppRoutes() {
         <Route path="import" element={<Import />} />
         <Route path="backup" element={<Backup />} />
         <Route path="logs" element={<Logs />} />
+        <Route path="plans" element={<Plans />} />
+        <Route path="subscription" element={<Subscription />} />
+        <Route path="invoices" element={<Invoices />} />
+        <Route path="status" element={<Status />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

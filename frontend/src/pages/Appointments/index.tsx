@@ -1,4 +1,4 @@
-import { useState, useEffect, FormEvent } from 'react';
+﻿import { useState, useEffect, FormEvent } from 'react';
 import { motion } from 'framer-motion';
 import api from '../../services/api';
 import { Appointment, Client } from '../../types';
@@ -213,7 +213,7 @@ export function Appointments() {
                 </select>
               </div>
               <div style={{ marginBottom: '1rem' }}>
-                <label style={{ color: 'var(--nexus-text)', fontSize: '0.875rem', fontWeight: 500, marginBottom: '0.375rem', display: 'block' }}>Descricao</label>
+                <label style={{ color: 'var(--nexus-text)', fontSize: '0.875rem', fontWeight: 500, marginBottom: '0.375rem', display: 'block' }}>Descrição</label>
                 <textarea rows={3} value={formData.description}
                   style={{ padding: '0.625rem 1rem', background: 'var(--nexus-input-bg)', color: 'var(--nexus-text)', border: '1px solid var(--nexus-border)', borderRadius: '10px', fontSize: '0.875rem', width: '100%', boxSizing: 'border-box', resize: 'vertical' }}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })} />
@@ -229,3 +229,4 @@ export function Appointments() {
     </motion.div>
   );
 }
+
