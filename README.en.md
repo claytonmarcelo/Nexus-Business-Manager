@@ -176,20 +176,22 @@ Nexus unifies **everything in a single system** with centralized data, web and m
 
 ## Implemented Modules
 
-| Authentication| ✅ |
-| Users         | ✅ |
-| CRM           | ✅ |
-| Products      | ✅ |
-| Inventory     | ✅ |
-| Suppliers     | ✅ |
-| Purchases     | ✅ |
-| Sales         | ✅ |
-| Financial     | ✅ |
-| Appointments  | ✅ |
-| Dashboard     | ✅ |
-| Reports       | ✅ |
+| Module | Status |
+|----------|--------|
+| Authentication | ✅ |
+| Users | ✅ |
+| CRM | ✅ |
+| Products | ✅ |
+| Inventory | ✅ |
+| Suppliers | ✅ |
+| Purchases | ✅ |
+| Sales | ✅ |
+| Financial | ✅ |
+| Appointments | ✅ |
+| Dashboard | ✅ |
+| Reports | ✅ |
 | Notifications | ✅ |
-| Audit         | ✅ |
+| Audit | ✅ |
 | Multi-company | ✅ |
 
 ---
