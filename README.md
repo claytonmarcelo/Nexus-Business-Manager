@@ -14,9 +14,15 @@
 </p>
 
 <p align="center">
-  <a href="README.md">BR Português</a> |
-  US <strong>English</strong>
+  <a href="README.md">
+    <img src="https://flagcdn.com/w20/br.png" width="20" alt="Brasil">
+    Português
+  </a>
+  |
+  <img src="https://flagcdn.com/w20/us.png" width="20" alt="USA">
+  <strong>English</strong>
 </p>
+
 
 <p align="center">
   <a href="./LICENSE"><img src="https://img.shields.io/badge/license-MIT-green" alt="MIT License"></a>
