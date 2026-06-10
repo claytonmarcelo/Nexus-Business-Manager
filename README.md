@@ -487,24 +487,23 @@ Consulte o arquivo [CHANGELOG.md](CHANGELOG.md) para visualizar todas as altera�
 
 ## Roadmap
 
-### Concluído
-- [x] Fundação do projeto (estrutura, design system, banco)
-- [x] Autenticação (login, JWT, permissões)
-- [x] Dashboard com indicadores e gráficos
-- [x] CRM completo (clientes, histórico)
-- [x] Controle de estoque (produtos, movimentações)
-- [x] Gestão financeira (contas, fluxo de caixa)
-- [x] Agendamento (calendário, eventos)
-- [x] Arquitetura multiempresa (SaaS)
-- [x] Relatórios exportáveis (PDF, Excel)
-- [x] Notificações e auditoria
-- [x] Pipeline de CI/CD
-- [x] Testes unitários automatizados
-- [x] Documentação completa bilíngue
+### Completed
+- [x] Project foundation (structure, design system, database)
+- [x] Authentication (login, JWT, permissions)
+- [x] Dashboard with KPIs and charts
+- [x] Full CRM (clients, history)
+- [x] Inventory control (products, movements)
+- [x] Financial management (accounts, cash flow)
+- [x] Scheduling (calendar, events)
+- [x] Multi-company architecture (SaaS)
+- [x] Exportable reports (PDF, Excel)
+- [x] Notifications and audit
+- [x] CI/CD pipeline
+- [x] Automated unit tests
+- [x] Complete bilingual documentation
+### Future
 
-### Futuro
-
-#### Fase 9 — Marketplace de Aplicativos
+#### Phase 9 — App Marketplace
 
 Área futura para permitir integração de módulos, extensões e serviços externos ao Nexus Business Manager.
 
