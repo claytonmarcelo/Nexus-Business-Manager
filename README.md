@@ -14,7 +14,8 @@
 </p>
 
 <p align="center">
-  🇧🇷 <strong>Português</strong> | <a href="README.en.md">🇺🇸 English</a>
+  <a href="README.md">BR Português</a> |
+  US <strong>English</strong>
 </p>
 
 <p align="center">
