@@ -1,4 +1,4 @@
-<p align="center">
+﻿<p align="center">
   <img
     src="assets/branding/logo.png"
     alt="Nexus Business Manager"
@@ -14,8 +14,8 @@
 </p>
 
 <p align="center">
-  <a href="README.md">🇧🇷 Português</a> |
-  🇺🇸 <strong>English</strong>
+  <a href="README.md">ðŸ‡§ðŸ‡· PortuguÃªs</a> |
+  ðŸ‡ºðŸ‡¸ <strong>English</strong>
 </p>
 
 <p align="center">
@@ -39,15 +39,15 @@
 
 | Login | Dashboard |
 |:-----:|:---------:|
-| <img src="docs/screenshots/login.png" alt="Login" width="300"> | <img src="docs/screenshots/dashboard.png" alt="Dashboard" width="300"> |
+| <img src="./assets/screenshots/login.png" alt="Login" width="300"> | <img src="./assets/screenshots/dashboard.png" alt="Dashboard" width="300"> |
 
 | CRM | Inventory |
 |:---:|:---------:|
-| <img src="docs/screenshots/clients.png" alt="Clients" width="300"> | <img src="docs/screenshots/stock.png" alt="Inventory" width="300"> |
+| <img src="./assets/screenshots/clientes.png" alt="Clients" width="300"> | <img src="./assets/screenshots/estoque.png" alt="Inventory" width="300"> |
 
 | Financial | Reports |
 |:---------:|:-------:|
-| <img src="docs/screenshots/financial.png" alt="Financial" width="300"> | <img src="docs/screenshots/reports.png" alt="Reports" width="300"> |
+| <img src="./assets/screenshots/financeiro.png" alt="Financial" width="300"> | <img src="./assets/screenshots/relatorios.png" alt="Reports" width="300"> |
 
 </div>
 
@@ -173,21 +173,21 @@ Nexus unifies **everything in a single system** with centralized data, web and m
 
 | Module        | Status |
 |---------------|--------|
-| Authentication| ✅      |
-| Users         | ✅      |
-| CRM           | ✅      |
-| Products      | ✅      |
-| Inventory     | ✅      |
-| Suppliers     | ✅      |
-| Purchases     | ✅      |
-| Sales         | ✅      |
-| Financial     | ✅      |
-| Appointments  | ✅      |
-| Dashboard     | ✅      |
-| Reports       | ✅      |
-| Notifications | ✅      |
-| Audit         | ✅      |
-| Multi-company | ✅      |
+| Authentication| âœ…      |
+| Users         | âœ…      |
+| CRM           | âœ…      |
+| Products      | âœ…      |
+| Inventory     | âœ…      |
+| Suppliers     | âœ…      |
+| Purchases     | âœ…      |
+| Sales         | âœ…      |
+| Financial     | âœ…      |
+| Appointments  | âœ…      |
+| Dashboard     | âœ…      |
+| Reports       | âœ…      |
+| Notifications | âœ…      |
+| Audit         | âœ…      |
+| Multi-company | âœ…      |
 
 ---
 
@@ -235,26 +235,26 @@ Nexus unifies **everything in a single system** with centralized data, web and m
 
 ```
 nexusbusinessmanager/
-├── backend/           → REST API (Fastify + TypeScript)
-│   ├── src/
-│   │   ├── modules/   → 15 business modules
-│   │   ├── shared/    → Middlewares, utils, DB connection
-│   │   └── tests/     → Unit tests (Vitest)
-│   └── database/
-│       └── migrations/→ Versioned SQL migrations
-├── frontend/          → Web application (React + Vite)
-│   └── src/
-│       ├── pages/     → Pages by module
-│       ├── components/→ Reusable components
-│       └── contexts/  → Auth context
-├── mobile/            → Mobile app (React Native)
-├── database/          → SQL schema and backup scripts
-├── docs/              → Complete documentation
-│   ├── en/            → Documentation in English
-│   └── screenshots/   → Application screenshots
-├── assets/            → Branding resources
-└── .github/
-    └── workflows/     → CI/CD (GitHub Actions)
+â”œâ”€â”€ backend/           â†’ REST API (Fastify + TypeScript)
+â”‚   â”œâ”€â”€ src/
+â”‚   â”‚   â”œâ”€â”€ modules/   â†’ 15 business modules
+â”‚   â”‚   â”œâ”€â”€ shared/    â†’ Middlewares, utils, DB connection
+â”‚   â”‚   â””â”€â”€ tests/     â†’ Unit tests (Vitest)
+â”‚   â””â”€â”€ database/
+â”‚       â””â”€â”€ migrations/â†’ Versioned SQL migrations
+â”œâ”€â”€ frontend/          â†’ Web application (React + Vite)
+â”‚   â””â”€â”€ src/
+â”‚       â”œâ”€â”€ pages/     â†’ Pages by module
+â”‚       â”œâ”€â”€ components/â†’ Reusable components
+â”‚       â””â”€â”€ contexts/  â†’ Auth context
+â”œâ”€â”€ mobile/            â†’ Mobile app (React Native)
+â”œâ”€â”€ database/          â†’ SQL schema and backup scripts
+â”œâ”€â”€ docs/              â†’ Complete documentation
+â”‚   â”œâ”€â”€ en/            â†’ Documentation in English
+â”‚   â””â”€â”€ screenshots/   â†’ Application screenshots
+â”œâ”€â”€ assets/            â†’ Branding resources
+â””â”€â”€ .github/
+    â””â”€â”€ workflows/     â†’ CI/CD (GitHub Actions)
 ```
 
 ---
@@ -299,35 +299,35 @@ The project implements multiple security layers:
 ## Architecture
 
 ```text
-┌─────────────────────┐
-│   Web Frontend      │
-│ React + TypeScript  │
-└──────────┬──────────┘
-           │ HTTP + JWT
-           ▼
-┌─────────────────────┐
-│   REST API          │
-│ Fastify + Node.js   │
-│ TypeScript + Zod    │
-└──────────┬──────────┘
-           │
-           ▼
-┌─────────────────────┐
-│ 15 ERP Modules      │
-│ CRM • Inventory     │
-│ Purchases • Sales   │
-│ Financial           │
-│ Appointments • Rpts.│
-│ Audit               │
-│ Multi-company       │
-└──────────┬──────────┘
-           │
-           ▼
-┌─────────────────────┐
-│ MySQL               │
-│ company_id          │
-│ Audit               │
-└─────────────────────┘
+â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
+â”‚   Web Frontend      â”‚
+â”‚ React + TypeScript  â”‚
+â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¬â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
+           â”‚ HTTP + JWT
+           â–¼
+â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
+â”‚   REST API          â”‚
+â”‚ Fastify + Node.js   â”‚
+â”‚ TypeScript + Zod    â”‚
+â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¬â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
+           â”‚
+           â–¼
+â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
+â”‚ 15 ERP Modules      â”‚
+â”‚ CRM â€¢ Inventory     â”‚
+â”‚ Purchases â€¢ Sales   â”‚
+â”‚ Financial           â”‚
+â”‚ Appointments â€¢ Rpts.â”‚
+â”‚ Audit               â”‚
+â”‚ Multi-company       â”‚
+â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¬â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
+           â”‚
+           â–¼
+â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
+â”‚ MySQL               â”‚
+â”‚ company_id          â”‚
+â”‚ Audit               â”‚
+â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
 ```
 
 ### Security
@@ -492,7 +492,7 @@ Complete documentation is available in the `docs/` folder:
 
 ### Future
 
-#### Phase 9 — App Marketplace
+#### Phase 9 â€” App Marketplace
 
 Future area to enable integration of modules, extensions and external services into Nexus Business Manager.
 
@@ -510,7 +510,7 @@ Future area to enable integration of modules, extensions and external services i
 
 > Status: Planned
 
-#### Phase 10 — BI and Business Intelligence
+#### Phase 10 â€” BI and Business Intelligence
 
 Future strategic analysis layer to transform operational data into management indicators.
 
@@ -551,7 +551,7 @@ Access `http://localhost:5173` and log in with:
 
 ---
 
-## 👨‍💻 Developer
+## ðŸ‘¨â€ðŸ’» Developer
 
 <table>
   <tr>
@@ -560,7 +560,7 @@ Access `http://localhost:5173` and log in with:
     </td>
     <td>
       <strong>C. Marcelo Dev.</strong><br>
-      <strong>📍</strong> Brazil<br><br>
+      <strong>ðŸ“</strong> Brazil<br><br>
       <a href="https://github.com/claytonmarcelo" target="_blank"><img src="https://img.shields.io/badge/GitHub-claytonmarcelo-181717?style=flat-square&logo=github"></a>
       <a href="https://www.youtube.com/@c.marcelodev.brasil" target="_blank"><img src="https://img.shields.io/badge/YouTube-CMarceloDev-FF0000?style=flat-square&logo=youtube"></a>
       <a href="https://cmarcelodev.com" target="_blank"><img src="https://img.shields.io/badge/Portfolio-cmarcelodev.com-000000?style=flat-square"></a>
@@ -574,10 +574,10 @@ Access `http://localhost:5173` and log in with:
 
 ## License
 
-This project is licensed under the **MIT License** — see the [LICENSE](LICENSE) file for details.
+This project is licensed under the **MIT License** â€” see the [LICENSE](LICENSE) file for details.
 
 Read the simplified explanation:
-- [Português](docs/license-pt-br.md)
+- [PortuguÃªs](docs/license-pt-br.md)
 - [English](docs/en/license-en.md)
 
 ---
@@ -585,5 +585,6 @@ Read the simplified explanation:
 <p align="center">
   <em>Built with dedication by <strong>C. Marcelo Dev. Brazil</strong>.</em>
   <br>
-  <a href="https://github.com/claytonmarcelo/Nexus-Business-Manager">🔗 GitHub</a>
+  <a href="https://github.com/claytonmarcelo/Nexus-Business-Manager">ðŸ”— GitHub</a>
 </p>
+
