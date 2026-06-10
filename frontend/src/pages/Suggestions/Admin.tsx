@@ -1,16 +1,13 @@
 ﻿import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { listSuggestions, updateSuggestion, deleteSuggestion } from '../../services/suggestions.service';
 import { Suggestion } from '../../types';
 import { useAuth } from '../../contexts/AuthContext';
 import { useToast } from '../../contexts/ToastContext';
 
 const statusLabels: Record<string, string> = {
-  pending: 'Pendente',
-  under_review: 'Em AnÃ¡lise',
-  approved: 'Aprovada',
-  rejected: 'Rejeitada',
-  implemented: 'Implementada',
+  pending: 'Pendente', under_review: 'Em Análise', approved: 'Aprovada',
+  rejected: 'Rejeitada', implemented: 'Implementada',
 };
 
 const statusBadgeStyles: Record<string, React.CSSProperties> = {
@@ -22,17 +19,14 @@ const statusBadgeStyles: Record<string, React.CSSProperties> = {
 };
 
 const categoryLabels: Record<string, string> = {
-  general: 'Geral',
-  improvement: 'Melhoria',
-  feature: 'Funcionalidade',
-  complaint: 'ReclamaÃ§Ã£o',
-  praise: 'Elogio',
+  general: 'Geral', improvement: 'Melhoria', feature: 'Funcionalidade',
+  complaint: 'Reclamação', praise: 'Elogio',
 };
 
 const statusFilterOptions = [
   { value: '', label: 'Todos' },
   { value: 'pending', label: 'Pendentes' },
-  { value: 'under_review', label: 'Em AnÃ¡lise' },
+  { value: 'under_review', label: 'Em Análise' },
   { value: 'approved', label: 'Aprovadas' },
   { value: 'rejected', label: 'Rejeitadas' },
   { value: 'implemented', label: 'Implementadas' },
@@ -63,7 +57,7 @@ export function AdminSuggestions() {
       setTotal(res.total || 0);
       setTotalPages(res.totalPages || 1);
     } catch {
-      showToast('Erro ao carregar sugestoes.', 'error');
+      showToast('Erro ao carregar sugestões.', 'error');
     } finally {
       setLoading(false);
     }
@@ -79,7 +73,7 @@ export function AdminSuggestions() {
     if (!selected) return;
     try {
       await updateSuggestion(selected.id, { status: newStatus, admin_notes: adminNotes || null });
-      showToast('SugestÃ£o atualizada com sucesso.');
+      showToast('Sugestão atualizada com sucesso.');
       setSelected(null);
       load();
     } catch (err: any) {
@@ -88,10 +82,10 @@ export function AdminSuggestions() {
   }
 
   async function handleDelete(id: number) {
-    if (!window.confirm('Tem certeza que deseja excluir esta sugestÃ£o?')) return;
+    if (!window.confirm('Tem certeza que deseja excluir esta sugestão?')) return;
     try {
       await deleteSuggestion(id);
-      showToast('SugestÃ£o excluida.');
+      showToast('Sugestão excluída.');
       load();
     } catch {
       showToast('Erro ao excluir.', 'error');
@@ -101,177 +95,169 @@ export function AdminSuggestions() {
   const canManage = user?.role?.toLowerCase() === 'admin' || user?.role?.toLowerCase() === 'manager';
 
   return (
-    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
-      <div style={{ marginBottom: '1.5rem' }}>
-        <h1 style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--nexus-text)' }}>
+    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="p-6 space-y-6 min-h-screen bg-transparent">
+      <div>
+        <h1 className="text-2xl font-bold" style={{ color: 'var(--nexus-text)' }}>
           Gerenciar <span style={{ color: 'var(--nexus-gold)' }}>Sugestões</span>
         </h1>
-        <p style={{ fontSize: '0.875rem', color: 'var(--nexus-muted-2)', marginTop: '0.25rem' }}>{total} sugestÃ£o(oes) encontrada(s)</p>
+        <p className="text-sm mt-1" style={{ color: 'var(--nexus-muted)' }}>{total} sugestão(ões) encontrada(s)</p>
       </div>
 
-      <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginBottom: '1.5rem' }}>
+      <div className="flex gap-2 flex-wrap">
         {statusFilterOptions.map((opt) => (
-          <button
-            key={opt.value}
-            onClick={() => { setStatusFilter(opt.value); setPage(1); }}
+          <button key={opt.value} onClick={() => { setStatusFilter(opt.value); setPage(1); }}
+            className="px-3 py-1.5 text-xs font-medium rounded-lg transition-all"
             style={{
-              padding: '0.375rem 0.875rem',
-              fontSize: '0.75rem',
-              borderRadius: '8px',
-              border: '1px solid',
               background: statusFilter === opt.value ? 'linear-gradient(135deg, var(--nexus-rose), var(--nexus-rose-dark))' : 'var(--nexus-card)',
-              color: statusFilter === opt.value ? '#fff' : 'var(--nexus-text)',
-              borderColor: statusFilter === opt.value ? 'transparent' : 'var(--nexus-border)',
-              cursor: 'pointer',
-              fontWeight: 500,
-            }}
-          >
+              color: statusFilter === opt.value ? '#FFFFFF' : 'var(--nexus-text)',
+              border: statusFilter === opt.value ? 'none' : '1px solid var(--nexus-border)',
+            }}>
             {opt.label}
           </button>
         ))}
       </div>
 
-      {loading ? (
-        <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--nexus-muted-2)' }}>Carregando...</div>
-      ) : suggestions.length === 0 ? (
-        <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--nexus-muted-2)' }}>Nenhuma sugestÃ£o encontrada.</div>
-      ) : (
-        <div style={{ background: 'var(--nexus-card)', border: '1px solid var(--nexus-border)', borderRadius: '14px', overflow: 'hidden' }}>
-          {suggestions.map((s) => (
-            <div
-              key={s.id}
-              style={{
-                padding: '1rem 1.25rem',
-                borderBottom: '1px solid var(--nexus-border)',
-                display: 'flex',
-                alignItems: 'flex-start',
-                justifyContent: 'space-between',
-                gap: '1rem',
-              }}
-            >
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
-                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.375rem', padding: '0.25rem 0.75rem', borderRadius: '9999px', fontSize: '0.75rem', fontWeight: 500, background: 'var(--nexus-card-soft)', color: 'var(--nexus-muted-2)' }}>
-                    {categoryLabels[s.category] || s.category}
-                  </span>
-                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.375rem', padding: '0.25rem 0.75rem', borderRadius: '9999px', fontSize: '0.75rem', fontWeight: 500, ...(statusBadgeStyles[s.status] || statusBadgeStyles.pending) }}>
-                    {statusLabels[s.status] || s.status}
-                  </span>
-                  {s.is_offensive === 1 && (
-                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.375rem', padding: '0.25rem 0.75rem', borderRadius: '9999px', fontSize: '0.75rem', fontWeight: 500, background: 'rgba(var(--nexus-danger-rgb),0.12)', color: 'var(--nexus-danger)' }}>
-                      Ofensivo
-                    </span>
+      <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--nexus-card)', border: '1px solid var(--nexus-border)' }}>
+        {loading ? (
+          <div className="p-6 space-y-4">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="space-y-2">
+                <div className="h-4 w-1/4 rounded animate-pulse" style={{ background: 'var(--nexus-bg-soft)' }} />
+                <div className="h-5 w-3/4 rounded animate-pulse" style={{ background: 'var(--nexus-bg-soft)' }} />
+                <div className="h-4 w-1/2 rounded animate-pulse" style={{ background: 'var(--nexus-bg-soft)' }} />
+              </div>
+            ))}
+          </div>
+        ) : suggestions.length === 0 ? (
+          <div className="text-center py-12">
+            <p className="text-sm" style={{ color: 'var(--nexus-muted)' }}>Nenhuma sugestão encontrada.</p>
+          </div>
+        ) : (
+          <div>
+            {suggestions.map((s) => (
+              <motion.div key={s.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+                className="px-5 py-4 transition-colors"
+                style={{ borderBottom: '1px solid var(--nexus-border)' }}
+                onMouseEnter={e => { e.currentTarget.style.background = 'var(--nexus-bg-soft)'; }}
+                onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; }}>
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="inline-flex px-2.5 py-0.5 rounded-full text-[11px] font-medium"
+                        style={{ background: 'var(--nexus-card-soft)', color: 'var(--nexus-muted-2)' }}>
+                        {categoryLabels[s.category] || s.category}
+                      </span>
+                      <span className="inline-flex px-2.5 py-0.5 rounded-full text-[11px] font-medium"
+                        style={statusBadgeStyles[s.status] || statusBadgeStyles.pending}>
+                        {statusLabels[s.status] || s.status}
+                      </span>
+                      {s.is_offensive === 1 && (
+                        <span className="inline-flex px-2.5 py-0.5 rounded-full text-[11px] font-medium"
+                          style={{ background: 'rgba(var(--nexus-danger-rgb),0.12)', color: 'var(--nexus-danger)' }}>
+                          Ofensivo
+                        </span>
+                      )}
+                    </div>
+                    <h3 className="text-sm font-semibold truncate" style={{ color: 'var(--nexus-text)' }}>{s.title}</h3>
+                    <p className="text-xs mt-1 line-clamp-2" style={{ color: 'var(--nexus-muted)' }}>{s.description}</p>
+                    <div className="flex items-center gap-3 mt-2 text-[11px]" style={{ color: 'var(--nexus-muted-2)' }}>
+                      <span>Por {s.user_name}</span>
+                      <span>{new Date(s.created_at).toLocaleString('pt-BR')}</span>
+                    </div>
+                    {s.admin_notes && (
+                      <div className="mt-2 p-2.5 rounded-lg text-xs italic" style={{ background: 'var(--nexus-card-soft)', color: 'var(--nexus-muted-2)' }}>
+                        Nota: {s.admin_notes}
+                      </div>
+                    )}
+                  </div>
+                  {canManage && (
+                    <div className="flex gap-2 flex-shrink-0">
+                      <button onClick={() => openEdit(s)}
+                        className="text-xs font-medium px-3 py-1.5 rounded-lg transition-colors"
+                        style={{ color: 'var(--nexus-gold)', border: '1px solid var(--nexus-border)' }}>
+                        Editar
+                      </button>
+                      <button onClick={() => handleDelete(s.id)}
+                        className="text-xs font-medium px-3 py-1.5 rounded-lg transition-colors"
+                        style={{ color: 'var(--nexus-danger)', border: '1px solid var(--nexus-border)' }}>
+                        Excluir
+                      </button>
+                    </div>
                   )}
                 </div>
-                <h3 style={{ fontSize: '0.9375rem', fontWeight: 600, color: 'var(--nexus-text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.title}</h3>
-                <p style={{ fontSize: '0.8125rem', color: 'var(--nexus-muted-2)', marginTop: '0.25rem', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{s.description}</p>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginTop: '0.5rem', fontSize: '0.75rem', color: 'var(--nexus-muted-2)' }}>
-                  <span>Por {s.user_name}</span>
-                  <span>{new Date(s.created_at).toLocaleString('pt-BR')}</span>
-                </div>
-                {s.admin_notes && (
-                  <div style={{ marginTop: '0.5rem', padding: '0.5rem', background: 'var(--nexus-card-soft)', borderRadius: '8px', fontSize: '0.75rem', color: 'var(--nexus-muted-2)', fontStyle: 'italic' }}>
-                    Nota: {s.admin_notes}
-                  </div>
-                )}
-              </div>
-              {canManage && (
-                <div style={{ display: 'flex', gap: '0.5rem', flexShrink: 0 }}>
-                  <button
-                    onClick={() => openEdit(s)}
-                    style={{ color: 'var(--nexus-gold)', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 500, fontSize: '0.8125rem' }}
-                  >
-                    Editar
-                  </button>
-                  <button
-                    onClick={() => handleDelete(s.id)}
-                    style={{ color: 'var(--nexus-danger)', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 500, fontSize: '0.8125rem' }}
-                  >
-                    Excluir
-                  </button>
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
-      )}
+              </motion.div>
+            ))}
+          </div>
+        )}
+      </div>
 
       {totalPages > 1 && (
-        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.75rem', marginTop: '1.5rem' }}>
-          <button
-            disabled={page <= 1}
-            onClick={() => setPage(page - 1)}
-            style={{ background: page <= 1 ? 'var(--nexus-card)' : 'var(--nexus-card)', color: 'var(--nexus-text)', border: '1px solid var(--nexus-border)', borderRadius: '10px', padding: '0.5rem 1rem', cursor: page <= 1 ? 'not-allowed' : 'pointer', fontSize: '0.875rem', opacity: page <= 1 ? 0.5 : 1 }}
-          >
+        <div className="flex items-center justify-center gap-3">
+          <button disabled={page <= 1} onClick={() => setPage(page - 1)}
+            className="px-4 py-2 text-sm font-medium rounded-xl transition-all disabled:opacity-40"
+            style={{ background: 'var(--nexus-card)', color: 'var(--nexus-text)', border: '1px solid var(--nexus-border)' }}>
             Anterior
           </button>
-          <span style={{ fontSize: '0.875rem', color: 'var(--nexus-gold)', fontWeight: 600 }}>
-            Pagina {page} de {totalPages}
+          <span className="text-sm font-semibold" style={{ color: 'var(--nexus-gold)' }}>
+            Página {page} de {totalPages}
           </span>
-          <button
-            disabled={page >= totalPages}
-            onClick={() => setPage(page + 1)}
-            style={{ background: 'var(--nexus-card)', color: 'var(--nexus-text)', border: '1px solid var(--nexus-border)', borderRadius: '10px', padding: '0.5rem 1rem', cursor: page >= totalPages ? 'not-allowed' : 'pointer', fontSize: '0.875rem', opacity: page >= totalPages ? 0.5 : 1 }}
-          >
-            Proxima
+          <button disabled={page >= totalPages} onClick={() => setPage(page + 1)}
+            className="px-4 py-2 text-sm font-medium rounded-xl transition-all disabled:opacity-40"
+            style={{ background: 'var(--nexus-card)', color: 'var(--nexus-text)', border: '1px solid var(--nexus-border)' }}>
+            Próxima
           </button>
         </div>
       )}
 
-      {selected && (
-        <div
-          style={{ position: 'fixed', inset: 0, zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem', background: 'var(--nexus-overlay)', backdropFilter: 'blur(4px)' }}
-          onClick={() => setSelected(null)}
-        >
-          <div
-            style={{ background: 'var(--nexus-card-strong)', border: '1px solid var(--nexus-border)', borderRadius: '18px', padding: '2rem', width: '100%', maxWidth: '32rem', maxHeight: '80vh', overflowY: 'auto' }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <h2 style={{ fontSize: '1.125rem', fontWeight: 600, color: 'var(--nexus-text)', marginBottom: '1rem' }}>
-              Editar SugestÃ£o <span style={{ color: 'var(--nexus-gold)' }}>#{selected.id}</span>
-            </h2>
+      <AnimatePresence>
+        {selected && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4"
+            style={{ background: 'var(--nexus-overlay)', backdropFilter: 'blur(4px)' }}
+            onClick={() => setSelected(null)}>
+            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }}
+              className="rounded-2xl p-6 w-full max-w-lg"
+              style={{ background: 'var(--nexus-card-strong)', border: '1px solid var(--nexus-border)' }}
+              onClick={e => e.stopPropagation()}>
+              <h2 className="text-lg font-semibold mb-4" style={{ color: 'var(--nexus-text)' }}>
+                Editar Sugestão <span style={{ color: 'var(--nexus-gold)' }}>#{selected.id}</span>
+              </h2>
 
-            <div style={{ marginBottom: '1rem' }}>
-              <label style={{ color: 'var(--nexus-text)', fontSize: '0.875rem', fontWeight: 500, marginBottom: '0.375rem', display: 'block' }}>Status</label>
-              <select
-                value={newStatus}
-                onChange={(e) => setNewStatus(e.target.value)}
-                style={{ width: '100%', padding: '0.75rem 1rem', background: 'var(--nexus-input-bg)', color: 'var(--nexus-text)', border: '1px solid var(--nexus-border)', borderRadius: '10px', fontSize: '0.875rem' }}
-              >
-                {Object.entries(statusLabels).map(([key, label]) => (
-                  <option key={key} value={key}>{label}</option>
-                ))}
-              </select>
-            </div>
+              <div className="mb-4">
+                <label className="block text-sm font-medium mb-1.5" style={{ color: 'var(--nexus-text)' }}>Status</label>
+                <select value={newStatus} onChange={(e) => setNewStatus(e.target.value)}
+                  className="w-full px-4 py-2.5 text-sm rounded-xl outline-none transition-all"
+                  style={{ background: 'var(--nexus-input-bg)', color: 'var(--nexus-text)', border: '1px solid var(--nexus-border)' }}>
+                  {Object.entries(statusLabels).map(([key, label]) => (
+                    <option key={key} value={key}>{label}</option>
+                  ))}
+                </select>
+              </div>
 
-            <div style={{ marginBottom: '1rem' }}>
-              <label style={{ color: 'var(--nexus-text)', fontSize: '0.875rem', fontWeight: 500, marginBottom: '0.375rem', display: 'block' }}>Notas do Administrador</label>
-              <textarea
-                value={adminNotes}
-                onChange={(e) => setAdminNotes(e.target.value)}
-                style={{ width: '100%', padding: '0.75rem 1rem', background: 'var(--nexus-input-bg)', color: 'var(--nexus-text)', border: '1px solid var(--nexus-border)', borderRadius: '10px', fontSize: '0.875rem', resize: 'vertical', minHeight: '100px' }}
-                placeholder="Adicione uma observaÃ§Ã£o sobre esta sugestÃ£o..."
-              />
-            </div>
+              <div className="mb-4">
+                <label className="block text-sm font-medium mb-1.5" style={{ color: 'var(--nexus-text)' }}>Notas do Administrador</label>
+                <textarea value={adminNotes} onChange={(e) => setAdminNotes(e.target.value)}
+                  className="w-full px-4 py-2.5 text-sm rounded-xl outline-none transition-all resize-vertical"
+                  style={{ background: 'var(--nexus-input-bg)', color: 'var(--nexus-text)', border: '1px solid var(--nexus-border)', minHeight: '100px' }}
+                  placeholder="Adicione uma observação sobre esta sugestão..." />
+              </div>
 
-            <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.5rem' }}>
-              <button
-                onClick={handleUpdate}
-                style={{ background: 'linear-gradient(135deg, var(--nexus-rose), var(--nexus-rose-dark))', color: '#fff', border: 'none', borderRadius: '10px', padding: '0.75rem 1.5rem', fontWeight: 500, cursor: 'pointer' }}
-              >
-                Salvar
-              </button>
-              <button
-                onClick={() => setSelected(null)}
-                style={{ background: 'var(--nexus-card)', color: 'var(--nexus-text)', border: '1px solid var(--nexus-border)', borderRadius: '10px', padding: '0.5rem 1rem', cursor: 'pointer' }}
-              >
-                Cancelar
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+              <div className="flex gap-3">
+                <button onClick={handleUpdate}
+                  className="px-5 py-2.5 text-sm font-medium rounded-xl"
+                  style={{ background: 'linear-gradient(135deg, var(--nexus-rose), var(--nexus-rose-dark))', color: '#FFFFFF' }}>
+                  Salvar
+                </button>
+                <button onClick={() => setSelected(null)}
+                  className="px-5 py-2.5 text-sm font-medium rounded-xl"
+                  style={{ background: 'var(--nexus-card)', color: 'var(--nexus-text)', border: '1px solid var(--nexus-border)' }}>
+                  Cancelar
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 }
-

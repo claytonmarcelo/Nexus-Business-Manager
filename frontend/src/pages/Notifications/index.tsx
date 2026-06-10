@@ -1,5 +1,9 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import {
+  BellIcon, CheckCircleIcon, ExclamationCircleIcon,
+  CalendarDaysIcon, InformationCircleIcon, ArrowPathIcon,
+} from '@heroicons/react/24/outline';
 import api from '../../services/api';
 import { useToast } from '../../contexts/ToastContext';
 
@@ -11,6 +15,15 @@ interface Notification {
   read: boolean;
   created_at: string;
 }
+
+const iconMap: Record<string, { icon: typeof BellIcon; color: string }> = {
+  warning: { icon: ExclamationCircleIcon, color: 'var(--nexus-warning)' },
+  calendar: { icon: CalendarDaysIcon, color: 'var(--nexus-gold)' },
+  info: { icon: InformationCircleIcon, color: 'var(--nexus-chart-blue)' },
+  success: { icon: CheckCircleIcon, color: 'var(--nexus-success)' },
+};
+
+const defaultIcon = { icon: BellIcon, color: 'var(--nexus-muted)' };
 
 export function Notifications() {
   const { showToast } = useToast();
@@ -26,18 +39,18 @@ export function Notifications() {
       setNotifications(res.data.data || []);
       setUnreadCount(res.data.unreadCount);
     } catch (err: any) {
-      console.error('Erro ao carregar notificações:', err);
-      const errorMsg = err?.response?.data?.message || err?.response?.data?.error || 'Erro ao carregar notificações';
-      showToast(errorMsg, 'error');
+      const msg = err?.response?.data?.message || err?.response?.data?.error || 'Erro ao carregar notificações';
+      showToast(msg, 'error');
+    } finally {
+      setLoading(false);
     }
-    finally { setLoading(false); }
   }
 
   async function handleMarkRead(id: number) {
     try {
       await api.put(`/notifications/${id}/read`);
       load();
-    } catch { showToast('Erro ao marcar notificação como lida', 'error'); }
+    } catch { showToast('Erro ao marcar como lida', 'error'); }
   }
 
   async function handleMarkAllRead() {
@@ -54,55 +67,97 @@ export function Notifications() {
     } catch { showToast('Erro ao gerar notificações', 'error'); }
   }
 
-  const iconMap: Record<string, string> = {
-    warning: '⚠️',
-    calendar: '📅',
-    info: 'ℹ️',
-  };
-
   return (
-    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.5rem' }}>
+    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="p-6 space-y-6 min-h-screen bg-transparent">
+      <div className="flex items-center justify-between">
         <div>
-          <h1 style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--nexus-text)' }}>Notificações</h1>
-          <p style={{ fontSize: '0.875rem', color: 'var(--nexus-muted-2)', marginTop: '0.25rem' }}>
+          <h1 className="text-2xl font-bold" style={{ color: 'var(--nexus-text)' }}>Notificações</h1>
+          <p className="text-sm mt-1" style={{ color: 'var(--nexus-muted)' }}>
             {unreadCount > 0 ? `${unreadCount} não lida(s)` : 'Todas lidas'}
           </p>
         </div>
-        <div style={{ display: 'flex', gap: '0.75rem' }}>
-          <button onClick={handleGenerate} style={{ background: 'var(--nexus-card)', color: 'var(--nexus-text)', border: '1px solid var(--nexus-border)', borderRadius: '10px', padding: '0.5rem 1rem', cursor: 'pointer', fontSize: '0.875rem' }}>Gerar Alertas</button>
+        <div className="flex gap-3">
+          <button onClick={handleGenerate}
+            className="px-4 py-2 text-sm font-medium rounded-xl transition-all"
+            style={{ background: 'var(--nexus-card)', color: 'var(--nexus-text)', border: '1px solid var(--nexus-border)' }}>
+            <span className="inline-flex items-center gap-1.5">
+              <ArrowPathIcon className="w-4 h-4" />
+              Gerar Alertas
+            </span>
+          </button>
           {unreadCount > 0 && (
-            <button onClick={handleMarkAllRead} style={{ background: 'linear-gradient(135deg, var(--nexus-rose), var(--nexus-rose-dark))', color: 'var(--nexus-text)', border: 'none', borderRadius: '10px', padding: '0.5rem 1rem', fontWeight: 500, cursor: 'pointer', fontSize: '0.875rem' }}>Marcar todas lidas</button>
+            <button onClick={handleMarkAllRead}
+              className="px-4 py-2 text-sm font-medium rounded-xl transition-all"
+              style={{ background: 'linear-gradient(135deg, var(--nexus-rose), var(--nexus-rose-dark))', color: '#FFFFFF' }}>
+              Marcar todas lidas
+            </button>
           )}
         </div>
       </div>
 
-      <div style={{ background: 'var(--nexus-card)', border: '1px solid var(--nexus-border)', borderRadius: '14px', overflow: 'hidden' }}>
+      <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--nexus-card)', border: '1px solid var(--nexus-border)' }}>
         {loading ? (
-          <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--nexus-muted-2)', fontSize: '0.875rem' }}>Carregando...</div>
-        ) : notifications.length === 0 ? (
-          <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--nexus-muted-2)' }}>Nenhum registro encontrado</div>
-        ) : (
-          <div>
-            {notifications.map((n) => (
-              <div key={n.id} style={{
-                display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem 1rem',
-                borderBottom: '1px solid rgba(var(--nexus-gold-rgb),0.05)',
-                background: !n.read ? 'rgba(var(--nexus-gold-rgb),0.08)' : undefined,
-              }}>
-                <span style={{ fontSize: '1.25rem' }}>{iconMap[n.icon || 'info'] || 'ℹ️'}</span>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <p style={{ fontSize: '0.875rem', fontWeight: !n.read ? 600 : 400, color: 'var(--nexus-text)', margin: 0 }}>{n.title}</p>
-                  {n.message && <p style={{ fontSize: '0.75rem', color: 'var(--nexus-muted-2)', margin: '0.125rem 0 0 0' }}>{n.message}</p>}
-                  <p style={{ fontSize: '0.75rem', color: 'var(--nexus-muted-2)', margin: '0.25rem 0 0 0', opacity: 0.65 }}>{new Date(n.created_at).toLocaleString('pt-BR')}</p>
+          <div className="p-6 space-y-4">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="flex items-start gap-3">
+                <div className="w-10 h-10 rounded-xl animate-pulse" style={{ background: 'var(--nexus-bg-soft)' }} />
+                <div className="flex-1 space-y-2">
+                  <div className="h-4 w-3/4 rounded animate-pulse" style={{ background: 'var(--nexus-bg-soft)' }} />
+                  <div className="h-3 w-1/2 rounded animate-pulse" style={{ background: 'var(--nexus-bg-soft)' }} />
                 </div>
-                {!n.read && (
-                  <button onClick={() => handleMarkRead(n.id)} style={{ color: 'var(--nexus-gold)', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 500, fontSize: '0.875rem', whiteSpace: 'nowrap' }}>
-                    Marcar lida
-                  </button>
-                )}
               </div>
             ))}
+          </div>
+        ) : notifications.length === 0 ? (
+          <div className="text-center py-12">
+            <BellIcon className="w-12 h-12 mx-auto mb-3" style={{ color: 'var(--nexus-muted-2)' }} />
+            <p className="text-sm font-medium" style={{ color: 'var(--nexus-text)' }}>Nenhuma notificação</p>
+            <p className="text-xs mt-1" style={{ color: 'var(--nexus-muted)' }}>Todas as notificações aparecerão aqui</p>
+          </div>
+        ) : (
+          <div>
+            {notifications.map((n) => {
+              const iconCfg = iconMap[n.icon || ''] || defaultIcon;
+              const Icon = iconCfg.icon;
+              return (
+                <motion.div key={n.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+                  className="flex items-start gap-3 px-5 py-4 transition-colors"
+                  style={{
+                    borderBottom: '1px solid var(--nexus-border)',
+                    background: !n.read ? 'rgba(var(--nexus-gold-rgb),0.06)' : 'transparent',
+                  }}
+                  onMouseEnter={e => { e.currentTarget.style.background = 'var(--nexus-bg-soft)'; }}
+                  onMouseLeave={e => {
+                    e.currentTarget.style.background = !n.read ? 'rgba(var(--nexus-gold-rgb),0.06)' : 'transparent';
+                  }}>
+                  <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+                    style={{ background: 'rgba(var(--nexus-gold-rgb),0.08)', color: iconCfg.color }}>
+                    <Icon className="w-5 h-5" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="text-sm font-medium truncate" style={{
+                        color: 'var(--nexus-text)',
+                        fontWeight: !n.read ? 600 : 400,
+                      }}>{n.title}</p>
+                      {!n.read && (
+                        <button onClick={() => handleMarkRead(n.id)}
+                          className="text-xs font-medium whitespace-nowrap flex-shrink-0 transition-colors"
+                          style={{ color: 'var(--nexus-gold)' }}>
+                          Marcar lida
+                        </button>
+                      )}
+                    </div>
+                    {n.message && (
+                      <p className="text-xs mt-0.5" style={{ color: 'var(--nexus-muted)' }}>{n.message}</p>
+                    )}
+                    <p className="text-[11px] mt-1" style={{ color: 'var(--nexus-muted-2)' }}>
+                      {new Date(n.created_at).toLocaleString('pt-BR')}
+                    </p>
+                  </div>
+                </motion.div>
+              );
+            })}
           </div>
         )}
       </div>

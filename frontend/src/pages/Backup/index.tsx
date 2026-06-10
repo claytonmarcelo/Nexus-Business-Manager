@@ -1,6 +1,9 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { ArrowDownTrayIcon, ClockIcon } from '@heroicons/react/24/outline';
+import {
+  ArrowDownTrayIcon, ClockIcon, ShieldCheckIcon,
+  ArrowPathIcon, ChevronLeftIcon, ChevronRightIcon,
+} from '@heroicons/react/24/outline';
 import api from '../../services/api';
 import { useToast } from '../../contexts/ToastContext';
 
@@ -11,15 +14,16 @@ interface BackupItem {
   created_at: string;
 }
 
-export function Backup() {
-  const [backups, setBackups] = useState<BackupItem[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [creating, setCreating] = useState(false);
-  const { showToast } = useToast();
+const PAGE_SIZE = 10;
 
-  useEffect(() => {
-    loadBackups();
-  }, []);
+export function Backup() {
+  const { showToast } = useToast();
+  const [backups, setBackups] = useState<BackupItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [creating, setCreating] = useState(false);
+  const [page, setPage] = useState(1);
+
+  useEffect(() => { loadBackups(); }, []);
 
   async function loadBackups() {
     setLoading(true);
@@ -61,86 +65,142 @@ export function Backup() {
     }
   }
 
+  const totalPages = Math.max(1, Math.ceil(backups.length / PAGE_SIZE));
+  const paged = backups.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3 }}
-      className="space-y-6"
-    >
+    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="p-6 space-y-6 min-h-screen bg-transparent">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="page-title">Backup e Restauração</h1>
-          <p className="mt-1 text-sm" style={{ color: 'var(--nexus-muted-2)' }}>
+          <h1 className="text-2xl font-bold" style={{ color: 'var(--nexus-text)' }}>Backup e Restauração</h1>
+          <p className="text-sm mt-1" style={{ color: 'var(--nexus-muted)' }}>
             Gerencie backups do banco de dados da sua empresa
           </p>
         </div>
-        <button
-          onClick={createBackup}
-          disabled={creating}
-          className="btn-primary"
-          style={{ height: '44px', padding: '0 1.5rem' }}
-        >
+        <button onClick={createBackup} disabled={creating}
+          className="px-5 py-2.5 text-sm font-medium rounded-xl transition-all disabled:opacity-50"
+          style={{
+            background: 'linear-gradient(135deg, var(--nexus-rose), var(--nexus-rose-dark))',
+            color: '#FFFFFF',
+          }}>
           {creating ? 'Criando...' : 'Criar Backup'}
         </button>
       </div>
 
-      <div className="nexus-card p-6">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        {[
+          { label: 'Total de Backups', value: backups.length, icon: ShieldCheckIcon, color: 'var(--nexus-gold)' },
+          { label: 'Último Backup', value: backups.length > 0 ? new Date(backups[0].created_at).toLocaleDateString('pt-BR') : 'Nenhum', icon: ClockIcon, color: 'var(--nexus-chart-blue)' },
+          { label: 'Backups Recentes', value: backups.filter(b => {
+            const d = new Date(b.created_at);
+            const sevenDaysAgo = new Date(Date.now() - 7 * 86400000);
+            return d >= sevenDaysAgo;
+          }).length + ' nesta semana', icon: ArrowPathIcon, color: 'var(--nexus-success)' },
+        ].map((s) => {
+          const Icon = s.icon;
+          return (
+            <motion.div key={s.label} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
+              className="rounded-xl p-4 flex items-center gap-3 transition-all"
+              style={{ background: 'var(--nexus-card)', border: '1px solid var(--nexus-border)' }}>
+              <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+                style={{ background: 'rgba(var(--nexus-gold-rgb),0.08)', color: s.color }}>
+                <Icon className="w-5 h-5" />
+              </div>
+              <div>
+                <p className="text-[11px] font-medium uppercase tracking-wider" style={{ color: 'var(--nexus-muted-2)' }}>{s.label}</p>
+                <p className="text-sm font-bold mt-0.5" style={{ color: 'var(--nexus-text)' }}>{s.value}</p>
+              </div>
+            </motion.div>
+          );
+        })}
+      </div>
+
+      <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--nexus-card)', border: '1px solid var(--nexus-border)' }}>
         {loading ? (
-          <div className="flex items-center justify-center py-10">
-            <span className="animate-spin text-2xl" style={{ color: 'var(--nexus-gold)' }}>{'\u21BB'}</span>
+          <div className="p-8 space-y-4">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="h-10 rounded-lg animate-pulse" style={{ background: 'var(--nexus-bg-soft)' }} />
+            ))}
           </div>
         ) : backups.length === 0 ? (
-          <div className="text-center py-10">
-            <ClockIcon className="w-12 h-12 mx-auto mb-4" style={{ color: 'var(--nexus-muted-2)' }} />
-            <p className="text-sm" style={{ color: 'var(--nexus-muted)' }}>
-              Nenhum backup encontrado. Crie seu primeiro backup clicando no botao acima.
+          <div className="text-center py-12">
+            <ClockIcon className="w-12 h-12 mx-auto mb-3" style={{ color: 'var(--nexus-muted-2)' }} />
+            <p className="text-sm font-medium" style={{ color: 'var(--nexus-text)' }}>Nenhum backup encontrado</p>
+            <p className="text-xs mt-1" style={{ color: 'var(--nexus-muted)' }}>
+              Crie seu primeiro backup clicando no botão acima
             </p>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="nexus-table">
-              <thead>
-                <tr>
-                  <th>Arquivo</th>
-                  <th>Tamanho</th>
-                  <th>Data</th>
-                  <th className="text-right">Acoes</th>
-                </tr>
-              </thead>
-              <tbody>
-                {backups.map((b) => (
-                  <tr key={b.id} className="nexus-table-row">
-                    <td><span className="text-sm" style={{ color: 'var(--nexus-text)' }}>{b.filename}</span></td>
-                    <td><span className="text-sm" style={{ color: 'var(--nexus-muted)' }}>{b.size}</span></td>
-                    <td><span className="text-sm" style={{ color: 'var(--nexus-muted)' }}>{b.created_at}</span></td>
-                    <td className="text-right">
-                      <button
-                        onClick={() => downloadBackup(b.id)}
-                        className="inline-flex items-center gap-1 text-sm font-medium transition-colors"
-                        style={{ color: 'var(--nexus-gold)' }}
-                      >
-                        <ArrowDownTrayIcon className="w-4 h-4" />
-                        Baixar
-                      </button>
-                    </td>
+          <>
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs">
+                <thead>
+                  <tr style={{ borderBottom: '1px solid var(--nexus-border)' }}>
+                    {['Arquivo', 'Tamanho', 'Data', ''].map(h => (
+                      <th key={h} className="px-5 py-3.5 font-semibold uppercase tracking-wider"
+                        style={{ color: 'var(--nexus-muted-2)' }}>{h}</th>
+                    ))}
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  {paged.map((b) => (
+                    <tr key={b.id} className="transition-colors" style={{ borderBottom: '1px solid var(--nexus-border)' }}
+                      onMouseEnter={e => { e.currentTarget.style.background = 'var(--nexus-bg-soft)'; }}
+                      onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; }}>
+                      <td className="px-5 py-3">
+                        <div className="flex items-center gap-2">
+                          <ShieldCheckIcon className="w-4 h-4" style={{ color: 'var(--nexus-gold)' }} />
+                          <span className="text-sm font-medium" style={{ color: 'var(--nexus-text)' }}>{b.filename}</span>
+                        </div>
+                      </td>
+                      <td className="px-5 py-3 text-sm" style={{ color: 'var(--nexus-muted)' }}>{b.size}</td>
+                      <td className="px-5 py-3 text-sm" style={{ color: 'var(--nexus-muted)' }}>{b.created_at}</td>
+                      <td className="px-5 py-3 text-right">
+                        <button onClick={() => downloadBackup(b.id)}
+                          className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-lg transition-colors"
+                          style={{ color: 'var(--nexus-gold)', border: '1px solid var(--nexus-border)' }}>
+                          <ArrowDownTrayIcon className="w-3.5 h-3.5" />
+                          Baixar
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {totalPages > 1 && (
+              <div className="flex items-center justify-between px-5 py-3" style={{ borderTop: '1px solid var(--nexus-border)' }}>
+                <span className="text-xs" style={{ color: 'var(--nexus-muted-2)' }}>
+                  Página {page} de {totalPages}
+                </span>
+                <div className="flex items-center gap-2">
+                  <button disabled={page <= 1} onClick={() => setPage(page - 1)}
+                    className="p-1.5 rounded-lg transition-colors disabled:opacity-30"
+                    style={{ border: '1px solid var(--nexus-border)', color: 'var(--nexus-muted)' }}>
+                    <ChevronLeftIcon className="w-4 h-4" />
+                  </button>
+                  <button disabled={page >= totalPages} onClick={() => setPage(page + 1)}
+                    className="p-1.5 rounded-lg transition-colors disabled:opacity-30"
+                    style={{ border: '1px solid var(--nexus-border)', color: 'var(--nexus-muted)' }}>
+                    <ChevronRightIcon className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+            )}
+          </>
         )}
       </div>
 
-      <div className="nexus-card p-6">
+      <div className="rounded-2xl p-6" style={{ background: 'var(--nexus-card)', border: '1px solid var(--nexus-border)' }}>
         <h2 className="text-base font-semibold mb-2" style={{ color: 'var(--nexus-text)' }}>Restauração</h2>
         <p className="text-sm mb-4" style={{ color: 'var(--nexus-muted)' }}>
           Para restaurar um backup, baixe o arquivo desejado e utilize a ferramenta de restauração do banco de dados.
         </p>
-        <div className="p-4 rounded-lg" style={{ background: 'rgba(var(--nexus-gold-rgb), 0.06)', border: '1px solid rgba(var(--nexus-gold-rgb), 0.15)' }}>
+        <div className="p-4 rounded-xl" style={{ background: 'rgba(var(--nexus-gold-rgb),0.06)', border: '1px solid rgba(var(--nexus-gold-rgb),0.15)' }}>
           <p className="text-xs" style={{ color: 'var(--nexus-muted-2)' }}>
             A restauração de backups deve ser realizada por um administrador do sistema.
-            O processo substituira todos os dados atuais pelos dados do backup.
+            O processo substituirá todos os dados atuais pelos dados do backup.
           </p>
         </div>
       </div>

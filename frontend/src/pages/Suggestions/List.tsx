@@ -1,24 +1,20 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { LightBulbIcon } from '@heroicons/react/24/outline';
 import { listSuggestions } from '../../services/suggestions.service';
 import { Suggestion } from '../../types';
 import { useAuth } from '../../contexts/AuthContext';
 
-const statusLabels: Record<string, string> = {
-  pending: 'Pendente', under_review: 'Em Análise', approved: 'Aprovada',
-  rejected: 'Rejeitada', implemented: 'Implementada',
+const statusCfg: Record<string, { label: string; style: React.CSSProperties }> = {
+  pending: { label: 'Pendente', style: { background: 'rgba(var(--nexus-gold-rgb),0.12)', color: 'var(--nexus-gold)' } },
+  under_review: { label: 'Em Análise', style: { background: 'rgba(var(--nexus-blue-rgb),0.12)', color: 'var(--nexus-chart-blue)' } },
+  approved: { label: 'Aprovada', style: { background: 'rgba(var(--nexus-success-rgb),0.12)', color: 'var(--nexus-success)' } },
+  rejected: { label: 'Rejeitada', style: { background: 'rgba(var(--nexus-danger-rgb),0.12)', color: 'var(--nexus-danger)' } },
+  implemented: { label: 'Implementada', style: { background: 'rgba(var(--nexus-success-rgb),0.12)', color: 'var(--nexus-success)' } },
 };
 
-const statusBadgeStyles: Record<string, React.CSSProperties> = {
-  pending: { background: 'rgba(var(--nexus-gold-rgb),0.12)', color: 'var(--nexus-gold)' },
-  under_review: { background: 'rgba(var(--nexus-blue-rgb),0.12)', color: 'var(--nexus-chart-blue)' },
-  approved: { background: 'rgba(var(--nexus-success-rgb),0.12)', color: 'var(--nexus-success)' },
-  rejected: { background: 'rgba(var(--nexus-danger-rgb),0.12)', color: 'var(--nexus-danger)' },
-  implemented: { background: 'rgba(var(--nexus-success-rgb),0.12)', color: 'var(--nexus-success)' },
-};
-
-const categoryLabels: Record<string, string> = {
+const categoryCfg: Record<string, string> = {
   general: 'Geral', improvement: 'Melhoria', feature: 'Funcionalidade',
   complaint: 'Reclamação', praise: 'Elogio',
 };
@@ -40,82 +36,89 @@ export function SuggestionsList() {
     finally { setLoading(false); }
   }
 
-  const isAdminOrManager = user?.role?.toLowerCase() === 'admin' || user?.role?.toLowerCase() === 'manager';
-  const userSuggestions = suggestions.filter((s) => s.user_id === user?.id);
-  const displaySuggestions = isAdminOrManager ? suggestions : userSuggestions;
+  const isAdmin = user?.role?.toLowerCase() === 'admin' || user?.role?.toLowerCase() === 'manager';
+  const display = isAdmin ? suggestions : suggestions.filter((s) => s.user_id === user?.id);
 
   return (
-    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
-      <div style={{ marginBottom: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="p-6 space-y-6 min-h-screen bg-transparent">
+      <div className="flex items-center justify-between">
         <div>
-          <h1 style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--nexus-text)' }}>
+          <h1 className="text-2xl font-bold" style={{ color: 'var(--nexus-text)' }}>
             <span style={{ color: 'var(--nexus-gold)' }}>Sugestões</span>
           </h1>
-          <p style={{ fontSize: '0.875rem', color: 'var(--nexus-muted-2)', marginTop: '0.25rem' }}>
-            {isAdminOrManager ? 'Todas as sugestões recebidas' : 'Minhas sugestões'}
+          <p className="text-sm mt-1" style={{ color: 'var(--nexus-muted)' }}>
+            {isAdmin ? 'Todas as sugestões recebidas' : 'Minhas sugestões'}
           </p>
         </div>
-        <div style={{ display: 'flex', gap: '0.75rem' }}>
-          {isAdminOrManager && (
-            <button
-              onClick={() => navigate('/suggestions/admin')}
-              style={{ background: 'var(--nexus-card)', color: 'var(--nexus-text)', border: '1px solid var(--nexus-border)', borderRadius: '10px', padding: '0.5rem 1rem', cursor: 'pointer' }}
-            >
+        <div className="flex gap-3">
+          {isAdmin && (
+            <button onClick={() => navigate('/suggestions/admin')}
+              className="px-4 py-2 text-sm font-medium rounded-xl transition-all"
+              style={{ background: 'var(--nexus-card)', color: 'var(--nexus-text)', border: '1px solid var(--nexus-border)' }}>
               Gerenciar
             </button>
           )}
-          <button
-            onClick={() => navigate('/suggestions/new')}
-            style={{ background: 'linear-gradient(135deg, var(--nexus-rose), var(--nexus-rose-dark))', color: 'var(--nexus-text)', border: 'none', borderRadius: '10px', padding: '0.75rem 1.5rem', fontWeight: 500, cursor: 'pointer' }}
-          >
+          <button onClick={() => navigate('/suggestions/new')}
+            className="px-4 py-2 text-sm font-medium rounded-xl transition-all"
+            style={{ background: 'linear-gradient(135deg, var(--nexus-rose), var(--nexus-rose-dark))', color: '#FFFFFF' }}>
             Nova Sugestão
           </button>
         </div>
       </div>
 
-      <div style={{ background: 'var(--nexus-card)', border: '1px solid var(--nexus-border)', borderRadius: '14px', overflow: 'hidden' }}>
+      <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--nexus-card)', border: '1px solid var(--nexus-border)' }}>
         {loading ? (
-          <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--nexus-muted-2)' }}>Carregando...</div>
-        ) : displaySuggestions.length === 0 ? (
-          <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--nexus-muted-2)' }}>
-            <p>Nenhuma sugestão encontrada.</p>
-            <button
-              onClick={() => navigate('/suggestions/new')}
-              style={{ background: 'linear-gradient(135deg, var(--nexus-rose), var(--nexus-rose-dark))', color: 'var(--nexus-text)', border: 'none', borderRadius: '10px', padding: '0.75rem 1.5rem', fontWeight: 500, cursor: 'pointer', marginTop: '1rem' }}
-            >
-              Enviar primeira sugestão
+          <div className="p-6 space-y-4">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="space-y-2">
+                <div className="h-4 w-1/4 rounded animate-pulse" style={{ background: 'var(--nexus-bg-soft)' }} />
+                <div className="h-5 w-3/4 rounded animate-pulse" style={{ background: 'var(--nexus-bg-soft)' }} />
+                <div className="h-4 w-1/2 rounded animate-pulse" style={{ background: 'var(--nexus-bg-soft)' }} />
+              </div>
+            ))}
+          </div>
+        ) : display.length === 0 ? (
+          <div className="text-center py-12">
+            <LightBulbIcon className="w-12 h-12 mx-auto mb-3" style={{ color: 'var(--nexus-muted-2)' }} />
+            <p className="text-sm font-medium" style={{ color: 'var(--nexus-text)' }}>Nenhuma sugestão encontrada</p>
+            <p className="text-xs mt-1 mb-4" style={{ color: 'var(--nexus-muted)' }}>Compartilhe sua ideia para melhorar o sistema</p>
+            <button onClick={() => navigate('/suggestions/new')}
+              className="px-4 py-2 text-sm font-medium rounded-xl"
+              style={{ background: 'linear-gradient(135deg, var(--nexus-rose), var(--nexus-rose-dark))', color: '#FFFFFF' }}>
+              Enviar sugestão
             </button>
           </div>
         ) : (
           <div>
-            {displaySuggestions.map((s) => (
-              <div
-                key={s.id}
-                style={{
-                  padding: '1rem 1.25rem',
-                  borderBottom: '1px solid var(--nexus-border)',
-                }}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
-                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.375rem', padding: '0.25rem 0.75rem', borderRadius: '9999px', fontSize: '0.75rem', fontWeight: 500, background: 'var(--nexus-card-soft)', color: 'var(--nexus-muted-2)' }}>
-                    {categoryLabels[s.category] || s.category}
+            {display.map((s) => (
+              <motion.div key={s.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+                className="px-5 py-4 transition-colors"
+                style={{ borderBottom: '1px solid var(--nexus-border)' }}
+                onMouseEnter={e => { e.currentTarget.style.background = 'var(--nexus-bg-soft)'; }}
+                onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; }}>
+                <div className="flex items-center gap-2 mb-1.5">
+                  <span className="inline-flex px-2.5 py-0.5 rounded-full text-[11px] font-medium"
+                    style={{ background: 'var(--nexus-card-soft)', color: 'var(--nexus-muted-2)' }}>
+                    {categoryCfg[s.category] || s.category}
                   </span>
-                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.375rem', padding: '0.25rem 0.75rem', borderRadius: '9999px', fontSize: '0.75rem', fontWeight: 500, ...(statusBadgeStyles[s.status] || statusBadgeStyles.pending) }}>
-                    {statusLabels[s.status] || s.status}
+                  <span className="inline-flex px-2.5 py-0.5 rounded-full text-[11px] font-medium"
+                    style={statusCfg[s.status]?.style || statusCfg.pending.style}>
+                    {statusCfg[s.status]?.label || s.status}
                   </span>
                   {s.is_offensive === 1 && (
-                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.375rem', padding: '0.25rem 0.75rem', borderRadius: '9999px', fontSize: '0.75rem', fontWeight: 500, background: 'rgba(var(--nexus-danger-rgb),0.12)', color: 'var(--nexus-danger)' }}>
+                    <span className="inline-flex px-2.5 py-0.5 rounded-full text-[11px] font-medium"
+                      style={{ background: 'rgba(var(--nexus-danger-rgb),0.12)', color: 'var(--nexus-danger)' }}>
                       Ofensivo
                     </span>
                   )}
                 </div>
-                <h3 style={{ fontSize: '0.9375rem', fontWeight: 600, color: 'var(--nexus-text)' }}>{s.title}</h3>
-                <p style={{ fontSize: '0.8125rem', color: 'var(--nexus-muted-2)', marginTop: '0.25rem', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{s.description}</p>
-                <p style={{ fontSize: '0.75rem', color: 'var(--nexus-muted-2)', marginTop: '0.5rem' }}>
+                <h3 className="text-sm font-semibold" style={{ color: 'var(--nexus-text)' }}>{s.title}</h3>
+                <p className="text-xs mt-1 line-clamp-2" style={{ color: 'var(--nexus-muted)' }}>{s.description}</p>
+                <p className="text-[11px] mt-2" style={{ color: 'var(--nexus-muted-2)' }}>
                   {new Date(s.created_at).toLocaleString('pt-BR')}
-                  {!isAdminOrManager && s.admin_notes && ` — Nota: ${s.admin_notes}`}
+                  {!isAdmin && s.admin_notes && ` — Nota: ${s.admin_notes}`}
                 </p>
-              </div>
+              </motion.div>
             ))}
           </div>
         )}
