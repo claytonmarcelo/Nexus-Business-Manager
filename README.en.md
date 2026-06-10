@@ -491,41 +491,40 @@ Complete documentation is available in the `docs/` folder:
 - [x] CI/CD pipeline
 - [x] Automated unit tests
 - [x] Complete bilingual documentation
-
 ### Future
 
-#### Phase 9 â€” App Marketplace
+#### Phase 9 — App Marketplace
 
 Future area to enable integration of modules, extensions and external services into Nexus Business Manager.
 
 **Possibilities:**
 
-- WhatsApp integrations
-- Google Calendar
-- Google Drive
-- PIX
-- Stripe
-- Mercado Pago
-- Internal apps
-- Business plugins
-- Per-company extensions
+* WhatsApp integrations
+* Google Calendar
+* Google Drive
+* PIX
+* Stripe
+* Mercado Pago
+* Internal apps
+* Business plugins
+* Per-company extensions
 
 > Status: Planned
 
-#### Phase 10 â€” BI and Business Intelligence
+#### Phase 10 — BI and Business Intelligence
 
 Future strategic analysis layer to transform operational data into management indicators.
 
 **Possibilities:**
 
-- Advanced dashboards
-- Custom KPIs
-- Comparative charts
-- Sales analysis
-- Financial analysis
-- Stock forecasting
-- Executive reports
-- Analytical export
+* Advanced dashboards
+* Custom KPIs
+* Comparative charts
+* Sales analysis
+* Financial analysis
+* Stock forecasting
+* Executive reports
+* Analytical export
 
 > Status: Planned
 
