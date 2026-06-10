@@ -553,7 +553,7 @@ Access `http://localhost:5173` and log in with:
 
 ---
 
-## ðŸ‘¨â€ðŸ’» Developer
+## 👨‍💻 Developer
 
 <table>
   <tr>
@@ -562,12 +562,24 @@ Access `http://localhost:5173` and log in with:
     </td>
     <td>
       <strong>C. Marcelo Dev.</strong><br>
-      <strong>ðŸ“</strong> Brazil<br><br>
-      <a href="https://github.com/claytonmarcelo" target="_blank"><img src="https://img.shields.io/badge/GitHub-claytonmarcelo-181717?style=flat-square&logo=github"></a>
-      <a href="https://www.youtube.com/@c.marcelodev.brasil" target="_blank"><img src="https://img.shields.io/badge/YouTube-CMarceloDev-FF0000?style=flat-square&logo=youtube"></a>
-      <a href="https://cmarcelodev.com" target="_blank"><img src="https://img.shields.io/badge/Portfolio-cmarcelodev.com-000000?style=flat-square"></a>
-      <a href="https://www.linkedin.com/in/clayton-marcelo-dev/" target="_blank"><img src="https://img.shields.io/badge/LinkedIn-claytonmarcelo-0A66C2?style=flat-square&logo=linkedin"></a><br><br>
-      <em>Full Stack Developer specialized in React, React Native, Node.js, Fastify, TypeScript, MySQL and enterprise SaaS solutions development.</em>
+      <strong>📍</strong> Brazil<br><br>
+      <a href="https://github.com/claytonmarcelo" target="_blank">
+        <img src="https://img.shields.io/badge/GitHub-claytonmarcelo-181717?style=flat-square&logo=github" alt="GitHub">
+      </a>
+      <a href="https://www.youtube.com/@c.marcelodev.brasil" target="_blank">
+        <img src="https://img.shields.io/badge/YouTube-CMarceloDev-FF0000?style=flat-square&logo=youtube" alt="YouTube">
+      </a>
+      <a href="https://cmarcelodev.com" target="_blank">
+        <img src="https://img.shields.io/badge/Portfolio-cmarcelodev.com-000000?style=flat-square" alt="Portfolio">
+      </a>
+      <a href="https://www.linkedin.com/in/clayton-marcelo-dev/" target="_blank">
+        <img src="https://img.shields.io/badge/LinkedIn-claytonmarcelo-0A66C2?style=flat-square&logo=linkedin" alt="LinkedIn">
+      </a>
+      <br><br>
+      <em>
+        Full Stack Developer specialized in React, React Native, Node.js,
+        Fastify, TypeScript, MySQL and enterprise SaaS solutions development.
+      </em>
     </td>
   </tr>
 </table>
@@ -576,17 +588,17 @@ Access `http://localhost:5173` and log in with:
 
 ## License
 
-This project is licensed under the **MIT License** â€” see the [LICENSE](LICENSE) file for details.
+This project is licensed under the **MIT License** — see the [LICENSE](LICENSE) file for details.
 
 Read the simplified explanation:
-- [PortuguÃªs](docs/license-pt-br.md)
-- [English](docs/en/license-en.md)
+
+* [Português](docs/license-pt-br.md)
+* [English](docs/en/license-en.md)
 
 ---
 
 <p align="center">
   <em>Built with dedication by <strong>C. Marcelo Dev. Brazil</strong>.</em>
   <br>
-  <a href="https://github.com/claytonmarcelo/Nexus-Business-Manager">ðŸ”— GitHub</a>
+  <a href="https://github.com/claytonmarcelo/Nexus-Business-Manager">🔗 GitHub</a>
 </p>
-
