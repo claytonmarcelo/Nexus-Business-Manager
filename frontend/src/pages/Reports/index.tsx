@@ -55,7 +55,7 @@ export function Reports() {
   const spark5 = [{v:12},{v:10},{v:18},{v:15},{v:22},{v:20},{v:28},{v:25},{v:30},{v:35}];
 
   return (
-    <div className="p-6 space-y-6 min-h-screen" style={{ background: 'var(--nexus-bg)' }}>
+    <div className="p-6 space-y-6" style={{ background: 'var(--nexus-bg)' }}>
 
       {/* ── Header ── */}
       <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}>

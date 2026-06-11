@@ -6,6 +6,21 @@ O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.
 
 Este projeto segue [Semantic Versioning](https://semver.org/lang/pt-BR/).
 
+## [1.3.0] - 2026-06-11
+
+### Added
+
+- FullCalendar 6 completo na pagina de Agenda: visoes mes/semana/dia/lista, arrastar e soltar, redimensionamento, locale pt-BR, modal CRUD, alteracao de status inline, filtro por cliente, tema escuro personalizado.
+- Rotas de erro (403, 500, 404) e manutencao agora utilizam o Layout padrao com Sidebar + Navbar para usuarios autenticados.
+
+### Changed
+
+- Paginas admin com `min-h-screen` redundante corrigidas para usar apenas `bg-transparent`, eliminando scroll duplicado dentro do Layout.
+
+### Fixed
+
+- Todas as paginas do painel administrativo agora seguem o padrao com sidebar e navbar fixa.
+
 ## [1.2.0] - 2026-06-11
 
 ### Added

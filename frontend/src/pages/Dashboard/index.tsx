@@ -600,7 +600,7 @@ const ExecutivePanel = memo(function ExecutivePanel() {
 /* ── Main Dashboard ──────────────────────────────────────── */
 export function Dashboard() {
   return (
-    <div className="p-5 space-y-5 min-h-screen bg-transparent">
+    <div className="p-5 space-y-5 bg-transparent">
 
       {/* Page header */}
       <div>

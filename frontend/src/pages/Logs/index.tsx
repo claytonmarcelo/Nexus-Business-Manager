@@ -84,7 +84,7 @@ export function Logs() {
   }));
 
   return (
-    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="p-6 space-y-6 min-h-screen bg-transparent">
+    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="p-6 space-y-6 bg-transparent">
       <div>
         <h1 className="text-2xl font-bold" style={{ color: 'var(--nexus-text)' }}>Logs do Sistema</h1>
         <p className="text-sm mt-1" style={{ color: 'var(--nexus-muted)' }}>

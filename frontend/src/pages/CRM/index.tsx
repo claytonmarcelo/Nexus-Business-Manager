@@ -248,7 +248,7 @@ export function CRM() {
 
   /* ── render ── */
   return (
-    <div className="p-6 space-y-6 min-h-screen" onClick={() => setActionMenu(null)}>
+    <div className="p-6 space-y-6" onClick={() => setActionMenu(null)}>
 
       {/* ── Breadcrumb + Header ── */}
       <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}>

@@ -1365,3 +1365,167 @@ input:focus, textarea:focus, select:focus {
 .light .dropdown-shadow {
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
 }
+
+/* FullCalendar 6 - tema escuro Nexus */
+.fc {
+  --fc-border-color: rgba(212, 149, 86, 0.15);
+  --fc-page-bg-color: transparent;
+  --fc-neutral-bg-color: rgba(255, 255, 255, 0.02);
+  --fc-today-bg-color: rgba(196, 138, 67, 0.08);
+  --fc-list-event-hover-bg-color: rgba(196, 138, 67, 0.06);
+  --fc-event-bg-color: rgba(196, 138, 67, 0.85);
+  --fc-event-border-color: #C48A43;
+  --fc-event-text-color: #fff;
+  --fc-more-link-bg-color: rgba(196, 138, 67, 0.15);
+  --fc-more-link-text-color: #C48A43;
+  --fc-button-text-color: #D8D8D8;
+  --fc-button-bg-color: transparent;
+  --fc-button-border-color: rgba(212, 149, 86, 0.25);
+  --fc-button-hover-bg-color: rgba(196, 138, 67, 0.12);
+  --fc-button-hover-border-color: #C48A43;
+  --fc-button-active-bg-color: rgba(196, 138, 67, 0.2);
+  --fc-button-active-border-color: #C48A43;
+  --fc-non-business-color: rgba(255, 255, 255, 0.01);
+  color: var(--nexus-text);
+  font-size: 0.875rem;
+}
+.fc .fc-toolbar-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--nexus-text);
+}
+.fc .fc-button {
+  border-radius: 8px;
+  padding: 0.4rem 0.8rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+.fc .fc-button-primary:not(:disabled).fc-button-active,
+.fc .fc-button-primary:not(:disabled):active {
+  background: var(--fc-button-active-bg-color);
+  border-color: var(--fc-button-active-border-color);
+  color: var(--nexus-gold);
+}
+.fc .fc-button-primary:not(:disabled):hover {
+  background: var(--fc-button-hover-bg-color);
+  border-color: var(--fc-button-hover-border-color);
+  color: var(--nexus-gold);
+}
+.fc .fc-col-header-cell-cushion {
+  color: var(--nexus-muted-2);
+  font-weight: 500;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.fc .fc-daygrid-day-number {
+  color: var(--nexus-muted);
+  font-size: 0.8125rem;
+}
+.fc .fc-daygrid-day.fc-day-today .fc-daygrid-day-number {
+  color: var(--nexus-gold);
+  font-weight: 700;
+}
+.fc .fc-daygrid-more-link {
+  color: var(--nexus-gold);
+  font-size: 0.75rem;
+}
+.fc .fc-timegrid-slot {
+  border-color: rgba(212, 149, 86, 0.06);
+}
+.fc .fc-list-day-cushion {
+  background: rgba(255, 255, 255, 0.02);
+}
+.fc .fc-list-day-text,
+.fc .fc-list-day-side-text {
+  color: var(--nexus-text);
+  font-weight: 600;
+}
+.fc .fc-list-event td {
+  border-color: rgba(212, 149, 86, 0.06);
+}
+.fc .fc-list-event:hover td {
+  background: var(--fc-list-event-hover-bg-color);
+}
+.fc .fc-cell-shaded,
+.fc .fc-day-disabled {
+  background: rgba(255, 255, 255, 0.01);
+}
+.fc .fc-popover {
+  background: var(--nexus-card-strong);
+  border: 1px solid var(--nexus-border);
+  border-radius: 12px;
+}
+.fc .fc-popover-title {
+  color: var(--nexus-text);
+}
+.fc .fc-popover-header {
+  background: transparent;
+  border-bottom: 1px solid var(--nexus-border);
+}
+.fc .fc-more-popover .fc-daygrid-event {
+  margin: 2px 0;
+}
+.fc .fc-now-indicator-line {
+  border-color: var(--nexus-rose);
+}
+.fc .fc-now-indicator-arrow {
+  border-color: var(--nexus-rose);
+  color: var(--nexus-rose);
+}
+.fc .fc-event {
+  border-radius: 6px;
+  padding: 2px 6px;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+.fc .fc-event:hover {
+  opacity: 0.85;
+}
+.fc .fc-event-title {
+  font-weight: 500;
+}
+.fc .fc-timegrid-event .fc-event-main {
+  padding: 2px 4px;
+}
+.fc .fc-daygrid-event-dot {
+  border-color: inherit;
+}
+.fc .fc-scrollgrid {
+  border-color: var(--fc-border-color);
+}
+.fc .fc-scrollgrid-section > td {
+  border-color: var(--fc-border-color);
+}
+.fc .fc-scrollgrid-section-header > th {
+  border-color: var(--fc-border-color);
+}
+.fc th {
+  border-color: var(--fc-border-color);
+}
+.fc td {
+  border-color: var(--fc-border-color);
+}
+
+/* Tema claro FullCalendar */
+.light .fc {
+  --fc-border-color: rgba(196, 138, 67, 0.2);
+  --fc-today-bg-color: rgba(196, 138, 67, 0.06);
+  --fc-list-event-hover-bg-color: rgba(196, 138, 67, 0.04);
+  --fc-button-hover-bg-color: rgba(196, 138, 67, 0.08);
+  --fc-button-hover-border-color: var(--nexus-gold);
+  --fc-button-active-bg-color: rgba(196, 138, 67, 0.12);
+  --fc-button-active-border-color: var(--nexus-gold);
+}
+.light .fc .fc-col-header-cell-cushion {
+  color: var(--nexus-muted-2);
+}
+.light .fc .fc-daygrid-day-number {
+  color: var(--nexus-text);
+}
+.light .fc .fc-list-day-cushion {
+  background: rgba(0, 0, 0, 0.02);
+}

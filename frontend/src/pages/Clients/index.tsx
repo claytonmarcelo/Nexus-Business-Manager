@@ -156,7 +156,7 @@ export function Clients() {
   }
 
   return (
-    <div className="p-6 space-y-6 min-h-screen" onClick={() => { setShowSort(false); setActionMenu(null); }}>
+    <div className="p-6 space-y-6" onClick={() => { setShowSort(false); setActionMenu(null); }}>
 
       {/* ── Breadcrumb + Title ── */}
       <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}>

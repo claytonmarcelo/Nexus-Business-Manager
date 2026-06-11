@@ -95,7 +95,7 @@ export function AdminSuggestions() {
   const canManage = user?.role?.toLowerCase() === 'admin' || user?.role?.toLowerCase() === 'manager';
 
   return (
-    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="p-6 space-y-6 min-h-screen bg-transparent">
+    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="p-6 space-y-6 bg-transparent">
       <div>
         <h1 className="text-2xl font-bold" style={{ color: 'var(--nexus-text)' }}>
           Gerenciar <span style={{ color: 'var(--nexus-gold)' }}>Sugestões</span>

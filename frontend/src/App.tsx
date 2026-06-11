@@ -81,8 +81,6 @@ function AppRoutes() {
   return (
     <Routes>
       <Route path="/maintenance" element={<PaginaManutencao />} />
-      <Route path="/403" element={<Error403 />} />
-      <Route path="/500" element={<Error500 />} />
 
       <Route element={<PublicLayout />}>
         <Route path="/" element={<Landing />} />
@@ -129,6 +127,10 @@ function AppRoutes() {
         <Route path="subscription" element={<Subscription />} />
         <Route path="invoices" element={<Invoices />} />
         <Route path="status" element={<Status />} />
+        <Route path="403" element={<Error403 />} />
+        <Route path="500" element={<Error500 />} />
+        <Route path="maintenance" element={<PaginaManutencao />} />
+        <Route path="*" element={<Error404 />} />
       </Route>
 
       <Route path="*" element={<Error404 />} />
