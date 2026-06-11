@@ -12,5 +12,9 @@ coverage/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+*.log
+logs/
+backend/logs/
+graphify-out/*.log
 database/backups/*.sql
 database/backups/*.sql.gz
