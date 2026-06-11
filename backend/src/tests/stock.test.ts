@@ -6,8 +6,6 @@ vi.mock("../shared/database/connection", () => ({
   execute: vi.fn(),
 }));
 
-import { query } from "../shared/database/connection";
-
 function updateProductStock(
   productId: number,
   type: string,

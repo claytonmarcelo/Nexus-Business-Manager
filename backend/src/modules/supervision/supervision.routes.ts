@@ -1,4 +1,3 @@
-import { FastifyInstance } from 'fastify'
 import { execute, query } from '../../shared/database/connection'
 
 export async function supervisionRoutes(app: any) {

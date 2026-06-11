@@ -99,19 +99,21 @@ export async function updateUser(id: number, data: UpdateUserInput): Promise<Use
   }
 
   if (fields.length > 0) {
-    values.push(id);
-    await execute(`UPDATE users SET ${fields.join(', ')} WHERE id = ?`, values);
+    values.push(id, companyId);
+    await execute(`UPDATE users SET ${fields.join(', ')} WHERE id = ? AND company_id = ?`, values);
   }
 
   return getUserById(id);
 }
 
 export async function updateTheme(userId: number, theme: string): Promise<void> {
-  await execute('UPDATE users SET theme_preference = ? WHERE id = ?', [theme, userId]);
+  const user = await getUserById(userId);
+  await execute('UPDATE users SET theme_preference = ? WHERE id = ? AND company_id = ?', [theme, userId, user.company_id]);
 }
 
 export async function updateAvatar(userId: number, avatarUrl: string): Promise<void> {
-  await execute('UPDATE users SET avatar_url = ? WHERE id = ?', [avatarUrl, userId]);
+  const user = await getUserById(userId);
+  await execute('UPDATE users SET avatar_url = ? WHERE id = ? AND company_id = ?', [avatarUrl, userId, user.company_id]);
 }
 
 export async function deleteUser(id: number): Promise<void> {
@@ -119,5 +121,5 @@ export async function deleteUser(id: number): Promise<void> {
   if (user.email === 'marcelolimadez@gmail.com') {
     throw new AppError('Este usuario administrador e reservado para testes do sistema e nao pode ser removido.', 403);
   }
-  await execute('UPDATE users SET active = FALSE WHERE id = ?', [id]);
+  await execute('UPDATE users SET active = FALSE WHERE id = ? AND company_id = ?', [id, user.company_id]);
 }

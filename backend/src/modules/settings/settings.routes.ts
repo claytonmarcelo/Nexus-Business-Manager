@@ -1,4 +1,3 @@
-import { FastifyInstance } from 'fastify'
 import { getAllSettings, setSetting, getPreloaderConfig } from './settings.service'
 
 export async function settingsRoutes(app: any) {

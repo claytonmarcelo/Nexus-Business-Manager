@@ -1,4 +1,3 @@
-import { FastifyInstance } from 'fastify'
 import { query } from '../../shared/database/connection'
 
 interface ConfigManutencao {

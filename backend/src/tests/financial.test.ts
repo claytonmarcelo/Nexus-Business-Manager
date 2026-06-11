@@ -5,12 +5,6 @@ vi.mock("../shared/database/connection", () => ({
   execute: vi.fn(),
 }));
 
-interface CashFlowRow {
-  total_revenue: number;
-  total_expense: number;
-  balance: number;
-}
-
 describe("Financial - Calculo de fluxo de caixa", () => {
   it("deve calcular saldo corretamente (receitas - despesas)", () => {
     const revenue = 10000;

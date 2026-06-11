@@ -3,7 +3,7 @@ import { AppError } from '../../shared/errors/app-error';
 
 const VALID_PLANS = ['free', 'pro', 'enterprise'] as const;
 
-export async function getSubscription(companyId: number, userId: number) {
+export async function getSubscription(companyId: number, _userId: number) {
   const rows = await query<any[]>(
     `SELECT id, plan, status, start_date, next_billing, payment_method, users_limit, 
             (SELECT COUNT(*) FROM users WHERE company_id = ? AND active = TRUE) as users_used

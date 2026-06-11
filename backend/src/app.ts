@@ -93,7 +93,7 @@ export async function buildApp() {
   });
 
   await app.register(jwt, {
-    secret: process.env.JWT_SECRET,
+    secret: process.env.JWT_SECRET as string,
     sign: { expiresIn: process.env.JWT_EXPIRES_IN || '8h' },
   });
 
@@ -109,7 +109,7 @@ export async function buildApp() {
     decorateReply: false,
   });
 
-  app.decorate('authenticate', async (request: any, reply: any) => {
+  app.decorate('authenticate', async (request: any, _reply: any) => {
     try {
       await request.jwtVerify();
       if (request.user) {

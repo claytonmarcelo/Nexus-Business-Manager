@@ -1,7 +1,7 @@
 import { FastifyRequest, FastifyReply } from 'fastify';
 import { AppError } from '../errors/app-error';
 
-export async function authenticate(request: FastifyRequest, reply: FastifyReply): Promise<void> {
+export async function authenticate(request: FastifyRequest, _reply: FastifyReply): Promise<void> {
   try {
     await request.jwtVerify();
   } catch {

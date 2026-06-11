@@ -69,15 +69,15 @@ async function getProduct(productId: number, companyId: number): Promise<Product
   return products[0];
 }
 
-function updateProductStock(productId: number, type: string, quantity: number, currentQty: number): Promise<any> {
+function updateProductStock(productId: number, type: string, quantity: number, currentQty: number, companyId: number): Promise<any> {
   const newQty = type === 'in' ? currentQty + quantity : currentQty - quantity;
   if (newQty < 0) throw new AppError('Estoque insuficiente para esta saida', 400);
-  return execute('UPDATE products SET quantity = ? WHERE id = ?', [newQty, productId]);
+  return execute('UPDATE products SET quantity = ? WHERE id = ? AND company_id = ?', [newQty, productId, companyId]);
 }
 
 export async function createMovement(data: CreateMovementInput, userId: number, companyId: number): Promise<StockMovementRow> {
   const product = await getProduct(data.product_id, companyId);
-  await updateProductStock(data.product_id, data.type, data.quantity, product.quantity);
+  await updateProductStock(data.product_id, data.type, data.quantity, product.quantity, companyId);
 
   const result = await execute(
     'INSERT INTO stock_movements (product_id, type, quantity, description, created_by, company_id) VALUES (?, ?, ?, ?, ?, ?)',

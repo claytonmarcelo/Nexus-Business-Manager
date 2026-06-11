@@ -1,6 +1,6 @@
 import { query, execute, getPool } from '../../shared/database/connection';
 import { AppError } from '../../shared/errors/app-error';
-import { RowDataPacket, ResultSetHeader } from 'mysql2/promise';
+import { RowDataPacket } from 'mysql2/promise';
 import path from 'path';
 import fs from 'fs';
 

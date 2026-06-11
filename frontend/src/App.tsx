@@ -51,8 +51,8 @@ import { PaginaManutencao } from './pages/Maintenance'
 import { Preloader } from './components/Preloader'
 import { PermissaoGuard } from './components/PermissionGuard'
 
-function PrivateRoute({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated, loading } = useAuth()
+function PrivateRoute({ children, allowedRoles }: { children: React.ReactNode; allowedRoles?: string[] }) {
+  const { isAuthenticated, loading, user } = useAuth()
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center"
@@ -61,7 +61,13 @@ function PrivateRoute({ children }: { children: React.ReactNode }) {
       </div>
     )
   }
-  return isAuthenticated ? <>{children}</> : <Navigate to="/login" replace />
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />
+  }
+  if (allowedRoles && user && !allowedRoles.includes(user.role)) {
+    return <Navigate to="/403" replace />
+  }
+  return <>{children}</>
 }
 
 function PublicRoute({ children }: { children: React.ReactNode }) {

@@ -93,7 +93,7 @@ export async function createSale(data: CreateSaleInput, userId: number, companyI
         'INSERT INTO sale_items (sale_id, product_id, quantity, unit_price, total_price) VALUES (?, ?, ?, ?, ?)',
         [saleId, item.product_id, item.quantity, item.unit_price, item.total_price]
       );
-      await conn.execute('UPDATE products SET quantity = quantity - ? WHERE id = ?', [item.quantity, item.product_id]);
+      await conn.execute('UPDATE products SET quantity = quantity - ? WHERE id = ? AND company_id = ?', [item.quantity, item.product_id, companyId]);
       await conn.execute(
         'INSERT INTO stock_movements (product_id, type, quantity, description, reference_type, reference_id, created_by, company_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
         [item.product_id, 'out', item.quantity, 'Saida por venda', 'sale', saleId, userId, companyId]
@@ -130,10 +130,9 @@ export async function deleteSale(id: number, companyId: number): Promise<void> {
     await conn.beginTransaction();
     const items = await getSaleItems(id);
     for (const item of items) {
-      await conn.execute('UPDATE products SET quantity = quantity + ? WHERE id = ?', [item.quantity, item.product_id]);
+      await conn.execute('UPDATE products SET quantity = quantity + ? WHERE id = ? AND company_id = ?', [item.quantity, item.product_id, companyId]);
     }
-    await conn.execute('DELETE FROM sale_items WHERE sale_id = ?', [id]);
-    await conn.execute('DELETE FROM sales WHERE id = ? AND company_id = ?', [id, companyId]);
+    await conn.execute('UPDATE sales SET status = ? WHERE id = ? AND company_id = ?', ['CANCELADA', id, companyId]);
     await conn.commit();
   } catch (error) {
     await conn.rollback();
