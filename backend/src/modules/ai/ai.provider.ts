@@ -1,5 +1,3 @@
-import { AppError } from '../../shared/errors/app-error';
-
 const AI_ENABLED = process.env.AI_ENABLED !== 'false';
 const OLLAMA_BASE_URL = process.env.OLLAMA_BASE_URL || 'http://localhost:11434';
 const OLLAMA_MODEL = process.env.OLLAMA_MODEL || 'llama3';

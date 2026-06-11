@@ -46,7 +46,7 @@ export async function chat(data: ChatInput, companyId: number) {
   };
 }
 
-function getFallbackAnswer(message: string, module: string, context: any): string {
+function getFallbackAnswer(message: string, module: string, _context: any): string {
   const lower = message.toLowerCase();
   
   // General questions about the system

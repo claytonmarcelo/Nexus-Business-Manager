@@ -16,10 +16,12 @@ Este projeto segue [Semantic Versioning](https://semver.org/lang/pt-BR/).
 ### Changed
 
 - Paginas admin com `min-h-screen` redundante corrigidas para usar apenas `bg-transparent`, eliminando scroll duplicado dentro do Layout.
+- Pagina de Auditoria refatorada para seguir o padrao de design padronizado do sistema, utilizando variaveis CSS e componentes consistentes.
 
 ### Fixed
 
 - Todas as paginas do painel administrativo agora seguem o padrao com sidebar e navbar fixa.
+- Linting errors no backend: removidos imports nao utilizados e parametros nao utilizados renomeados com prefixo underscore.
 
 ## [1.2.0] - 2026-06-11
 
