@@ -153,15 +153,16 @@ export function Audit() {
   } as const
 
   return (
-    <div className="min-h-full" style={{ background: '#050505', backgroundImage: 'radial-gradient(ellipse at 50% 0%, rgba(200,134,62,0.04) 0%, transparent 60%), repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255,255,255,0.005) 2px, rgba(255,255,255,0.005) 3px)' }}>
-      <motion.div variants={containerVariants} initial="hidden" animate="visible" className="max-w-[1440px] mx-auto">
+    <div style={{ position: 'relative', background: '#050505' }}>
+      <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 0, backgroundImage: 'radial-gradient(ellipse at 50% 0%, rgba(200,134,62,0.04) 0%, transparent 60%), repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255,255,255,0.005) 2px, rgba(255,255,255,0.005) 3px)' }} />
+      <motion.div variants={containerVariants} initial="hidden" animate="visible" className="max-w-[1440px] mx-auto" style={{ position: 'relative', zIndex: 1 }}>
 
         {/* TITULO */}
-        <motion.div variants={itemVariants} className="mb-8">
-          <h1 className="font-bold tracking-tight" style={{ fontFamily: 'Inter, "Segoe UI", Roboto, Arial, sans-serif', fontSize: 48, color: '#FFFFFF', lineHeight: 1.1 }}>
+        <motion.div variants={itemVariants} className="mb-6">
+          <h1 className="font-bold tracking-tight" style={{ fontFamily: 'Inter, "Segoe UI", Roboto, Arial, sans-serif', fontSize: 'clamp(28px, 4vw, 48px)', color: '#FFFFFF', lineHeight: 1.1 }}>
             Auditoria
           </h1>
-          <p style={{ fontFamily: 'Inter, "Segoe UI", Roboto, Arial, sans-serif', fontSize: 18, fontWeight: 400, color: '#D8D8D8', marginTop: 4 }}>
+          <p style={{ fontFamily: 'Inter, "Segoe UI", Roboto, Arial, sans-serif', fontSize: 'clamp(14px, 1.5vw, 18px)', fontWeight: 400, color: '#D8D8D8', marginTop: 4 }}>
             Monitore todas as ações realizadas no sistema
           </p>
         </motion.div>
@@ -176,9 +177,9 @@ export function Audit() {
           ].map((card, i) => (
             <div
               key={i}
-              className="relative overflow-hidden transition-all duration-[0.25s] ease-out hover:-translate-y-0.5"
+              className="transition-all duration-[0.25s] ease-out hover:-translate-y-0.5"
               style={{
-                height: 120,
+                minHeight: 120,
                 background: 'linear-gradient(135deg, #0D0D0D 0%, #121212 100%)',
                 border: '1px solid #1F1A14',
                 borderRadius: 16,
@@ -228,7 +229,7 @@ export function Audit() {
         </motion.div>
 
         {/* GRID PRINCIPAL: TABELA + SIDEBAR */}
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_minmax(250px,300px)] gap-6">
 
           {/* COLUNA ESQUERDA - TABELA */}
           <motion.div variants={itemVariants} className="min-w-0">
@@ -242,8 +243,8 @@ export function Audit() {
               }}
             >
               {/* FILTROS */}
-              <div className="flex flex-col lg:flex-row gap-3 mb-6">
-                <div className="relative flex-1">
+              <div className="flex flex-wrap gap-2 mb-6">
+                <div className="relative flex-[2] min-w-[200px]">
                   <MagnifyingGlassIcon className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: '#D89A4D' }} />
                   <input
                     type="text"
@@ -252,7 +253,7 @@ export function Audit() {
                     onChange={(e) => setSearch(e.target.value)}
                     style={{
                       width: '100%',
-                      height: 48,
+                      height: 42,
                       background: '#0D0D0D',
                       border: '1px solid #2A2117',
                       borderRadius: 10,
@@ -264,14 +265,14 @@ export function Audit() {
                   />
                 </div>
                 <select value={filterUser} onChange={(e) => setFilterUser(e.target.value)}
-                  style={{ height: 48, background: '#0D0D0D', border: '1px solid #2A2117', borderRadius: 10, color: '#D8D8D8', fontSize: 13, padding: '0 12px', outline: 'none', minWidth: 130 }}>
+                  style={{ height: 42, background: '#0D0D0D', border: '1px solid #2A2117', borderRadius: 10, color: '#D8D8D8', fontSize: 13, padding: '0 10px', outline: 'none', minWidth: 110, maxWidth: 140 }}>
                   <option value="">Usuário</option>
                   <option>Clayton Marcelo</option>
                   <option>Ana Beatriz</option>
                   <option>Carlos Eduardo</option>
                 </select>
                 <select value={filterAction} onChange={(e) => setFilterAction(e.target.value)}
-                  style={{ height: 48, background: '#0D0D0D', border: '1px solid #2A2117', borderRadius: 10, color: '#D8D8D8', fontSize: 13, padding: '0 12px', outline: 'none', minWidth: 100 }}>
+                  style={{ height: 42, background: '#0D0D0D', border: '1px solid #2A2117', borderRadius: 10, color: '#D8D8D8', fontSize: 13, padding: '0 10px', outline: 'none', minWidth: 80, maxWidth: 110 }}>
                   <option value="">Ação</option>
                   <option value="create">Criar</option>
                   <option value="update">Editar</option>
@@ -279,7 +280,7 @@ export function Audit() {
                   <option value="login">Login</option>
                 </select>
                 <select value={filterModule} onChange={(e) => setFilterModule(e.target.value)}
-                  style={{ height: 48, background: '#0D0D0D', border: '1px solid #2A2117', borderRadius: 10, color: '#D8D8D8', fontSize: 13, padding: '0 12px', outline: 'none', minWidth: 110 }}>
+                  style={{ height: 42, background: '#0D0D0D', border: '1px solid #2A2117', borderRadius: 10, color: '#D8D8D8', fontSize: 13, padding: '0 10px', outline: 'none', minWidth: 90, maxWidth: 120 }}>
                   <option value="">Módulo</option>
                   <option>Clientes</option>
                   <option>Vendas</option>
@@ -287,21 +288,21 @@ export function Audit() {
                   <option>Financeiro</option>
                 </select>
                 <select value={filterPeriod} onChange={(e) => setFilterPeriod(e.target.value)}
-                  style={{ height: 48, background: '#0D0D0D', border: '1px solid #2A2117', borderRadius: 10, color: '#D8D8D8', fontSize: 13, padding: '0 12px', outline: 'none', minWidth: 100 }}>
+                  style={{ height: 42, background: '#0D0D0D', border: '1px solid #2A2117', borderRadius: 10, color: '#D8D8D8', fontSize: 13, padding: '0 10px', outline: 'none', minWidth: 80, maxWidth: 110 }}>
                   <option value="">Período</option>
                   <option value="today">Hoje</option>
                   <option value="week">Esta semana</option>
                   <option value="month">Este mês</option>
                 </select>
                 <button
-                  style={{ height: 48, padding: '0 16px', background: '#1A120D', border: '1px solid #2A2117', borderRadius: 10, color: '#D89A4D', fontSize: 13, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6, whiteSpace: 'nowrap' }}>
+                  style={{ height: 42, padding: '0 12px', background: '#1A120D', border: '1px solid #2A2117', borderRadius: 10, color: '#D89A4D', fontSize: 13, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 5, whiteSpace: 'nowrap' }}>
                   <FunnelIcon className="w-4 h-4" />
                   Mais filtros
                 </button>
                 <button
-                  style={{ height: 48, padding: '0 18px', background: 'linear-gradient(135deg, #D66F7C, #C94D60)', border: 'none', borderRadius: 10, color: '#FFFFFF', fontSize: 13, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6, whiteSpace: 'nowrap', boxShadow: '0 0 20px rgba(201,77,96,0.25)' }}>
+                  style={{ height: 42, padding: '0 14px', background: 'linear-gradient(135deg, #D66F7C, #C94D60)', border: 'none', borderRadius: 10, color: '#FFFFFF', fontSize: 13, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 5, whiteSpace: 'nowrap', boxShadow: '0 0 20px rgba(201,77,96,0.25)' }}>
                   <ArrowDownTrayIcon className="w-4 h-4" />
-                  Exportar relatório
+                  Exportar
                 </button>
               </div>
 
