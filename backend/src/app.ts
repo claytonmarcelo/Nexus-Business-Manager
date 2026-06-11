@@ -9,6 +9,8 @@ import path from 'path';
 import fs from 'fs';
 import dotenv from 'dotenv';
 
+import { ensureUploadFolders } from './shared/uploads/ensure-upload-folders';
+
 import { authRoutes } from './modules/auth/auth.routes';
 import { userRoutes } from './modules/users/users.routes';
 import { clientRoutes } from './modules/clients/clients.routes';
@@ -38,6 +40,14 @@ import { checkDatabaseHealth } from './shared/health-check';
 
 dotenv.config();
 
+const requiredEnv = ['JWT_SECRET', 'DB_HOST', 'DB_USER', 'DB_NAME'];
+
+for (const key of requiredEnv) {
+  if (!process.env[key]) {
+    throw new Error(`Variável de ambiente obrigatória ausente: ${key}`);
+  }
+}
+
 export async function buildApp() {
   const logDir = path.resolve(__dirname, '..', 'logs');
   if (!fs.existsSync(logDir)) fs.mkdirSync(logDir, { recursive: true });
@@ -64,14 +74,26 @@ export async function buildApp() {
     crossOriginResourcePolicy: { policy: 'cross-origin' },
   });
 
+  const allowedOrigins = (process.env.CORS_ORIGIN || 'http://localhost:5173,http://localhost:3000')
+    .split(',')
+    .map((origin) => origin.trim())
+    .filter(Boolean);
+
   await app.register(cors, {
-    origin: ['http://localhost:5173', 'http://localhost:3000'],
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+        return;
+      }
+
+      callback(new Error('Origem não permitida pelo CORS'), false);
+    },
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
     credentials: true,
   });
 
   await app.register(jwt, {
-    secret: process.env.JWT_SECRET || 'nexus-default-secret',
+    secret: process.env.JWT_SECRET,
     sign: { expiresIn: process.env.JWT_EXPIRES_IN || '8h' },
   });
 
@@ -79,15 +101,13 @@ export async function buildApp() {
     limits: { fileSize: 2 * 1024 * 1024 },
   });
 
-  const uploadsDir = path.resolve(__dirname, '..', 'uploads');
+  const uploadsRoot = ensureUploadFolders();
+
   await app.register(fastifyStatic, {
-    root: uploadsDir,
+    root: uploadsRoot,
     prefix: '/uploads/',
     decorateReply: false,
   });
-
-  const avatarsDir = path.resolve(__dirname, '..', 'uploads', 'avatars');
-  if (!fs.existsSync(avatarsDir)) fs.mkdirSync(avatarsDir, { recursive: true });
 
   app.decorate('authenticate', async (request: any, reply: any) => {
     try {
@@ -191,6 +211,16 @@ export async function buildApp() {
       uptime: process.uptime(),
       nodeVersion: process.version,
     };
+  });
+
+  app.setNotFoundHandler((request, reply) => {
+    return reply.code(404).send({
+      success: false,
+      error: {
+        code: 'NOT_FOUND',
+        message: 'Rota não encontrada.',
+      },
+    });
   });
 
   return app;
