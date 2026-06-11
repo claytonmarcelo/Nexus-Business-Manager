@@ -6,11 +6,47 @@ O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.
 
 Este projeto segue [Semantic Versioning](https://semver.org/lang/pt-BR/).
 
-## [1.1.0] - 2026-06-09
+## [1.2.0] - 2026-06-11
 
 ### Added
 
-- Area Comercial: pagina de Planos com upgrade/downgrade.
+- Paginas de erro personalizadas (404, 403, 500) com animacoes e identidade visual.
+- Pagina de manutencao com liberacao por IP, temporizador de retorno e configuracao de plano de fundo.
+- Preloader animado com bolinhas pulsantes, ativavel/desativavel para admin e site.
+- Sidebar estilo AdminLTE4: recolher/abrir com logo completo ou favicon, botoes de alternancia.
+- Menu mobile deslizante da esquerda para direita com animacao spring (framer-motion).
+- Navbar fixo com backdrop-filter: blur, busca, alternador de tema, calendario e notificacoes.
+- Sistema de notificacoes audiovisual: sininho com animacao de balanco e som via Web Audio API.
+- Central de notificacoes em dropdown com marcacao individual/todas como lidas.
+- Componente UserDropdown: avatar, nome, role, links para perfil/configuracoes, alternador de tema, sair.
+- Sistema de permissao modular (PermissaoGuard) com verificacao de cargos por hierarquia.
+- Sistema de acesso supervisionado (backend) com aprovacao/rejeicao de acoes.
+- Backend modulo maintenance com rotas GET/PUT para configuracao de manutencao.
+- Backend modulo settings com sistema de chave-valor (system_settings).
+- Backend modulo supervision com rotas de acoes pendentes/aprovacao/rejeicao.
+- Migracao 021: tabelas system_settings, supervised_action_logs, modules, module_permissions.
+- Integracao SweetAlert2 para toasts e confirmacoes em todo o sistema.
+- CSS padronizado: .card-padrao, .input-padrao, .label-padrao, .select-padrao.
+- Animacao do sininho @keyframes sacudir-sininho.
+- Variavel CSS --nexus-header-bg para tema dark/light.
+
+### Changed
+
+- App.tsx: adicionadas rotas /403, /500, /maintenance, catch-all Error404.
+- Layout: integrado Preloader, Sidebar com recolhimento, Header com notificacoes e perfil.
+- Sidebar: reestruturada com submenus aninhados (Cadastros, Movimentacoes, Administracao, Comercial).
+- Header: refeito com NotificacaoSininho, UserDropdown, alternador de tema, busca e calendario.
+- index.css: adicionados estilos para sidebar recolhida, preloader, notificacoes, dropdowns.
+- backend app.ts: registrados modulos maintenance, settings, supervision.
+
+### Fixed
+
+- Preloader removia classe .preloader-dot solta.
+- Sidebar mobile nao tinha animacao suave.
+- Notificacoes sem som e sem feedback visual.
+- Ausencia de paginas de erro personalizadas.
+- Sidebar sem suporte a recolhimento.
+- Layout sem preloader configurable.
 - Area Comercial: pagina Minha Assinatura com detalhes do plano.
 - Area Comercial: pagina de Faturas com historico de pagamentos.
 - Pagina de Status do Sistema com health check.

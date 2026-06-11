@@ -1,125 +1,269 @@
-import { NavLink } from 'react-router-dom';
-import { useAuth } from '../../contexts/AuthContext';
+import { useState, useEffect } from 'react'
+import { NavLink, useLocation } from 'react-router-dom'
+import { AnimatePresence, motion } from 'framer-motion'
+import { useAuth } from '../../contexts/AuthContext'
+import { verificarPermissao } from '../PermissionGuard'
 import {
-  ChartBarIcon,
-  UserGroupIcon,
-  TruckIcon,
-  CubeIcon,
-  ClipboardDocumentListIcon,
-  ShoppingCartIcon,
-  CurrencyDollarIcon,
-  BuildingOfficeIcon,
-  CreditCardIcon,
-  CalendarDaysIcon,
-  ChartPieIcon,
-  BellIcon,
-  ShieldCheckIcon,
-  Cog6ToothIcon,
-  LightBulbIcon,
-  InformationCircleIcon,
-  ArrowRightOnRectangleIcon
-} from '@heroicons/react/24/solid';
+  ChartBarIcon, UserGroupIcon, TruckIcon, CubeIcon,
+  ClipboardDocumentListIcon, ShoppingCartIcon, CurrencyDollarIcon,
+  BuildingOfficeIcon, CreditCardIcon, CalendarDaysIcon, ChartPieIcon,
+  BellIcon, ShieldCheckIcon, Cog6ToothIcon, LightBulbIcon,
+  InformationCircleIcon, ArrowRightOnRectangleIcon,
+  ChevronLeftIcon, ChevronDownIcon, Bars3Icon,
+  UsersIcon, DocumentArrowUpIcon, ArrowPathIcon,
+  ClipboardDocumentCheckIcon, ExclamationTriangleIcon,
+} from '@heroicons/react/24/outline'
+import { confirmarAcao } from '../../services/sweetalert'
 
-const navItems = [
-  { to: '/dashboard', label: 'Dashboard', icon: ChartBarIcon },
-  { to: '/clients', label: 'Clientes', icon: UserGroupIcon },
-  { to: '/suppliers', label: 'Fornecedores', icon: TruckIcon },
-  { to: '/products', label: 'Produtos', icon: CubeIcon },
-  { to: '/stock', label: 'Estoque', icon: ClipboardDocumentListIcon },
-  { to: '/purchases', label: 'Compras', icon: ShoppingCartIcon },
-  { to: '/sales', label: 'Vendas', icon: CurrencyDollarIcon },
-  { to: '/crm', label: 'CRM', icon: BuildingOfficeIcon },
-  { to: '/financial', label: 'Financeiro', icon: CreditCardIcon },
-  { to: '/appointments', label: 'Agenda', icon: CalendarDaysIcon },
-  { to: '/reports', label: 'Relatórios', icon: ChartPieIcon },
-  { to: '/notifications', label: 'Notificações', icon: BellIcon },
-  { to: '/audit', label: 'Auditoria', icon: ShieldCheckIcon, roles: ['admin', 'manager'] },
-  { to: '/companies', label: 'Configurações', icon: Cog6ToothIcon, roles: ['admin'] },
-  { to: '/suggestions', label: 'Sugestões', icon: LightBulbIcon },
-  { to: '/about', label: 'Sobre', icon: InformationCircleIcon },
-];
-
-interface SidebarProps {
-  open?: boolean;
-  onClose?: () => void;
+interface ItemMenu {
+  to: string
+  label: string
+  icone: React.ComponentType<{ className?: string }>
+  cargos?: string[]
+  badge?: number
+  subitens?: ItemMenu[]
 }
 
-export function Sidebar({ open, onClose }: SidebarProps) {
-  const { user, signOut } = useAuth();
+const itensMenu: ItemMenu[] = [
+  { to: '/dashboard', label: 'Dashboard', icone: ChartBarIcon },
+  {
+    to: '#', label: 'Cadastros', icone: UserGroupIcon,
+    subitens: [
+      { to: '/clients', label: 'Clientes', icone: UserGroupIcon },
+      { to: '/suppliers', label: 'Fornecedores', icone: TruckIcon },
+      { to: '/products', label: 'Produtos', icone: CubeIcon },
+    ],
+  },
+  {
+    to: '#', label: 'Movimentações', icone: ClipboardDocumentListIcon,
+    subitens: [
+      { to: '/stock', label: 'Estoque', icone: ClipboardDocumentListIcon },
+      { to: '/purchases', label: 'Compras', icone: ShoppingCartIcon },
+      { to: '/sales', label: 'Vendas', icone: CurrencyDollarIcon },
+    ],
+  },
+  { to: '/crm', label: 'CRM', icone: BuildingOfficeIcon },
+  { to: '/financial', label: 'Financeiro', icone: CreditCardIcon },
+  { to: '/appointments', label: 'Agenda', icone: CalendarDaysIcon },
+  { to: '/reports', label: 'Relatórios', icone: ChartPieIcon },
+  { to: '/notifications', label: 'Notificações', icone: BellIcon },
+  {
+    to: '#', label: 'Administração', icone: Cog6ToothIcon, cargos: ['admin', 'manager'],
+    subitens: [
+      { to: '/audit', label: 'Auditoria', icone: ShieldCheckIcon, cargos: ['admin', 'manager'] },
+      { to: '/logs', label: 'Logs', icone: ClipboardDocumentCheckIcon },
+      { to: '/backup', label: 'Backup', icone: ArrowPathIcon },
+      { to: '/import', label: 'Importação', icone: DocumentArrowUpIcon },
+      { to: '/suggestions', label: 'Sugestões', icone: LightBulbIcon },
+      { to: '/users', label: 'Usuários', icone: UsersIcon, cargos: ['admin', 'manager'] },
+      { to: '/companies', label: 'Config. Empresa', icone: Cog6ToothIcon, cargos: ['admin'] },
+    ],
+  },
+  {
+    to: '#', label: 'Comercial', icone: CreditCardIcon,
+    subitens: [
+      { to: '/plans', label: 'Planos', icone: CurrencyDollarIcon },
+      { to: '/subscription', label: 'Assinatura', icone: CreditCardIcon },
+      { to: '/invoices', label: 'Faturas', icone: ClipboardDocumentListIcon },
+    ],
+  },
+  { to: '/nexus-ai', label: 'Nexus AI', icone: LightBulbIcon },
+  { to: '/about', label: 'Sobre', icone: InformationCircleIcon },
+]
+
+interface SidebarProps {
+  recolhido: boolean
+  alternarRecolhido: () => void
+  mobileAberto: boolean
+  fecharMobile: () => void
+}
+
+export function Sidebar({ recolhido, alternarRecolhido, mobileAberto, fecharMobile }: SidebarProps) {
+  const { user, signOut } = useAuth()
+  const location = useLocation()
+  const [submenusAbertos, setSubmenusAbertos] = useState<Record<string, boolean>>({})
+
+  useEffect(() => {
+    itensMenu.forEach((item) => {
+      if (item.subitens) {
+        const ativo = item.subitens.some((s) => location.pathname.startsWith(s.to))
+        if (ativo && !recolhido) {
+          setSubmenusAbertos((prev) => ({ ...prev, [item.label]: true }))
+        }
+      }
+    })
+  }, [location.pathname, recolhido])
+
+  const alternarSubmenu = (label: string) => {
+    if (recolhido) return
+    setSubmenusAbertos((prev) => ({ ...prev, [label]: !prev[label] }))
+  }
+
+  const handleSignOut = async () => {
+    const confirmado = await confirmarAcao('Sair do sistema', 'Tem certeza que deseja sair?')
+    if (confirmado) signOut()
+  }
+
+  const itemAtivo = (to: string) => location.pathname === to || location.pathname.startsWith(to + '/')
+
+  function renderItem(item: ItemMenu) {
+    if (item.cargos && !verificarPermissao(user?.role || '', item.cargos[0])) return null
+
+    const Icon = item.icone
+    const temSubitens = item.subitens && item.subitens.length > 0
+    const aberto = submenusAbertos[item.label] || false
+    const ativo = itemAtivo(item.to)
+
+    if (temSubitens) {
+      const subItensVisiveis = item.subitens!.filter(
+        (s) => !s.cargos || verificarPermissao(user?.role || '', s.cargos[0])
+      )
+      if (subItensVisiveis.length === 0) return null
+
+      return (
+        <div>
+          <button
+            onClick={() => alternarSubmenu(item.label)}
+            className={`nexus-sidebar-item w-full ${ativo ? 'active' : ''}`}
+            title={recolhido ? item.label : undefined}
+          >
+            <span className="nexus-sidebar-icon"><Icon className="w-5 h-5" /></span>
+            {!recolhido && (
+              <>
+                <span className="text-sm font-medium flex-1 text-left">{item.label}</span>
+                <ChevronDownIcon className={`w-3.5 h-3.5 transition-transform duration-200 ${aberto ? 'rotate-180' : ''}`}
+                  style={{ color: 'var(--nexus-muted)' }} />
+              </>
+            )}
+          </button>
+          <AnimatePresence initial={false}>
+            {aberto && !recolhido && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: 'auto', opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                className="overflow-hidden"
+              >
+                <div className="ml-9 border-l pl-2 space-y-0.5 mt-0.5"
+                  style={{ borderColor: 'var(--nexus-border)' }}>
+                  {subItensVisiveis.map((sub) => (
+                    <NavLink
+                      key={sub.to}
+                      to={sub.to}
+                      onClick={fecharMobile}
+                      className={({ isActive }) =>
+                        `nexus-sidebar-item py-2 ${isActive || itemAtivo(sub.to) ? 'active' : ''}`
+                      }
+                    >
+                      <span className="text-xs font-medium">{sub.label}</span>
+                    </NavLink>
+                  ))}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      )
+    }
+
+    return (
+      <NavLink
+        to={item.to}
+        onClick={fecharMobile}
+        className={({ isActive }) => `nexus-sidebar-item ${isActive || ativo ? 'active' : ''}`}
+        title={recolhido ? item.label : undefined}
+      >
+        <span className="nexus-sidebar-icon"><Icon className="w-5 h-5" /></span>
+        {!recolhido && (
+          <>
+            <span className="text-sm font-medium flex-1 text-left">{item.label}</span>
+          </>
+        )}
+      </NavLink>
+    )
+  }
 
   const sidebarContent = (
     <div className="flex flex-col h-full">
-      <div className="p-6 flex items-center justify-center border-b" style={{ borderColor: 'var(--nexus-border)' }}>
-        <img
-          src="/logo.png"
-          alt="Nexus Business Manager"
-          className="sidebar-logo"
-        />
+      <div className="h-16 flex items-center justify-center border-b px-4"
+        style={{ borderColor: 'var(--nexus-border)' }}>
+        {recolhido ? (
+          <img src="/favicon.ico" alt="N" className="h-8 w-8" />
+        ) : (
+          <img src="/logo.png" alt="Nexus Business Manager" className="h-8" />
+        )}
       </div>
 
-      <nav className="flex-1 px-3 py-3 space-y-1 overflow-y-auto custom-scrollbar">
-        {navItems
-          .filter((item) => !item.roles || item.roles.includes((user?.role || '').toLowerCase()))
-          .map((item) => {
-            const Icon = item.icon;
-            return (
-              <NavLink
-                key={item.to}
-                to={item.to}
-                onClick={onClose}
-                className={({ isActive }) =>
-                  `nexus-sidebar-item ${isActive ? 'active' : ''}`
-                }
-              >
-                <span className="nexus-sidebar-icon">
-                  <Icon className="w-5 h-5" />
-                </span>
-                <span className="text-sm font-medium flex-1">{item.label}</span>
-                {item.to === '/notifications' && (
-                  <span className="ml-auto text-[10px] font-bold px-1.5 py-0.5 rounded-full"
-                    style={{ background: 'var(--nexus-danger)', color: '#fff', minWidth: 18, textAlign: 'center' }}>
-                    3
-                  </span>
-                )}
-              </NavLink>
-            );
-          })}
+      <nav className="flex-1 px-2 py-3 space-y-0.5 overflow-y-auto overflow-x-hidden custom-scrollbar">
+        {itensMenu.map((item) => (
+          <div key={item.to + item.label}>{renderItem(item)}</div>
+        ))}
       </nav>
 
-      <div className="p-4 border-t" style={{ borderColor: 'var(--nexus-border)' }}>
+      <div className="p-3 border-t" style={{ borderColor: 'var(--nexus-border)' }}>
         <button
-          onClick={signOut}
-          className="flex items-center gap-3 w-full px-4 py-2.5 text-sm font-medium transition-colors rounded-lg hover:bg-nexus-bg"
-          style={{ color: 'var(--nexus-gold)' }}
+          onClick={handleSignOut}
+          className="flex items-center gap-3 w-full px-3 py-2.5 text-sm font-medium transition-colors rounded-lg hover:bg-nexus-bg/50"
+          style={{ color: 'var(--nexus-rose)' }}
+          title={recolhido ? 'Sair' : undefined}
         >
-          <ArrowRightOnRectangleIcon className="w-5 h-5" />
-          Sair do sistema
+          <ArrowRightOnRectangleIcon className="w-5 h-5 flex-shrink-0" />
+          {!recolhido && <span>Sair do sistema</span>}
         </button>
       </div>
     </div>
-  );
+  )
 
   return (
     <>
-      {/* Desktop sidebar - always visible on md+ screens */}
-      <aside className="nexus-sidebar w-64 min-h-screen flex flex-col hidden md:flex border-r" style={{ borderColor: 'var(--nexus-border)', background: 'var(--nexus-sidebar)' }}>
+      <aside
+        className={`nexus-sidebar hidden md:flex flex-col border-r transition-all duration-300 ease-in-out ${recolhido ? 'w-16' : 'w-64'}`}
+        style={{
+          borderColor: 'var(--nexus-border)',
+          background: 'var(--nexus-sidebar)',
+        }}
+      >
         {sidebarContent}
+        <button
+          onClick={alternarRecolhido}
+          className="absolute -right-3 top-20 w-6 h-6 rounded-full flex items-center justify-center border shadow-sm transition-transform hover:scale-110 z-10"
+          style={{
+            background: 'var(--nexus-card)',
+            borderColor: 'var(--nexus-border)',
+            color: 'var(--nexus-muted)',
+          }}
+        >
+          <ChevronLeftIcon className={`w-3.5 h-3.5 transition-transform duration-200 ${recolhido ? 'rotate-180' : ''}`} />
+        </button>
       </aside>
 
-      {/* Mobile sidebar - overlay, only shown when toggled */}
-      {open !== undefined && (
-        <>
-          {open && (
-            <div className="nexus-sidebar-overlay fixed inset-0 z-40 bg-black/50" onClick={onClose} />
-          )}
-          <aside
-            className={`nexus-sidebar w-64 h-full fixed top-0 left-0 z-50 flex flex-col md:hidden transition-transform transform ${open ? 'translate-x-0' : '-translate-x-full'}`}
-            style={{ borderRight: '1px solid var(--nexus-border)', background: 'var(--nexus-sidebar)' }}
-          >
-            {sidebarContent}
-          </aside>
-        </>
-      )}
+      <AnimatePresence>
+        {mobileAberto && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-40 bg-black/60 md:hidden"
+              onClick={fecharMobile}
+            />
+            <motion.aside
+              initial={{ x: '-100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: '-100%' }}
+              transition={{ type: 'spring', damping: 25, stiffness: 250 }}
+              className="fixed top-0 left-0 z-50 w-72 h-full md:hidden border-r shadow-2xl"
+              style={{
+                borderColor: 'var(--nexus-border)',
+                background: 'var(--nexus-sidebar)',
+              }}
+            >
+              {sidebarContent}
+            </motion.aside>
+          </>
+        )}
+      </AnimatePresence>
     </>
-  );
+  )
 }

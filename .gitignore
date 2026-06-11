@@ -17,3 +17,5 @@ uploads/
 logs/
 database/backups/*.sql
 database/backups/*.sql.gz
+
+graphify-out/
