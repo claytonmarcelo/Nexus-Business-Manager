@@ -129,22 +129,18 @@ export function Audit() {
   }, [])
 
   return (
-    <div style={{ position: 'relative', minHeight: '100%', background: paleta.pretoAbsoluto }}>
+    <div style={{
+      background: `
+        radial-gradient(ellipse at 50% 0%, rgba(200,134,62,0.04) 0%, transparent 60%),
+        linear-gradient(180deg, #050505 0%, #080808 40%, #0B0B0B 100%),
+        repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255,255,255,0.006) 2px, rgba(255,255,255,0.006) 3px)
+      `,
+      position: 'relative',
+    }}>
       <div style={{
-        position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 0,
-        background: `
-          radial-gradient(ellipse at 50% 0%, rgba(200,134,62,0.04) 0%, transparent 60%),
-          linear-gradient(180deg, #050505 0%, #080808 40%, #0B0B0B 100%)
-        `,
-      }}>
-        <div style={{
-          position: 'absolute', inset: 0,
-          backgroundImage: `
-            repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255,255,255,0.006) 2px, rgba(255,255,255,0.006) 3px),
-            radial-gradient(ellipse at 50% 50%, transparent 60%, rgba(0,0,0,0.6) 100%)
-          `,
-        }} />
-      </div>
+        position: 'absolute', inset: 0, pointerEvents: 'none',
+        background: 'radial-gradient(ellipse at 50% 50%, transparent 60%, rgba(0,0,0,0.6) 100%)',
+      }} />
 
       <motion.div variants={animacaoContainer} initial="hidden" animate="visible" style={{ position: 'relative', zIndex: 1, maxWidth: 1440, margin: '0 auto' }}>
 
