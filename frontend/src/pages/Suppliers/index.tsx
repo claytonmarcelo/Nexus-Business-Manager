@@ -6,6 +6,7 @@ import {
   ShoppingCartIcon,
   CurrencyDollarIcon,
   ChartBarIcon,
+  CheckBadgeIcon,
   PlusIcon,
   MagnifyingGlassIcon,
   AdjustmentsHorizontalIcon,
@@ -17,6 +18,7 @@ import {
   ChevronDownIcon,
   XMarkIcon,
 } from '@heroicons/react/24/outline';
+import { StatsCard } from '../../components/ui/StatsCard';
 import { StarIcon as StarSolid } from '@heroicons/react/24/solid';
 import { StarIcon as StarOutline } from '@heroicons/react/24/outline';
 import api from '../../services/api';
@@ -60,38 +62,6 @@ function StarRating({ rating }: { rating: number }) {
       </div>
       <span className="text-xs font-medium" style={{ color: 'var(--nexus-muted-2)' }}>{rating.toFixed(1)}</span>
     </div>
-  );
-}
-
-/* ─── KPI Card ─────────────────────────────────────────────────────── */
-function KpiCard({ label, value, icon, trend, subtitle }: {
-  label: string; value: string; icon: React.ReactNode; trend: string; subtitle?: string;
-}) {
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 16 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3 }}
-      whileHover={{ y: -2, boxShadow: '0 0 28px rgba(var(--nexus-gold-rgb),0.12)' }}
-      className="relative rounded-xl p-5 overflow-hidden"
-      style={{ background: 'var(--nexus-card)', border: '1px solid var(--nexus-border)' }}
-    >
-      <div className="absolute top-0 left-0 w-1 h-full rounded-r" style={{ background: 'var(--nexus-gold)' }} />
-      <div className="flex items-start justify-between mb-3">
-        <span className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: 'var(--nexus-gold)' }}>
-          {label}
-        </span>
-        <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
-          style={{ background: 'rgba(var(--nexus-gold-rgb),0.12)', color: 'var(--nexus-gold)' }}>
-          {icon}
-        </div>
-      </div>
-      <p className="text-2xl font-bold mb-1" style={{ color: 'var(--nexus-text)' }}>{value}</p>
-      <div className="flex items-center gap-1.5">
-        <span className="text-xs font-medium" style={{ color: 'var(--nexus-success)' }}>↑ {trend}</span>
-        {subtitle && <span className="text-xs" style={{ color: 'var(--nexus-muted-2)' }}>{subtitle}</span>}
-      </div>
-    </motion.div>
   );
 }
 
@@ -317,11 +287,46 @@ export function Suppliers() {
 
       {/* ── KPI Cards ───────────────────────────────────────────── */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
-        <KpiCard label="Total de Fornecedores" value="320"           icon={<UserGroupIcon      className="w-5 h-5" />} trend="12,5%" subtitle="este mês" />
-        <KpiCard label="Novos Fornecedores"    value="22"            icon={<UserPlusIcon        className="w-5 h-5" />} trend="8,3%"  subtitle="este mês" />
-        <KpiCard label="Total de Compras"      value="R$ 84.230,50"  icon={<ShoppingCartIcon    className="w-5 h-5" />} trend="18,7%" subtitle="este mês" />
-        <KpiCard label="Ticket Médio"          value="R$ 1.245,30"   icon={<CurrencyDollarIcon  className="w-5 h-5" />} trend="15,3%" subtitle="este mês" />
-        <KpiCard label="Avaliação Média"       value="4,7 / 5"       icon={<ChartBarIcon        className="w-5 h-5" />} trend="6,2%"  subtitle="este mês" />
+        <StatsCard
+          label="Total de Fornecedores"
+          value="320"
+          icon={<UserGroupIcon      className="w-5 h-5" />}
+          color="gold"
+          trend={{ value: "12,5%", direction: "up" }}
+          subtitle="este mês"
+        />
+        <StatsCard
+          label="Novos Fornecedores"
+          value="22"
+          icon={<UserPlusIcon        className="w-5 h-5" />}
+          color="green"
+          trend={{ value: "8,3%", direction: "up" }}
+          subtitle="este mês"
+        />
+        <StatsCard
+          label="Total de Compras"
+          value="R$ 84.230,50"
+          icon={<ShoppingCartIcon    className="w-5 h-5" />}
+          color="blue"
+          trend={{ value: "18,7%", direction: "up" }}
+          subtitle="este mês"
+        />
+        <StatsCard
+          label="Ticket Médio"
+          value="R$ 1.245,30"
+          icon={<CurrencyDollarIcon  className="w-5 h-5" />}
+          color="purple"
+          trend={{ value: "15,3%", direction: "up" }}
+          subtitle="este mês"
+        />
+        <StatsCard
+          label="Avaliação Média"
+          value="4,7 / 5"
+          icon={<ChartBarIcon        className="w-5 h-5" />}
+          color="rose"
+          trend={{ value: "6,2%", direction: "up" }}
+          subtitle="este mês"
+        />
       </div>
 
       {/* ── Table Card ──────────────────────────────────────────── */}

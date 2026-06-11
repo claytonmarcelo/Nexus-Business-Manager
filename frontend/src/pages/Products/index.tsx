@@ -6,6 +6,7 @@ import {
   CheckCircleIcon,
   XCircleIcon,
   CurrencyDollarIcon,
+  CheckBadgeIcon,
   PlusIcon,
   MagnifyingGlassIcon,
   AdjustmentsHorizontalIcon,
@@ -17,6 +18,7 @@ import {
   ChevronDownIcon,
   XMarkIcon,
 } from '@heroicons/react/24/outline';
+import { StatsCard } from '../../components/ui/StatsCard';
 import api from '../../services/api';
 import { Product } from '../../types';
 
@@ -40,48 +42,6 @@ function getInitials(name: string) {
   const parts = name.trim().split(' ');
   if (parts.length >= 2) return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
   return name.substring(0, 2).toUpperCase();
-}
-
-/* ─── KPI Card ─────────────────────────────────────────────────────── */
-function KpiCard({
-  label, value, icon, trend, subtitle, trendDown,
-}: {
-  label: string; value: string; icon: React.ReactNode;
-  trend: string; subtitle?: string; trendDown?: boolean;
-}) {
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 16 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3 }}
-      whileHover={{ y: -2, boxShadow: '0 0 28px rgba(var(--nexus-gold-rgb),0.12)' }}
-      className="relative rounded-xl p-5 overflow-hidden"
-      style={{ background: 'var(--nexus-card)', border: '1px solid var(--nexus-border)' }}
-    >
-      <div className="absolute top-0 left-0 w-1 h-full rounded-r" style={{ background: 'var(--nexus-gold)' }} />
-      <div className="flex items-start justify-between mb-3">
-        <span className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: 'var(--nexus-gold)' }}>
-          {label}
-        </span>
-        <div
-          className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
-          style={{ background: 'rgba(var(--nexus-gold-rgb),0.12)', color: 'var(--nexus-gold)' }}
-        >
-          {icon}
-        </div>
-      </div>
-      <p className="text-2xl font-bold mb-1" style={{ color: 'var(--nexus-text)' }}>{value}</p>
-      <div className="flex items-center gap-1.5">
-        <span
-          className="text-xs font-medium"
-          style={{ color: trendDown ? 'var(--nexus-danger)' : 'var(--nexus-success)' }}
-        >
-          {trendDown ? '↓' : '↑'} {trend}
-        </span>
-        {subtitle && <span className="text-xs" style={{ color: 'var(--nexus-muted-2)' }}>{subtitle}</span>}
-      </div>
-    </motion.div>
-  );
 }
 
 /* ─── Floating label select ────────────────────────────────────────── */
@@ -376,39 +336,43 @@ export function Products() {
 
       {/* ── KPI Cards ───────────────────────────────────────────── */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
-        <KpiCard
+        <StatsCard
           label="Produtos cadastrados"
           value={String(displayProducts.length > 100 ? '1.890' : displayProducts.length)}
           icon={<CubeIcon className="w-5 h-5" />}
-          trend="8%"
+          color="gold"
+          trend={{ value: '8%', direction: 'up' }}
           subtitle="este mês"
         />
-        <KpiCard
+        <StatsCard
           label="Categorias"
           value={String(categories.length > 10 ? '24' : categories.length)}
           icon={<TagIcon className="w-5 h-5" />}
-          trend="3 novas"
+          color="purple"
+          trend={{ value: '3 novas', direction: 'up' }}
         />
-        <KpiCard
+        <StatsCard
           label="Produtos ativos"
           value={String(totalActive > 100 ? '1.720' : totalActive)}
           icon={<CheckCircleIcon className="w-5 h-5" />}
-          trend="12%"
+          color="green"
+          trend={{ value: '12%', direction: 'up' }}
           subtitle="este mês"
         />
-        <KpiCard
+        <StatsCard
           label="Produtos inativos"
           value={String(totalInactive > 100 ? '170' : totalInactive)}
           icon={<XCircleIcon className="w-5 h-5" />}
-          trend="4%"
+          color="rose"
+          trend={{ value: '4%', direction: 'down' }}
           subtitle="este mês"
-          trendDown
         />
-        <KpiCard
+        <StatsCard
           label="Valor médio"
           value={avgPrice > 0 ? formatPrice(avgPrice) : 'R$ 850,40'}
           icon={<CurrencyDollarIcon className="w-5 h-5" />}
-          trend="6,5%"
+          color="blue"
+          trend={{ value: '6,5%', direction: 'up' }}
           subtitle="este mês"
         />
       </div>

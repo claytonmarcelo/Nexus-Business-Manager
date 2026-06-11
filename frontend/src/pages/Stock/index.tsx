@@ -19,7 +19,9 @@ import {
   ArrowUpIcon,
   ArrowDownIcon,
   WrenchScrewdriverIcon,
+  CheckBadgeIcon,
 } from '@heroicons/react/24/outline';
+import { StatsCard } from '../../components/ui/StatsCard';
 import api from '../../services/api';
 import { Product, StockMovement } from '../../types';
 
@@ -78,41 +80,6 @@ const MOCK_MOVEMENTS = [
   { id: 2, type: 'out',    label: 'Saída de estoque',   ref: 'Venda #VDA-2024-1586',  time: '4 horas atrás',  delta: '-15 unidades',  color: 'var(--nexus-danger)'  },
   { id: 3, type: 'adjust', label: 'Ajuste de estoque',  ref: 'Ajuste manual',          time: '1 dia atrás',    delta: '+3 unidades',   color: 'var(--nexus-warning)' },
 ];
-
-/* ─── Sub-components ─────────────────────────────────────────────────── */
-function KpiCard({ label, value, icon, trend, subtitle, trendDown }: {
-  label: string; value: string; icon: React.ReactNode;
-  trend: string; subtitle?: string; trendDown?: boolean;
-}) {
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 16 }}
-      animate={{ opacity: 1, y: 0 }}
-      whileHover={{ y: -2, boxShadow: '0 0 28px rgba(var(--nexus-gold-rgb),0.12)' }}
-      className="relative rounded-xl p-5 overflow-hidden"
-      style={{ background: 'var(--nexus-card)', border: '1px solid var(--nexus-border)' }}
-    >
-      <div className="absolute top-0 left-0 w-1 h-full rounded-r" style={{ background: 'var(--nexus-gold)' }} />
-      <div className="flex items-start justify-between mb-3">
-        <span className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: 'var(--nexus-gold)' }}>
-          {label}
-        </span>
-        <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
-          style={{ background: 'rgba(var(--nexus-gold-rgb),0.12)', color: 'var(--nexus-gold)' }}>
-          {icon}
-        </div>
-      </div>
-      <p className="text-2xl font-bold mb-1" style={{ color: 'var(--nexus-text)' }}>{value}</p>
-      <div className="flex items-center gap-1.5">
-        <span className="text-xs font-medium"
-          style={{ color: trendDown ? 'var(--nexus-danger)' : 'var(--nexus-success)' }}>
-          {trendDown ? '↓' : '↑'} {trend}
-        </span>
-        {subtitle && <span className="text-xs" style={{ color: 'var(--nexus-muted-2)' }}>{subtitle}</span>}
-      </div>
-    </motion.div>
-  );
-}
 
 function FilterSelect({ label, options }: { label: string; options: string[] }) {
   return (
@@ -359,11 +326,44 @@ export function Stock() {
 
       {/* ── KPI Cards ───────────────────────────────────────────── */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
-        <KpiCard label="Itens em estoque"      value={formatNumber(stats.totalItems > 1000 ? 15230 : stats.totalItems)} icon={<CubeIcon className="w-5 h-5" />}           trend="12%"   subtitle="este mês" />
-        <KpiCard label="Estoque baixo"         value={String(stats.lowCount > 10 ? 23 : stats.lowCount)}               icon={<ExclamationTriangleIcon className="w-5 h-5"/>} trend="5 novos hoje" />
-        <KpiCard label="Estoque crítico"       value={String(stats.criticalCount > 5 ? 7 : stats.criticalCount)}       icon={<ExclamationCircleIcon className="w-5 h-5"/>}  trend="2 novos hoje" trendDown />
-        <KpiCard label="Valor total em estoque" value={formatPrice(stats.totalValue > 10000 ? 250430.75 : stats.totalValue)} icon={<CurrencyDollarIcon className="w-5 h-5"/>}  trend="15%"   subtitle="este mês" />
-        <KpiCard label="Movimentações (mês)"   value="320"                                                              icon={<ArrowsRightLeftIcon className="w-5 h-5"/>}   trend="10%"   subtitle="este mês" />
+        <StatsCard
+          label="Itens em estoque"
+          value={formatNumber(stats.totalItems > 1000 ? 15230 : stats.totalItems)}
+          icon={<CubeIcon className="w-5 h-5" />}
+          color="gold"
+          trend={{ value: '12%', direction: 'up' }}
+          subtitle="este mês"
+        />
+        <StatsCard
+          label="Estoque baixo"
+          value={String(stats.lowCount > 10 ? 23 : stats.lowCount)}
+          icon={<ExclamationTriangleIcon className="w-5 h-5"/>}
+          color="green"
+          trend={{ value: '5 novos hoje', direction: 'up' }}
+        />
+        <StatsCard
+          label="Estoque crítico"
+          value={String(stats.criticalCount > 5 ? 7 : stats.criticalCount)}
+          icon={<ExclamationCircleIcon className="w-5 h-5"/>}
+          color="rose"
+          trend={{ value: '2 novos hoje', direction: 'down' }}
+        />
+        <StatsCard
+          label="Valor total em estoque"
+          value={formatPrice(stats.totalValue > 10000 ? 250430.75 : stats.totalValue)}
+          icon={<CurrencyDollarIcon className="w-5 h-5"/>}
+          color="blue"
+          trend={{ value: '15%', direction: 'up' }}
+          subtitle="este mês"
+        />
+        <StatsCard
+          label="Movimentações (mês)"
+          value="320"
+          icon={<ArrowsRightLeftIcon className="w-5 h-5"/>}
+          color="purple"
+          trend={{ value: '10%', direction: 'up' }}
+          subtitle="este mês"
+        />
       </div>
 
       {/* ── Table Card ──────────────────────────────────────────── */}

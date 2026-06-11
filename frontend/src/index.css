@@ -543,6 +543,8 @@ input:focus, textarea:focus, select:focus {
   background: var(--nexus-sidebar);
   border-right: 1px solid var(--nexus-border);
   color: var(--nexus-text);
+  height: 100vh;
+  min-height: 100vh;
 }
 
 .nexus-sidebar-overlay {
@@ -624,6 +626,10 @@ input:focus, textarea:focus, select:focus {
   padding: 1rem 2rem;
   background: rgba(5, 5, 5, 0.6);
   backdrop-filter: blur(12px);
+  height: 64px;
+  position: sticky;
+  top: 0;
+  z-index: 20;
 }
 .light .nexus-header {
   background: #FFFFFF;
