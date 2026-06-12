@@ -41,11 +41,13 @@ export function Layout() {
         />
         <div className="flex-1 flex flex-col min-w-0 transition-all duration-300">
           <Header alternarSidebar={alternarSidebar} />
-          <main className="flex-1 overflow-auto page-bg p-4 md:p-6 lg:p-8 flex flex-col">
-            <div className="flex-1">
-              <Outlet />
+          <main className="flex-1 overflow-auto page-bg p-4 md:p-6 lg:p-8">
+            <div className="min-h-full flex flex-col">
+              <div className="flex-1">
+                <Outlet />
+              </div>
+              <Footer />
             </div>
-            <Footer />
           </main>
         </div>
       </div>
