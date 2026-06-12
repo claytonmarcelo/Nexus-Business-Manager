@@ -90,7 +90,7 @@ export function PaginaManutencao() {
             style={{ color: 'var(--nexus-gold)' }} />
         </motion.div>
 
-        <h1 className="text-3xl md:text-4xl font-bold mb-4"
+        <h1 className="text-3xl md:text-2xl font-bold mb-4"
           style={{ color: 'var(--nexus-text)' }}>
           Sistema em Manutenção
         </h1>
@@ -106,7 +106,7 @@ export function PaginaManutencao() {
               style={{ color: 'var(--nexus-muted)' }}>
               Tempo estimado para retorno
             </p>
-            <div className="text-4xl md:text-5xl font-mono font-bold tracking-wider"
+            <div className="text-2xl md:text-2xl font-mono font-bold tracking-wider"
               style={{ color: 'var(--nexus-gold)' }}>
               {tempoRestante || '--:--:--'}
             </div>

@@ -42,7 +42,7 @@ export function Onboarding() {
         animate={{ opacity: 1, y: 0 }}
         className="text-center py-20"
       >
-        <div className="nexus-card p-10 max-w-md mx-auto">
+        <div className="nexus-card p-5 max-w-md mx-auto">
           <h2 className="text-xl font-semibold mb-2" style={{ color: 'var(--nexus-text)' }}>Bem-vindo ao Nexus!</h2>
           <p className="text-sm mb-6" style={{ color: 'var(--nexus-muted)' }}>
             Voce pode acessar o guia de boas-vindas a qualquer momento nas Configuracoes.

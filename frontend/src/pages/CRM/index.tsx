@@ -595,7 +595,7 @@ export function CRM() {
         >
           <h3 className="text-sm font-bold mb-4" style={{ color: 'var(--nexus-text)' }}>Satisfação do Cliente (NPS)</h3>
           <div className="flex flex-col items-center mb-4">
-            <span className="text-4xl font-bold" style={{ color: 'var(--nexus-gold)' }}>4,8</span>
+            <span className="text-2xl font-bold" style={{ color: 'var(--nexus-gold)' }}>4,8</span>
             <span className="text-xs mt-1" style={{ color: 'var(--nexus-muted-2)' }}>de 5</span>
             <div className="flex gap-1 mt-2">
               {[1, 2, 3, 4, 5].map(s => (

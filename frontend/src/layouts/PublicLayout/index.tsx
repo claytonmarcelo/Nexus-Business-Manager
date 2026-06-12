@@ -123,7 +123,7 @@ export function PublicLayout() {
         style={{ borderColor: 'var(--nexus-border)', background: 'rgba(0, 0, 0, 0.3)' }}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div className="md:col-span-2">
               <img src="/logo.png" alt="Nexus" className="h-10 w-auto mb-4" />
               <p className="text-sm" style={{ color: 'var(--nexus-muted)' }}>

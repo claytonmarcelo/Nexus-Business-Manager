@@ -59,7 +59,7 @@ export function Landing() {
             >
               <img src="/logo.png" alt="Nexus" className="h-16 sm:h-20 w-auto" />
             </motion.div>
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold mb-6 leading-tight">
+            <h1 className="text-2xl sm:text-2xl lg:text-6xl font-bold mb-6 leading-tight">
               <span style={{ color: 'var(--nexus-text)' }}>Gestao Empresarial </span>
               <span style={{ color: 'var(--nexus-gold)' }}>Completa e Gratuita</span>
             </h1>
@@ -97,7 +97,7 @@ export function Landing() {
       <motion.section variants={itemVariants} className="py-20" style={{ background: 'var(--nexus-bg-soft)' }}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <h2 className="text-3xl sm:text-4xl font-bold mb-4" style={{ color: 'var(--nexus-text)' }}>
+            <h2 className="text-3xl sm:text-2xl font-bold mb-4" style={{ color: 'var(--nexus-text)' }}>
               Tudo que sua empresa precisa
             </h2>
             <p className="text-lg max-w-2xl mx-auto" style={{ color: 'var(--nexus-muted)' }}>
@@ -131,13 +131,13 @@ export function Landing() {
 
       <motion.section variants={itemVariants} className="py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="rounded-2xl p-10 sm:p-16 text-center relative overflow-hidden"
+          <div className="rounded-2xl p-5 sm:p-16 text-center relative overflow-hidden"
             style={{
               background: 'linear-gradient(135deg, rgba(var(--nexus-gold-rgb), 0.08), rgba(var(--nexus-rose-rgb), 0.06))',
               border: '1px solid var(--nexus-border)',
             }}
           >
-            <h2 className="text-3xl sm:text-4xl font-bold mb-4" style={{ color: 'var(--nexus-text)' }}>
+            <h2 className="text-3xl sm:text-2xl font-bold mb-4" style={{ color: 'var(--nexus-text)' }}>
               Pronto para transformar sua gestao?
             </h2>
             <p className="text-lg mb-8 max-w-xl mx-auto" style={{ color: 'var(--nexus-muted)' }}>
@@ -167,14 +167,14 @@ export function Landing() {
               Por que escolher o Nexus?
             </h2>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
             {[
               { value: '100%', label: 'Gratuito', desc: 'Codigo aberto sem taxas ou assinaturas' },
               { value: '8+', label: 'Modulos', desc: 'CRM, Estoque, Financeiro e mais integrados' },
               { value: 'Multi', label: 'Empresas', desc: 'Gerencie quantas empresas precisar' },
             ].map((stat) => (
               <div key={stat.label}>
-                <div className="text-4xl font-bold mb-2" style={{ color: 'var(--nexus-gold)' }}>{stat.value}</div>
+                <div className="text-2xl font-bold mb-2" style={{ color: 'var(--nexus-gold)' }}>{stat.value}</div>
                 <div className="text-lg font-semibold mb-1" style={{ color: 'var(--nexus-text)' }}>{stat.label}</div>
                 <div className="text-sm" style={{ color: 'var(--nexus-muted)' }}>{stat.desc}</div>
               </div>

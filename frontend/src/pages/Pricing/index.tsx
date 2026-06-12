@@ -68,7 +68,7 @@ export function Pricing() {
       className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16"
     >
       <div className="text-center mb-16">
-        <h1 className="text-3xl sm:text-4xl font-bold mb-4" style={{ color: 'var(--nexus-text)' }}>
+        <h1 className="text-3xl sm:text-2xl font-bold mb-4" style={{ color: 'var(--nexus-text)' }}>
           Planos e Precos
         </h1>
         <p className="text-lg max-w-2xl mx-auto" style={{ color: 'var(--nexus-muted)' }}>
@@ -76,12 +76,12 @@ export function Pricing() {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-5xl mx-auto">
         {plans.map((plan) => (
           <motion.div
             key={plan.name}
             whileHover={{ y: -6, transition: { duration: 0.2 } }}
-            className="rounded-2xl p-8 flex flex-col relative overflow-hidden transition-all duration-200"
+            className="rounded-2xl p-5 flex flex-col relative overflow-hidden transition-all duration-200"
             style={{
               background: plan.highlighted
                 ? 'linear-gradient(135deg, rgba(var(--nexus-gold-rgb), 0.10), rgba(var(--nexus-rose-rgb), 0.06))'

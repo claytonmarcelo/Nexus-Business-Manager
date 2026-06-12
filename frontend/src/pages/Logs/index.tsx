@@ -124,7 +124,7 @@ export function Logs() {
 
       <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--nexus-card)', border: '1px solid var(--nexus-border)' }}>
         {loading ? (
-          <div className="p-8 space-y-4">
+          <div className="p-5 space-y-4">
             {Array.from({ length: 5 }).map((_, i) => (
               <div key={i} className="h-10 rounded-lg animate-pulse" style={{ background: 'var(--nexus-bg-soft)' }} />
             ))}

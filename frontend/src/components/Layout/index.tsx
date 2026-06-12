@@ -32,16 +32,16 @@ export function Layout() {
   return (
     <NotificacaoProvider>
       <Preloader />
-      <div className={`flex h-screen overflow-hidden ${sidebarRecolhido ? 'sidebar-collapsed' : ''}`}>
+      <div className={`app-shell ${sidebarRecolhido ? 'sidebar-collapsed' : ''}`}>
         <Sidebar
           recolhido={sidebarRecolhido}
           alternarRecolhido={alternarRecolhido}
           mobileAberto={mobileAberto}
           fecharMobile={fecharMobile}
         />
-        <div className="flex-1 flex flex-col min-w-0 transition-all duration-300 relative">
+        <div className="app-main transition-all duration-300">
           <Header alternarSidebar={alternarSidebar} />
-          <main className="flex-1 overflow-auto page-bg p-4 md:p-6 lg:p-8">
+          <main className="app-content page-bg">
             <Outlet />
           </main>
           <Footer />

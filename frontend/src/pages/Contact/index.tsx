@@ -32,7 +32,7 @@ export function Contact() {
         animate={{ opacity: 1, y: 0 }}
         className="max-w-2xl mx-auto px-4 py-16 text-center"
       >
-        <div className="nexus-card p-10">
+        <div className="nexus-card p-5">
           <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4" style={{ background: 'rgba(var(--nexus-success-rgb), 0.12)' }}>
             <svg className="w-8 h-8" style={{ color: 'var(--nexus-success)' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
@@ -64,7 +64,7 @@ export function Contact() {
         </p>
       </div>
 
-      <div className="nexus-card p-8">
+      <div className="nexus-card p-5">
         <form onSubmit={handleSubmit} className="space-y-5">
           {error && (
             <div className="px-4 py-3 rounded-lg text-sm" style={{ background: 'rgba(var(--nexus-danger-rgb), 0.12)', color: 'var(--nexus-danger)', border: '1px solid rgba(var(--nexus-danger-rgb), 0.2)' }}>

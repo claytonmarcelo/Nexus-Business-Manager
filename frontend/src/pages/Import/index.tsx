@@ -70,7 +70,7 @@ export function Import() {
         </div>
 
         <div
-          className="border-2 border-dashed rounded-xl p-10 text-center cursor-pointer transition-all"
+          className="border-2 border-dashed rounded-xl p-5 text-center cursor-pointer transition-all"
           style={{ borderColor: 'var(--nexus-border)' }}
           onClick={() => fileRef.current?.click()}
           onDragOver={(e) => { e.preventDefault(); e.currentTarget.style.borderColor = 'var(--nexus-gold)'; }}

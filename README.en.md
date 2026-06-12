@@ -1,6 +1,6 @@
-﻿<p align="center">
+<p align="center">
   <img
-    src="assets/branding/logo.png"
+    src="assets/branding/Logo.png"
     alt="Nexus Business Manager"
     width="550"
   >
