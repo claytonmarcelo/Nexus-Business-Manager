@@ -113,7 +113,7 @@ export function Import() {
             <button
               onClick={handleSubmit}
               disabled={loading}
-              className="btn-primary ml-auto"
+              className="btn-primary ml-auto whitespace-nowrap"
               style={{ height: '44px', padding: '0 1.5rem' }}
             >
               {loading ? 'Importando...' : 'Importar'}

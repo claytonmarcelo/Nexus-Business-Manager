@@ -99,10 +99,7 @@ export function Sidebar({ recolhido, alternarRecolhido, mobileAberto, fecharMobi
     setSubmenusAbertos((prev) => ({ ...prev, [label]: !prev[label] }))
   }
 
-  const handleSignOut = async () => {
-    const confirmado = await confirmarAcao('Sair do sistema', 'Tem certeza que deseja sair?')
-    if (confirmado) signOut()
-  }
+
 
   const itemAtivo = (to: string) => location.pathname === to || location.pathname.startsWith(to + '/')
 
@@ -127,10 +124,10 @@ export function Sidebar({ recolhido, alternarRecolhido, mobileAberto, fecharMobi
             className={`nexus-sidebar-item w-full ${ativo ? 'active' : ''}`}
             title={recolhido ? item.label : undefined}
           >
-            <span className="nexus-sidebar-icon"><Icon className="w-5 h-5" /></span>
+            <span className="nexus-sidebar-icon"><Icon className="w-4 h-4" /></span>
             {!recolhido && (
               <>
-                <span className="text-sm font-medium flex-1 text-left">{item.label}</span>
+                <span className="text-[13px] font-medium flex-1 text-left">{item.label}</span>
                 <ChevronDownIcon className={`w-3.5 h-3.5 transition-transform duration-200 ${aberto ? 'rotate-180' : ''}`}
                   style={{ color: 'var(--nexus-muted)' }} />
               </>
@@ -145,7 +142,7 @@ export function Sidebar({ recolhido, alternarRecolhido, mobileAberto, fecharMobi
                 transition={{ duration: 0.2 }}
                 className="overflow-hidden"
               >
-                <div className="ml-9 border-l pl-2 space-y-0.5 mt-0.5"
+                <div className="ml-7 border-l pl-2 space-y-0.5 mt-0.5"
                   style={{ borderColor: 'var(--nexus-border)' }}>
                   {subItensVisiveis.map((sub) => (
                     <NavLink
@@ -153,10 +150,10 @@ export function Sidebar({ recolhido, alternarRecolhido, mobileAberto, fecharMobi
                       to={sub.to}
                       onClick={fecharMobile}
                       className={({ isActive }) =>
-                        `nexus-sidebar-item py-2 ${isActive || itemAtivo(sub.to) ? 'active' : ''}`
+                        `nexus-sidebar-item py-1 ${isActive || itemAtivo(sub.to) ? 'active' : ''}`
                       }
                     >
-                      <span className="text-xs font-medium">{sub.label}</span>
+                      <span className="text-[12px] font-medium">{sub.label}</span>
                     </NavLink>
                   ))}
                 </div>
@@ -174,10 +171,10 @@ export function Sidebar({ recolhido, alternarRecolhido, mobileAberto, fecharMobi
         className={({ isActive }) => `nexus-sidebar-item ${isActive || ativo ? 'active' : ''}`}
         title={recolhido ? item.label : undefined}
       >
-        <span className="nexus-sidebar-icon"><Icon className="w-5 h-5" /></span>
+        <span className="nexus-sidebar-icon"><Icon className="w-4 h-4" /></span>
         {!recolhido && (
           <>
-            <span className="text-sm font-medium flex-1 text-left">{item.label}</span>
+            <span className="text-[13px] font-medium flex-1 text-left">{item.label}</span>
           </>
         )}
       </NavLink>
@@ -186,39 +183,31 @@ export function Sidebar({ recolhido, alternarRecolhido, mobileAberto, fecharMobi
 
   const sidebarContent = (
     <div className="flex flex-col h-full">
-      <div className="h-16 flex items-center justify-center border-b px-4"
+      <div className={`flex items-center justify-center border-b transition-all duration-300 ${recolhido ? 'h-16 p-4' : 'h-[150px] p-0'}`}
         style={{ borderColor: 'var(--nexus-border)' }}>
         {recolhido ? (
-          <img src="/favicon.ico" alt="N" className="h-8 w-8" />
+          <img src="/favicon.ico" alt="N" className="h-8 w-8 object-contain transition-all duration-300" />
         ) : (
-          <img src="/logo.png" alt="Nexus Business Manager" className="h-8" />
+          <div className="w-[150px] h-[150px] flex items-center justify-center">
+            <img src="/assets/Logo.png" alt="Nexus Business Manager" className="w-full h-full object-contain transition-all duration-300" />
+          </div>
         )}
       </div>
 
-      <nav className="flex-1 px-2 py-3 space-y-0.5 overflow-y-auto overflow-x-hidden custom-scrollbar">
+      <nav className="flex-1 px-2 py-2 space-y-0.5 overflow-y-auto overflow-x-hidden custom-scrollbar">
         {itensMenu.map((item) => (
           <div key={item.to + item.label}>{renderItem(item)}</div>
         ))}
       </nav>
 
-      <div className="p-3 border-t" style={{ borderColor: 'var(--nexus-border)' }}>
-        <button
-          onClick={handleSignOut}
-          className="flex items-center gap-3 w-full px-3 py-2.5 text-sm font-medium transition-colors rounded-lg hover:bg-nexus-bg/50"
-          style={{ color: 'var(--nexus-rose)' }}
-          title={recolhido ? 'Sair' : undefined}
-        >
-          <ArrowRightOnRectangleIcon className="w-5 h-5 flex-shrink-0" />
-          {!recolhido && <span>Sair do sistema</span>}
-        </button>
-      </div>
+
     </div>
   )
 
   return (
     <>
       <aside
-        className={`nexus-sidebar hidden md:flex flex-col border-r transition-all duration-300 ease-in-out ${recolhido ? 'w-16' : 'w-64'}`}
+        className={`nexus-sidebar relative hidden md:flex flex-col border-r transition-all duration-300 ease-in-out ${recolhido ? 'w-16' : 'w-64'}`}
         style={{
           borderColor: 'var(--nexus-border)',
           background: 'var(--nexus-sidebar)',
@@ -227,7 +216,7 @@ export function Sidebar({ recolhido, alternarRecolhido, mobileAberto, fecharMobi
         {sidebarContent}
         <button
           onClick={alternarRecolhido}
-          className="absolute -right-3 top-20 w-6 h-6 rounded-full flex items-center justify-center border shadow-sm transition-transform hover:scale-110 z-10"
+          className="absolute -right-3 top-20 w-6 h-6 rounded-full flex items-center justify-center border shadow-sm transition-transform hover:scale-110 z-10 whitespace-nowrap"
           style={{
             background: 'var(--nexus-card)',
             borderColor: 'var(--nexus-border)',
@@ -253,7 +242,7 @@ export function Sidebar({ recolhido, alternarRecolhido, mobileAberto, fecharMobi
               animate={{ x: 0 }}
               exit={{ x: '-100%' }}
               transition={{ type: 'spring', damping: 25, stiffness: 250 }}
-              className="fixed top-0 left-0 z-50 w-72 h-full md:hidden border-r shadow-2xl"
+              className="fixed top-0 left-0 z-50 w-64 h-full md:hidden border-r shadow-2xl"
               style={{
                 borderColor: 'var(--nexus-border)',
                 background: 'var(--nexus-sidebar)',

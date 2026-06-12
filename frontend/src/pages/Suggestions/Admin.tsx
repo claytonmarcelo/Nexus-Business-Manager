@@ -244,7 +244,7 @@ export function AdminSuggestions() {
 
               <div className="flex gap-3">
                 <button onClick={handleUpdate}
-                  className="px-5 py-2.5 text-sm font-medium rounded-xl"
+                  className="px-5 py-2.5 text-sm font-medium rounded-xl whitespace-nowrap"
                   style={{ background: 'linear-gradient(135deg, var(--nexus-rose), var(--nexus-rose-dark))', color: '#FFFFFF' }}>
                   Salvar
                 </button>

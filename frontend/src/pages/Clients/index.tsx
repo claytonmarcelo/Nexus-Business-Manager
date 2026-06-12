@@ -211,11 +211,11 @@ export function Clients() {
       {/* ── Toolbar ── */}
       <motion.div
         initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
-        className="flex flex-wrap items-center gap-3"
+        className="flex items-center gap-4 flex-wrap"
         onClick={e => e.stopPropagation()}
       >
         {/* Search */}
-        <form onSubmit={handleSearch} className="relative flex-1 min-w-[220px] max-w-sm">
+        <form onSubmit={handleSearch} className="relative flex-1 min-w-[180px] max-w-[320px]">
           <MagnifyingGlassIcon className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" style={{ color: 'var(--nexus-muted)' }} />
           <input
             type="text"
@@ -235,50 +235,52 @@ export function Clients() {
           )}
         </form>
 
-        {/* Filter btn */}
-        <button className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium border transition-all"
-          style={{ background: 'var(--nexus-card)', borderColor: 'var(--nexus-border)', color: 'var(--nexus-muted)' }}
-          onMouseEnter={e => (e.currentTarget.style.borderColor = 'rgba(var(--nexus-gold-rgb),0.4)')}
-          onMouseLeave={e => (e.currentTarget.style.borderColor = 'var(--nexus-border)')}>
-          <FunnelIcon className="w-4 h-4" />
-          Filtros
-        </button>
-
-        {/* Sort dropdown */}
-        <div className="relative">
-          <button onClick={e => { e.stopPropagation(); setShowSort(v => !v); }}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium border transition-all"
-            style={{ background: 'var(--nexus-card)', borderColor: 'var(--nexus-border)', color: 'var(--nexus-muted)' }}>
-            {sortLabel}
-            <ChevronDownIcon className="w-4 h-4" />
+        {/* Right Controls */}
+        <div className="flex items-center gap-3 ml-auto flex-wrap">
+          {/* Filter btn */}
+          <button className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium border transition-all whitespace-nowrap flex-shrink-0"
+            style={{ background: 'var(--nexus-card)', borderColor: 'var(--nexus-border)', color: 'var(--nexus-muted)' }}
+            onMouseEnter={e => (e.currentTarget.style.borderColor = 'rgba(var(--nexus-gold-rgb),0.4)')}
+            onMouseLeave={e => (e.currentTarget.style.borderColor = 'var(--nexus-border)')}>
+            <FunnelIcon className="w-4 h-4" />
+            Filtros
           </button>
-          <AnimatePresence>
-            {showSort && (
-              <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}
-                className="absolute left-0 top-12 z-20 rounded-xl overflow-hidden shadow-xl min-w-[160px]"
-                style={{ background: 'var(--nexus-card)', border: '1px solid var(--nexus-border)' }}>
-                {sortOptions.map(opt => (
-                  <button key={opt} onClick={() => { setSortLabel(opt); setShowSort(false); }}
-                    className="w-full text-left px-4 py-2.5 text-sm transition-colors hover:bg-[rgba(var(--nexus-gold-rgb),0.08)]"
-                    style={{ color: opt === sortLabel ? 'var(--nexus-gold)' : 'var(--nexus-text)' }}>
-                    {opt}
-                  </button>
-                ))}
-              </motion.div>
-            )}
-          </AnimatePresence>
+
+          {/* Sort dropdown */}
+          <div className="relative flex-shrink-0">
+            <button onClick={e => { e.stopPropagation(); setShowSort(v => !v); }}
+              className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium border transition-all whitespace-nowrap"
+              style={{ background: 'var(--nexus-card)', borderColor: 'var(--nexus-border)', color: 'var(--nexus-muted)' }}>
+              {sortLabel}
+              <ChevronDownIcon className="w-4 h-4" />
+            </button>
+            <AnimatePresence>
+              {showSort && (
+                <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}
+                  className="absolute right-0 top-12 z-20 rounded-xl overflow-hidden shadow-xl min-w-[160px]"
+                  style={{ background: 'var(--nexus-card)', border: '1px solid var(--nexus-border)' }}>
+                  {sortOptions.map(opt => (
+                    <button key={opt} onClick={() => { setSortLabel(opt); setShowSort(false); }}
+                      className="w-full text-left px-4 py-2.5 text-sm transition-colors hover:bg-[rgba(var(--nexus-gold-rgb),0.08)] whitespace-nowrap"
+                      style={{ color: opt === sortLabel ? 'var(--nexus-gold)' : 'var(--nexus-text)' }}>
+                      {opt}
+                    </button>
+                  ))}
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+
+          {/* New Client */}
+          <div className="flex-shrink-0">
+            <button onClick={openCreate}
+              className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-white transition-all hover:opacity-90 shadow-lg whitespace-nowrap"
+              style={{ background: 'linear-gradient(135deg, var(--nexus-rose), var(--nexus-rose-dark))' }}>
+              <PlusIcon className="w-4 h-4" />
+              Novo Cliente
+            </button>
+          </div>
         </div>
-
-        {/* Spacer */}
-        <div className="flex-1" />
-
-        {/* New Client */}
-        <button onClick={openCreate}
-          className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-white transition-all hover:opacity-90 shadow-lg"
-          style={{ background: 'linear-gradient(135deg, var(--nexus-rose), var(--nexus-rose-dark))' }}>
-          <PlusIcon className="w-4 h-4" />
-          Novo Cliente
-        </button>
       </motion.div>
 
       {/* ── Table ── */}
@@ -287,12 +289,12 @@ export function Clients() {
         className="rounded-2xl overflow-hidden"
         style={{ background: 'var(--nexus-card)', border: '1px solid var(--nexus-border)' }}
       >
-        <div className="overflow-x-auto">
+        <div className="">
           <table className="w-full text-sm border-collapse">
             <thead>
               <tr style={{ borderBottom: '1px solid var(--nexus-border)' }}>
                 {['Cliente','Contato','Telefone','Email','Cidade','Última Compra','Status','Ações'].map(h => (
-                  <th key={h} className="px-5 py-4 text-left text-xs font-semibold uppercase tracking-wider"
+                  <th key={h} className="px-5 py-4 text-left text-xs font-semibold uppercase tracking-wider whitespace-normal break-words"
                     style={{ color: 'var(--nexus-muted)' }}>{h}</th>
                 ))}
               </tr>
@@ -302,7 +304,7 @@ export function Clients() {
                 Array.from({ length: 5 }).map((_, i) => (
                   <tr key={i} style={{ borderBottom: '1px solid rgba(var(--nexus-gold-rgb),0.05)' }}>
                     {Array.from({ length: 8 }).map((_, j) => (
-                      <td key={j} className="px-5 py-4">
+                      <td key={j} className="px-5 py-4 whitespace-normal break-words">
                         <div className="h-4 rounded animate-pulse" style={{ background: 'var(--nexus-bg-soft)', width: j === 0 ? '140px' : '80px' }} />
                       </td>
                     ))}
@@ -310,7 +312,7 @@ export function Clients() {
                 ))
               ) : clients.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="px-5 py-16 text-center text-sm" style={{ color: 'var(--nexus-muted)' }}>
+                  <td colSpan={8} className="px-5 py-16 text-center text-sm whitespace-normal break-words" style={{ color: 'var(--nexus-muted)' }}>
                     <UserGroupIcon className="w-10 h-10 mx-auto mb-3 opacity-30" />
                     <p className="font-medium">Nenhum cliente encontrado</p>
                     <p className="text-xs mt-1 opacity-70">{search ? 'Tente outra busca.' : 'Cadastre o primeiro cliente.'}</p>
@@ -325,7 +327,7 @@ export function Clients() {
                     onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
 
                     {/* Avatar + Name + ID */}
-                    <td className="px-5 py-3.5">
+                    <td className="px-5 py-3.5 whitespace-normal break-words">
                       <div className="flex items-center gap-3">
                         <div className="w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold text-white flex-shrink-0 shadow"
                           style={{ background: avatarColor(client.name) }}>
@@ -341,22 +343,22 @@ export function Clients() {
                     </td>
 
                     {/* Contato */}
-                    <td className="px-5 py-3.5 text-sm" style={{ color: 'var(--nexus-muted)' }}>{client.name}</td>
+                    <td className="px-5 py-3.5 text-sm whitespace-normal break-words" style={{ color: 'var(--nexus-muted)' }}>{client.name}</td>
 
                     {/* Telefone */}
-                    <td className="px-5 py-3.5 text-sm" style={{ color: 'var(--nexus-muted)' }}>{client.phone || '-'}</td>
+                    <td className="px-5 py-3.5 text-sm whitespace-normal break-words" style={{ color: 'var(--nexus-muted)' }}>{client.phone || '-'}</td>
 
                     {/* Email */}
-                    <td className="px-5 py-3.5 text-sm" style={{ color: 'var(--nexus-muted)' }}>{client.email || '-'}</td>
+                    <td className="px-5 py-3.5 text-sm whitespace-normal break-words" style={{ color: 'var(--nexus-muted)' }}>{client.email || '-'}</td>
 
                     {/* Cidade */}
-                    <td className="px-5 py-3.5 text-sm" style={{ color: 'var(--nexus-muted)' }}>{extractCity(client.address)}</td>
+                    <td className="px-5 py-3.5 text-sm whitespace-normal break-words" style={{ color: 'var(--nexus-muted)' }}>{extractCity(client.address)}</td>
 
                     {/* Última Compra */}
-                    <td className="px-5 py-3.5 text-sm" style={{ color: 'var(--nexus-muted)' }}>-</td>
+                    <td className="px-5 py-3.5 text-sm whitespace-normal break-words" style={{ color: 'var(--nexus-muted)' }}>-</td>
 
                     {/* Status */}
-                    <td className="px-5 py-3.5">
+                    <td className="px-5 py-3.5 whitespace-normal break-words">
                       <span className="inline-flex px-2.5 py-1 rounded-md text-[11px] font-bold uppercase tracking-wider border"
                         style={client.active ? {
                           background: 'rgba(var(--nexus-success-rgb),0.1)',
@@ -372,7 +374,7 @@ export function Clients() {
                     </td>
 
                     {/* Actions */}
-                    <td className="px-5 py-3.5" onClick={e => e.stopPropagation()}>
+                    <td className="px-5 py-3.5 whitespace-normal break-words" onClick={e => e.stopPropagation()}>
                       <div className="flex items-center gap-1.5 justify-end">
                         <button onClick={() => setViewingClient(client)}
                           className="w-8 h-8 rounded-lg flex items-center justify-center transition-all hover:scale-105"
@@ -452,9 +454,11 @@ export function Clients() {
             </div>
             <div className="flex items-center gap-2 text-xs" style={{ color: 'var(--nexus-muted)' }}>
               Registros por página
-              <select value={PAGE_SIZE} className="rounded-lg px-2 py-1 text-xs outline-none"
+              <select value={PAGE_SIZE} className="rounded-lg px-2 py-1 text-xs outline-none cursor-pointer"
                 style={{ background: 'var(--nexus-bg-soft)', border: '1px solid var(--nexus-border)', color: 'var(--nexus-text)' }}>
-                <option>10</option><option>25</option><option>50</option>
+                <option style={{ background: 'var(--nexus-bg)', color: 'var(--nexus-text)' }}>10</option>
+                <option style={{ background: 'var(--nexus-bg)', color: 'var(--nexus-text)' }}>25</option>
+                <option style={{ background: 'var(--nexus-bg)', color: 'var(--nexus-text)' }}>50</option>
               </select>
             </div>
           </div>
@@ -594,9 +598,9 @@ export function Clients() {
                   <div>
                     <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--nexus-muted)' }}>Status</label>
                     <select value={formData.status} onChange={e => setFormData({ ...formData, status: e.target.value })}
-                      className={inputCls} style={inputStyle}>
-                      <option value="ATIVO">Ativo</option>
-                      <option value="INATIVO">Inativo</option>
+                      className={`${inputCls} cursor-pointer`} style={inputStyle}>
+                      <option value="ATIVO" style={{ background: 'var(--nexus-bg)', color: 'var(--nexus-text)' }}>Ativo</option>
+                      <option value="INATIVO" style={{ background: 'var(--nexus-bg)', color: 'var(--nexus-text)' }}>Inativo</option>
                     </select>
                   </div>
                 </div>
@@ -621,7 +625,7 @@ export function Clients() {
 
                 <div className="flex gap-3 pt-2">
                   <button type="submit"
-                    className="flex-1 py-2.5 rounded-xl text-sm font-semibold text-white transition-all hover:opacity-90"
+                    className="flex-1 py-2.5 rounded-xl text-sm font-semibold text-white transition-all hover:opacity-90 whitespace-nowrap"
                     style={{ background: 'linear-gradient(135deg, var(--nexus-rose), var(--nexus-rose-dark))' }}>
                     {editingClient ? 'Salvar' : 'Criar Cliente'}
                   </button>

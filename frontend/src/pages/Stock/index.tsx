@@ -86,7 +86,7 @@ function FilterSelect({ label, options }: { label: string; options: string[] }) 
     <div className="relative">
       <select className="appearance-none rounded-lg pl-3 pr-8 py-2.5 text-sm outline-none cursor-pointer"
         style={{ background: 'var(--nexus-input-bg)', border: '1px solid rgba(var(--nexus-gold-rgb),0.18)', color: 'var(--nexus-muted-2)', minWidth: 120 }}>
-        {options.map((o) => <option key={o}>{o}</option>)}
+        {options.map((o) => <option key={o} style={{ background: 'var(--nexus-bg)', color: 'var(--nexus-text)' }}>{o}</option>)}
       </select>
       <ChevronDownIcon className="w-3.5 h-3.5 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" style={{ color: 'var(--nexus-muted-2)' }} />
       <span className="absolute left-3 top-[-9px] px-1 text-[10px] font-medium"
@@ -133,7 +133,7 @@ function GradBtn({ onClick, children, secondary, type = 'button', icon }: {
   return (
     <button type={type} onClick={onClick}
       onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)}
-      className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold transition-all duration-200"
+      className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold transition-all duration-200 whitespace-nowrap"
       style={secondary
         ? { background: 'transparent', color: 'var(--nexus-muted-2)', border: '1px solid rgba(var(--nexus-gold-rgb),0.2)' }
         : {
@@ -325,7 +325,7 @@ export function Stock() {
       </div>
 
       {/* ── KPI Cards ───────────────────────────────────────────── */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 mb-6">
         <StatsCard
           label="Itens em estoque"
           value={formatNumber(stats.totalItems > 1000 ? 15230 : stats.totalItems)}
@@ -370,10 +370,10 @@ export function Stock() {
       <div className="rounded-xl overflow-visible mb-6" style={{ background: 'var(--nexus-card)', border: '1px solid var(--nexus-border)' }}>
 
         {/* Filter bar */}
-        <div className="px-5 py-4 flex flex-col lg:flex-row gap-4 items-center justify-between"
+        <div className="px-5 py-4 flex items-center gap-4 flex-wrap"
           style={{ borderBottom: '1px solid var(--nexus-border)' }}>
           {/* Search */}
-          <div className="relative w-full lg:w-72 flex-shrink-0">
+          <div className="relative flex-1 min-w-[180px] max-w-[320px]">
             <MagnifyingGlassIcon className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2" style={{ color: 'var(--nexus-muted-2)' }} />
             <input type="text" value={search} onChange={(e) => setSearch(e.target.value)}
               placeholder="Buscar produto, código ou categoria..."
@@ -383,24 +383,26 @@ export function Stock() {
               onBlur={(e)  => (e.target.style.borderColor = 'rgba(var(--nexus-gold-rgb),0.15)')} />
           </div>
 
-          <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto justify-start lg:justify-end">
+          <div className="flex items-center gap-3 ml-auto flex-wrap">
             <FilterSelect label="Categoria"       options={['Todas', ...categories]} />
             <FilterSelect label="Status"          options={['Todos', 'Normal', 'Baixo', 'Crítico']} />
             <FilterSelect label="Nível de estoque" options={['Todos', 'Normal', 'Baixo', 'Crítico']} />
-            <button className="flex items-center gap-2 px-3.5 py-2.5 rounded-lg text-sm font-medium transition-all"
+            <button className="flex items-center gap-2 px-3.5 py-2.5 rounded-lg text-sm font-medium transition-all whitespace-nowrap flex-shrink-0"
               style={{ color: 'var(--nexus-gold)', background: 'transparent', border: '1px solid rgba(var(--nexus-gold-rgb),0.22)' }}
               onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(var(--nexus-gold-rgb),0.06)')}
               onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}>
               <AdjustmentsHorizontalIcon className="w-4 h-4" />Mais filtros
             </button>
-            <GradBtn onClick={() => { setError(''); setShowModal(true); }} icon={<ArrowDownTrayIcon className="w-4 h-4" />}>
-              Exportar relatório
-            </GradBtn>
+            <div className="flex-shrink-0">
+              <GradBtn onClick={() => { setError(''); setShowModal(true); }} icon={<ArrowDownTrayIcon className="w-4 h-4" />}>
+                <span className="whitespace-nowrap">Exportar relatório</span>
+              </GradBtn>
+            </div>
           </div>
         </div>
 
         {/* Table */}
-        <div className="overflow-x-auto">
+        <div className="">
           <table className="w-full" style={{ borderCollapse: 'collapse' }}>
             <thead>
               <tr style={{ borderBottom: '1px solid var(--nexus-border)' }}>
@@ -415,9 +417,9 @@ export function Stock() {
             </thead>
             <tbody>
               {loading ? (
-                <tr><td colSpan={9} className="px-4 py-12 text-center text-sm" style={{ color: 'var(--nexus-muted-2)' }}>Carregando...</td></tr>
+                <tr><td colSpan={9} className="px-4 py-12 text-center text-sm whitespace-normal break-words" style={{ color: 'var(--nexus-muted-2)' }}>Carregando...</td></tr>
               ) : filtered.length === 0 ? (
-                <tr><td colSpan={9} className="px-4 py-12 text-center text-sm" style={{ color: 'var(--nexus-muted-2)' }}>Nenhum produto encontrado.</td></tr>
+                <tr><td colSpan={9} className="px-4 py-12 text-center text-sm whitespace-normal break-words" style={{ color: 'var(--nexus-muted-2)' }}>Nenhum produto encontrado.</td></tr>
               ) : filtered.map((p, idx) => {
                 const style  = getCatStyle(p.category);
                 const level  = computeLevel(p.quantity, p.min_qty);
@@ -429,7 +431,7 @@ export function Stock() {
                     onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}>
 
                     {/* Produto */}
-                    <td className="px-4 py-3.5">
+                    <td className="px-4 py-3.5 whitespace-normal break-words">
                       <div className="flex items-center gap-3">
                         <div className="w-9 h-9 rounded-lg flex items-center justify-center text-xs font-bold flex-shrink-0"
                           style={{ background: style.bg, color: style.color }}>
@@ -440,44 +442,44 @@ export function Stock() {
                     </td>
 
                     {/* Categoria */}
-                    <td className="px-4 py-3.5">
+                    <td className="px-4 py-3.5 whitespace-normal break-words">
                       <span className="text-sm" style={{ color: 'var(--nexus-muted-2)' }}>{p.category || '—'}</span>
                     </td>
 
                     {/* Código */}
-                    <td className="px-4 py-3.5">
+                    <td className="px-4 py-3.5 whitespace-normal break-words">
                       <span className="text-sm font-mono" style={{ color: 'var(--nexus-muted-2)' }}>{p.sku}</span>
                     </td>
 
                     {/* Estoque Atual */}
-                    <td className="px-4 py-3.5">
+                    <td className="px-4 py-3.5 whitespace-normal break-words">
                       <span className="text-sm" style={{ color: 'var(--nexus-muted-2)' }}>
                         {p.quantity} {p.quantity === 1 ? 'unidade' : 'unidades'}
                       </span>
                     </td>
 
                     {/* Estoque Mínimo */}
-                    <td className="px-4 py-3.5">
+                    <td className="px-4 py-3.5 whitespace-normal break-words">
                       <span className="text-sm" style={{ color: 'var(--nexus-muted-2)' }}>
                         {p.min_qty} {p.min_qty === 1 ? 'unidade' : 'unidades'}
                       </span>
                     </td>
 
                     {/* Nível */}
-                    <td className="px-4 py-3.5"><LevelBadge level={level} /></td>
+                    <td className="px-4 py-3.5 whitespace-normal break-words"><LevelBadge level={level} /></td>
 
                     {/* Valor Unit. */}
-                    <td className="px-4 py-3.5">
+                    <td className="px-4 py-3.5 whitespace-normal break-words">
                       <span className="text-sm" style={{ color: 'var(--nexus-muted-2)' }}>{formatPrice(p.price)}</span>
                     </td>
 
                     {/* Valor Total */}
-                    <td className="px-4 py-3.5">
+                    <td className="px-4 py-3.5 whitespace-normal break-words">
                       <span className="text-sm font-medium" style={{ color: 'var(--nexus-text)' }}>{formatPrice(p.price * p.quantity)}</span>
                     </td>
 
                     {/* Ações */}
-                    <td className="px-4 py-3.5">
+                    <td className="px-4 py-3.5 whitespace-normal break-words">
                       <div className="flex items-center gap-1.5 justify-end" onClick={(e) => e.stopPropagation()}>
                         <ActionBtn title="Visualizar"><EyeIcon className="w-4 h-4" /></ActionBtn>
                         <ActionBtn gold title="Editar"><PencilIcon className="w-4 h-4" /></ActionBtn>
@@ -494,7 +496,7 @@ export function Stock() {
                                 style={{ background: 'var(--nexus-card-strong)', border: '1px solid var(--nexus-border)', boxShadow: 'var(--nexus-shadow)' }}>
                                 {['Movimentar estoque', 'Ver histórico', 'Ajuste manual', 'Excluir'].map((opt) => (
                                   <button key={opt}
-                                    className="w-full text-left px-4 py-2 text-xs transition-colors"
+                                    className="w-full text-left px-4 py-2 text-xs transition-colors whitespace-nowrap"
                                     style={{ color: opt === 'Excluir' ? 'var(--nexus-danger)' : 'var(--nexus-muted-2)' }}
                                     onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(var(--nexus-gold-rgb),0.06)')}
                                     onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
@@ -535,7 +537,9 @@ export function Stock() {
             <div className="relative">
               <select className="appearance-none rounded-lg pl-3 pr-7 py-1.5 text-sm outline-none cursor-pointer"
                 style={{ background: 'var(--nexus-input-bg)', border: '1px solid rgba(var(--nexus-gold-rgb),0.15)', color: 'var(--nexus-text)' }}>
-                <option>10</option><option>20</option><option>50</option>
+                <option style={{ background: 'var(--nexus-bg)', color: 'var(--nexus-text)' }}>10</option>
+                <option style={{ background: 'var(--nexus-bg)', color: 'var(--nexus-text)' }}>20</option>
+                <option style={{ background: 'var(--nexus-bg)', color: 'var(--nexus-text)' }}>50</option>
               </select>
               <ChevronDownIcon className="w-3 h-3 absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none" style={{ color: 'var(--nexus-muted-2)' }} />
             </div>
@@ -676,8 +680,8 @@ export function Stock() {
               <form onSubmit={handleSubmit} className="space-y-4">
                 {/* Produto */}
                 <Field label="Produto" required value={formData.product_id} onChange={(v) => setFormData({ ...formData, product_id: v })} as="select">
-                  <option value="">Selecione um produto...</option>
-                  {stockList.map(p => <option key={p.id} value={p.id}>{p.name} (qtd: {p.quantity})</option>)}
+                  <option value="" style={{ background: 'var(--nexus-bg)', color: 'var(--nexus-text)' }}>Selecione um produto...</option>
+                  {stockList.map(p => <option key={p.id} value={p.id} style={{ background: 'var(--nexus-bg)', color: 'var(--nexus-text)' }}>{p.name} (qtd: {p.quantity})</option>)}
                 </Field>
 
                 {/* Tipo */}

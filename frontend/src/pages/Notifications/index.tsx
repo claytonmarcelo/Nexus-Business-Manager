@@ -78,7 +78,7 @@ export function Notifications() {
         </div>
         <div className="flex gap-3">
           <button onClick={handleGenerate}
-            className="px-4 py-2 text-sm font-medium rounded-xl transition-all"
+            className="px-4 py-2 text-sm font-medium rounded-xl transition-all whitespace-nowrap"
             style={{ background: 'var(--nexus-card)', color: 'var(--nexus-text)', border: '1px solid var(--nexus-border)' }}>
             <span className="inline-flex items-center gap-1.5">
               <ArrowPathIcon className="w-4 h-4" />
@@ -87,7 +87,7 @@ export function Notifications() {
           </button>
           {unreadCount > 0 && (
             <button onClick={handleMarkAllRead}
-              className="px-4 py-2 text-sm font-medium rounded-xl transition-all"
+              className="px-4 py-2 text-sm font-medium rounded-xl transition-all whitespace-nowrap"
               style={{ background: 'linear-gradient(135deg, var(--nexus-rose), var(--nexus-rose-dark))', color: '#FFFFFF' }}>
               Marcar todas lidas
             </button>

@@ -53,9 +53,9 @@ export function Preloader() {
               transition={{ duration: 0.5 }}
             >
               <img
-                src="/logo.png"
+                src="/assets/Logo.png"
                 alt="Nexus Business Manager"
-                className="h-12 md:h-16"
+                className="h-16 md:h-20 object-contain"
               />
             </motion.div>
 

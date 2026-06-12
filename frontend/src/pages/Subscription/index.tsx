@@ -200,7 +200,7 @@ export function Subscription() {
               </button>
               <button
                 onClick={handleCancel}
-                className="px-4 py-2 text-sm font-medium rounded-xl transition-all duration-200"
+                className="px-4 py-2 text-sm font-medium rounded-xl transition-all duration-200 whitespace-nowrap"
                 style={{ color: 'var(--nexus-danger)', border: '1px solid var(--nexus-danger)' }}
               >
                 Cancelar Assinatura

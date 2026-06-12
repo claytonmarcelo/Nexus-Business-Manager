@@ -257,7 +257,7 @@ export function About() {
                 <Icon className="w-10 h-10 mb-3" style={{ color: 'var(--nexus-gold)' }} />
                 <h4 className="text-base font-semibold mb-2" style={{ color: '#FFFFFF' }}>{item.title}</h4>
                 <p className="text-sm mb-4 leading-tight" style={{ color: 'var(--nexus-muted)' }}>{item.desc}</p>
-                <button className="w-full py-2 rounded-lg text-sm font-semibold transition-all duration-200 mt-auto"
+                <button className="w-full py-2 rounded-lg text-sm font-semibold transition-all duration-200 mt-auto whitespace-nowrap"
                   style={{ background: 'rgba(var(--nexus-gold-rgb),0.15)', color: 'var(--nexus-gold)', border: '1px solid rgba(var(--nexus-gold-rgb),0.25)' }}
                   onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(var(--nexus-gold-rgb),0.25)'}
                   onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(var(--nexus-gold-rgb),0.15)'}>
@@ -284,7 +284,7 @@ export function About() {
               </p>
             </div>
           </div>
-          <button className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-200"
+          <button className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-200 whitespace-nowrap"
             style={{ background: 'rgba(var(--nexus-gold-rgb),0.15)', color: 'var(--nexus-gold)', border: '1px solid rgba(var(--nexus-gold-rgb),0.25)' }}
             onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(var(--nexus-gold-rgb),0.25)'}
             onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(var(--nexus-gold-rgb),0.15)'}>

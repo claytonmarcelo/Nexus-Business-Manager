@@ -74,11 +74,15 @@ function FilterSelect({ label, options }: { label: string; options: string[] }) 
         style={{
           background: 'var(--nexus-input-bg)',
           border: '1px solid rgba(var(--nexus-gold-rgb),0.18)',
-          color: 'var(--nexus-muted-2)',
+          color: 'var(--nexus-text)',
           minWidth: 120,
         }}
       >
-        {options.map((o) => <option key={o} value={o.toLowerCase()}>{o}</option>)}
+        {options.map((o) => (
+          <option key={o} value={o.toLowerCase()} style={{ background: 'var(--nexus-bg)', color: 'var(--nexus-text)' }}>
+            {o}
+          </option>
+        ))}
       </select>
       <ChevronDownIcon className="w-3.5 h-3.5 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none"
         style={{ color: 'var(--nexus-muted-2)' }} />
@@ -334,11 +338,11 @@ export function Suppliers() {
 
         {/* Filters bar */}
         <div
-          className="px-5 py-4 flex flex-col lg:flex-row gap-4 items-center justify-between"
+          className="px-5 py-4 flex items-center gap-4 flex-wrap"
           style={{ borderBottom: '1px solid var(--nexus-border)' }}
         >
           {/* Search */}
-          <div className="relative w-full lg:w-72 flex-shrink-0">
+          <div className="relative flex-1 min-w-[180px] max-w-[320px]">
             <MagnifyingGlassIcon className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2" style={{ color: 'var(--nexus-muted-2)' }} />
             <input
               type="text"
@@ -357,14 +361,14 @@ export function Suppliers() {
           </div>
 
           {/* Right side controls */}
-          <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto justify-start lg:justify-end">
+          <div className="flex items-center gap-3 ml-auto flex-wrap">
             <FilterSelect label="Categoria" options={['Todas', ...categories]} />
             <FilterSelect label="Status"    options={['Todos', 'Ativo', 'Inativo']} />
             <FilterSelect label="Avaliação" options={['Todas', '5 estrelas', '4+ estrelas', '3+ estrelas']} />
 
-            {/* More filters */}
+            {/* Buttons */}
             <button
-              className="flex items-center gap-2 px-3.5 py-2.5 rounded-lg text-sm font-medium transition-all"
+              className="flex items-center gap-2 px-3.5 py-2.5 rounded-lg text-sm font-medium transition-all whitespace-nowrap flex-shrink-0"
               style={{ color: 'var(--nexus-gold)', background: 'transparent', border: '1px solid rgba(var(--nexus-gold-rgb),0.22)' }}
               onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(var(--nexus-gold-rgb),0.06)')}
               onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
@@ -373,16 +377,17 @@ export function Suppliers() {
               Mais filtros
             </button>
 
-            {/* New supplier */}
-            <GradBtn onClick={openCreate}>
-              <PlusIcon className="w-4 h-4" />
-              Novo Fornecedor
-            </GradBtn>
+            <div className="flex-shrink-0">
+              <GradBtn onClick={openCreate}>
+                <PlusIcon className="w-4 h-4" />
+                <span className="whitespace-nowrap">Novo Fornecedor</span>
+              </GradBtn>
+            </div>
           </div>
         </div>
 
         {/* Table */}
-        <div className="overflow-x-auto">
+        <div className="">
           <table className="w-full" style={{ borderCollapse: 'collapse' }}>
             <thead>
               <tr style={{ borderBottom: '1px solid var(--nexus-border)' }}>
@@ -400,13 +405,13 @@ export function Suppliers() {
             <tbody>
               {loading && suppliers.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="text-center py-16 text-sm" style={{ color: 'var(--nexus-muted-2)' }}>
+                  <td colSpan={8} className="text-center py-16 text-sm whitespace-normal break-words" style={{ color: 'var(--nexus-muted-2)' }}>
                     Carregando fornecedores...
                   </td>
                 </tr>
               ) : filtered.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="text-center py-16 text-sm" style={{ color: 'var(--nexus-muted-2)' }}>
+                  <td colSpan={8} className="text-center py-16 text-sm whitespace-normal break-words" style={{ color: 'var(--nexus-muted-2)' }}>
                     Nenhum fornecedor encontrado.
                   </td>
                 </tr>
@@ -431,7 +436,7 @@ export function Suppliers() {
                     onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
                   >
                     {/* Fornecedor */}
-                    <td className="px-4 py-3.5">
+                    <td className="px-4 py-3.5 whitespace-normal break-words">
                       <div className="flex items-center gap-3">
                         <div
                           className="w-9 h-9 rounded-full flex items-center justify-center font-bold text-xs flex-shrink-0"
@@ -451,43 +456,43 @@ export function Suppliers() {
                     </td>
 
                     {/* Contato */}
-                    <td className="px-4 py-3.5">
+                    <td className="px-4 py-3.5 whitespace-normal break-words">
                       <span className="text-sm" style={{ color: 'var(--nexus-muted-2)' }}>
                         {s.contact_name || '—'}
                       </span>
                     </td>
 
                     {/* Categoria */}
-                    <td className="px-4 py-3.5">
+                    <td className="px-4 py-3.5 whitespace-normal break-words">
                       <span className="text-sm" style={{ color: 'var(--nexus-muted-2)' }}>{cat}</span>
                     </td>
 
                     {/* Telefone */}
-                    <td className="px-4 py-3.5">
+                    <td className="px-4 py-3.5 whitespace-normal break-words">
                       <span className="text-sm" style={{ color: 'var(--nexus-muted-2)' }}>
                         {s.phone || '—'}
                       </span>
                     </td>
 
                     {/* Email */}
-                    <td className="px-4 py-3.5">
+                    <td className="px-4 py-3.5 whitespace-normal break-words">
                       <span className="text-sm" style={{ color: 'var(--nexus-muted-2)' }}>
                         {s.email || '—'}
                       </span>
                     </td>
 
                     {/* Avaliação */}
-                    <td className="px-4 py-3.5">
+                    <td className="px-4 py-3.5 whitespace-normal break-words">
                       <StarRating rating={rat} />
                     </td>
 
                     {/* Status */}
-                    <td className="px-4 py-3.5">
+                    <td className="px-4 py-3.5 whitespace-normal break-words">
                       <StatusBadge active={s.active ?? true} />
                     </td>
 
                     {/* Ações */}
-                    <td className="px-4 py-3.5">
+                    <td className="px-4 py-3.5 whitespace-normal break-words">
                       <div className="flex items-center gap-1.5 justify-end" onClick={(e) => e.stopPropagation()}>
                         <ActionBtn title="Visualizar">
                           <EyeIcon className="w-4 h-4" />
@@ -517,7 +522,7 @@ export function Suppliers() {
                                 {['Ver detalhes', 'Editar', 'Desativar', 'Excluir'].map((opt) => (
                                   <button
                                     key={opt}
-                                    className="w-full text-left px-4 py-2 text-xs transition-colors"
+                                    className="w-full text-left px-4 py-2 text-xs transition-colors whitespace-nowrap"
                                     style={{ color: opt === 'Excluir' ? 'var(--nexus-danger)' : 'var(--nexus-muted-2)' }}
                                     onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(var(--nexus-gold-rgb),0.06)')}
                                     onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
@@ -564,9 +569,9 @@ export function Suppliers() {
                 className="appearance-none rounded-lg pl-3 pr-7 py-1.5 text-sm outline-none cursor-pointer"
                 style={{ background: 'var(--nexus-input-bg)', border: '1px solid rgba(var(--nexus-gold-rgb),0.15)', color: 'var(--nexus-text)' }}
               >
-                <option>10</option>
-                <option>20</option>
-                <option>50</option>
+                <option style={{ background: 'var(--nexus-bg)', color: 'var(--nexus-text)' }}>10</option>
+                <option style={{ background: 'var(--nexus-bg)', color: 'var(--nexus-text)' }}>20</option>
+                <option style={{ background: 'var(--nexus-bg)', color: 'var(--nexus-text)' }}>50</option>
               </select>
               <ChevronDownIcon className="w-3 h-3 absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none" style={{ color: 'var(--nexus-muted-2)' }} />
             </div>

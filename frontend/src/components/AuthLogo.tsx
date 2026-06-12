@@ -2,7 +2,7 @@ export function AuthLogo() {
   return (
     <div className="auth-logo-wrapper">
       <img
-        src="/logo.png"
+        src="/assets/Logo.png"
         alt="Nexus Business Manager"
         className="auth-logo"
       />

@@ -42,7 +42,7 @@ export function PremiumTable<T extends { id: number | string }>({
   };
 
   return (
-    <div className="overflow-x-auto animate-fade-in-up">
+    <div className="animate-fade-in-up">
       <table className="stock-table">
         <thead>
           <tr>

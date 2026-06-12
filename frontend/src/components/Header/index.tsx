@@ -27,7 +27,7 @@ export function Header({ alternarSidebar }: HeaderProps) {
           <div className="flex items-center gap-3">
             <button
               onClick={alternarSidebar}
-              className="p-2 rounded-lg transition-colors hover:bg-nexus-bg/50 md:hidden"
+              className="p-2 rounded-lg transition-colors hover:bg-nexus-bg/50 md:hidden whitespace-nowrap"
               style={{ color: 'var(--nexus-text)' }}
             >
               <Bars3Icon className="w-5 h-5" />
@@ -48,7 +48,7 @@ export function Header({ alternarSidebar }: HeaderProps) {
           <div className="flex items-center gap-2">
             <button
               onClick={toggleTheme}
-              className="p-2 rounded-lg transition-all duration-200 hover:bg-nexus-bg/50"
+              className="p-2 rounded-lg transition-all duration-200 hover:bg-nexus-bg/50 whitespace-nowrap"
               style={{ color: 'var(--nexus-text)' }}
               title={`Tema: ${theme === 'dark' ? 'Escuro' : theme === 'light' ? 'Claro' : 'Automático'}`}
             >

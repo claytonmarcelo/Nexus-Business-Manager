@@ -99,7 +99,7 @@ export function Status() {
         <button
           onClick={handleCheck}
           disabled={checking}
-          className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-xl transition-all duration-200 disabled:opacity-50"
+          className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-xl transition-all duration-200 disabled:opacity-50 whitespace-nowrap"
           style={{ background: 'var(--nexus-card)', color: 'var(--nexus-text)', border: '1px solid var(--nexus-border)' }}
         >
           <ArrowPathIcon className={`w-4 h-4 ${checking ? 'animate-spin' : ''}`} />

@@ -84,7 +84,7 @@ export function Modal({
         {showCloseButton && (
           <button
             onClick={onClose}
-            className="absolute top-4 right-4 text-nexus-muted/60 hover:text-nexus-text transition-colors"
+            className="absolute top-4 right-4 text-nexus-muted/60 hover:text-nexus-text transition-colors whitespace-nowrap"
           >
             <XMarkIcon className="w-5 h-5" />
           </button>
@@ -111,7 +111,7 @@ export function Modal({
             <div className="mt-6">
               <button
                 onClick={onClose}
-                className="btn-primary"
+                className="btn-primary whitespace-nowrap"
               >
                 Ok
               </button>

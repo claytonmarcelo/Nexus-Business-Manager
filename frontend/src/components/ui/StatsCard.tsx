@@ -47,8 +47,8 @@ export function StatsCard({ label, value, icon, color, trend, subtitle, sparklin
       }} />
 
       <div className="p-4 pb-0 relative z-10 flex-1">
-        <div className="flex items-start justify-between mb-2">
-          <span className="text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--nexus-muted-2)' }}>
+        <div className="flex items-start justify-between mb-2 gap-2">
+          <span className="text-[10px] font-bold uppercase tracking-widest truncate" style={{ color: 'var(--nexus-muted-2)' }}>
             {label}
           </span>
           <div
@@ -59,21 +59,21 @@ export function StatsCard({ label, value, icon, color, trend, subtitle, sparklin
           </div>
         </div>
 
-        <p className={`${valueFontSize} font-bold mb-1 leading-tight`} style={{ color: 'var(--nexus-text)' }}>
+        <p className={`${valueFontSize} font-bold mb-1 leading-tight truncate`} style={{ color: 'var(--nexus-text)' }}>
           {value}
         </p>
 
-        <div className="flex items-center gap-1.5">
+        <div className="flex items-center gap-1.5 flex-wrap">
           {trend && (
             <span
-              className="text-[11px] font-semibold"
+              className="text-[11px] font-semibold flex-shrink-0"
               style={{ color: trend.direction === 'up' ? 'var(--nexus-success)' : 'var(--nexus-danger)' }}
             >
               {trend.direction === 'up' ? '↑' : '↓'} {trend.value}
             </span>
           )}
           {subtitle && (
-            <span className="text-[10px]" style={{ color: 'var(--nexus-muted-2)' }}>{subtitle}</span>
+            <span className="text-[10px] truncate" style={{ color: 'var(--nexus-muted-2)' }}>{subtitle}</span>
           )}
         </div>
       </div>

@@ -136,12 +136,12 @@ export function Logs() {
           </div>
         ) : (
           <>
-            <div className="overflow-x-auto">
+            <div className="">
               <table className="w-full text-left text-xs">
                 <thead>
                   <tr style={{ borderBottom: '1px solid var(--nexus-border)' }}>
                     {['Data/Hora', 'Usuário', 'Ação', 'Descrição', 'IP', ''].map(h => (
-                      <th key={h} className="px-5 py-3.5 font-semibold uppercase tracking-wider"
+                      <th key={h} className="px-5 py-3.5 font-semibold uppercase tracking-wider whitespace-normal break-words"
                         style={{ color: 'var(--nexus-muted-2)' }}>{h}</th>
                     ))}
                   </tr>
@@ -154,19 +154,19 @@ export function Logs() {
                         onMouseEnter={e => { e.currentTarget.style.background = 'var(--nexus-bg-soft)'; }}
                         onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; }}
                         onClick={() => setSelectedLog(log)}>
-                        <td className="px-5 py-3" style={{ color: 'var(--nexus-muted-2)' }}>
+                        <td className="px-5 py-3 whitespace-normal break-words" style={{ color: 'var(--nexus-muted-2)' }}>
                           {new Date(log.created_at).toLocaleString('pt-BR')}
                         </td>
-                        <td className="px-5 py-3 font-medium" style={{ color: 'var(--nexus-text)' }}>{log.user_name}</td>
-                        <td className="px-5 py-3">
+                        <td className="px-5 py-3 font-medium whitespace-normal break-words" style={{ color: 'var(--nexus-text)' }}>{log.user_name}</td>
+                        <td className="px-5 py-3 whitespace-normal break-words">
                           <span className="inline-flex px-2.5 py-1 rounded-full text-[10px] font-medium"
                             style={{ background: meta.bg, color: meta.color }}>
                             {actionLabels[log.action] || log.action}
                           </span>
                         </td>
-                        <td className="px-5 py-3 max-w-[300px] truncate" style={{ color: 'var(--nexus-muted)' }}>{log.description}</td>
-                        <td className="px-5 py-3 text-[11px]" style={{ color: 'var(--nexus-muted-2)' }}>{log.ip_address}</td>
-                        <td className="px-5 py-3 text-right">
+                        <td className="px-5 py-3 max-w-[300px] truncate whitespace-normal break-words" style={{ color: 'var(--nexus-muted)' }}>{log.description}</td>
+                        <td className="px-5 py-3 text-[11px] whitespace-normal break-words" style={{ color: 'var(--nexus-muted-2)' }}>{log.ip_address}</td>
+                        <td className="px-5 py-3 text-right whitespace-normal break-words">
                           <EyeIcon className="w-4 h-4 inline-block" style={{ color: 'var(--nexus-muted-2)' }} />
                         </td>
                       </tr>

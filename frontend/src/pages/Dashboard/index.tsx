@@ -149,7 +149,7 @@ const SectionHeader = memo(function SectionHeader({ title, link }: { title: stri
     <div className="flex items-center justify-between mb-3">
       <h2 className="text-sm font-semibold" style={{ color: 'var(--nexus-text)' }}>{title}</h2>
       {link && (
-        <button className="flex items-center gap-1 text-xs font-medium transition-colors"
+        <button className="flex items-center gap-1 text-xs font-medium transition-colors whitespace-nowrap"
           style={{ color: 'var(--nexus-gold)' }}
           onMouseEnter={e => { e.currentTarget.style.color = 'var(--nexus-gold-light)'; }}
           onMouseLeave={e => { e.currentTarget.style.color = 'var(--nexus-gold)'; }}>
@@ -189,7 +189,7 @@ const SalesChart = memo(function SalesChart() {
         <div className="relative">
           <select className="appearance-none border rounded-lg px-3 py-1 pr-7 text-xs cursor-pointer"
             style={{ borderColor: 'var(--nexus-border)', color: 'var(--nexus-muted)', background: 'var(--nexus-bg-soft)' }}>
-            <option>Ultimos 12 meses</option>
+            <option style={{ background: 'var(--nexus-bg)', color: 'var(--nexus-text)' }}>Ultimos 12 meses</option>
           </select>
           <CalendarDaysIcon className="w-3 h-3 absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none"
             style={{ color: 'var(--nexus-muted)' }} />
@@ -239,7 +239,7 @@ const FinancialChart = memo(function FinancialChart() {
         <div className="relative">
           <select className="appearance-none border rounded-lg px-3 py-1 pr-7 text-xs cursor-pointer"
             style={{ borderColor: 'var(--nexus-border)', color: 'var(--nexus-muted)', background: 'var(--nexus-bg-soft)' }}>
-            <option>Este mes</option>
+            <option style={{ background: 'var(--nexus-bg)', color: 'var(--nexus-text)' }}>Este mes</option>
           </select>
           <CalendarDaysIcon className="w-3 h-3 absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none"
             style={{ color: 'var(--nexus-muted)' }} />
@@ -342,12 +342,12 @@ const SalesTable = memo(function SalesTable() {
       style={cardStyle}>
       <div className="absolute top-0 left-0 w-full h-px" style={topAccentStyle} />
       <SectionHeader title="Ultimas Vendas" link="Ver todas" />
-      <div className="flex-1 overflow-x-auto">
+      <div className="flex-1">
         <table className="w-full text-left" style={{ fontSize: 11 }}>
           <thead>
             <tr style={{ borderBottom: '1px solid var(--nexus-border)' }}>
               {['Pedido', 'Cliente', 'Data', 'Valor', 'Status'].map(h => (
-                <th key={h} className="pb-2 pr-2 font-semibold uppercase tracking-wider whitespace-nowrap"
+                <th key={h} className="pb-2 pr-2 font-semibold uppercase tracking-wider whitespace-normal break-words"
                   style={{ color: 'var(--nexus-muted-2)', fontSize: 10 }}>{h}</th>
               ))}
             </tr>
@@ -357,11 +357,11 @@ const SalesTable = memo(function SalesTable() {
               <tr key={s.id} className="transition-colors" style={{ borderBottom: '1px solid var(--nexus-border)' }}
                 onMouseEnter={e => { e.currentTarget.style.background = 'var(--nexus-bg-soft)'; }}
                 onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; }}>
-                <td className="py-2 pr-2 font-medium whitespace-nowrap" style={{ color: 'var(--nexus-text)' }}>{s.id}</td>
-                <td className="py-2 pr-2 whitespace-nowrap" style={{ color: 'var(--nexus-muted)' }}>{s.client}</td>
-                <td className="py-2 pr-2 whitespace-nowrap" style={{ color: 'var(--nexus-muted)' }}>{s.date}</td>
-                <td className="py-2 pr-2 font-medium whitespace-nowrap" style={{ color: 'var(--nexus-text)' }}>{fmtBRL(s.value)}</td>
-                <td className="py-2">{badge(s.status)}</td>
+                <td className="py-2 pr-2 font-medium whitespace-normal break-words" style={{ color: 'var(--nexus-text)' }}>{s.id}</td>
+                <td className="py-2 pr-2 whitespace-normal break-words" style={{ color: 'var(--nexus-muted)' }}>{s.client}</td>
+                <td className="py-2 pr-2 whitespace-normal break-words" style={{ color: 'var(--nexus-muted)' }}>{s.date}</td>
+                <td className="py-2 pr-2 font-medium whitespace-normal break-words" style={{ color: 'var(--nexus-text)' }}>{fmtBRL(s.value)}</td>
+                <td className="py-2 whitespace-normal break-words">{badge(s.status)}</td>
               </tr>
             ))}
           </tbody>
@@ -379,12 +379,12 @@ const NewClientsTable = memo(function NewClientsTable() {
       style={cardStyle}>
       <div className="absolute top-0 left-0 w-full h-px" style={topAccentStyle} />
       <SectionHeader title="Novos Clientes" link="Ver todas" />
-      <div className="flex-1 overflow-x-auto">
+      <div className="flex-1">
         <table className="w-full text-left" style={{ fontSize: 11 }}>
           <thead>
             <tr style={{ borderBottom: '1px solid var(--nexus-border)' }}>
               {['Cliente', 'Cidade', 'Data'].map(h => (
-                <th key={h} className="pb-2 pr-2 font-semibold uppercase tracking-wider whitespace-nowrap"
+                <th key={h} className="pb-2 pr-2 font-semibold uppercase tracking-wider whitespace-normal break-words"
                   style={{ color: 'var(--nexus-muted-2)', fontSize: 10 }}>{h}</th>
               ))}
             </tr>
@@ -394,9 +394,9 @@ const NewClientsTable = memo(function NewClientsTable() {
               <tr key={i} className="transition-colors" style={{ borderBottom: '1px solid var(--nexus-border)' }}
                 onMouseEnter={e => { e.currentTarget.style.background = 'var(--nexus-bg-soft)'; }}
                 onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; }}>
-                <td className="py-2 pr-2 font-medium whitespace-nowrap" style={{ color: 'var(--nexus-text)' }}>{c.name}</td>
-                <td className="py-2 pr-2 whitespace-nowrap" style={{ color: 'var(--nexus-muted)' }}>{c.city}</td>
-                <td className="py-2 whitespace-nowrap" style={{ color: 'var(--nexus-muted)' }}>{c.date}</td>
+                <td className="py-2 pr-2 font-medium whitespace-normal break-words" style={{ color: 'var(--nexus-text)' }}>{c.name}</td>
+                <td className="py-2 pr-2 whitespace-normal break-words" style={{ color: 'var(--nexus-muted)' }}>{c.city}</td>
+                <td className="py-2 whitespace-normal break-words" style={{ color: 'var(--nexus-muted)' }}>{c.date}</td>
               </tr>
             ))}
           </tbody>
@@ -426,12 +426,12 @@ const LowStockTable = memo(function LowStockTable() {
       style={cardStyle}>
       <div className="absolute top-0 left-0 w-full h-px" style={topAccentStyle} />
       <SectionHeader title="Estoque Baixo" link="Ver todas" />
-      <div className="flex-1 overflow-x-auto">
+      <div className="flex-1">
         <table className="w-full text-left" style={{ fontSize: 11 }}>
           <thead>
             <tr style={{ borderBottom: '1px solid var(--nexus-border)' }}>
               {['Produto', 'Estoque', 'Minimo', 'Status'].map(h => (
-                <th key={h} className="pb-2 pr-2 font-semibold uppercase tracking-wider whitespace-nowrap"
+                <th key={h} className="pb-2 pr-2 font-semibold uppercase tracking-wider whitespace-normal break-words"
                   style={{ color: 'var(--nexus-muted-2)', fontSize: 10 }}>{h}</th>
               ))}
             </tr>
@@ -441,10 +441,10 @@ const LowStockTable = memo(function LowStockTable() {
               <tr key={i} className="transition-colors" style={{ borderBottom: '1px solid var(--nexus-border)' }}
                 onMouseEnter={e => { e.currentTarget.style.background = 'var(--nexus-bg-soft)'; }}
                 onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; }}>
-                <td className="py-2 pr-2 font-medium whitespace-nowrap" style={{ color: 'var(--nexus-text)' }}>{p.product}</td>
-                <td className="py-2 pr-2 font-bold" style={{ color: 'var(--nexus-danger)' }}>{p.stock}</td>
-                <td className="py-2 pr-2" style={{ color: 'var(--nexus-muted)' }}>{p.min}</td>
-                <td className="py-2">{badge(p.status)}</td>
+                <td className="py-2 pr-2 font-medium whitespace-normal break-words" style={{ color: 'var(--nexus-text)' }}>{p.product}</td>
+                <td className="py-2 pr-2 font-bold whitespace-normal break-words" style={{ color: 'var(--nexus-danger)' }}>{p.stock}</td>
+                <td className="py-2 pr-2 whitespace-normal break-words" style={{ color: 'var(--nexus-muted)' }}>{p.min}</td>
+                <td className="py-2 whitespace-normal break-words">{badge(p.status)}</td>
               </tr>
             ))}
           </tbody>
@@ -469,12 +469,12 @@ const ReceivablesTable = memo(function ReceivablesTable() {
       style={cardStyle}>
       <div className="absolute top-0 left-0 w-full h-px" style={topAccentStyle} />
       <SectionHeader title="Contas a Receber" link="Ver todas" />
-      <div className="flex-1 overflow-x-auto">
+      <div className="flex-1">
         <table className="w-full text-left" style={{ fontSize: 11 }}>
           <thead>
             <tr style={{ borderBottom: '1px solid var(--nexus-border)' }}>
               {['Cliente', 'Valor', 'Vencimento'].map(h => (
-                <th key={h} className="pb-2 pr-2 font-semibold uppercase tracking-wider whitespace-nowrap"
+                <th key={h} className="pb-2 pr-2 font-semibold uppercase tracking-wider whitespace-normal break-words"
                   style={{ color: 'var(--nexus-muted-2)', fontSize: 10 }}>{h}</th>
               ))}
             </tr>
@@ -484,9 +484,9 @@ const ReceivablesTable = memo(function ReceivablesTable() {
               <tr key={i} className="transition-colors" style={{ borderBottom: '1px solid var(--nexus-border)' }}
                 onMouseEnter={e => { e.currentTarget.style.background = 'var(--nexus-bg-soft)'; }}
                 onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; }}>
-                <td className="py-2 pr-2 font-medium whitespace-nowrap" style={{ color: 'var(--nexus-text)' }}>{r.client}</td>
-                <td className="py-2 pr-2 font-medium whitespace-nowrap" style={{ color: 'var(--nexus-text)' }}>{fmtBRL(r.value)}</td>
-                <td className="py-2 whitespace-nowrap font-semibold" style={{ color: isDue(r.due) ? 'var(--nexus-danger)' : 'var(--nexus-warning)' }}>{r.due}</td>
+                <td className="py-2 pr-2 font-medium whitespace-normal break-words" style={{ color: 'var(--nexus-text)' }}>{r.client}</td>
+                <td className="py-2 pr-2 font-medium whitespace-normal break-words" style={{ color: 'var(--nexus-text)' }}>{fmtBRL(r.value)}</td>
+                <td className="py-2 font-semibold whitespace-normal break-words" style={{ color: isDue(r.due) ? 'var(--nexus-danger)' : 'var(--nexus-warning)' }}>{r.due}</td>
               </tr>
             ))}
           </tbody>

@@ -85,7 +85,7 @@ export function Profile() {
             <button
               onClick={handleAvatarClick}
               disabled={avatarLoading}
-              className="w-24 h-24 rounded-full bg-nexus-gold flex items-center justify-center text-3xl font-bold overflow-hidden hover:opacity-80 transition-opacity cursor-pointer"
+              className="w-24 h-24 rounded-full bg-nexus-gold flex items-center justify-center text-3xl font-bold overflow-hidden hover:opacity-80 transition-opacity cursor-pointer whitespace-nowrap"
               title="Clique para alterar avatar"
             >
               {avatarLoading ? (
@@ -172,13 +172,13 @@ export function Profile() {
             <>
               <button
                 onClick={handleSave}
-                className="px-4 py-2 bg-nexus-gold text-white rounded-lg hover:opacity-90 transition-opacity font-medium"
+                className="px-4 py-2 bg-nexus-gold text-white rounded-lg hover:opacity-90 transition-opacity font-medium whitespace-nowrap"
               >
                 Salvar
               </button>
               <button
                 onClick={handleCancel}
-                className="px-4 py-2 border border-nexus-border text-nexus-text rounded-lg hover:bg-nexus-bg-soft transition-colors font-medium"
+                className="px-4 py-2 border border-nexus-border text-nexus-text rounded-lg hover:bg-nexus-bg-soft transition-colors font-medium whitespace-nowrap"
               >
                 Cancelar
               </button>

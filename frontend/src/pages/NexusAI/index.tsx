@@ -162,7 +162,7 @@ export function NexusAI() {
           <button
             onClick={handleSend}
             disabled={loading || !input.trim()}
-            className="px-6 py-3 rounded-xl font-semibold text-sm transition-all duration-200 flex items-center gap-2"
+            className="px-6 py-3 rounded-xl font-semibold text-sm transition-all duration-200 flex items-center gap-2 whitespace-nowrap"
             style={{
               background: 'linear-gradient(135deg, var(--nexus-gold), var(--nexus-rose))',
               color: '#FFFFFF',

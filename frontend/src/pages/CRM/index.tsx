@@ -70,7 +70,7 @@ function ActionBtn({ onClick, title, gold, children }: { onClick?: () => void; t
     <button
       onClick={onClick}
       title={title}
-      className="w-8 h-8 rounded-lg flex items-center justify-center transition-all hover:scale-105"
+      className="w-8 h-8 rounded-lg flex items-center justify-center transition-all hover:scale-105 whitespace-nowrap"
       style={{ background: gold ? 'rgba(var(--nexus-gold-rgb),0.1)' : 'var(--nexus-bg-soft)', color: gold ? 'var(--nexus-gold)' : 'var(--nexus-muted)' }}>
       {children}
     </button>
@@ -264,7 +264,7 @@ export function CRM() {
             <p className="text-sm mt-1" style={{ color: 'var(--nexus-muted-2)' }}>Central de Monitoramento de Relacionamento com Cliente</p>
           </div>
           <button onClick={openCreate}
-            className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-white transition-all hover:opacity-90 shadow-lg"
+            className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-white transition-all hover:opacity-90 shadow-lg whitespace-nowrap flex-shrink-0"
             style={{ background: 'linear-gradient(135deg, var(--nexus-rose), var(--nexus-rose-dark))' }}>
             <PlusIcon className="w-4 h-4" />
             Novo Lead
@@ -302,12 +302,12 @@ export function CRM() {
       {/* ── Filters Bar ── */}
       <motion.div
         initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
-        className="rounded-2xl p-4 border flex flex-wrap items-center gap-3"
+        className="rounded-2xl p-4 border flex items-center gap-4 hide-scrollbar flex-wrap"
         style={{ background: 'var(--nexus-card)', borderColor: 'var(--nexus-border)' }}
         onClick={e => e.stopPropagation()}
       >
         {/* Search */}
-        <div className="relative flex-1 min-w-[200px] max-w-xs">
+        <div className="relative flex-1 min-w-[180px] max-w-[320px]">
           <MagnifyingGlassIcon className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" style={{ color: 'var(--nexus-muted)' }} />
           <input type="text" value={search} onChange={e => setSearch(e.target.value)}
             placeholder="Buscar por cliente, protocolo ou assunto..."
@@ -322,60 +322,64 @@ export function CRM() {
           )}
         </div>
 
-        {/* Filter selects */}
-        <select value={channelFilter} onChange={e => setChannelFilter(e.target.value)}
-          className="px-3.5 py-2.5 rounded-xl text-xs font-semibold outline-none cursor-pointer min-w-[110px]"
-          style={{ background: 'var(--nexus-bg-soft)', border: '1px solid var(--nexus-border)', color: 'var(--nexus-text)' }}>
-          <option value="">Canal</option>
-          <option value="WhatsApp">WhatsApp</option>
-          <option value="E-mail">E-mail</option>
-          <option value="Telefone">Telefone</option>
-          <option value="Chat">Chat</option>
-        </select>
+        <div className="flex items-center gap-3 ml-auto flex-wrap">
+          {/* Filter selects */}
+          <select value={channelFilter} onChange={e => setChannelFilter(e.target.value)}
+            className="px-3.5 py-2.5 rounded-xl text-xs font-semibold outline-none cursor-pointer min-w-[110px]"
+            style={{ background: 'var(--nexus-bg-soft)', border: '1px solid var(--nexus-border)', color: 'var(--nexus-text)' }}>
+            <option value="" style={{ background: 'var(--nexus-bg)', color: 'var(--nexus-text)' }}>Canal</option>
+            <option value="WhatsApp" style={{ background: 'var(--nexus-bg)', color: 'var(--nexus-text)' }}>WhatsApp</option>
+            <option value="E-mail" style={{ background: 'var(--nexus-bg)', color: 'var(--nexus-text)' }}>E-mail</option>
+            <option value="Telefone" style={{ background: 'var(--nexus-bg)', color: 'var(--nexus-text)' }}>Telefone</option>
+            <option value="Chat" style={{ background: 'var(--nexus-bg)', color: 'var(--nexus-text)' }}>Chat</option>
+          </select>
 
-        <select value={statusTableFilter} onChange={e => setStatusTableFilter(e.target.value)}
-          className="px-3.5 py-2.5 rounded-xl text-xs font-semibold outline-none cursor-pointer min-w-[110px]"
-          style={{ background: 'var(--nexus-bg-soft)', border: '1px solid var(--nexus-border)', color: 'var(--nexus-text)' }}>
-          <option value="">Status</option>
-          <option value="Concluída">Concluída</option>
-          <option value="Em andamento">Em andamento</option>
-          <option value="Pendente">Pendente</option>
-        </select>
+          <select value={statusTableFilter} onChange={e => setStatusTableFilter(e.target.value)}
+            className="px-3.5 py-2.5 rounded-xl text-xs font-semibold outline-none cursor-pointer min-w-[110px]"
+            style={{ background: 'var(--nexus-bg-soft)', border: '1px solid var(--nexus-border)', color: 'var(--nexus-text)' }}>
+            <option value="" style={{ background: 'var(--nexus-bg)', color: 'var(--nexus-text)' }}>Status</option>
+            <option value="Concluída" style={{ background: 'var(--nexus-bg)', color: 'var(--nexus-text)' }}>Concluída</option>
+            <option value="Em andamento" style={{ background: 'var(--nexus-bg)', color: 'var(--nexus-text)' }}>Em andamento</option>
+            <option value="Pendente" style={{ background: 'var(--nexus-bg)', color: 'var(--nexus-text)' }}>Pendente</option>
+          </select>
 
-        <select value={priorityFilter} onChange={e => setPriorityFilter(e.target.value)}
-          className="px-3.5 py-2.5 rounded-xl text-xs font-semibold outline-none cursor-pointer min-w-[110px]"
-          style={{ background: 'var(--nexus-bg-soft)', border: '1px solid var(--nexus-border)', color: 'var(--nexus-text)' }}>
-          <option value="">Prioridade</option>
-          <option value="Alta">Alta</option>
-          <option value="Média">Média</option>
-          <option value="Baixa">Baixa</option>
-        </select>
+          <select value={priorityFilter} onChange={e => setPriorityFilter(e.target.value)}
+            className="px-3.5 py-2.5 rounded-xl text-xs font-semibold outline-none cursor-pointer min-w-[110px]"
+            style={{ background: 'var(--nexus-bg-soft)', border: '1px solid var(--nexus-border)', color: 'var(--nexus-text)' }}>
+            <option value="" style={{ background: 'var(--nexus-bg)', color: 'var(--nexus-text)' }}>Prioridade</option>
+            <option value="Alta" style={{ background: 'var(--nexus-bg)', color: 'var(--nexus-text)' }}>Alta</option>
+            <option value="Média" style={{ background: 'var(--nexus-bg)', color: 'var(--nexus-text)' }}>Média</option>
+            <option value="Baixa" style={{ background: 'var(--nexus-bg)', color: 'var(--nexus-text)' }}>Baixa</option>
+          </select>
 
-        <select value={periodFilter} onChange={e => setPeriodFilter(e.target.value)}
-          className="px-3.5 py-2.5 rounded-xl text-xs font-semibold outline-none cursor-pointer min-w-[120px]"
-          style={{ background: 'var(--nexus-bg-soft)', border: '1px solid var(--nexus-border)', color: 'var(--nexus-text)' }}>
-          <option value="">Período</option>
-          <option value="today">Hoje</option>
-          <option value="week">Esta Semana</option>
-          <option value="month">Este Mês</option>
-          <option value="quarter">Este Trimestre</option>
-        </select>
+          <select value={periodFilter} onChange={e => setPeriodFilter(e.target.value)}
+            className="px-3.5 py-2.5 rounded-xl text-xs font-semibold outline-none cursor-pointer min-w-[120px]"
+            style={{ background: 'var(--nexus-bg-soft)', border: '1px solid var(--nexus-border)', color: 'var(--nexus-text)' }}>
+            <option value="" style={{ background: 'var(--nexus-bg)', color: 'var(--nexus-text)' }}>Período</option>
+            <option value="today" style={{ background: 'var(--nexus-bg)', color: 'var(--nexus-text)' }}>Hoje</option>
+            <option value="week" style={{ background: 'var(--nexus-bg)', color: 'var(--nexus-text)' }}>Esta Semana</option>
+            <option value="month" style={{ background: 'var(--nexus-bg)', color: 'var(--nexus-text)' }}>Este Mês</option>
+            <option value="quarter" style={{ background: 'var(--nexus-bg)', color: 'var(--nexus-text)' }}>Este Trimestre</option>
+          </select>
 
-        {/* More filters */}
-        <button onClick={() => setShowMoreFilters(!showMoreFilters)}
-          className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all"
-          style={{ background: 'var(--nexus-bg-soft)', border: '1px solid var(--nexus-border)', color: 'var(--nexus-muted)' }}>
-          <AdjustmentsHorizontalIcon className="w-4 h-4" />
-          Mais filtros
-        </button>
+          {/* More filters */}
+          <button onClick={() => setShowMoreFilters(!showMoreFilters)}
+            className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all whitespace-nowrap flex-shrink-0"
+            style={{ background: 'var(--nexus-bg-soft)', border: '1px solid var(--nexus-border)', color: 'var(--nexus-muted)' }}>
+            <AdjustmentsHorizontalIcon className="w-4 h-4" />
+            Mais filtros
+          </button>
 
-        {/* New Interaction */}
-        <button
-          className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-white transition-all hover:opacity-90 shadow-lg ml-auto"
-          style={{ background: 'linear-gradient(135deg, var(--nexus-rose), var(--nexus-rose-dark))' }}>
-          <PlusIcon className="w-4 h-4" />
-          Nova Interação
-        </button>
+          {/* New Interaction */}
+          <div className="flex-shrink-0">
+            <button
+              className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-white transition-all hover:opacity-90 shadow-lg whitespace-nowrap"
+              style={{ background: 'linear-gradient(135deg, var(--nexus-rose), var(--nexus-rose-dark))' }}>
+              <PlusIcon className="w-4 h-4" />
+              Nova Interação
+            </button>
+          </div>
+        </div>
       </motion.div>
 
       {/* ── Additional filters (expandable) ── */}
@@ -387,10 +391,10 @@ export function CRM() {
             <div className="p-4 flex flex-wrap items-center gap-3">
               <select className="px-3.5 py-2.5 rounded-xl text-xs font-semibold outline-none cursor-pointer min-w-[140px]"
                 style={{ background: 'var(--nexus-bg-soft)', border: '1px solid var(--nexus-border)', color: 'var(--nexus-text)' }}>
-                <option value="">Responsável</option>
-                <option value="Ana Beatriz">Ana Beatriz</option>
-                <option value="Carlos Eduardo">Carlos Eduardo</option>
-                <option value="Juliana Martins">Juliana Martins</option>
+                <option value="" style={{ background: 'var(--nexus-bg)', color: 'var(--nexus-text)' }}>Responsável</option>
+                <option value="Ana Beatriz" style={{ background: 'var(--nexus-bg)', color: 'var(--nexus-text)' }}>Ana Beatriz</option>
+                <option value="Carlos Eduardo" style={{ background: 'var(--nexus-bg)', color: 'var(--nexus-text)' }}>Carlos Eduardo</option>
+                <option value="Juliana Martins" style={{ background: 'var(--nexus-bg)', color: 'var(--nexus-text)' }}>Juliana Martins</option>
               </select>
               <input type="date" className="px-3.5 py-2.5 rounded-xl text-xs font-semibold outline-none"
                 style={{ background: 'var(--nexus-bg-soft)', border: '1px solid var(--nexus-border)', color: 'var(--nexus-text)' }} />
@@ -408,7 +412,7 @@ export function CRM() {
         className="rounded-2xl overflow-hidden border"
         style={{ background: 'var(--nexus-card)', borderColor: 'var(--nexus-border)' }}
       >
-        <div className="overflow-x-auto">
+        <div className="">
           <table className="w-full text-sm border-collapse">
             <thead>
               <tr style={{ borderBottom: '1px solid var(--nexus-border)' }}>
@@ -421,7 +425,7 @@ export function CRM() {
             <tbody>
               {filteredInteractions.length === 0 ? (
                 <tr>
-                  <td colSpan={9} className="px-4 py-12 text-center text-sm" style={{ color: 'var(--nexus-muted)' }}>
+                  <td colSpan={9} className="px-4 py-12 text-center text-sm whitespace-normal break-words" style={{ color: 'var(--nexus-muted)' }}>
                     Nenhuma interação encontrada
                   </td>
                 </tr>
@@ -435,12 +439,12 @@ export function CRM() {
                     onClick={() => setActionMenu(null)}>
 
                     {/* Protocolo */}
-                    <td className="px-4 py-3.5">
+                    <td className="px-4 py-3.5 whitespace-normal break-words">
                       <span className="text-xs font-mono font-semibold" style={{ color: 'var(--nexus-gold)' }}>{item.protocolo}</span>
                     </td>
 
                     {/* Cliente */}
-                    <td className="px-4 py-3.5">
+                    <td className="px-4 py-3.5 whitespace-normal break-words">
                       <div className="flex items-center gap-2.5">
                         <div className="w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-bold text-white flex-shrink-0"
                           style={{ background: avatarColor(item.cliente) }}>
@@ -451,12 +455,12 @@ export function CRM() {
                     </td>
 
                     {/* Assunto */}
-                    <td className="px-4 py-3.5">
+                    <td className="px-4 py-3.5 whitespace-normal break-words">
                       <span className="text-sm" style={{ color: 'var(--nexus-muted-2)' }}>{item.assunto}</span>
                     </td>
 
                     {/* Canal */}
-                    <td className="px-4 py-3.5">
+                    <td className="px-4 py-3.5 whitespace-normal break-words">
                       <div className="flex items-center gap-1.5">
                         <span style={{ color: 'var(--nexus-gold)' }}>{CHANNEL_ICONS[item.canal]}</span>
                         <span className="text-xs" style={{ color: 'var(--nexus-muted-2)' }}>{item.canal}</span>
@@ -464,17 +468,17 @@ export function CRM() {
                     </td>
 
                     {/* Data/Hora */}
-                    <td className="px-4 py-3.5">
+                    <td className="px-4 py-3.5 whitespace-normal break-words">
                       <span className="text-xs" style={{ color: 'var(--nexus-muted-2)' }}>{item.data}</span>
                     </td>
 
                     {/* Responsável */}
-                    <td className="px-4 py-3.5">
+                    <td className="px-4 py-3.5 whitespace-normal break-words">
                       <span className="text-xs" style={{ color: 'var(--nexus-muted-2)' }}>{item.responsavel}</span>
                     </td>
 
                     {/* Status */}
-                    <td className="px-4 py-3.5">
+                    <td className="px-4 py-3.5 whitespace-normal break-words">
                       <span className="inline-flex px-2.5 py-1 rounded-md text-[11px] font-bold uppercase tracking-wider border"
                         style={{ background: (STATUS_BADGE[item.status] || { bg: 'transparent' }).bg, color: (STATUS_BADGE[item.status] || { color: 'var(--nexus-muted)' }).color, borderColor: 'transparent' }}>
                         {item.status}
@@ -482,7 +486,7 @@ export function CRM() {
                     </td>
 
                     {/* Prioridade */}
-                    <td className="px-4 py-3.5">
+                    <td className="px-4 py-3.5 whitespace-normal break-words">
                       <div className="flex items-center gap-1.5">
                         <span className="w-2 h-2 rounded-full" style={{ background: PRIORITY_COLORS[item.prioridade] || 'var(--nexus-muted)' }} />
                         <span className="text-xs" style={{ color: PRIORITY_COLORS[item.prioridade] || 'var(--nexus-muted)' }}>{item.prioridade}</span>
@@ -490,7 +494,7 @@ export function CRM() {
                     </td>
 
                     {/* Ações */}
-                    <td className="px-4 py-3.5">
+                    <td className="px-4 py-3.5 whitespace-normal break-words">
                       <div className="flex items-center gap-1.5 justify-end" onClick={e => e.stopPropagation()}>
                         <ActionBtn title="Visualizar">
                           <EyeIcon className="w-4 h-4" />
@@ -511,18 +515,18 @@ export function CRM() {
                                 transition={{ duration: 0.15 }}
                                 className="absolute right-0 top-9 z-50 rounded-xl py-1 min-w-[140px]"
                                 style={{ background: 'var(--nexus-card-strong)', border: '1px solid var(--nexus-border)', boxShadow: 'var(--nexus-shadow)' }}>
-                                <button className="w-full flex items-center gap-2 px-3.5 py-2 text-xs transition-colors hover:bg-white/5"
+                                <button className="w-full flex items-center gap-2 px-3.5 py-2 text-xs transition-colors hover:bg-white/5 whitespace-nowrap"
                                   style={{ color: 'var(--nexus-text)' }}>
                                   <EyeIcon className="w-3.5 h-3.5" />
                                   Visualizar
                                 </button>
-                                <button className="w-full flex items-center gap-2 px-3.5 py-2 text-xs transition-colors hover:bg-white/5"
+                                <button className="w-full flex items-center gap-2 px-3.5 py-2 text-xs transition-colors hover:bg-white/5 whitespace-nowrap"
                                   style={{ color: 'var(--nexus-text)' }}>
                                   <PencilSquareIcon className="w-3.5 h-3.5" />
                                   Editar
                                 </button>
                                 <div style={{ borderTop: '1px solid var(--nexus-border)', margin: '0.25rem 0' }} />
-                                <button className="w-full flex items-center gap-2 px-3.5 py-2 text-xs transition-colors hover:bg-white/5"
+                                <button className="w-full flex items-center gap-2 px-3.5 py-2 text-xs transition-colors hover:bg-white/5 whitespace-nowrap"
                                   style={{ color: 'var(--nexus-danger)' }}>
                                   <TrashIcon className="w-3.5 h-3.5" />
                                   Excluir
@@ -782,7 +786,7 @@ export function CRM() {
                     <select value={formData.status} onChange={e => setFormData({ ...formData, status: e.target.value })}
                       className={inputCls} style={inputStyle}>
                       {Object.entries(STATUS_META).map(([key, m]) => (
-                        <option key={key} value={key}>{m.label}</option>
+                        <option key={key} value={key} style={{ background: 'var(--nexus-bg)', color: 'var(--nexus-text)' }}>{m.label}</option>
                       ))}
                     </select>
                   </div>
@@ -818,7 +822,7 @@ export function CRM() {
 
                 <div className="flex gap-3 pt-2">
                   <button type="submit"
-                    className="flex-1 py-2.5 rounded-xl text-sm font-semibold text-white transition-all hover:opacity-90"
+                    className="flex-1 py-2.5 rounded-xl text-sm font-semibold text-white transition-all hover:opacity-90 whitespace-nowrap"
                     style={{ background: 'linear-gradient(135deg, var(--nexus-rose), var(--nexus-rose-dark))' }}>
                     {editing ? 'Salvar Alterações' : 'Criar Lead'}
                   </button>

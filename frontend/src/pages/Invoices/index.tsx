@@ -102,16 +102,16 @@ export function Invoices() {
         </div>
       ) : (
         <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--nexus-card)', border: '1px solid var(--nexus-border)' }}>
-          <div className="overflow-x-auto">
+          <div className="">
             <table className="w-full">
               <thead>
                 <tr style={{ borderBottom: '1px solid var(--nexus-border)' }}>
-                  <th className="text-left px-6 py-4 text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--nexus-muted)' }}>Fatura</th>
-                  <th className="text-left px-6 py-4 text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--nexus-muted)' }}>Plano</th>
-                  <th className="text-left px-6 py-4 text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--nexus-muted)' }}>Vencimento</th>
-                  <th className="text-left px-6 py-4 text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--nexus-muted)' }}>Valor</th>
-                  <th className="text-left px-6 py-4 text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--nexus-muted)' }}>Status</th>
-                  <th className="text-right px-6 py-4 text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--nexus-muted)' }}>Acao</th>
+                  <th className="text-left px-6 py-4 text-xs font-semibold uppercase tracking-wider whitespace-normal break-words" style={{ color: 'var(--nexus-muted)' }}>Fatura</th>
+                  <th className="text-left px-6 py-4 text-xs font-semibold uppercase tracking-wider whitespace-normal break-words" style={{ color: 'var(--nexus-muted)' }}>Plano</th>
+                  <th className="text-left px-6 py-4 text-xs font-semibold uppercase tracking-wider whitespace-normal break-words" style={{ color: 'var(--nexus-muted)' }}>Vencimento</th>
+                  <th className="text-left px-6 py-4 text-xs font-semibold uppercase tracking-wider whitespace-normal break-words" style={{ color: 'var(--nexus-muted)' }}>Valor</th>
+                  <th className="text-left px-6 py-4 text-xs font-semibold uppercase tracking-wider whitespace-normal break-words" style={{ color: 'var(--nexus-muted)' }}>Status</th>
+                  <th className="text-right px-6 py-4 text-xs font-semibold uppercase tracking-wider whitespace-normal break-words" style={{ color: 'var(--nexus-muted)' }}>Acao</th>
                 </tr>
               </thead>
               <tbody>
@@ -121,23 +121,23 @@ export function Invoices() {
                   return (
                     <tr key={inv.id} className="transition-colors hover:opacity-80"
                       style={{ borderBottom: '1px solid var(--nexus-border)' }}>
-                      <td className="px-6 py-4">
+                      <td className="px-6 py-4 whitespace-normal break-words">
                         <div className="flex items-center gap-2">
                           <DocumentTextIcon className="w-4 h-4" style={{ color: 'var(--nexus-gold)' }} />
                           <span className="text-sm font-medium" style={{ color: 'var(--nexus-text)' }}>{inv.number}</span>
                         </div>
                       </td>
-                      <td className="px-6 py-4 text-sm" style={{ color: 'var(--nexus-text)' }}>{inv.plan}</td>
-                      <td className="px-6 py-4 text-sm" style={{ color: 'var(--nexus-muted)' }}>{fmtDate(inv.due_date)}</td>
-                      <td className="px-6 py-4 text-sm font-medium" style={{ color: 'var(--nexus-text)' }}>{fmtBRL(inv.amount)}</td>
-                      <td className="px-6 py-4">
+                      <td className="px-6 py-4 text-sm whitespace-normal break-words" style={{ color: 'var(--nexus-text)' }}>{inv.plan}</td>
+                      <td className="px-6 py-4 text-sm whitespace-normal break-words" style={{ color: 'var(--nexus-muted)' }}>{fmtDate(inv.due_date)}</td>
+                      <td className="px-6 py-4 text-sm font-medium whitespace-normal break-words" style={{ color: 'var(--nexus-text)' }}>{fmtBRL(inv.amount)}</td>
+                      <td className="px-6 py-4 whitespace-normal break-words">
                         <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium"
                           style={{ background: `rgba(var(--nexus-success-rgb), 0.1)`, color: sc.color }}>
                           <Icon className="w-3.5 h-3.5" />
                           {sc.label}
                         </span>
                       </td>
-                      <td className="px-6 py-4 text-right">
+                      <td className="px-6 py-4 text-right whitespace-normal break-words">
                         {inv.status === 'paid' && (
                           <button
                             onClick={() => handleDownloadPdf(inv)}
@@ -150,7 +150,7 @@ export function Invoices() {
                         )}
                         {inv.status === 'pending' && (
                           <button
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg"
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg whitespace-nowrap"
                             style={{ background: 'var(--nexus-gold)', color: '#000000' }}
                           >
                             Pagar

@@ -143,7 +143,7 @@ export function Login() {
             <button
               type="submit"
               disabled={loading}
-              className="btn-primary w-full"
+              className="btn-primary w-full whitespace-nowrap"
               style={{ height: '52px', fontSize: '1rem' }}
             >
               {loading ? 'Entrando...' : 'Entrar'}

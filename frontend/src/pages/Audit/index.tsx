@@ -127,7 +127,7 @@ export function Audit() {
       </div>
 
       {/* Stats cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-4 gap-4">
         {[
           { icon: ClipboardDocumentListIcon, label: 'Total de eventos', value: '18.732', trend: '+15,7%', up: true },
           { icon: UserGroupIcon, label: 'Usuários ativos', value: '24', trend: '+9,1%', up: true },
@@ -183,8 +183,8 @@ export function Audit() {
           <div className="absolute top-0 left-0 w-full h-px" style={topAccentStyle} />
           
           {/* Filters */}
-          <div className="flex flex-wrap gap-2 mb-4">
-            <div className="relative flex-1 min-w-[200px]">
+          <div className="flex items-center gap-4 hide-scrollbar mb-4 flex-wrap">
+            <div className="relative flex-1 min-w-[180px] max-w-[320px]">
               <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: 'var(--nexus-muted)' }} />
               <input
                 type="text"
@@ -199,100 +199,105 @@ export function Audit() {
                 }}
               />
             </div>
-            <select
-              value={filtroUsuario}
-              onChange={(e) => setFiltroUsuario(e.target.value)}
-              className="h-10 px-3 rounded-lg text-sm"
-              style={{
-                background: 'var(--nexus-bg-soft)',
-                border: '1px solid var(--nexus-border)',
-                color: 'var(--nexus-text)',
-              }}
-            >
-              <option value="">Usuário</option>
-              <option>Clayton Marcelo</option>
-              <option>Ana Beatriz</option>
-              <option>Carlos Eduardo</option>
-            </select>
-            <select
-              value={filtroAcao}
-              onChange={(e) => setFiltroAcao(e.target.value)}
-              className="h-10 px-3 rounded-lg text-sm"
-              style={{
-                background: 'var(--nexus-bg-soft)',
-                border: '1px solid var(--nexus-border)',
-                color: 'var(--nexus-text)',
-              }}
-            >
-              <option value="">Ação</option>
-              <option value="create">Criar</option>
-              <option value="update">Editar</option>
-              <option value="delete">Excluir</option>
-              <option value="login">Login</option>
-            </select>
-            <select
-              value={filtroModulo}
-              onChange={(e) => setFiltroModulo(e.target.value)}
-              className="h-10 px-3 rounded-lg text-sm"
-              style={{
-                background: 'var(--nexus-bg-soft)',
-                border: '1px solid var(--nexus-border)',
-                color: 'var(--nexus-text)',
-              }}
-            >
-              <option value="">Módulo</option>
-              <option>Clientes</option>
-              <option>Vendas</option>
-              <option>Compras</option>
-              <option>Financeiro</option>
-            </select>
-            <select
-              value={filtroPeriodo}
-              onChange={(e) => setFiltroPeriodo(e.target.value)}
-              className="h-10 px-3 rounded-lg text-sm"
-              style={{
-                background: 'var(--nexus-bg-soft)',
-                border: '1px solid var(--nexus-border)',
-                color: 'var(--nexus-text)',
-              }}
-            >
-              <option value="">Período</option>
-              <option value="today">Hoje</option>
-              <option value="week">Esta semana</option>
-              <option value="month">Este mês</option>
-            </select>
-            <button
-              className="h-10 px-4 rounded-lg text-sm font-medium flex items-center gap-2"
-              style={{
-                background: 'var(--nexus-bg-soft)',
-                border: '1px solid var(--nexus-border)',
-                color: 'var(--nexus-gold)',
-              }}
-            >
-              <FunnelIcon className="w-4 h-4" />
-              Mais filtros
-            </button>
-            <button
-              className="h-10 px-4 rounded-lg text-sm font-medium flex items-center gap-2"
-              style={{
-                background: 'linear-gradient(135deg, #D66F7C, #C94D60)',
-                border: 'none',
-                color: 'var(--nexus-text)',
-                boxShadow: '0 0 20px rgba(201,77,96,0.25)',
-              }}
-            >
-              <ArrowDownTrayIcon className="w-4 h-4" />
-              Exportar
-            </button>
+
+            <div className="flex items-center gap-3 ml-auto flex-wrap">
+              <select
+                value={filtroUsuario}
+                onChange={(e) => setFiltroUsuario(e.target.value)}
+                className="h-10 px-3 rounded-lg text-sm"
+                style={{
+                  background: 'var(--nexus-bg-soft)',
+                  border: '1px solid var(--nexus-border)',
+                  color: 'var(--nexus-text)',
+                }}
+              >
+                <option value="" style={{ background: 'var(--nexus-bg)', color: 'var(--nexus-text)' }}>Usuário</option>
+                <option style={{ background: 'var(--nexus-bg)', color: 'var(--nexus-text)' }}>Clayton Marcelo</option>
+                <option style={{ background: 'var(--nexus-bg)', color: 'var(--nexus-text)' }}>Ana Beatriz</option>
+                <option style={{ background: 'var(--nexus-bg)', color: 'var(--nexus-text)' }}>Carlos Eduardo</option>
+              </select>
+              <select
+                value={filtroAcao}
+                onChange={(e) => setFiltroAcao(e.target.value)}
+                className="h-10 px-3 rounded-lg text-sm"
+                style={{
+                  background: 'var(--nexus-bg-soft)',
+                  border: '1px solid var(--nexus-border)',
+                  color: 'var(--nexus-text)',
+                }}
+              >
+                <option value="" style={{ background: 'var(--nexus-bg)', color: 'var(--nexus-text)' }}>Ação</option>
+                <option value="create" style={{ background: 'var(--nexus-bg)', color: 'var(--nexus-text)' }}>Criar</option>
+                <option value="update" style={{ background: 'var(--nexus-bg)', color: 'var(--nexus-text)' }}>Editar</option>
+                <option value="delete" style={{ background: 'var(--nexus-bg)', color: 'var(--nexus-text)' }}>Excluir</option>
+                <option value="login" style={{ background: 'var(--nexus-bg)', color: 'var(--nexus-text)' }}>Login</option>
+              </select>
+              <select
+                value={filtroModulo}
+                onChange={(e) => setFiltroModulo(e.target.value)}
+                className="h-10 px-3 rounded-lg text-sm"
+                style={{
+                  background: 'var(--nexus-bg-soft)',
+                  border: '1px solid var(--nexus-border)',
+                  color: 'var(--nexus-text)',
+                }}
+              >
+                <option value="" style={{ background: 'var(--nexus-bg)', color: 'var(--nexus-text)' }}>Módulo</option>
+                <option style={{ background: 'var(--nexus-bg)', color: 'var(--nexus-text)' }}>Clientes</option>
+                <option style={{ background: 'var(--nexus-bg)', color: 'var(--nexus-text)' }}>Vendas</option>
+                <option style={{ background: 'var(--nexus-bg)', color: 'var(--nexus-text)' }}>Compras</option>
+                <option style={{ background: 'var(--nexus-bg)', color: 'var(--nexus-text)' }}>Financeiro</option>
+              </select>
+              <select
+                value={filtroPeriodo}
+                onChange={(e) => setFiltroPeriodo(e.target.value)}
+                className="h-10 px-3 rounded-lg text-sm"
+                style={{
+                  background: 'var(--nexus-bg-soft)',
+                  border: '1px solid var(--nexus-border)',
+                  color: 'var(--nexus-text)',
+                }}
+              >
+                <option value="" style={{ background: 'var(--nexus-bg)', color: 'var(--nexus-text)' }}>Período</option>
+                <option value="today" style={{ background: 'var(--nexus-bg)', color: 'var(--nexus-text)' }}>Hoje</option>
+                <option value="week" style={{ background: 'var(--nexus-bg)', color: 'var(--nexus-text)' }}>Esta semana</option>
+                <option value="month" style={{ background: 'var(--nexus-bg)', color: 'var(--nexus-text)' }}>Este mês</option>
+              </select>
+              <button
+                className="h-10 px-4 rounded-lg text-sm font-medium flex items-center gap-2 whitespace-nowrap flex-shrink-0"
+                style={{
+                  background: 'var(--nexus-bg-soft)',
+                  border: '1px solid var(--nexus-border)',
+                  color: 'var(--nexus-gold)',
+                }}
+              >
+                <FunnelIcon className="w-4 h-4" />
+                Mais filtros
+              </button>
+              <div className="flex-shrink-0">
+                <button
+                  className="h-10 px-4 rounded-lg text-sm font-medium flex items-center gap-2 whitespace-nowrap"
+                  style={{
+                    background: 'linear-gradient(135deg, #D66F7C, #C94D60)',
+                    border: 'none',
+                    color: 'var(--nexus-text)',
+                    boxShadow: '0 0 20px rgba(201,77,96,0.25)',
+                  }}
+                >
+                  <ArrowDownTrayIcon className="w-4 h-4" />
+                  Exportar
+                </button>
+              </div>
+            </div>
           </div>
 
           {/* Table */}
-          <div className="overflow-x-auto">
+          <div className="">
             <table className="w-full text-left" style={{ fontSize: 12 }}>
               <thead>
                 <tr style={{ borderBottom: '1px solid var(--nexus-border)' }}>
                   {['Data/Hora', 'Usuário', 'Ação', 'Módulo', 'Descrição', 'IP', 'Dispositivo', ''].map((h) => (
-                    <th key={h} className="pb-2 pr-2 font-semibold uppercase tracking-wider whitespace-nowrap"
+                    <th key={h} className="pb-2 pr-2 font-semibold uppercase tracking-wider whitespace-normal break-words"
                       style={{ color: 'var(--nexus-muted-2)', fontSize: 10 }}>{h}</th>
                   ))}
                 </tr>
@@ -306,8 +311,8 @@ export function Audit() {
                     onMouseEnter={e => { e.currentTarget.style.background = 'var(--nexus-bg-soft)' }}
                     onMouseLeave={e => { e.currentTarget.style.background = 'transparent' }}
                   >
-                    <td className="py-2 pr-2 whitespace-nowrap" style={{ color: 'var(--nexus-muted)' }}>{log.data}</td>
-                    <td className="py-2 pr-2">
+                    <td className="py-2 pr-2 whitespace-normal break-words" style={{ color: 'var(--nexus-muted)' }}>{log.data}</td>
+                    <td className="py-2 pr-2 whitespace-normal break-words">
                       <div className="flex items-center gap-2">
                         <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold"
                           style={{ background: 'linear-gradient(135deg, var(--nexus-gold), #C8863E)', color: '#000' }}>
@@ -319,7 +324,7 @@ export function Audit() {
                         </div>
                       </div>
                     </td>
-                    <td className="py-2 pr-2">
+                    <td className="py-2 pr-2 whitespace-normal break-words">
                       <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium"
                         style={{
                           background: actionBadgeColors[log.action]?.bg || 'rgba(128,128,128,0.12)',
@@ -328,7 +333,7 @@ export function Audit() {
                         {actionLabel(log.action)}
                       </span>
                     </td>
-                    <td className="py-2 pr-2">
+                    <td className="py-2 pr-2 whitespace-normal break-words">
                       <div className="flex items-center gap-2">
                         <div className="w-7 h-7 rounded-lg flex items-center justify-center text-sm"
                           style={{ background: 'var(--nexus-bg-soft)', border: '1px solid rgba(212,149,86,0.3)' }}>
@@ -337,16 +342,16 @@ export function Audit() {
                         <span className="text-sm" style={{ color: 'var(--nexus-muted)' }}>{log.module}</span>
                       </div>
                     </td>
-                    <td className="py-2 pr-2 max-w-[200px] truncate" style={{ color: 'var(--nexus-muted-2)' }}>{log.desc}</td>
-                    <td className="py-2 pr-2 font-mono text-xs" style={{ color: 'var(--nexus-muted-2)' }}>{log.ip}</td>
-                    <td className="py-2 pr-2">
+                    <td className="py-2 pr-2 max-w-[200px] truncate whitespace-normal break-words" style={{ color: 'var(--nexus-muted-2)' }}>{log.desc}</td>
+                    <td className="py-2 pr-2 font-mono text-xs whitespace-normal break-words" style={{ color: 'var(--nexus-muted-2)' }}>{log.ip}</td>
+                    <td className="py-2 pr-2 whitespace-normal break-words">
                       <div className="flex items-center gap-1" style={{ color: 'var(--nexus-gold)' }}>
                         {iconeDispositivo(log.device)}
                         <span className="text-xs">{log.device}</span>
                       </div>
                     </td>
-                    <td className="py-2 pr-2">
-                      <button className="w-8 h-8 rounded-lg flex items-center justify-center"
+                    <td className="py-2 pr-2 whitespace-normal break-words">
+                      <button className="w-8 h-8 rounded-lg flex items-center justify-center whitespace-nowrap"
                         style={{ background: 'var(--nexus-bg-soft)', border: '1px solid var(--nexus-border)', color: 'var(--nexus-muted)' }}>
                         <EllipsisVerticalIcon className="w-4 h-4" />
                       </button>
@@ -361,20 +366,20 @@ export function Audit() {
           <div className="flex items-center justify-between mt-4">
             <p className="text-sm" style={{ color: 'var(--nexus-muted)' }}>Mostrando 1 a 10 de 18.732 registros</p>
             <div className="flex items-center gap-1">
-              <button className="w-9 h-9 rounded-lg flex items-center justify-center"
+              <button className="w-9 h-9 rounded-lg flex items-center justify-center whitespace-nowrap"
                 style={{ background: 'var(--nexus-bg-soft)', border: '1px solid var(--nexus-border)', color: 'var(--nexus-muted)' }}>
                 <ChevronLeftIcon className="w-4 h-4" />
               </button>
-              <button className="w-9 h-9 rounded-lg flex items-center justify-center font-bold text-sm"
+              <button className="w-9 h-9 rounded-lg flex items-center justify-center font-bold text-sm whitespace-nowrap"
                 style={{ background: 'linear-gradient(135deg, #D66F7C, #C94D60)', border: 'none', color: 'var(--nexus-text)' }}>1</button>
               {[2, 3].map((n) => (
-                <button key={n} className="w-9 h-9 rounded-lg flex items-center justify-center text-sm"
+                <button key={n} className="w-9 h-9 rounded-lg flex items-center justify-center text-sm whitespace-nowrap"
                   style={{ background: 'var(--nexus-bg-soft)', border: '1px solid var(--nexus-border)', color: 'var(--nexus-muted)' }}>{n}</button>
               ))}
               <span className="px-1" style={{ color: 'var(--nexus-muted)' }}>...</span>
-              <button className="w-9 h-9 rounded-lg flex items-center justify-center text-sm"
+              <button className="w-9 h-9 rounded-lg flex items-center justify-center text-sm whitespace-nowrap"
                 style={{ background: 'var(--nexus-bg-soft)', border: '1px solid var(--nexus-border)', color: 'var(--nexus-muted)' }}>1874</button>
-              <button className="w-9 h-9 rounded-lg flex items-center justify-center"
+              <button className="w-9 h-9 rounded-lg flex items-center justify-center whitespace-nowrap"
                 style={{ background: 'var(--nexus-bg-soft)', border: '1px solid var(--nexus-border)', color: 'var(--nexus-muted)' }}>
                 <ChevronRightIcon className="w-4 h-4" />
               </button>
@@ -516,7 +521,7 @@ export function Audit() {
                 </div>
               ))}
             </div>
-            <button className="w-full mt-3 py-2 rounded-lg text-sm font-medium border"
+            <button className="w-full mt-3 py-2 rounded-lg text-sm font-medium border whitespace-nowrap"
               style={{
                 background: 'transparent',
                 borderColor: 'rgba(212,149,86,0.2)',
@@ -551,7 +556,7 @@ export function Audit() {
                 </div>
               ))}
             </div>
-            <button className="w-full mt-3 py-2 rounded-lg text-sm font-medium border"
+            <button className="w-full mt-3 py-2 rounded-lg text-sm font-medium border whitespace-nowrap"
               style={{
                 background: 'transparent',
                 borderColor: 'rgba(216,75,95,0.2)',

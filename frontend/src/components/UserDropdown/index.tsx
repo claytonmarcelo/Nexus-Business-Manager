@@ -115,7 +115,7 @@ export function UserDropdown() {
 
               <button
                 onClick={toggleTheme}
-                className="flex items-center gap-3 w-full px-4 py-2.5 text-sm transition-colors hover:bg-nexus-bg/30"
+                className="flex items-center gap-3 w-full px-4 py-2.5 text-sm transition-colors hover:bg-nexus-bg/30 whitespace-nowrap"
                 style={{ color: 'var(--nexus-text)' }}>
                 <PaintBrushIcon className="w-4 h-4 opacity-70" />
                 Tema: {theme === 'dark' ? 'Escuro' : theme === 'light' ? 'Claro' : 'Automático'}
@@ -125,7 +125,7 @@ export function UserDropdown() {
 
               <button
                 onClick={handleSignOut}
-                className="flex items-center gap-3 w-full px-4 py-2.5 text-sm transition-colors hover:bg-nexus-bg/30"
+                className="flex items-center gap-3 w-full px-4 py-2.5 text-sm transition-colors hover:bg-nexus-bg/30 whitespace-nowrap"
                 style={{ color: 'var(--nexus-rose)' }}>
                 <ArrowRightOnRectangleIcon className="w-4 h-4" />
                 Sair do Sistema

@@ -57,7 +57,7 @@ function FilterSelect({ label, options }: { label: string; options: string[] }) 
           minWidth: 120,
         }}
       >
-        {options.map((o) => <option key={o} value={o.toLowerCase()}>{o}</option>)}
+        {options.map((o) => <option key={o} value={o.toLowerCase()} style={{ background: 'var(--nexus-bg)', color: 'var(--nexus-text)' }}>{o}</option>)}
       </select>
       <ChevronDownIcon
         className="w-3.5 h-3.5 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none"
@@ -154,7 +154,7 @@ function GradBtn({ onClick, children, secondary, type = 'button' }: {
       onClick={onClick}
       onMouseEnter={() => setHov(true)}
       onMouseLeave={() => setHov(false)}
-      className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold transition-all duration-200"
+      className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold transition-all duration-200 whitespace-nowrap"
       style={secondary
         ? { background: 'transparent', color: 'var(--nexus-muted-2)', border: '1px solid rgba(var(--nexus-gold-rgb),0.2)' }
         : {
@@ -335,7 +335,7 @@ export function Products() {
       </div>
 
       {/* ── KPI Cards ───────────────────────────────────────────── */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 mb-6">
         <StatsCard
           label="Produtos cadastrados"
           value={String(displayProducts.length > 100 ? '1.890' : displayProducts.length)}
@@ -382,11 +382,11 @@ export function Products() {
 
         {/* Filters bar */}
         <div
-          className="px-5 py-4 flex flex-col lg:flex-row gap-4 items-center justify-between"
+          className="px-5 py-4 flex items-center gap-4 flex-wrap"
           style={{ borderBottom: '1px solid var(--nexus-border)' }}
         >
           {/* Search */}
-          <div className="relative w-full lg:w-72 flex-shrink-0">
+          <div className="relative flex-1 min-w-[180px] max-w-[320px]">
             <MagnifyingGlassIcon className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2" style={{ color: 'var(--nexus-muted-2)' }} />
             <input
               type="text"
@@ -405,13 +405,13 @@ export function Products() {
           </div>
 
           {/* Right side controls */}
-          <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto justify-start lg:justify-end">
+          <div className="flex items-center gap-3 ml-auto flex-wrap">
             <FilterSelect label="Categoria" options={['Todas', ...categories]} />
             <FilterSelect label="Status"    options={['Todos', 'Ativo', 'Inativo', 'Baixo estoque', 'Crítico']} />
 
             {/* More filters */}
             <button
-              className="flex items-center gap-2 px-3.5 py-2.5 rounded-lg text-sm font-medium transition-all"
+              className="flex items-center gap-2 px-3.5 py-2.5 rounded-lg text-sm font-medium transition-all whitespace-nowrap flex-shrink-0"
               style={{ color: 'var(--nexus-gold)', background: 'transparent', border: '1px solid rgba(var(--nexus-gold-rgb),0.22)' }}
               onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(var(--nexus-gold-rgb),0.06)')}
               onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
@@ -421,15 +421,17 @@ export function Products() {
             </button>
 
             {/* New product */}
-            <GradBtn onClick={openCreate}>
-              <PlusIcon className="w-4 h-4" />
-              Novo produto
-            </GradBtn>
+            <div className="flex-shrink-0">
+              <GradBtn onClick={openCreate}>
+                <PlusIcon className="w-4 h-4" />
+                <span className="whitespace-nowrap">Novo produto</span>
+              </GradBtn>
+            </div>
           </div>
         </div>
 
         {/* Table */}
-        <div className="overflow-x-auto">
+        <div className="">
           <table className="w-full" style={{ borderCollapse: 'collapse' }}>
             <thead>
               <tr style={{ borderBottom: '1px solid var(--nexus-border)' }}>
@@ -447,13 +449,13 @@ export function Products() {
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan={7} className="px-4 py-12 text-center text-sm" style={{ color: 'var(--nexus-muted-2)' }}>
+                  <td colSpan={7} className="px-4 py-12 text-center text-sm whitespace-normal break-words" style={{ color: 'var(--nexus-muted-2)' }}>
                     Carregando...
                   </td>
                 </tr>
               ) : filtered.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-4 py-12 text-center text-sm" style={{ color: 'var(--nexus-muted-2)' }}>
+                  <td colSpan={7} className="px-4 py-12 text-center text-sm whitespace-normal break-words" style={{ color: 'var(--nexus-muted-2)' }}>
                     Nenhum produto encontrado.
                   </td>
                 </tr>
@@ -474,7 +476,7 @@ export function Products() {
                       onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
                     >
                       {/* Produto */}
-                      <td className="px-4 py-3.5">
+                      <td className="px-4 py-3.5 whitespace-normal break-words">
                         <div className="flex items-center gap-3">
                           <div
                             className="w-9 h-9 rounded-lg flex items-center justify-center text-xs font-bold flex-shrink-0"
@@ -489,40 +491,40 @@ export function Products() {
                       </td>
 
                       {/* Categoria */}
-                      <td className="px-4 py-3.5">
+                      <td className="px-4 py-3.5 whitespace-normal break-words">
                         <span className="text-sm" style={{ color: 'var(--nexus-muted-2)' }}>
                           {p.category || '—'}
                         </span>
                       </td>
 
                       {/* Código */}
-                      <td className="px-4 py-3.5">
+                      <td className="px-4 py-3.5 whitespace-normal break-words">
                         <span className="text-sm font-mono" style={{ color: 'var(--nexus-muted-2)' }}>
                           {p.sku}
                         </span>
                       </td>
 
                       {/* Preço */}
-                      <td className="px-4 py-3.5">
+                      <td className="px-4 py-3.5 whitespace-normal break-words">
                         <span className="text-sm font-medium" style={{ color: 'var(--nexus-text)' }}>
                           {formatPrice(p.price)}
                         </span>
                       </td>
 
                       {/* Estoque */}
-                      <td className="px-4 py-3.5">
+                      <td className="px-4 py-3.5 whitespace-normal break-words">
                         <span className="text-sm" style={{ color: 'var(--nexus-muted-2)' }}>
                           {p.quantity} {p.quantity === 1 ? 'unidade' : 'unidades'}
                         </span>
                       </td>
 
                       {/* Status */}
-                      <td className="px-4 py-3.5">
+                      <td className="px-4 py-3.5 whitespace-normal break-words">
                         <StatusBadge qty={p.quantity} active={p.active} />
                       </td>
 
                       {/* Ações */}
-                      <td className="px-4 py-3.5">
+                      <td className="px-4 py-3.5 whitespace-normal break-words">
                         <div className="flex items-center gap-1.5 justify-end" onClick={(e) => e.stopPropagation()}>
                           <ActionBtn title="Visualizar">
                             <EyeIcon className="w-4 h-4" />
@@ -552,7 +554,7 @@ export function Products() {
                                   {['Ver detalhes', 'Editar', 'Desativar', 'Excluir'].map((opt) => (
                                     <button
                                       key={opt}
-                                      className="w-full text-left px-4 py-2 text-xs transition-colors"
+                                      className="w-full text-left px-4 py-2 text-xs transition-colors whitespace-nowrap"
                                       style={{ color: opt === 'Excluir' ? 'var(--nexus-danger)' : 'var(--nexus-muted-2)' }}
                                       onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(var(--nexus-gold-rgb),0.06)')}
                                       onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
@@ -605,9 +607,9 @@ export function Products() {
                 className="appearance-none rounded-lg pl-3 pr-7 py-1.5 text-sm outline-none cursor-pointer"
                 style={{ background: 'var(--nexus-input-bg)', border: '1px solid rgba(var(--nexus-gold-rgb),0.15)', color: 'var(--nexus-text)' }}
               >
-                <option>10</option>
-                <option>20</option>
-                <option>50</option>
+                <option style={{ background: 'var(--nexus-bg)', color: 'var(--nexus-text)' }}>10</option>
+                <option style={{ background: 'var(--nexus-bg)', color: 'var(--nexus-text)' }}>20</option>
+                <option style={{ background: 'var(--nexus-bg)', color: 'var(--nexus-text)' }}>50</option>
               </select>
               <ChevronDownIcon className="w-3 h-3 absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none" style={{ color: 'var(--nexus-muted-2)' }} />
             </div>

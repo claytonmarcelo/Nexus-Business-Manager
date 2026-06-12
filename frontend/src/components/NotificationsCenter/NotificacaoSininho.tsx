@@ -77,7 +77,7 @@ export function NotificacaoSininho() {
               {naoLidas > 0 && (
                 <button
                   onClick={marcarTodasLidas}
-                  className="text-xs font-medium hover:underline"
+                  className="text-xs font-medium hover:underline whitespace-nowrap"
                   style={{ color: 'var(--nexus-gold)' }}
                 >
                   Marcar todas lidas

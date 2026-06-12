@@ -31,7 +31,7 @@ export function Layout() {
   return (
     <NotificacaoProvider>
       <Preloader />
-      <div className={`flex min-h-screen ${sidebarRecolhido ? 'sidebar-collapsed' : ''}`}>
+      <div className={`flex h-screen overflow-hidden ${sidebarRecolhido ? 'sidebar-collapsed' : ''}`}>
         <Sidebar
           recolhido={sidebarRecolhido}
           alternarRecolhido={alternarRecolhido}

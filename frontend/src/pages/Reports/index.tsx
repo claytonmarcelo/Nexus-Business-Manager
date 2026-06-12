@@ -71,7 +71,7 @@ export function Reports() {
               <span>01/05/2024 - 31/05/2024</span>
               <ChevronRightIcon className="w-3 h-3 rotate-90" />
             </div>
-            <button className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium border transition-all hover:bg-black/5 dark:hover:bg-white/5"
+            <button className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium border transition-all hover:bg-black/5 dark:hover:bg-white/5 whitespace-nowrap flex-shrink-0"
               style={{ background: 'var(--nexus-card)', borderColor: 'var(--nexus-border)', color: 'var(--nexus-text)' }}>
               <ArrowDownTrayIcon className="w-4 h-4" />
               Exportar
@@ -83,7 +83,7 @@ export function Reports() {
       {/* ── KPI Cards ── */}
       <motion.div
         initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}
-        className="grid grid-cols-5 gap-3 lg:gap-4"
+        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3 lg:gap-4"
       >
         {[
           { label: 'Faturamento Total', value: 'R$ 126.430,20', icon: <CurrencyDollarIcon className="w-4 h-4 lg:w-5 lg:h-5" />, change: '↑ 15,3% em relação ao período anterior', spark: spark1 },
@@ -262,15 +262,15 @@ export function Reports() {
                   <div className="text-[12px]" style={{ color: 'var(--nexus-muted)' }}>{t.date}</div>
                   
                   <div className="flex items-center gap-1">
-                    <button className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
+                    <button className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-black/5 dark:hover:bg-white/10 transition-colors whitespace-nowrap"
                       style={{ color: 'var(--nexus-gold)' }}>
                       <EyeIcon className="w-4 h-4" />
                     </button>
-                    <button className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
+                    <button className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-black/5 dark:hover:bg-white/10 transition-colors whitespace-nowrap"
                       style={{ color: 'var(--nexus-gold)' }}>
                       <ArrowDownTrayIcon className="w-4 h-4" />
                     </button>
-                    <button className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
+                    <button className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-black/5 dark:hover:bg-white/10 transition-colors whitespace-nowrap"
                       style={{ color: 'var(--nexus-muted)' }}>
                       <EllipsisVerticalIcon className="w-4 h-4" />
                     </button>
@@ -285,7 +285,7 @@ export function Reports() {
               Mostrando 1 a 5 de 12 relatórios
             </p>
             <div className="flex items-center gap-1.5">
-              <button disabled className="w-8 h-8 rounded-lg flex items-center justify-center border disabled:opacity-30 transition-colors"
+              <button disabled className="w-8 h-8 rounded-lg flex items-center justify-center border disabled:opacity-30 transition-colors whitespace-nowrap"
                 style={{ color: 'var(--nexus-text)', background: 'var(--nexus-bg)', borderColor: 'var(--nexus-border)' }}>
                 1
               </button>
@@ -293,13 +293,13 @@ export function Reports() {
                 p === '...' ? (
                   <span key={i} className="w-8 h-8 flex items-center justify-center text-[12px]" style={{ color: 'var(--nexus-muted)' }}>…</span>
                 ) : (
-                  <button key={i} className="w-8 h-8 rounded-lg flex items-center justify-center text-[12px] transition-colors"
+                  <button key={i} className="w-8 h-8 rounded-lg flex items-center justify-center text-[12px] transition-colors whitespace-nowrap"
                     style={{ background: 'transparent', color: 'var(--nexus-muted)' }}>
                     {p}
                   </button>
                 )
               )}
-              <button className="w-8 h-8 rounded-lg flex items-center justify-center border transition-colors"
+              <button className="w-8 h-8 rounded-lg flex items-center justify-center border transition-colors whitespace-nowrap"
                 style={{ color: 'var(--nexus-text)', background: 'var(--nexus-bg)', borderColor: 'var(--nexus-border)' }}>
                 <ChevronRightIcon className="w-4 h-4" />
               </button>
@@ -321,7 +321,7 @@ export function Reports() {
               { name: 'Movimentação de estoque', icon: <ArchiveBoxIcon className="w-4 h-4" /> },
               { name: 'Fluxo de caixa', icon: <CurrencyDollarIcon className="w-4 h-4" /> },
             ].map((item, i) => (
-              <button key={i} className="w-full flex items-center justify-between p-2.5 rounded-xl transition-colors hover:bg-black/5 dark:hover:bg-white/5 group">
+              <button key={i} className="w-full flex items-center justify-between p-2.5 rounded-xl transition-colors hover:bg-black/5 dark:hover:bg-white/5 group whitespace-nowrap">
                 <div className="flex items-center gap-3 text-[13px]" style={{ color: 'var(--nexus-muted)' }}>
                   <div style={{ color: 'var(--nexus-bronze)' }}>
                     {item.icon}
@@ -333,7 +333,7 @@ export function Reports() {
             ))}
           </div>
 
-          <button className="w-full py-3 rounded-xl text-sm font-semibold transition-all hover:opacity-90 flex items-center justify-center gap-2"
+          <button className="w-full py-3 rounded-xl text-sm font-semibold transition-all hover:opacity-90 flex items-center justify-center gap-2 whitespace-nowrap"
             style={{ background: 'var(--nexus-rose)', color: '#fff' }}>
             + Gerar relatório personalizado
           </button>

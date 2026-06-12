@@ -78,7 +78,7 @@ export function Backup() {
           </p>
         </div>
         <button onClick={createBackup} disabled={creating}
-          className="px-5 py-2.5 text-sm font-medium rounded-xl transition-all disabled:opacity-50"
+          className="px-5 py-2.5 text-sm font-medium rounded-xl transition-all disabled:opacity-50 whitespace-nowrap"
           style={{
             background: 'linear-gradient(135deg, var(--nexus-rose), var(--nexus-rose-dark))',
             color: '#FFFFFF',
@@ -132,12 +132,12 @@ export function Backup() {
           </div>
         ) : (
           <>
-            <div className="overflow-x-auto">
+            <div className="">
               <table className="w-full text-left text-xs">
                 <thead>
                   <tr style={{ borderBottom: '1px solid var(--nexus-border)' }}>
                     {['Arquivo', 'Tamanho', 'Data', ''].map(h => (
-                      <th key={h} className="px-5 py-3.5 font-semibold uppercase tracking-wider"
+                      <th key={h} className="px-5 py-3.5 font-semibold uppercase tracking-wider whitespace-normal break-words"
                         style={{ color: 'var(--nexus-muted-2)' }}>{h}</th>
                     ))}
                   </tr>
@@ -147,15 +147,15 @@ export function Backup() {
                     <tr key={b.id} className="transition-colors" style={{ borderBottom: '1px solid var(--nexus-border)' }}
                       onMouseEnter={e => { e.currentTarget.style.background = 'var(--nexus-bg-soft)'; }}
                       onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; }}>
-                      <td className="px-5 py-3">
+                      <td className="px-5 py-3 whitespace-normal break-words">
                         <div className="flex items-center gap-2">
                           <ShieldCheckIcon className="w-4 h-4" style={{ color: 'var(--nexus-gold)' }} />
                           <span className="text-sm font-medium" style={{ color: 'var(--nexus-text)' }}>{b.filename}</span>
                         </div>
                       </td>
-                      <td className="px-5 py-3 text-sm" style={{ color: 'var(--nexus-muted)' }}>{b.size}</td>
-                      <td className="px-5 py-3 text-sm" style={{ color: 'var(--nexus-muted)' }}>{b.created_at}</td>
-                      <td className="px-5 py-3 text-right">
+                      <td className="px-5 py-3 text-sm whitespace-normal break-words" style={{ color: 'var(--nexus-muted)' }}>{b.size}</td>
+                      <td className="px-5 py-3 text-sm whitespace-normal break-words" style={{ color: 'var(--nexus-muted)' }}>{b.created_at}</td>
+                      <td className="px-5 py-3 text-right whitespace-normal break-words">
                         <button onClick={() => downloadBackup(b.id)}
                           className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-lg transition-colors"
                           style={{ color: 'var(--nexus-gold)', border: '1px solid var(--nexus-border)' }}>
