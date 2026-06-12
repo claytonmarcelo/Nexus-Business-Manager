@@ -39,7 +39,7 @@ export function Layout() {
           mobileAberto={mobileAberto}
           fecharMobile={fecharMobile}
         />
-        <div className="flex-1 flex flex-col min-w-0 transition-all duration-300 relative h-screen">
+        <div className="flex-1 flex flex-col min-w-0 transition-all duration-300 relative">
           <Header alternarSidebar={alternarSidebar} />
           <main className="flex-1 overflow-auto page-bg p-4 md:p-6 lg:p-8">
             <Outlet />

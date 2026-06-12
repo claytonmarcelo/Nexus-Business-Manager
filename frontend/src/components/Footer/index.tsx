@@ -11,7 +11,7 @@ export function Footer() {
       </div>
 
       <div className="hidden md:block">
-        <span>Desenvolvido por: Clayton Marcelo</span> | <b>Versão</b> 2.1.0
+        <span>Desenvolvido por: <i className="fas fa-heart pulse" style={{ color: 'var(--nexus-rose, #f43f5e)' }}></i> Clayton Marcelo</span> | <b>Versão</b> 2.1.0
       </div>
     </footer>
   );
