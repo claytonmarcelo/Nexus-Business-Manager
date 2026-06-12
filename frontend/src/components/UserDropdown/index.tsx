@@ -101,7 +101,7 @@ export function UserDropdown() {
                 onClick={() => setAberto(false)}
                 className="flex items-center gap-3 px-4 py-2.5 text-sm transition-colors hover:bg-nexus-bg/30"
                 style={{ color: 'var(--nexus-text)' }}>
-                <UserIcon className="w-4 h-4 opacity-70" />
+                <UserIcon className="w-4 h-4 opacity-70" style={{ color: 'var(--nexus-gold)' }} />
                 Meu Perfil
               </Link>
 
@@ -109,7 +109,7 @@ export function UserDropdown() {
                 onClick={() => setAberto(false)}
                 className="flex items-center gap-3 px-4 py-2.5 text-sm transition-colors hover:bg-nexus-bg/30"
                 style={{ color: 'var(--nexus-text)' }}>
-                <Cog6ToothIcon className="w-4 h-4 opacity-70" />
+                <Cog6ToothIcon className="w-4 h-4 opacity-70" style={{ color: 'var(--nexus-gold)' }} />
                 Configurações
               </Link>
 
@@ -117,7 +117,7 @@ export function UserDropdown() {
                 onClick={toggleTheme}
                 className="flex items-center gap-3 w-full px-4 py-2.5 text-sm transition-colors hover:bg-nexus-bg/30 whitespace-nowrap"
                 style={{ color: 'var(--nexus-text)' }}>
-                <PaintBrushIcon className="w-4 h-4 opacity-70" />
+                <PaintBrushIcon className="w-4 h-4 opacity-70" style={{ color: 'var(--nexus-gold)' }} />
                 Tema: {theme === 'dark' ? 'Escuro' : theme === 'light' ? 'Claro' : 'Automático'}
               </button>
 

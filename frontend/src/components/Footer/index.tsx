@@ -7,8 +7,10 @@ export function Footer() {
         <strong style={{ color: 'var(--nexus-text)' }}>Copyright &copy; {currentYear} <a href="#" className="hover:text-nexus-gold transition-colors">Nexus Business Manager</a>.</strong> Todos os direitos reservados.
       </div>
 
-      <div className="hidden md:block">
-        <span>Desenvolvido por: <i className="fas fa-heart pulse" style={{ color: 'var(--nexus-rose, #f43f5e)' }}></i> Clayton Marcelo</span> | <b>Versão</b> 2.1.0
+      <div className="hidden md:flex items-center gap-3">
+        <span>Desenvolvido por: <i className="fas fa-heart pulse text-xs" style={{ color: 'var(--nexus-rose, #b10d28)' }}></i> Clayton Marcelo</span>
+        <span>|</span>
+        <b>Versão</b> 2.1.0
       </div>
     </footer>
   );

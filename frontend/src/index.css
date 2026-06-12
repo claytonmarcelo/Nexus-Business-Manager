@@ -545,6 +545,10 @@ input:focus, textarea:focus, select:focus {
   color: var(--nexus-text);
   height: 100vh;
   min-height: 100vh;
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 50;
 }
 
 .nexus-sidebar-overlay {
@@ -626,9 +630,17 @@ input:focus, textarea:focus, select:focus {
   padding: 0;
   background: rgba(5, 5, 5, 0.6);
   backdrop-filter: blur(12px);
-  position: sticky;
+  position: fixed;
   top: 0;
-  z-index: 20;
+  left: 16rem;
+  right: 0;
+  z-index: 40;
+  transition: left 0.3s ease-in-out;
+  width: calc(100% - 16rem);
+}
+.sidebar-collapsed .nexus-header {
+  left: 4rem;
+  width: calc(100% - 4rem);
 }
 .light .nexus-header {
   background: #FFFFFF;
@@ -1599,15 +1611,21 @@ body { min-height: 100vh; overflow-x: hidden; }
   display: flex;
   flex-direction: column;
   overflow-x: hidden;
+  margin-left: 16rem;
+  transition: margin-left 0.3s ease-in-out;
+}
+.sidebar-collapsed .app-main {
+  margin-left: 4rem;
 }
 .app-content {
   flex: 1;
   width: 100%;
   padding: 1rem;
+  padding-top: 5rem;
 }
 .app-footer {
   width: 100%;
-  padding: 0.85rem 1rem;
+  padding: 1rem 1rem 0.85rem 1rem;
   font-size: 0.82rem;
   opacity: 0.75;
   border-top: 1px solid rgba(255, 255, 255, 0.08);

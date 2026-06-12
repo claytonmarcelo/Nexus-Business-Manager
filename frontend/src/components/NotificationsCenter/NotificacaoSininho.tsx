@@ -44,7 +44,7 @@ export function NotificacaoSininho() {
       <button
         onClick={() => { setAberto(!aberto); listarNotificacoes() }}
         className={`relative p-2 rounded-lg transition-all duration-200 hover:bg-nexus-bg/50 ${balancando ? 'animar-sininho' : ''}`}
-        style={{ color: 'var(--nexus-text)' }}
+        style={{ color: 'var(--nexus-gold)' }}
         title="Notificações"
       >
         <BellIcon className="w-5 h-5" />

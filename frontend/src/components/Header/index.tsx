@@ -28,14 +28,14 @@ export function Header({ alternarSidebar }: HeaderProps) {
             <button
               onClick={alternarSidebar}
               className="p-2 rounded-lg transition-colors hover:bg-nexus-bg/50 md:hidden whitespace-nowrap"
-              style={{ color: 'var(--nexus-text)' }}
+              style={{ color: 'var(--nexus-gold)' }}
             >
               <Bars3Icon className="w-5 h-5" />
             </button>
 
             <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg transition-colors"
               style={{ background: 'var(--nexus-bg)', border: '1px solid var(--nexus-border)' }}>
-              <MagnifyingGlassIcon className="w-4 h-4" style={{ color: 'var(--nexus-muted)' }} />
+              <MagnifyingGlassIcon className="w-4 h-4" style={{ color: 'var(--nexus-gold)' }} />
               <input
                 type="text"
                 placeholder="Buscar no sistema..."
@@ -49,7 +49,7 @@ export function Header({ alternarSidebar }: HeaderProps) {
             <button
               onClick={toggleTheme}
               className="p-2 rounded-lg transition-all duration-200 hover:bg-nexus-bg/50 whitespace-nowrap"
-              style={{ color: 'var(--nexus-text)' }}
+              style={{ color: 'var(--nexus-gold)' }}
               title={`Tema: ${theme === 'dark' ? 'Escuro' : theme === 'light' ? 'Claro' : 'Automático'}`}
             >
               {theme === 'dark' ? (
@@ -68,7 +68,7 @@ export function Header({ alternarSidebar }: HeaderProps) {
             <Link
               to="/appointments"
               className="p-2 rounded-lg transition-all duration-200 hover:bg-nexus-bg/50 hidden sm:block"
-              style={{ color: 'var(--nexus-text)' }}
+              style={{ color: 'var(--nexus-gold)' }}
               title="Agenda"
             >
               <CalendarDaysIcon className="w-5 h-5" />
@@ -84,7 +84,7 @@ export function Header({ alternarSidebar }: HeaderProps) {
           <div className="px-4 pb-3 sm:hidden">
             <div className="flex items-center gap-2 px-3 py-2 rounded-lg"
               style={{ background: 'var(--nexus-bg)', border: '1px solid var(--nexus-border)' }}>
-              <MagnifyingGlassIcon className="w-4 h-4" style={{ color: 'var(--nexus-muted)' }} />
+              <MagnifyingGlassIcon className="w-4 h-4" style={{ color: 'var(--nexus-gold)' }} />
               <input
                 type="text"
                 placeholder="Buscar no sistema..."

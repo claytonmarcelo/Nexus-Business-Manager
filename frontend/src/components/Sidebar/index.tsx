@@ -183,8 +183,7 @@ export function Sidebar({ recolhido, alternarRecolhido, mobileAberto, fecharMobi
 
   const sidebarContent = (
     <div className="flex flex-col h-full">
-      <div className={`flex items-center justify-center border-b transition-all duration-300 ${recolhido ? 'h-16 p-4' : 'h-[150px] p-0'}`}
-        style={{ borderColor: 'var(--nexus-border)' }}>
+      <div className={`flex items-center justify-center transition-all duration-300 ${recolhido ? 'h-16 p-4' : 'h-[150px] p-0'}`}>
         {recolhido ? (
           <img src="/favicon.ico" alt="N" className="h-8 w-8 object-contain transition-all duration-300" />
         ) : (
@@ -207,7 +206,7 @@ export function Sidebar({ recolhido, alternarRecolhido, mobileAberto, fecharMobi
   return (
     <>
       <aside
-        className={`nexus-sidebar relative hidden md:flex flex-col border-r transition-all duration-300 ease-in-out ${recolhido ? 'w-16' : 'w-64'}`}
+        className={`nexus-sidebar hidden md:flex flex-col border-r transition-all duration-300 ease-in-out ${recolhido ? 'w-16' : 'w-64'}`}
         style={{
           borderColor: 'var(--nexus-border)',
           background: 'var(--nexus-sidebar)',
@@ -216,11 +215,12 @@ export function Sidebar({ recolhido, alternarRecolhido, mobileAberto, fecharMobi
         {sidebarContent}
         <button
           onClick={alternarRecolhido}
-          className="absolute -right-3 top-20 w-6 h-6 rounded-full flex items-center justify-center border shadow-sm transition-transform hover:scale-110 z-10 whitespace-nowrap"
+          className="absolute -right-3 w-6 h-6 rounded-full flex items-center justify-center border shadow-sm transition-transform hover:scale-110 z-10 whitespace-nowrap"
           style={{
             background: 'var(--nexus-card)',
             borderColor: 'var(--nexus-border)',
-            color: 'var(--nexus-muted)',
+            color: 'var(--nexus-gold)',
+            top: '3.3rem',
           }}
         >
           <ChevronLeftIcon className={`w-3.5 h-3.5 transition-transform duration-200 ${recolhido ? 'rotate-180' : ''}`} />

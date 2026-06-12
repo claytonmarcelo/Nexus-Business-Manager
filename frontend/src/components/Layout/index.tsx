@@ -6,6 +6,7 @@ import { Preloader } from '../Preloader'
 import { ProvedorNotificacao as NotificacaoProvider } from '../NotificationsCenter/NotificacaoContext'
 import { NexusAIButton } from '../ai/NexusAIButton'
 import { Footer } from '../Footer'
+import { BackToTop } from '../BackToTop'
 
 export function Layout() {
   const [sidebarRecolhido, setSidebarRecolhido] = useState(() => {
@@ -48,6 +49,7 @@ export function Layout() {
         </div>
       </div>
       <NexusAIButton />
+      <BackToTop />
     </NotificacaoProvider>
   )
 }

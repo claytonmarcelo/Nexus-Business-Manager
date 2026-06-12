@@ -29,14 +29,15 @@ export function NexusAIButton() {
     <>
       <button
         onClick={() => setOpen(!open)}
-        className="fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full flex items-center justify-center shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-105"
+        className="fixed right-6 z-50 w-10 h-10 rounded-full flex items-center justify-center shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-105"
         style={{
           background: 'linear-gradient(135deg, var(--nexus-rose), var(--nexus-rose-dark))',
           boxShadow: '0 4px 20px rgba(201,111,120,0.4)',
+          bottom: '60px',
         }}
         title="Nexus AI Assistant"
       >
-        <SparklesIcon className="w-6 h-6 text-white" />
+        <SparklesIcon className="w-4 h-4 text-white" />
       </button>
 
       {open && (
