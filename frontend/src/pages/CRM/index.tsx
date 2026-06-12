@@ -425,7 +425,7 @@ export function CRM() {
             <tbody>
               {filteredInteractions.length === 0 ? (
                 <tr>
-                  <td colSpan={9} className="px-4 py-12 text-center text-sm whitespace-normal break-words" style={{ color: 'var(--nexus-muted)' }}>
+                  <td colSpan={9} className="px-4 py-12 text-center text-sm whitespace-nowrap" style={{ color: 'var(--nexus-muted)' }}>
                     Nenhuma interação encontrada
                   </td>
                 </tr>
@@ -439,12 +439,12 @@ export function CRM() {
                     onClick={() => setActionMenu(null)}>
 
                     {/* Protocolo */}
-                    <td className="px-4 py-3.5 whitespace-normal break-words">
+                    <td className="px-4 py-3.5 whitespace-nowrap">
                       <span className="text-xs font-mono font-semibold" style={{ color: 'var(--nexus-gold)' }}>{item.protocolo}</span>
                     </td>
 
                     {/* Cliente */}
-                    <td className="px-4 py-3.5 whitespace-normal break-words">
+                    <td className="px-4 py-3.5 whitespace-nowrap">
                       <div className="flex items-center gap-2.5">
                         <div className="w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-bold text-white flex-shrink-0"
                           style={{ background: avatarColor(item.cliente) }}>
@@ -455,12 +455,12 @@ export function CRM() {
                     </td>
 
                     {/* Assunto */}
-                    <td className="px-4 py-3.5 whitespace-normal break-words">
+                    <td className="px-4 py-3.5 whitespace-nowrap">
                       <span className="text-sm" style={{ color: 'var(--nexus-muted-2)' }}>{item.assunto}</span>
                     </td>
 
                     {/* Canal */}
-                    <td className="px-4 py-3.5 whitespace-normal break-words">
+                    <td className="px-4 py-3.5 whitespace-nowrap">
                       <div className="flex items-center gap-1.5">
                         <span style={{ color: 'var(--nexus-gold)' }}>{CHANNEL_ICONS[item.canal]}</span>
                         <span className="text-xs" style={{ color: 'var(--nexus-muted-2)' }}>{item.canal}</span>
@@ -468,17 +468,17 @@ export function CRM() {
                     </td>
 
                     {/* Data/Hora */}
-                    <td className="px-4 py-3.5 whitespace-normal break-words">
+                    <td className="px-4 py-3.5 whitespace-nowrap">
                       <span className="text-xs" style={{ color: 'var(--nexus-muted-2)' }}>{item.data}</span>
                     </td>
 
                     {/* Responsável */}
-                    <td className="px-4 py-3.5 whitespace-normal break-words">
+                    <td className="px-4 py-3.5 whitespace-nowrap">
                       <span className="text-xs" style={{ color: 'var(--nexus-muted-2)' }}>{item.responsavel}</span>
                     </td>
 
                     {/* Status */}
-                    <td className="px-4 py-3.5 whitespace-normal break-words">
+                    <td className="px-4 py-3.5 whitespace-nowrap">
                       <span className="inline-flex px-2.5 py-1 rounded-md text-[11px] font-bold uppercase tracking-wider border"
                         style={{ background: (STATUS_BADGE[item.status] || { bg: 'transparent' }).bg, color: (STATUS_BADGE[item.status] || { color: 'var(--nexus-muted)' }).color, borderColor: 'transparent' }}>
                         {item.status}
@@ -486,7 +486,7 @@ export function CRM() {
                     </td>
 
                     {/* Prioridade */}
-                    <td className="px-4 py-3.5 whitespace-normal break-words">
+                    <td className="px-4 py-3.5 whitespace-nowrap">
                       <div className="flex items-center gap-1.5">
                         <span className="w-2 h-2 rounded-full" style={{ background: PRIORITY_COLORS[item.prioridade] || 'var(--nexus-muted)' }} />
                         <span className="text-xs" style={{ color: PRIORITY_COLORS[item.prioridade] || 'var(--nexus-muted)' }}>{item.prioridade}</span>
@@ -494,7 +494,7 @@ export function CRM() {
                     </td>
 
                     {/* Ações */}
-                    <td className="px-4 py-3.5 whitespace-normal break-words">
+                    <td className="px-4 py-3.5 whitespace-nowrap">
                       <div className="flex items-center gap-1.5 justify-end" onClick={e => e.stopPropagation()}>
                         <ActionBtn title="Visualizar">
                           <EyeIcon className="w-4 h-4" />

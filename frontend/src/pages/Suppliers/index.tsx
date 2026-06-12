@@ -405,13 +405,13 @@ export function Suppliers() {
             <tbody>
               {loading && suppliers.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="text-center py-16 text-sm whitespace-normal break-words" style={{ color: 'var(--nexus-muted-2)' }}>
+                  <td colSpan={8} className="text-center py-16 text-sm whitespace-nowrap" style={{ color: 'var(--nexus-muted-2)' }}>
                     Carregando fornecedores...
                   </td>
                 </tr>
               ) : filtered.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="text-center py-16 text-sm whitespace-normal break-words" style={{ color: 'var(--nexus-muted-2)' }}>
+                  <td colSpan={8} className="text-center py-16 text-sm whitespace-nowrap" style={{ color: 'var(--nexus-muted-2)' }}>
                     Nenhum fornecedor encontrado.
                   </td>
                 </tr>
@@ -436,7 +436,7 @@ export function Suppliers() {
                     onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
                   >
                     {/* Fornecedor */}
-                    <td className="px-4 py-3.5 whitespace-normal break-words">
+                    <td className="px-4 py-3.5 whitespace-nowrap">
                       <div className="flex items-center gap-3">
                         <div
                           className="w-9 h-9 rounded-full flex items-center justify-center font-bold text-xs flex-shrink-0"
@@ -456,43 +456,43 @@ export function Suppliers() {
                     </td>
 
                     {/* Contato */}
-                    <td className="px-4 py-3.5 whitespace-normal break-words">
+                    <td className="px-4 py-3.5 whitespace-nowrap">
                       <span className="text-sm" style={{ color: 'var(--nexus-muted-2)' }}>
                         {s.contact_name || '—'}
                       </span>
                     </td>
 
                     {/* Categoria */}
-                    <td className="px-4 py-3.5 whitespace-normal break-words">
+                    <td className="px-4 py-3.5 whitespace-nowrap">
                       <span className="text-sm" style={{ color: 'var(--nexus-muted-2)' }}>{cat}</span>
                     </td>
 
                     {/* Telefone */}
-                    <td className="px-4 py-3.5 whitespace-normal break-words">
+                    <td className="px-4 py-3.5 whitespace-nowrap">
                       <span className="text-sm" style={{ color: 'var(--nexus-muted-2)' }}>
                         {s.phone || '—'}
                       </span>
                     </td>
 
                     {/* Email */}
-                    <td className="px-4 py-3.5 whitespace-normal break-words">
+                    <td className="px-4 py-3.5 whitespace-nowrap">
                       <span className="text-sm" style={{ color: 'var(--nexus-muted-2)' }}>
                         {s.email || '—'}
                       </span>
                     </td>
 
                     {/* Avaliação */}
-                    <td className="px-4 py-3.5 whitespace-normal break-words">
+                    <td className="px-4 py-3.5 whitespace-nowrap">
                       <StarRating rating={rat} />
                     </td>
 
                     {/* Status */}
-                    <td className="px-4 py-3.5 whitespace-normal break-words">
+                    <td className="px-4 py-3.5 whitespace-nowrap">
                       <StatusBadge active={s.active ?? true} />
                     </td>
 
                     {/* Ações */}
-                    <td className="px-4 py-3.5 whitespace-normal break-words">
+                    <td className="px-4 py-3.5 whitespace-nowrap">
                       <div className="flex items-center gap-1.5 justify-end" onClick={(e) => e.stopPropagation()}>
                         <ActionBtn title="Visualizar">
                           <EyeIcon className="w-4 h-4" />

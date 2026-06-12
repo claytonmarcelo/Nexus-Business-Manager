@@ -297,7 +297,7 @@ export function Audit() {
               <thead>
                 <tr style={{ borderBottom: '1px solid var(--nexus-border)' }}>
                   {['Data/Hora', 'Usuário', 'Ação', 'Módulo', 'Descrição', 'IP', 'Dispositivo', ''].map((h) => (
-                    <th key={h} className="pb-2 pr-2 font-semibold uppercase tracking-wider whitespace-normal break-words"
+                    <th key={h} className="pb-2 pr-2 font-semibold uppercase tracking-wider whitespace-nowrap"
                       style={{ color: 'var(--nexus-muted-2)', fontSize: 10 }}>{h}</th>
                   ))}
                 </tr>
@@ -311,8 +311,8 @@ export function Audit() {
                     onMouseEnter={e => { e.currentTarget.style.background = 'var(--nexus-bg-soft)' }}
                     onMouseLeave={e => { e.currentTarget.style.background = 'transparent' }}
                   >
-                    <td className="py-2 pr-2 whitespace-normal break-words" style={{ color: 'var(--nexus-muted)' }}>{log.data}</td>
-                    <td className="py-2 pr-2 whitespace-normal break-words">
+                    <td className="py-2 pr-2 whitespace-nowrap" style={{ color: 'var(--nexus-muted)' }}>{log.data}</td>
+                    <td className="py-2 pr-2 whitespace-nowrap">
                       <div className="flex items-center gap-2">
                         <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold"
                           style={{ background: 'linear-gradient(135deg, var(--nexus-gold), #C8863E)', color: '#000' }}>
@@ -324,7 +324,7 @@ export function Audit() {
                         </div>
                       </div>
                     </td>
-                    <td className="py-2 pr-2 whitespace-normal break-words">
+                    <td className="py-2 pr-2 whitespace-nowrap">
                       <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium"
                         style={{
                           background: actionBadgeColors[log.action]?.bg || 'rgba(128,128,128,0.12)',
@@ -333,7 +333,7 @@ export function Audit() {
                         {actionLabel(log.action)}
                       </span>
                     </td>
-                    <td className="py-2 pr-2 whitespace-normal break-words">
+                    <td className="py-2 pr-2 whitespace-nowrap">
                       <div className="flex items-center gap-2">
                         <div className="w-7 h-7 rounded-lg flex items-center justify-center text-sm"
                           style={{ background: 'var(--nexus-bg-soft)', border: '1px solid rgba(212,149,86,0.3)' }}>
@@ -342,15 +342,15 @@ export function Audit() {
                         <span className="text-sm" style={{ color: 'var(--nexus-muted)' }}>{log.module}</span>
                       </div>
                     </td>
-                    <td className="py-2 pr-2 max-w-[200px] truncate whitespace-normal break-words" style={{ color: 'var(--nexus-muted-2)' }}>{log.desc}</td>
-                    <td className="py-2 pr-2 font-mono text-xs whitespace-normal break-words" style={{ color: 'var(--nexus-muted-2)' }}>{log.ip}</td>
-                    <td className="py-2 pr-2 whitespace-normal break-words">
+                    <td className="py-2 pr-2 max-w-[200px] truncate whitespace-nowrap" style={{ color: 'var(--nexus-muted-2)' }}>{log.desc}</td>
+                    <td className="py-2 pr-2 font-mono text-xs whitespace-nowrap" style={{ color: 'var(--nexus-muted-2)' }}>{log.ip}</td>
+                    <td className="py-2 pr-2 whitespace-nowrap">
                       <div className="flex items-center gap-1" style={{ color: 'var(--nexus-gold)' }}>
                         {iconeDispositivo(log.device)}
                         <span className="text-xs">{log.device}</span>
                       </div>
                     </td>
-                    <td className="py-2 pr-2 whitespace-normal break-words">
+                    <td className="py-2 pr-2 whitespace-nowrap">
                       <button className="w-8 h-8 rounded-lg flex items-center justify-center whitespace-nowrap"
                         style={{ background: 'var(--nexus-bg-soft)', border: '1px solid var(--nexus-border)', color: 'var(--nexus-muted)' }}>
                         <EllipsisVerticalIcon className="w-4 h-4" />

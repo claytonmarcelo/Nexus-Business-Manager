@@ -449,13 +449,13 @@ export function Products() {
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan={7} className="px-4 py-12 text-center text-sm whitespace-normal break-words" style={{ color: 'var(--nexus-muted-2)' }}>
+                  <td colSpan={7} className="px-4 py-12 text-center text-sm whitespace-nowrap" style={{ color: 'var(--nexus-muted-2)' }}>
                     Carregando...
                   </td>
                 </tr>
               ) : filtered.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-4 py-12 text-center text-sm whitespace-normal break-words" style={{ color: 'var(--nexus-muted-2)' }}>
+                  <td colSpan={7} className="px-4 py-12 text-center text-sm whitespace-nowrap" style={{ color: 'var(--nexus-muted-2)' }}>
                     Nenhum produto encontrado.
                   </td>
                 </tr>
@@ -476,7 +476,7 @@ export function Products() {
                       onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
                     >
                       {/* Produto */}
-                      <td className="px-4 py-3.5 whitespace-normal break-words">
+                      <td className="px-4 py-3.5 whitespace-nowrap">
                         <div className="flex items-center gap-3">
                           <div
                             className="w-9 h-9 rounded-lg flex items-center justify-center text-xs font-bold flex-shrink-0"
@@ -491,40 +491,40 @@ export function Products() {
                       </td>
 
                       {/* Categoria */}
-                      <td className="px-4 py-3.5 whitespace-normal break-words">
+                      <td className="px-4 py-3.5 whitespace-nowrap">
                         <span className="text-sm" style={{ color: 'var(--nexus-muted-2)' }}>
                           {p.category || '—'}
                         </span>
                       </td>
 
                       {/* Código */}
-                      <td className="px-4 py-3.5 whitespace-normal break-words">
+                      <td className="px-4 py-3.5 whitespace-nowrap">
                         <span className="text-sm font-mono" style={{ color: 'var(--nexus-muted-2)' }}>
                           {p.sku}
                         </span>
                       </td>
 
                       {/* Preço */}
-                      <td className="px-4 py-3.5 whitespace-normal break-words">
+                      <td className="px-4 py-3.5 whitespace-nowrap">
                         <span className="text-sm font-medium" style={{ color: 'var(--nexus-text)' }}>
                           {formatPrice(p.price)}
                         </span>
                       </td>
 
                       {/* Estoque */}
-                      <td className="px-4 py-3.5 whitespace-normal break-words">
+                      <td className="px-4 py-3.5 whitespace-nowrap">
                         <span className="text-sm" style={{ color: 'var(--nexus-muted-2)' }}>
                           {p.quantity} {p.quantity === 1 ? 'unidade' : 'unidades'}
                         </span>
                       </td>
 
                       {/* Status */}
-                      <td className="px-4 py-3.5 whitespace-normal break-words">
+                      <td className="px-4 py-3.5 whitespace-nowrap">
                         <StatusBadge qty={p.quantity} active={p.active} />
                       </td>
 
                       {/* Ações */}
-                      <td className="px-4 py-3.5 whitespace-normal break-words">
+                      <td className="px-4 py-3.5 whitespace-nowrap">
                         <div className="flex items-center gap-1.5 justify-end" onClick={(e) => e.stopPropagation()}>
                           <ActionBtn title="Visualizar">
                             <EyeIcon className="w-4 h-4" />

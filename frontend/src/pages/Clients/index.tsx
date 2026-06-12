@@ -294,7 +294,7 @@ export function Clients() {
             <thead>
               <tr style={{ borderBottom: '1px solid var(--nexus-border)' }}>
                 {['Cliente','Contato','Telefone','Email','Cidade','Última Compra','Status','Ações'].map(h => (
-                  <th key={h} className="px-5 py-4 text-left text-xs font-semibold uppercase tracking-wider whitespace-normal break-words"
+                  <th key={h} className="px-5 py-4 text-left text-xs font-semibold uppercase tracking-wider whitespace-nowrap"
                     style={{ color: 'var(--nexus-muted)' }}>{h}</th>
                 ))}
               </tr>
@@ -304,7 +304,7 @@ export function Clients() {
                 Array.from({ length: 5 }).map((_, i) => (
                   <tr key={i} style={{ borderBottom: '1px solid rgba(var(--nexus-gold-rgb),0.05)' }}>
                     {Array.from({ length: 8 }).map((_, j) => (
-                      <td key={j} className="px-5 py-4 whitespace-normal break-words">
+                      <td key={j} className="px-5 py-4 whitespace-nowrap">
                         <div className="h-4 rounded animate-pulse" style={{ background: 'var(--nexus-bg-soft)', width: j === 0 ? '140px' : '80px' }} />
                       </td>
                     ))}
@@ -312,7 +312,7 @@ export function Clients() {
                 ))
               ) : clients.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="px-5 py-16 text-center text-sm whitespace-normal break-words" style={{ color: 'var(--nexus-muted)' }}>
+                  <td colSpan={8} className="px-5 py-16 text-center text-sm whitespace-nowrap" style={{ color: 'var(--nexus-muted)' }}>
                     <UserGroupIcon className="w-10 h-10 mx-auto mb-3 opacity-30" />
                     <p className="font-medium">Nenhum cliente encontrado</p>
                     <p className="text-xs mt-1 opacity-70">{search ? 'Tente outra busca.' : 'Cadastre o primeiro cliente.'}</p>
@@ -327,7 +327,7 @@ export function Clients() {
                     onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
 
                     {/* Avatar + Name + ID */}
-                    <td className="px-5 py-3.5 whitespace-normal break-words">
+                    <td className="px-5 py-3.5 whitespace-nowrap">
                       <div className="flex items-center gap-3">
                         <div className="w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold text-white flex-shrink-0 shadow"
                           style={{ background: avatarColor(client.name) }}>
@@ -343,22 +343,22 @@ export function Clients() {
                     </td>
 
                     {/* Contato */}
-                    <td className="px-5 py-3.5 text-sm whitespace-normal break-words" style={{ color: 'var(--nexus-muted)' }}>{client.name}</td>
+                    <td className="px-5 py-3.5 text-sm whitespace-nowrap" style={{ color: 'var(--nexus-muted)' }}>{client.name}</td>
 
                     {/* Telefone */}
-                    <td className="px-5 py-3.5 text-sm whitespace-normal break-words" style={{ color: 'var(--nexus-muted)' }}>{client.phone || '-'}</td>
+                    <td className="px-5 py-3.5 text-sm whitespace-nowrap" style={{ color: 'var(--nexus-muted)' }}>{client.phone || '-'}</td>
 
                     {/* Email */}
-                    <td className="px-5 py-3.5 text-sm whitespace-normal break-words" style={{ color: 'var(--nexus-muted)' }}>{client.email || '-'}</td>
+                    <td className="px-5 py-3.5 text-sm whitespace-nowrap" style={{ color: 'var(--nexus-muted)' }}>{client.email || '-'}</td>
 
                     {/* Cidade */}
-                    <td className="px-5 py-3.5 text-sm whitespace-normal break-words" style={{ color: 'var(--nexus-muted)' }}>{extractCity(client.address)}</td>
+                    <td className="px-5 py-3.5 text-sm whitespace-nowrap" style={{ color: 'var(--nexus-muted)' }}>{extractCity(client.address)}</td>
 
                     {/* Última Compra */}
-                    <td className="px-5 py-3.5 text-sm whitespace-normal break-words" style={{ color: 'var(--nexus-muted)' }}>-</td>
+                    <td className="px-5 py-3.5 text-sm whitespace-nowrap" style={{ color: 'var(--nexus-muted)' }}>-</td>
 
                     {/* Status */}
-                    <td className="px-5 py-3.5 whitespace-normal break-words">
+                    <td className="px-5 py-3.5 whitespace-nowrap">
                       <span className="inline-flex px-2.5 py-1 rounded-md text-[11px] font-bold uppercase tracking-wider border"
                         style={client.active ? {
                           background: 'rgba(var(--nexus-success-rgb),0.1)',
@@ -374,7 +374,7 @@ export function Clients() {
                     </td>
 
                     {/* Actions */}
-                    <td className="px-5 py-3.5 whitespace-normal break-words" onClick={e => e.stopPropagation()}>
+                    <td className="px-5 py-3.5 whitespace-nowrap" onClick={e => e.stopPropagation()}>
                       <div className="flex items-center gap-1.5 justify-end">
                         <button onClick={() => setViewingClient(client)}
                           className="w-8 h-8 rounded-lg flex items-center justify-center transition-all hover:scale-105"

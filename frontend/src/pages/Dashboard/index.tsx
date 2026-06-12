@@ -347,7 +347,7 @@ const SalesTable = memo(function SalesTable() {
           <thead>
             <tr style={{ borderBottom: '1px solid var(--nexus-border)' }}>
               {['Pedido', 'Cliente', 'Data', 'Valor', 'Status'].map(h => (
-                <th key={h} className="pb-2 pr-2 font-semibold uppercase tracking-wider whitespace-normal break-words"
+                <th key={h} className="pb-2 pr-2 font-semibold uppercase tracking-wider whitespace-nowrap"
                   style={{ color: 'var(--nexus-muted-2)', fontSize: 10 }}>{h}</th>
               ))}
             </tr>
@@ -357,11 +357,11 @@ const SalesTable = memo(function SalesTable() {
               <tr key={s.id} className="transition-colors" style={{ borderBottom: '1px solid var(--nexus-border)' }}
                 onMouseEnter={e => { e.currentTarget.style.background = 'var(--nexus-bg-soft)'; }}
                 onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; }}>
-                <td className="py-2 pr-2 font-medium whitespace-normal break-words" style={{ color: 'var(--nexus-text)' }}>{s.id}</td>
-                <td className="py-2 pr-2 whitespace-normal break-words" style={{ color: 'var(--nexus-muted)' }}>{s.client}</td>
-                <td className="py-2 pr-2 whitespace-normal break-words" style={{ color: 'var(--nexus-muted)' }}>{s.date}</td>
-                <td className="py-2 pr-2 font-medium whitespace-normal break-words" style={{ color: 'var(--nexus-text)' }}>{fmtBRL(s.value)}</td>
-                <td className="py-2 whitespace-normal break-words">{badge(s.status)}</td>
+                <td className="py-2 pr-2 font-medium whitespace-nowrap" style={{ color: 'var(--nexus-text)' }}>{s.id}</td>
+                <td className="py-2 pr-2 whitespace-nowrap" style={{ color: 'var(--nexus-muted)' }}>{s.client}</td>
+                <td className="py-2 pr-2 whitespace-nowrap" style={{ color: 'var(--nexus-muted)' }}>{s.date}</td>
+                <td className="py-2 pr-2 font-medium whitespace-nowrap" style={{ color: 'var(--nexus-text)' }}>{fmtBRL(s.value)}</td>
+                <td className="py-2 whitespace-nowrap">{badge(s.status)}</td>
               </tr>
             ))}
           </tbody>
@@ -384,7 +384,7 @@ const NewClientsTable = memo(function NewClientsTable() {
           <thead>
             <tr style={{ borderBottom: '1px solid var(--nexus-border)' }}>
               {['Cliente', 'Cidade', 'Data'].map(h => (
-                <th key={h} className="pb-2 pr-2 font-semibold uppercase tracking-wider whitespace-normal break-words"
+                <th key={h} className="pb-2 pr-2 font-semibold uppercase tracking-wider whitespace-nowrap"
                   style={{ color: 'var(--nexus-muted-2)', fontSize: 10 }}>{h}</th>
               ))}
             </tr>
@@ -394,9 +394,9 @@ const NewClientsTable = memo(function NewClientsTable() {
               <tr key={i} className="transition-colors" style={{ borderBottom: '1px solid var(--nexus-border)' }}
                 onMouseEnter={e => { e.currentTarget.style.background = 'var(--nexus-bg-soft)'; }}
                 onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; }}>
-                <td className="py-2 pr-2 font-medium whitespace-normal break-words" style={{ color: 'var(--nexus-text)' }}>{c.name}</td>
-                <td className="py-2 pr-2 whitespace-normal break-words" style={{ color: 'var(--nexus-muted)' }}>{c.city}</td>
-                <td className="py-2 whitespace-normal break-words" style={{ color: 'var(--nexus-muted)' }}>{c.date}</td>
+                <td className="py-2 pr-2 font-medium whitespace-nowrap" style={{ color: 'var(--nexus-text)' }}>{c.name}</td>
+                <td className="py-2 pr-2 whitespace-nowrap" style={{ color: 'var(--nexus-muted)' }}>{c.city}</td>
+                <td className="py-2 whitespace-nowrap" style={{ color: 'var(--nexus-muted)' }}>{c.date}</td>
               </tr>
             ))}
           </tbody>
@@ -431,7 +431,7 @@ const LowStockTable = memo(function LowStockTable() {
           <thead>
             <tr style={{ borderBottom: '1px solid var(--nexus-border)' }}>
               {['Produto', 'Estoque', 'Minimo', 'Status'].map(h => (
-                <th key={h} className="pb-2 pr-2 font-semibold uppercase tracking-wider whitespace-normal break-words"
+                <th key={h} className="pb-2 pr-2 font-semibold uppercase tracking-wider whitespace-nowrap"
                   style={{ color: 'var(--nexus-muted-2)', fontSize: 10 }}>{h}</th>
               ))}
             </tr>
@@ -441,10 +441,10 @@ const LowStockTable = memo(function LowStockTable() {
               <tr key={i} className="transition-colors" style={{ borderBottom: '1px solid var(--nexus-border)' }}
                 onMouseEnter={e => { e.currentTarget.style.background = 'var(--nexus-bg-soft)'; }}
                 onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; }}>
-                <td className="py-2 pr-2 font-medium whitespace-normal break-words" style={{ color: 'var(--nexus-text)' }}>{p.product}</td>
-                <td className="py-2 pr-2 font-bold whitespace-normal break-words" style={{ color: 'var(--nexus-danger)' }}>{p.stock}</td>
-                <td className="py-2 pr-2 whitespace-normal break-words" style={{ color: 'var(--nexus-muted)' }}>{p.min}</td>
-                <td className="py-2 whitespace-normal break-words">{badge(p.status)}</td>
+                <td className="py-2 pr-2 font-medium whitespace-nowrap" style={{ color: 'var(--nexus-text)' }}>{p.product}</td>
+                <td className="py-2 pr-2 font-bold whitespace-nowrap" style={{ color: 'var(--nexus-danger)' }}>{p.stock}</td>
+                <td className="py-2 pr-2 whitespace-nowrap" style={{ color: 'var(--nexus-muted)' }}>{p.min}</td>
+                <td className="py-2 whitespace-nowrap">{badge(p.status)}</td>
               </tr>
             ))}
           </tbody>
@@ -474,7 +474,7 @@ const ReceivablesTable = memo(function ReceivablesTable() {
           <thead>
             <tr style={{ borderBottom: '1px solid var(--nexus-border)' }}>
               {['Cliente', 'Valor', 'Vencimento'].map(h => (
-                <th key={h} className="pb-2 pr-2 font-semibold uppercase tracking-wider whitespace-normal break-words"
+                <th key={h} className="pb-2 pr-2 font-semibold uppercase tracking-wider whitespace-nowrap"
                   style={{ color: 'var(--nexus-muted-2)', fontSize: 10 }}>{h}</th>
               ))}
             </tr>
@@ -484,9 +484,9 @@ const ReceivablesTable = memo(function ReceivablesTable() {
               <tr key={i} className="transition-colors" style={{ borderBottom: '1px solid var(--nexus-border)' }}
                 onMouseEnter={e => { e.currentTarget.style.background = 'var(--nexus-bg-soft)'; }}
                 onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; }}>
-                <td className="py-2 pr-2 font-medium whitespace-normal break-words" style={{ color: 'var(--nexus-text)' }}>{r.client}</td>
-                <td className="py-2 pr-2 font-medium whitespace-normal break-words" style={{ color: 'var(--nexus-text)' }}>{fmtBRL(r.value)}</td>
-                <td className="py-2 font-semibold whitespace-normal break-words" style={{ color: isDue(r.due) ? 'var(--nexus-danger)' : 'var(--nexus-warning)' }}>{r.due}</td>
+                <td className="py-2 pr-2 font-medium whitespace-nowrap" style={{ color: 'var(--nexus-text)' }}>{r.client}</td>
+                <td className="py-2 pr-2 font-medium whitespace-nowrap" style={{ color: 'var(--nexus-text)' }}>{fmtBRL(r.value)}</td>
+                <td className="py-2 font-semibold whitespace-nowrap" style={{ color: isDue(r.due) ? 'var(--nexus-danger)' : 'var(--nexus-warning)' }}>{r.due}</td>
               </tr>
             ))}
           </tbody>
@@ -625,7 +625,7 @@ export function Dashboard() {
       </div>
 
       {/* Data tables row */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-4 gap-4">
         <SalesTable />
         <NewClientsTable />
         <LowStockTable />
@@ -633,11 +633,11 @@ export function Dashboard() {
       </div>
 
       {/* Bottom row: Activities | Notifications | Executive Panel */}
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
-        <div className="lg:col-span-1 flex flex-col">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <div className="flex flex-col">
           <ActivitiesTimeline />
         </div>
-        <div className="lg:col-span-1 flex flex-col">
+        <div className="flex flex-col">
           <NotificationsPanel />
         </div>
         <div className="lg:col-span-2 flex flex-col">
