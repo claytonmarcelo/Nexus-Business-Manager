@@ -28,6 +28,8 @@ import { CRM } from './pages/CRM'
 import { SuggestionsList } from './pages/Suggestions/List'
 import { Profile } from './pages/Profile'
 import { Settings } from './pages/Settings'
+import { Analytics } from './pages/Analytics'
+import { SEO } from './pages/SEO'
 import { PublicLayout } from './layouts/PublicLayout'
 import { Landing } from './pages/Landing'
 import { ForgotPassword } from './pages/ForgotPassword'
@@ -125,6 +127,8 @@ function AppRoutes() {
         <Route path="companies" element={<Companies />} />
         <Route path="profile" element={<Profile />} />
         <Route path="settings" element={<Settings />} />
+        <Route path="analytics" element={<Analytics />} />
+        <Route path="seo" element={<SEO />} />
         <Route path="welcome" element={<Onboarding />} />
         <Route path="import" element={<Import />} />
         <Route path="backup" element={<Backup />} />

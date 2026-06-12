@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useTheme } from '../../contexts/ThemeContext';
+import { ImageUpload } from '../../components/ImageUpload';
 import {
   SunIcon,
   MoonIcon,
@@ -38,7 +39,20 @@ export function Settings() {
   const [saving, setSaving] = useState(false);
   const [companySettings, setCompanySettings] = useState({
     name: 'Nexus Business Manager',
-    address: '',
+    cnpj: '',
+    phone: '',
+    email: '',
+    website: '',
+    address: {
+      street: '',
+      number: '',
+      complement: '',
+      neighborhood: '',
+      city: '',
+      state: '',
+      zipCode: '',
+      country: 'Brasil',
+    },
     logo: '/assets/Logo.png',
     favicon: '/assets/Logo.png',
   });
@@ -223,19 +237,73 @@ export function Settings() {
 
               <div>
                 <label className="block text-sm font-medium mb-2" style={{ color: 'var(--nexus-text)' }}>
-                  Endereço
+                  CNPJ
                 </label>
                 <input
                   type="text"
-                  value={companySettings.address}
-                  onChange={(e) => setCompanySettings({ ...companySettings, address: e.target.value })}
+                  value={companySettings.cnpj}
+                  onChange={(e) => setCompanySettings({ ...companySettings, cnpj: e.target.value })}
                   className="w-full px-4 py-2.5 rounded-lg border focus:outline-none focus:ring-2 transition-all"
                   style={{
                     background: 'var(--nexus-bg)',
                     borderColor: 'var(--nexus-border)',
                     color: 'var(--nexus-text)',
                   }}
-                  placeholder="Digite o endereço da empresa"
+                  placeholder="00.000.000/0000-00"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-2" style={{ color: 'var(--nexus-text)' }}>
+                  Telefone
+                </label>
+                <input
+                  type="text"
+                  value={companySettings.phone}
+                  onChange={(e) => setCompanySettings({ ...companySettings, phone: e.target.value })}
+                  className="w-full px-4 py-2.5 rounded-lg border focus:outline-none focus:ring-2 transition-all"
+                  style={{
+                    background: 'var(--nexus-bg)',
+                    borderColor: 'var(--nexus-border)',
+                    color: 'var(--nexus-text)',
+                  }}
+                  placeholder="(00) 00000-0000"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-2" style={{ color: 'var(--nexus-text)' }}>
+                  Email
+                </label>
+                <input
+                  type="email"
+                  value={companySettings.email}
+                  onChange={(e) => setCompanySettings({ ...companySettings, email: e.target.value })}
+                  className="w-full px-4 py-2.5 rounded-lg border focus:outline-none focus:ring-2 transition-all"
+                  style={{
+                    background: 'var(--nexus-bg)',
+                    borderColor: 'var(--nexus-border)',
+                    color: 'var(--nexus-text)',
+                  }}
+                  placeholder="contato@empresa.com"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-2" style={{ color: 'var(--nexus-text)' }}>
+                  Website
+                </label>
+                <input
+                  type="url"
+                  value={companySettings.website}
+                  onChange={(e) => setCompanySettings({ ...companySettings, website: e.target.value })}
+                  className="w-full px-4 py-2.5 rounded-lg border focus:outline-none focus:ring-2 transition-all"
+                  style={{
+                    background: 'var(--nexus-bg)',
+                    borderColor: 'var(--nexus-border)',
+                    color: 'var(--nexus-text)',
+                  }}
+                  placeholder="https://www.empresa.com"
                 />
               </div>
             </div>
@@ -245,63 +313,153 @@ export function Settings() {
                 <label className="block text-sm font-medium mb-2" style={{ color: 'var(--nexus-text)' }}>
                   Logo da Empresa
                 </label>
-                <div className="flex items-center gap-4">
-                  <div
-                    className="w-20 h-20 rounded-lg flex items-center justify-center border-2 border-dashed"
-                    style={{ borderColor: 'var(--nexus-border)' }}
-                  >
-                    {companySettings.logo ? (
-                      <img src={companySettings.logo} alt="Logo" className="w-full h-full object-contain rounded-lg" />
-                    ) : (
-                      <PhotoIcon className="w-8 h-8" style={{ color: 'var(--nexus-muted)' }} />
-                    )}
-                  </div>
-                  <div className="flex-1">
-                    <input
-                      type="text"
-                      value={companySettings.logo}
-                      onChange={(e) => setCompanySettings({ ...companySettings, logo: e.target.value })}
-                      className="w-full px-4 py-2.5 rounded-lg border focus:outline-none focus:ring-2 transition-all"
-                      style={{
-                        background: 'var(--nexus-bg)',
-                        borderColor: 'var(--nexus-border)',
-                        color: 'var(--nexus-text)',
-                      }}
-                      placeholder="URL da logo"
-                    />
-                  </div>
-                </div>
+                <ImageUpload
+                  currentImage={companySettings.logo}
+                  onImageChange={(url) => setCompanySettings({ ...companySettings, logo: url })}
+                  label="Logo da Empresa"
+                  size="lg"
+                  aspectRatio="square"
+                />
               </div>
 
               <div>
                 <label className="block text-sm font-medium mb-2" style={{ color: 'var(--nexus-text)' }}>
                   Favicon
                 </label>
-                <div className="flex items-center gap-4">
-                  <div
-                    className="w-12 h-12 rounded-lg flex items-center justify-center border-2 border-dashed"
-                    style={{ borderColor: 'var(--nexus-border)' }}
-                  >
-                    {companySettings.favicon ? (
-                      <img src={companySettings.favicon} alt="Favicon" className="w-full h-full object-contain rounded-lg" />
-                    ) : (
-                      <PhotoIcon className="w-6 h-6" style={{ color: 'var(--nexus-muted)' }} />
-                    )}
-                  </div>
-                  <div className="flex-1">
-                    <input
-                      type="text"
-                      value={companySettings.favicon}
-                      onChange={(e) => setCompanySettings({ ...companySettings, favicon: e.target.value })}
-                      className="w-full px-4 py-2.5 rounded-lg border focus:outline-none focus:ring-2 transition-all"
-                      style={{
-                        background: 'var(--nexus-bg)',
-                        borderColor: 'var(--nexus-border)',
-                        color: 'var(--nexus-text)',
-                      }}
-                      placeholder="URL do favicon"
-                    />
-                  </div>
+                <ImageUpload
+                  currentImage={companySettings.favicon}
+                  onImageChange={(url) => setCompanySettings({ ...companySettings, favicon: url })}
+                  label="Favicon"
+                  size="md"
+                  aspectRatio="square"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-3" style={{ color: 'var(--nexus-text)' }}>
+                Endereço Completo
+              </label>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="md:col-span-2">
+                  <label className="block text-xs mb-1" style={{ color: 'var(--nexus-muted)' }}>Rua</label>
+                  <input
+                    type="text"
+                    value={companySettings.address.street}
+                    onChange={(e) => setCompanySettings({ ...companySettings, address: { ...companySettings.address, street: e.target.value } })}
+                    className="w-full px-3 py-2 rounded-lg border focus:outline-none focus:ring-2 transition-all text-sm"
+                    style={{
+                      background: 'var(--nexus-bg)',
+                      borderColor: 'var(--nexus-border)',
+                      color: 'var(--nexus-text)',
+                    }}
+                    placeholder="Nome da rua"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs mb-1" style={{ color: 'var(--nexus-muted)' }}>Número</label>
+                  <input
+                    type="text"
+                    value={companySettings.address.number}
+                    onChange={(e) => setCompanySettings({ ...companySettings, address: { ...companySettings.address, number: e.target.value } })}
+                    className="w-full px-3 py-2 rounded-lg border focus:outline-none focus:ring-2 transition-all text-sm"
+                    style={{
+                      background: 'var(--nexus-bg)',
+                      borderColor: 'var(--nexus-border)',
+                      color: 'var(--nexus-text)',
+                    }}
+                    placeholder="123"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs mb-1" style={{ color: 'var(--nexus-muted)' }}>Complemento</label>
+                  <input
+                    type="text"
+                    value={companySettings.address.complement}
+                    onChange={(e) => setCompanySettings({ ...companySettings, address: { ...companySettings.address, complement: e.target.value } })}
+                    className="w-full px-3 py-2 rounded-lg border focus:outline-none focus:ring-2 transition-all text-sm"
+                    style={{
+                      background: 'var(--nexus-bg)',
+                      borderColor: 'var(--nexus-border)',
+                      color: 'var(--nexus-text)',
+                    }}
+                    placeholder="Apto, Bloco"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs mb-1" style={{ color: 'var(--nexus-muted)' }}>Bairro</label>
+                  <input
+                    type="text"
+                    value={companySettings.address.neighborhood}
+                    onChange={(e) => setCompanySettings({ ...companySettings, address: { ...companySettings.address, neighborhood: e.target.value } })}
+                    className="w-full px-3 py-2 rounded-lg border focus:outline-none focus:ring-2 transition-all text-sm"
+                    style={{
+                      background: 'var(--nexus-bg)',
+                      borderColor: 'var(--nexus-border)',
+                      color: 'var(--nexus-text)',
+                    }}
+                    placeholder="Centro"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs mb-1" style={{ color: 'var(--nexus-muted)' }}>CEP</label>
+                  <input
+                    type="text"
+                    value={companySettings.address.zipCode}
+                    onChange={(e) => setCompanySettings({ ...companySettings, address: { ...companySettings.address, zipCode: e.target.value } })}
+                    className="w-full px-3 py-2 rounded-lg border focus:outline-none focus:ring-2 transition-all text-sm"
+                    style={{
+                      background: 'var(--nexus-bg)',
+                      borderColor: 'var(--nexus-border)',
+                      color: 'var(--nexus-text)',
+                    }}
+                    placeholder="00000-000"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs mb-1" style={{ color: 'var(--nexus-muted)' }}>Cidade</label>
+                  <input
+                    type="text"
+                    value={companySettings.address.city}
+                    onChange={(e) => setCompanySettings({ ...companySettings, address: { ...companySettings.address, city: e.target.value } })}
+                    className="w-full px-3 py-2 rounded-lg border focus:outline-none focus:ring-2 transition-all text-sm"
+                    style={{
+                      background: 'var(--nexus-bg)',
+                      borderColor: 'var(--nexus-border)',
+                      color: 'var(--nexus-text)',
+                    }}
+                    placeholder="São Paulo"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs mb-1" style={{ color: 'var(--nexus-muted)' }}>Estado</label>
+                  <input
+                    type="text"
+                    value={companySettings.address.state}
+                    onChange={(e) => setCompanySettings({ ...companySettings, address: { ...companySettings.address, state: e.target.value } })}
+                    className="w-full px-3 py-2 rounded-lg border focus:outline-none focus:ring-2 transition-all text-sm"
+                    style={{
+                      background: 'var(--nexus-bg)',
+                      borderColor: 'var(--nexus-border)',
+                      color: 'var(--nexus-text)',
+                    }}
+                    placeholder="SP"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs mb-1" style={{ color: 'var(--nexus-muted)' }}>País</label>
+                  <input
+                    type="text"
+                    value={companySettings.address.country}
+                    onChange={(e) => setCompanySettings({ ...companySettings, address: { ...companySettings.address, country: e.target.value } })}
+                    className="w-full px-3 py-2 rounded-lg border focus:outline-none focus:ring-2 transition-all text-sm"
+                    style={{
+                      background: 'var(--nexus-bg)',
+                      borderColor: 'var(--nexus-border)',
+                      color: 'var(--nexus-text)',
+                    }}
+                    placeholder="Brasil"
+                  />
                 </div>
               </div>
             </div>

@@ -1,6 +1,6 @@
 import { useState, useEffect, FormEvent } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { XMarkIcon } from '@heroicons/react/24/outline';
+import { XMarkIcon, ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
 import api from '../../services/api';
 import { Sale, Client, Product } from '../../types';
 import { useToast } from '../../contexts/ToastContext';
@@ -17,6 +17,8 @@ export function Sales() {
   const [editing, setEditing] = useState<Sale | null>(null);
   const [formData, setFormData] = useState({ client_id: 0, notes: '', items: [{ product_id: 0, quantity: 1, unit_price: 0 }] });
   const [error, setError] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(10);
 
   useEffect(() => { loadData(); }, []);
 
@@ -90,6 +92,13 @@ export function Sales() {
     } catch { showToast('Erro ao excluir venda.', 'error'); }
   }
 
+  const totalPages = Math.ceil(sales.length / itemsPerPage);
+  const paginatedSales = sales.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
+  function handlePageChange(page: number) {
+    setCurrentPage(page);
+  }
+
   const columns: Column<Sale>[] = [
     {
       key: 'date',
@@ -156,7 +165,47 @@ export function Sales() {
       </div>
 
       <div style={{ background: 'var(--nexus-card)', border: '1px solid var(--nexus-border)', borderRadius: '14px', overflow: 'hidden' }}>
-        <PremiumTable columns={columns} data={sales} loading={loading} />
+        <PremiumTable columns={columns} data={paginatedSales} loading={loading} />
+        
+        {!loading && sales.length > 0 && (
+          <div className="flex items-center justify-between px-4 py-3" style={{ borderTop: '1px solid var(--nexus-border)' }}>
+            <div className="text-sm" style={{ color: 'var(--nexus-muted)' }}>
+              Mostrando {((currentPage - 1) * itemsPerPage) + 1} a {Math.min(currentPage * itemsPerPage, sales.length)} de {sales.length} vendas
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => handlePageChange(currentPage - 1)}
+                disabled={currentPage === 1}
+                className="p-2 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                style={{ background: 'var(--nexus-card-soft)', color: 'var(--nexus-text)', border: '1px solid var(--nexus-border)' }}
+              >
+                <ChevronLeftIcon className="w-4 h-4" />
+              </button>
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                <button
+                  key={page}
+                  onClick={() => handlePageChange(page)}
+                  className="w-8 h-8 rounded-lg text-sm font-medium transition-all"
+                  style={{
+                    background: currentPage === page ? 'linear-gradient(135deg, var(--nexus-gold), var(--nexus-bronze))' : 'var(--nexus-card-soft)',
+                    color: currentPage === page ? '#000' : 'var(--nexus-text)',
+                    border: currentPage === page ? 'none' : '1px solid var(--nexus-border)',
+                  }}
+                >
+                  {page}
+                </button>
+              ))}
+              <button
+                onClick={() => handlePageChange(currentPage + 1)}
+                disabled={currentPage === totalPages}
+                className="p-2 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                style={{ background: 'var(--nexus-card-soft)', color: 'var(--nexus-text)', border: '1px solid var(--nexus-border)' }}
+              >
+                <ChevronRightIcon className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       <AnimatePresence>

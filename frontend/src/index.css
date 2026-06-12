@@ -1599,6 +1599,10 @@ body { min-height: 100vh; overflow-x: hidden; }
 }
 @media (max-width: 640px) {
   .grid-dashboard { grid-template-columns: 1fr; }
+  .page-container { max-width: 100%; padding: 0.5rem; }
+  .app-shell, .app-main { border-radius: 0 !important; border: none !important; box-shadow: none !important; }
+  body, #root { border-radius: 0 !important; border: none !important; box-shadow: none !important; }
+  .nexus-card { border-radius: 0 !important; }
 }
 
 .app-shell {
