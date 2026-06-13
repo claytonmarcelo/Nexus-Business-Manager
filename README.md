@@ -2,7 +2,7 @@
   <img
     src="assets/branding/Logo.png"
     alt="Nexus Business Manager"
-    width="550"
+    width="650"
   >
 </p>
 
