@@ -1,4 +1,4 @@
-﻿<p align="center">
+<p align="center">
   <img
     src="assets/branding/Logo.png"
     alt="Nexus Business Manager"
@@ -9,20 +9,19 @@
 <h1 align="center">Nexus Business Manager</h1>
 
 <p align="center">
-  <strong>ERP SaaS Completo para GestÃƒÂ£o Empresarial</strong><br>
-  Sistema moderno para centralizar CRM, Estoque, Compras, Vendas, Financeiro, Agendamentos, RelatÃƒÂ³rios e Multiempresa em uma ÃƒÂºnica plataforma.
+  <strong>ERP SaaS Completo para Gestão Empresarial</strong><br>
+  Sistema moderno para centralizar CRM, Estoque, Compras, Vendas, Financeiro, Agendamentos, Relatórios e Multiempresa em uma única plataforma.
 </p>
 
 <p align="center">
   <img src="https://flagcdn.com/w20/br.png" width="20" alt="Brasil">
-  <strong>PortuguÃƒÂªs</strong>
+  <strong>Português</strong>
   |
   <a href="README.en.md">
     <img src="https://flagcdn.com/w20/us.png" width="20" alt="USA">
     English
   </a>
 </p>
-
 
 <p align="center">
   <a href="./LICENSE"><img src="https://img.shields.io/badge/license-MIT-green" alt="MIT License"></a>
@@ -36,6 +35,7 @@
 </p>
 
 ---
+
 ## Screenshots
 
 > Capturas ilustrativas da interface do Nexus Business Manager.
@@ -50,150 +50,149 @@
 | :--------------------------------------------------------------------: | :------------------------------------------------------------------: |
 | <img src="assets/screenshots/clientes.png" alt="Clientes" width="300"> | <img src="assets/screenshots/estoque.png" alt="Estoque" width="300"> |
 
-|                                 Financeiro                                 |                                 RelatÃƒÂ³rios                                 |
+|                                 Financeiro                                 |                                 Relatórios                                 |
 | :------------------------------------------------------------------------: | :------------------------------------------------------------------------: |
-| <img src="assets/screenshots/financeiro.png" alt="Financeiro" width="300"> | <img src="assets/screenshots/relatorios.png" alt="RelatÃƒÂ³rios" width="300"> |
+| <img src="assets/screenshots/financeiro.png" alt="Financeiro" width="300"> | <img src="assets/screenshots/relatorios.png" alt="Relatórios" width="300"> |
 
 </div>
 
 ---
----
 
 ## Sobre o Projeto
 
-O **Nexus Business Manager** ÃƒÂ© um sistema ERP SaaS completo desenvolvido para atender pequenas e mÃƒÂ©dias empresas que precisam de uma soluÃƒÂ§ÃƒÂ£o unificada de gestÃƒÂ£o.
+O **Nexus Business Manager** é um sistema ERP SaaS completo desenvolvido para atender pequenas e médias empresas que precisam de uma solução unificada de gestão.
 
 ### Problema que resolve
 
-Pequenas empresas frequentemente utilizam ferramentas isoladas para cada ÃƒÂ¡rea: um sistema para clientes, uma planilha para estoque, outro para finanÃƒÂ§as e uma agenda separada. Isso gera retrabalho, dados inconsistentes e perda de tempo.
+Pequenas empresas frequentemente utilizam ferramentas isoladas para cada área: um sistema para clientes, uma planilha para estoque, outro para finanças e uma agenda separada. Isso gera retrabalho, dados inconsistentes e perda de tempo.
 
-O Nexus unifica **tudo em um ÃƒÂºnico sistema**, com dados centralizados, acesso web e mobile, suporte a mÃƒÂºltiplos usuÃƒÂ¡rios e isolamento completo entre empresas.
+O Nexus unifica **tudo em um único sistema**, com dados centralizados, acesso web e mobile, suporte a múltiplos usuários e isolamento completo entre empresas.
 
-### PÃƒÂºblico-alvo
+### Público-alvo
 
 - Lojas de varejo e atacado
-- Prestadores de serviÃƒÂ§os (oficinas, consultÃƒÂ³rios, escritÃƒÂ³rios)
-- Pequenas indÃƒÂºstrias e distribuidoras
-- Profissionais autÃƒÂ´nomos
-- EscritÃƒÂ³rios de contabilidade
+- Prestadores de serviços (oficinas, consultórios, escritórios)
+- Pequenas indústrias e distribuidoras
+- Profissionais autônomos
+- Escritórios de contabilidade
 
-### BenefÃƒÂ­cios
+### Benefícios
 
-- **CentralizaÃƒÂ§ÃƒÂ£o**: Todos os dados em um sÃƒÂ³ lugar
-- **Economia**: Substitui mÃƒÂºltiplas ferramentas pagas
+- **Centralização**: Todos os dados em um só lugar
+- **Economia**: Substitui múltiplas ferramentas pagas
 - **Escalabilidade**: Arquitetura preparada para crescer
 - **Multiempresa**: Gerencie quantas empresas precisar
-- **CÃƒÂ³digo aberto**: Liberdade para customizar e estender
+- **Código aberto**: Liberdade para customizar e estender
 
 ---
 
 ## Funcionalidades
 
-### AutenticaÃƒÂ§ÃƒÂ£o
+### Autenticação
 - Login seguro com JWT
-- Controle de sessÃƒÂ£o por token
-- Suporte a recuperaÃƒÂ§ÃƒÂ£o de senha
+- Controle de sessão por token
+- Suporte a recuperação de senha
 
-### UsuÃƒÂ¡rios
+### Usuários
 - Cadastro completo com perfis
-- Hierarquia de permissÃƒÂµes: admin, manager, operator, viewer
-- AtivaÃƒÂ§ÃƒÂ£o/desativaÃƒÂ§ÃƒÂ£o de usuÃƒÂ¡rios
+- Hierarquia de permissões: admin, manager, operator, viewer
+- Ativação/desativação de usuários
 
 ### CRM
-- Cadastro de clientes com busca e paginaÃƒÂ§ÃƒÂ£o
-- HistÃƒÂ³rico de vendas por cliente
+- Cadastro de clientes com busca e paginação
+- Histórico de vendas por cliente
 - Status de cliente (ativo/inativo)
 
 ### Produtos
-- Cadastro com SKU ÃƒÂºnico
-- Categorias e preÃƒÂ§os
+- Cadastro com SKU único
+- Categorias e preços
 - Controle de imagem do produto
 
 ### Estoque
-- MovimentaÃƒÂ§ÃƒÂµes de entrada e saÃƒÂ­da
+- Movimentações de entrada e saída
 - Controle de quantidade por produto
 - Alerta de estoque baixo
-- HistÃƒÂ³rico completo de movimentaÃƒÂ§ÃƒÂµes
+- Histórico completo de movimentações
 
 ### Fornecedores
 - Cadastro com dados de contato
 - Busca por nome e documento
 
 ### Compras
-- Pedidos com mÃƒÂºltiplos itens
+- Pedidos com múltiplos itens
 - Recebimento parcial
 - Status: pendente, recebida, cancelada
-- AtualizaÃƒÂ§ÃƒÂ£o automÃƒÂ¡tica de estoque ao receber
+- Atualização automática de estoque ao receber
 
 ### Vendas
-- Registro com mÃƒÂºltiplos itens
-- Baixa automÃƒÂ¡tica de estoque
-- VÃƒÂ­nculo com cliente
-- Status: aberta, concluÃƒÂ­da, cancelada
+- Registro com múltiplos itens
+- Baixa automática de estoque
+- Vínculo com cliente
+- Status: aberta, concluída, cancelada
 
 ### Financeiro
 - Receitas e despesas
 - Fluxo de caixa
-- Categorias personalizÃƒÂ¡veis
+- Categorias personalizáveis
 - Status: pendente, pago, vencido, cancelado
-- RelatÃƒÂ³rio de fluxo de caixa
+- Relatório de fluxo de caixa
 
 ### Agendamentos
-- CalendÃƒÂ¡rio de serviÃƒÂ§os
-- VÃƒÂ­nculo com clientes
+- Calendário de serviços
+- Vínculo com clientes
 - Filtro por data
-- Status: agendado, concluÃƒÂ­do, cancelado
+- Status: agendado, concluído, cancelado
 
 ### Dashboard
 - Indicadores: clientes, produtos, vendas, estoque baixo
-- GrÃƒÂ¡fico de receitas x despesas por mÃƒÂªs
-- GrÃƒÂ¡fico de vendas por mÃƒÂªs
-- GrÃƒÂ¡fico de produtos por categoria
+- Gráfico de receitas x despesas por mês
+- Gráfico de vendas por mês
+- Gráfico de produtos por categoria
 - Valor total em estoque
 
-### RelatÃƒÂ³rios
-- RelatÃƒÂ³rios em JSON, PDF e Excel
+### Relatórios
+- Relatórios em JSON, PDF e Excel
 - Tipos: clientes, produtos, financeiro, estoque, vendas
 - Download direto pelo navegador
 
-### NotificaÃƒÂ§ÃƒÂµes
+### Notificações
 - Alertas de estoque baixo
 - Alertas de contas a vencer
 - Alertas de agenda do dia
 - Marcar como lida / ler todas
 
 ### Auditoria
-- Registro de todas as aÃƒÂ§ÃƒÂµes (criaÃƒÂ§ÃƒÂ£o, alteraÃƒÂ§ÃƒÂ£o, exclusÃƒÂ£o)
+- Registro de todas as ações (criação, alteração, exclusão)
 - Registro de login e logout
-- Registro de exportaÃƒÂ§ÃƒÂ£o de relatÃƒÂ³rios
-- IP do usuÃƒÂ¡rio registrado
+- Registro de exportação de relatórios
+- IP do usuário registrado
 
 ### Multiempresa
 - Isolamento completo por `company_id`
-- Empresas nÃƒÂ£o visualizam dados umas das outras
+- Empresas não visualizam dados umas das outras
 - Cadastro e gerenciamento de empresas
 
 ---
 
-## MÃƒÂ³dulos Implementados
+## Módulos Implementados
 
-| MÃƒÂ³dulo       | Status |
+| Módulo       | Status |
 |--------------|--------|
-| AutenticaÃƒÂ§ÃƒÂ£o | Ã¢Å“â€¦      |
-| UsuÃƒÂ¡rios     | Ã¢Å“â€¦      |
-| CRM          | Ã¢Å“â€¦      |
-| Produtos     | Ã¢Å“â€¦      |
-| Estoque      | Ã¢Å“â€¦      |
-| Fornecedores | Ã¢Å“â€¦      |
-| Compras      | Ã¢Å“â€¦      |
-| Vendas       | Ã¢Å“â€¦      |
-| Financeiro   | Ã¢Å“â€¦      |
-| Agendamentos | Ã¢Å“â€¦      |
-| Dashboard    | Ã¢Å“â€¦      |
-| RelatÃƒÂ³rios   | Ã¢Å“â€¦      |
-| NotificaÃƒÂ§ÃƒÂµes | Ã¢Å“â€¦      |
-| Auditoria    | Ã¢Å“â€¦      |
-| Multiempresa | Ã¢Å“â€¦      |
+| Autenticação | ✅      |
+| Usuários     | ✅      |
+| CRM          | ✅      |
+| Produtos     | ✅      |
+| Estoque      | ✅      |
+| Fornecedores | ✅      |
+| Compras      | ✅      |
+| Vendas       | ✅      |
+| Financeiro   | ✅      |
+| Agendamentos | ✅      |
+| Dashboard    | ✅      |
+| Relatórios   | ✅      |
+| Notificações | ✅      |
+| Auditoria    | ✅      |
+| Multiempresa | ✅      |
 
 ---
 
@@ -204,12 +203,12 @@ O Nexus unifica **tudo em um ÃƒÂºnico sistema**, com dados centralizados, ac
 |--------------|-----------------------------|
 | Node.js      | Runtime JavaScript          |
 | Fastify      | Framework HTTP              |
-| TypeScript   | Tipagem estÃƒÂ¡tica            |
-| JWT          | AutenticaÃƒÂ§ÃƒÂ£o stateless      |
-| Zod          | ValidaÃƒÂ§ÃƒÂ£o de schemas        |
+| TypeScript   | Tipagem estática            |
+| JWT          | Autenticação stateless      |
+| Zod          | Validação de schemas        |
 | bcryptjs     | Hash de senhas              |
 | mysql2       | Driver MySQL                |
-| Prisma       | ORM (mÃƒÂ³dulo de auth)        |
+| Prisma       | ORM (módulo de auth)        |
 
 ### Frontend
 | Tecnologia   | Finalidade                  |
@@ -218,86 +217,86 @@ O Nexus unifica **tudo em um ÃƒÂºnico sistema**, com dados centralizados, ac
 | Vite         | Bundler e dev server        |
 | Tailwind CSS | Framework de estilos        |
 | React Native | Aplicativo mobile           |
-| Recharts     | GrÃƒÂ¡ficos e charts           |
+| Recharts     | Gráficos e charts           |
 | Axios        | HTTP client                 |
 
 ### Banco de Dados
 | Tecnologia   | Finalidade                  |
 |--------------|-----------------------------|
 | MySQL 8+     | Banco relacional            |
-| Migrations   | EvoluÃƒÂ§ÃƒÂ£o do schema          |
+| Migrations   | Evolução do schema          |
 | Seeds        | Dados iniciais              |
 
 ### DevOps
 | Tecnologia     | Finalidade                  |
 |----------------|-----------------------------|
-| Git            | Controle de versÃƒÂ£o          |
+| Git            | Controle de versão          |
 | GitHub Actions | CI/CD                       |
-| Vitest         | Testes unitÃƒÂ¡rios            |
+| Vitest         | Testes unitários            |
 
 ---
 
 ## Estrutura de Pastas
 
-```
+```text
 nexusbusinessmanager/
-Ã¢â€Å“Ã¢â€â‚¬Ã¢â€â‚¬ backend/           Ã¢â€ â€™ API REST (Fastify + TypeScript)
-Ã¢â€â€š   Ã¢â€Å“Ã¢â€â‚¬Ã¢â€â‚¬ src/
-Ã¢â€â€š   Ã¢â€â€š   Ã¢â€Å“Ã¢â€â‚¬Ã¢â€â‚¬ modules/   Ã¢â€ â€™ 15 mÃƒÂ³dulos de negÃƒÂ³cio
-Ã¢â€â€š   Ã¢â€â€š   Ã¢â€Å“Ã¢â€â‚¬Ã¢â€â‚¬ shared/    Ã¢â€ â€™ Middlewares, utils, conexÃƒÂ£o DB
-Ã¢â€â€š   Ã¢â€â€š   Ã¢â€â€Ã¢â€â‚¬Ã¢â€â‚¬ tests/     Ã¢â€ â€™ Testes unitÃƒÂ¡rios (Vitest)
-Ã¢â€â€š   Ã¢â€â€Ã¢â€â‚¬Ã¢â€â‚¬ database/
-Ã¢â€â€š       Ã¢â€â€Ã¢â€â‚¬Ã¢â€â‚¬ migrations/Ã¢â€ â€™ MigraÃƒÂ§ÃƒÂµes SQL versionadas
-Ã¢â€Å“Ã¢â€â‚¬Ã¢â€â‚¬ frontend/          Ã¢â€ â€™ AplicaÃƒÂ§ÃƒÂ£o web (React + Vite)
-Ã¢â€â€š   Ã¢â€â€Ã¢â€â‚¬Ã¢â€â‚¬ src/
-Ã¢â€â€š       Ã¢â€Å“Ã¢â€â‚¬Ã¢â€â‚¬ pages/     Ã¢â€ â€™ PÃƒÂ¡ginas por mÃƒÂ³dulo
-Ã¢â€â€š       Ã¢â€Å“Ã¢â€â‚¬Ã¢â€â‚¬ components/Ã¢â€ â€™ Componentes reutilizÃƒÂ¡veis
-Ã¢â€â€š       Ã¢â€â€Ã¢â€â‚¬Ã¢â€â‚¬ contexts/  Ã¢â€ â€™ Contexto de autenticaÃƒÂ§ÃƒÂ£o
-Ã¢â€Å“Ã¢â€â‚¬Ã¢â€â‚¬ mobile/            Ã¢â€ â€™ Aplicativo mobile (React Native)
-Ã¢â€Å“Ã¢â€â‚¬Ã¢â€â‚¬ database/          Ã¢â€ â€™ Schema SQL e scripts de backup
-Ã¢â€Å“Ã¢â€â‚¬Ã¢â€â‚¬ docs/              Ã¢â€ â€™ DocumentaÃƒÂ§ÃƒÂ£o completa
-Ã¢â€â€š   Ã¢â€Å“Ã¢â€â‚¬Ã¢â€â‚¬ en/            Ã¢â€ â€™ DocumentaÃƒÂ§ÃƒÂ£o em inglÃƒÂªs
-Ã¢â€â€š   Ã¢â€â€Ã¢â€â‚¬Ã¢â€â‚¬ screenshots/   Ã¢â€ â€™ Capturas de tela
-Ã¢â€Å“Ã¢â€â‚¬Ã¢â€â‚¬ assets/            Ã¢â€ â€™ Recursos de branding
-Ã¢â€â€Ã¢â€â‚¬Ã¢â€â‚¬ .github/
-    Ã¢â€â€Ã¢â€â‚¬Ã¢â€â‚¬ workflows/     Ã¢â€ â€™ CI/CD (GitHub Actions)
+├── backend/           → API REST (Fastify + TypeScript)
+│   ├── src/
+│   │   ├── modules/   → 15 módulos de negócio
+│   │   ├── shared/    → Middlewares, utils, conexão DB
+│   │   └── tests/     → Testes unitários (Vitest)
+│   └── database/
+│       └── migrations/→ Migrações SQL versionadas
+├── frontend/          → Aplicação web (React + Vite)
+│   └── src/
+│       ├── pages/     → Páginas por módulo
+│       ├── components/→ Componentes reutilizáveis
+│       └── contexts/  → Contexto de autenticação
+├── mobile/            → Aplicativo mobile (React Native)
+├── database/          → Schema SQL e scripts de backup
+├── docs/              → Documentação completa
+│   ├── en/            → Documentação em inglês
+│   └── screenshots/   → Capturas de tela
+├── assets/            → Recursos de branding
+└── .github/
+    └── workflows/     → CI/CD (GitHub Actions)
 ```
 
 ---
 
 ## Multiempresa
 
-O Nexus Business Manager foi projetado com suporte nativo a **mÃƒÂºltiplas empresas** (SaaS multi-tenant).
+O Nexus Business Manager foi projetado com suporte nativo a **múltiplas empresas** (SaaS multi-tenant).
 
 ### Como funciona
 
 1. Cada tabela de dados possui uma coluna `company_id`
 2. Toda consulta SQL inclui `WHERE company_id = ?`
-3. O token JWT contÃƒÂ©m o `companyId` do usuÃƒÂ¡rio logado
-4. O middleware de autenticaÃƒÂ§ÃƒÂ£o extrai e repassa o `company_id` automaticamente
+3. O token JWT contém o `companyId` do usuário logado
+4. O middleware de autenticação extrai e repassa o `company_id` automaticamente
 
 ### Isolamento
 
-- Empresas **nÃƒÂ£o visualizam** dados de outras empresas
-- UsuÃƒÂ¡rios pertencem a uma ÃƒÂºnica empresa
-- O cadastro de empresas ÃƒÂ© gerenciado pelo mÃƒÂ³dulo de administraÃƒÂ§ÃƒÂ£o
+- Empresas **não visualizam** dados de outras empresas
+- Usuários pertencem a uma única empresa
+- O cadastro de empresas é gerenciado pelo módulo de administração
 - Ideal para franquias, grupos empresariais e prestadores de SaaS
 
 ---
 
-## SeguranÃƒÂ§a
+## Segurança
 
-O projeto implementa mÃƒÂºltiplas camadas de seguranÃƒÂ§a:
+O projeto implementa múltiplas camadas de segurança:
 
-| Camada          | DescriÃƒÂ§ÃƒÂ£o                                      |
+| Camada          | Descrição                                      |
 |-----------------|------------------------------------------------|
-| **JWT**         | Tokens com expiraÃƒÂ§ÃƒÂ£o configurÃƒÂ¡vel              |
+| **JWT**         | Tokens com expiração configurável              |
 | **bcryptjs**    | Hash seguro com salt para senhas               |
-| **Rate Limit**  | 100 requisiÃƒÂ§ÃƒÂµes/min global, 5 tentativas de login |
-| **Helmet**      | Headers HTTP de seguranÃƒÂ§a (XSS, CSP, HSTS)     |
-| **Zod**         | ValidaÃƒÂ§ÃƒÂ£o rigorosa de todas as entradas        |
-| **PermissÃƒÂµes**  | Hierarquia admin > manager > operator > viewer |
-| **Auditoria**   | Registro de todas as aÃƒÂ§ÃƒÂµes com IP e data       |
+| **Rate Limit**  | 100 requisições/min global, 5 tentativas de login |
+| **Helmet**      | Headers HTTP de segurança (XSS, CSP, HSTS)     |
+| **Zod**         | Validação rigorosa de todas as entradas        |
+| **Permissões**  | Hierarquia admin > manager > operator > viewer |
+| **Auditoria**   | Registro de todas as ações com IP e data       |
 | **CORS**        | Controle de origens permitidas                 |
 
 ---
@@ -305,44 +304,44 @@ O projeto implementa mÃƒÂºltiplas camadas de seguranÃƒÂ§a:
 ## Arquitetura
 
 ```text
-Ã¢â€Å’Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€Â
-Ã¢â€â€š   Frontend Web      Ã¢â€â€š
-Ã¢â€â€š React + TypeScript  Ã¢â€â€š
-Ã¢â€â€Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€Â¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€Ëœ
-           Ã¢â€â€š HTTP + JWT
-           Ã¢â€“Â¼
-Ã¢â€Å’Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€Â
-Ã¢â€â€š   API REST          Ã¢â€â€š
-Ã¢â€â€š Fastify + Node.js   Ã¢â€â€š
-Ã¢â€â€š TypeScript + Zod    Ã¢â€â€š
-Ã¢â€â€Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€Â¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€Ëœ
-           Ã¢â€â€š
-           Ã¢â€“Â¼
-Ã¢â€Å’Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€Â
-Ã¢â€â€š 15 MÃƒÂ³dulos ERP      Ã¢â€â€š
-Ã¢â€â€š CRM Ã¢â‚¬Â¢ Estoque       Ã¢â€â€š
-Ã¢â€â€š Compras Ã¢â‚¬Â¢ Vendas    Ã¢â€â€š
-Ã¢â€â€š Financeiro          Ã¢â€â€š
-Ã¢â€â€š Agenda Ã¢â‚¬Â¢ RelatÃƒÂ³rios Ã¢â€â€š
-Ã¢â€â€š Auditoria           Ã¢â€â€š
-Ã¢â€â€š Multiempresa        Ã¢â€â€š
-Ã¢â€â€Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€Â¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€Ëœ
-           Ã¢â€â€š
-           Ã¢â€“Â¼
-Ã¢â€Å’Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€Â
-Ã¢â€â€š MySQL               Ã¢â€â€š
-Ã¢â€â€š company_id          Ã¢â€â€š
-Ã¢â€â€š Auditoria           Ã¢â€â€š
-Ã¢â€â€Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€Ëœ
+┌─────────────────────┐
+│   Frontend Web      │
+│ React + TypeScript  │
+└──────────┬──────────┘
+           │ HTTP + JWT
+           ▼
+┌─────────────────────┐
+│   API REST          │
+│ Fastify + Node.js   │
+│ TypeScript + Zod    │
+└──────────┬──────────┘
+           │
+           ▼
+┌─────────────────────┐
+│ 15 Módulos ERP      │
+│ CRM • Estoque       │
+│ Compras • Vendas    │
+│ Financeiro          │
+│ Agenda • Relatórios │
+│ Auditoria           │
+│ Multiempresa        │
+└──────────┬──────────┘
+           │
+           ▼
+┌─────────────────────┐
+│ MySQL               │
+│ company_id          │
+│ Auditoria           │
+└─────────────────────┘
 ```
 
-### SeguranÃƒÂ§a
+### Segurança
 
 * JWT Authentication
 * Rate Limiting
 * Helmet
 * CORS
-* Hierarquia de PermissÃƒÂµes
+* Hierarquia de Permissões
 * Isolamento Multiempresa
 
 ### Arquitetura
@@ -356,9 +355,9 @@ O projeto implementa mÃƒÂºltiplas camadas de seguranÃƒÂ§a:
 ### Escalabilidade
 
 * Arquitetura modular
-* SeparaÃƒÂ§ÃƒÂ£o por domÃƒÂ­nio
+* Separação por domínio
 * Preparado para SaaS
-* Preparado para integraÃƒÂ§ÃƒÂµes futuras
+* Preparado para integrações futuras
 
 ---
 
@@ -368,7 +367,7 @@ O projeto utiliza **MySQL 8+** como banco de dados relacional.
 
 ### Migrations
 
-As migrations estÃƒÂ£o em `backend/database/migrations/` e sÃƒÂ£o executadas em ordem numÃƒÂ©rica:
+As migrations estão em `backend/database/migrations/` e são executadas em ordem numérica:
 
 ```bash
 npm run migrate
@@ -376,13 +375,13 @@ npm run migrate
 
 ### Seeds
 
-O seed inicial cria o administrador e a empresa padrÃƒÂ£o:
+O seed inicial cria o administrador e a empresa padrão:
 
 ```bash
 npm run seed
 ```
 
-O seed de demonstraÃƒÂ§ÃƒÂ£o popula o banco com dados realistas (clientes, produtos, vendas, etc.):
+O seed de demonstração popula o banco com dados realistas (clientes, produtos, vendas, etc.):
 
 ```bash
 npm run demo-seed
@@ -390,19 +389,19 @@ npm run demo-seed
 
 ---
 
-## InstalaÃƒÂ§ÃƒÂ£o
+## Instalação
 
-### PrÃƒÂ©-requisitos
+### Pré-requisitos
 
 - Node.js >= 20
 - MySQL >= 8.0
 - Git
-- npm (incluÃƒÂ­do com Node.js)
+- npm (incluído com Node.js)
 
 ### Passo a passo
 
 ```bash
-# 1. Clone o repositÃƒÂ³rio
+# 1. Clone o repositório
 git clone https://github.com/claytonmarcelo/Nexus-Business-Manager.git
 cd nexusbusinessmanager
 
@@ -425,9 +424,9 @@ npm install
 npm run dev
 ```
 
-A API estarÃƒÂ¡ disponÃƒÂ­vel em `http://localhost:3333` e o frontend em `http://localhost:5173`.
+A API estará disponível em `http://localhost:3333` e o frontend em `http://localhost:5173`.
 
-### Dados de demonstraÃƒÂ§ÃƒÂ£o
+### Dados de demonstração
 
 ```bash
 cd backend
@@ -440,9 +439,9 @@ Acesse com:
 
 ---
 
-## ConfiguraÃƒÂ§ÃƒÂ£o
+## Configuração
 
-### VariÃƒÂ¡veis de Ambiente
+### Variáveis de Ambiente
 
 Crie um arquivo `.env` na pasta `backend/` baseado no `.env.example`:
 
@@ -462,54 +461,55 @@ DB_PASSWORD=
 
 ---
 
-## DocumentaÃƒÂ§ÃƒÂ£o
+## Documentação
 
-A documentaÃƒÂ§ÃƒÂ£o completa estÃƒÂ¡ disponÃƒÂ­vel na pasta `docs/`:
+A documentação completa está disponível na pasta `docs/`:
 
-| Documento               | DescriÃƒÂ§ÃƒÂ£o                          |
+| Documento               | Descrição                          |
 |-------------------------|------------------------------------|
 | [Arquitetura](docs/arquitetura.md) | Diagramas e fluxos do sistema     |
-| [Deploy](docs/deploy.md)            | Guia de implantaÃƒÂ§ÃƒÂ£o em produÃƒÂ§ÃƒÂ£o   |
-| [Backup](docs/backup.md)            | Backup e restauraÃƒÂ§ÃƒÂ£o do banco     |
+| [Deploy](docs/deploy.md)            | Guia de implantação em produção   |
+| [Backup](docs/backup.md)            | Backup e restauração do banco     |
 | [Monitoramento](docs/monitoramento.md) | Health check e logs            |
-| [Testes](docs/tests.md)             | ExecuÃƒÂ§ÃƒÂ£o e cobertura de testes    |
-| [Casos de Uso](docs/use-cases.md)   | Exemplos reais de aplicaÃƒÂ§ÃƒÂ£o       |
-| [Conta Demo](docs/demo-account.md)  | Credenciais de demonstraÃƒÂ§ÃƒÂ£o       |
-| [LicenÃƒÂ§a (PT)](docs/license-pt-br.md) | ExplicaÃƒÂ§ÃƒÂ£o da licenÃƒÂ§a MIT       |
+| [Testes](docs/tests.md)             | Execução e cobertura de testes    |
+| [Casos de Uso](docs/use-cases.md)   | Exemplos reais de aplicação       |
+| [Conta Demo](docs/demo-account.md)  | Credenciais de demonstração       |
+| [Licença (PT)](docs/license-pt-br.md) | Explicação da licença MIT       |
 
 ---
 
-## HistÃƒÂ³rico de VersÃƒÂµes
+## Histórico de Versões
 
-Consulte o arquivo [CHANGELOG.md](CHANGELOG.md) para visualizar todas as alteraÃƒÂ§ÃƒÂµes do projeto.
+Consulte o arquivo [CHANGELOG.md](CHANGELOG.md) para visualizar todas as alterações do projeto.
 
 ---
 
 ## Roadmap
 
-### Completed
-- [x] Project foundation (structure, design system, database)
-- [x] Authentication (login, JWT, permissions)
-- [x] Dashboard with KPIs and charts
-- [x] Full CRM (clients, history)
-- [x] Inventory control (products, movements)
-- [x] Financial management (accounts, cash flow)
-- [x] Scheduling (calendar, events)
-- [x] Multi-company architecture (SaaS)
-- [x] Exportable reports (PDF, Excel)
-- [x] Notifications and audit
-- [x] CI/CD pipeline
-- [x] Automated unit tests
-- [x] Complete bilingual documentation
-### Future
+### Concluído
+- [x] Fundação do projeto (estrutura, design system, banco)
+- [x] Autenticação (login, JWT, permissões)
+- [x] Dashboard com indicadores e gráficos
+- [x] CRM completo (clientes, histórico)
+- [x] Controle de estoque (produtos, movimentações)
+- [x] Gestão financeira (contas, fluxo de caixa)
+- [x] Agendamento (calendário, eventos)
+- [x] Arquitetura multiempresa (SaaS)
+- [x] Relatórios exportáveis (PDF, Excel)
+- [x] Notificações e auditoria
+- [x] Pipeline de CI/CD
+- [x] Testes unitários automatizados
+- [x] Documentação completa bilíngue
 
-#### Phase 9 Ã¢â‚¬â€ App Marketplace
+### Futuro
 
-ÃƒÂrea futura para permitir integraÃƒÂ§ÃƒÂ£o de mÃƒÂ³dulos, extensÃƒÂµes e serviÃƒÂ§os externos ao Nexus Business Manager.
+#### Fase 9 — Marketplace de Aplicativos
+
+Área futura para permitir integração de módulos, extensões e serviços externos ao Nexus Business Manager.
 
 **Possibilidades:**
 
-- IntegraÃƒÂ§ÃƒÂµes com WhatsApp
+- Integrações com WhatsApp
 - Google Calendar
 - Google Drive
 - PIX
@@ -517,36 +517,36 @@ Consulte o arquivo [CHANGELOG.md](CHANGELOG.md) para visualizar todas as altera�
 - Mercado Pago
 - Aplicativos internos
 - Plugins empresariais
-- ExtensÃƒÂµes por empresa
+- Extensões por empresa
 
 > Status: Planejado
 
-#### Fase 10 Ã¢â‚¬â€ BI e InteligÃƒÂªncia de NegÃƒÂ³cios
+#### Fase 10 — BI e Inteligência de Negócios
 
-Camada futura de anÃƒÂ¡lise estratÃƒÂ©gica para transformar dados operacionais em indicadores gerenciais.
+Camada futura de análise estratégica para transformar dados operacionais em indicadores gerenciais.
 
 **Possibilidades:**
 
-- Dashboards avanÃƒÂ§ados
+- Dashboards avançados
 - KPIs personalizados
-- GrÃƒÂ¡ficos comparativos
-- AnÃƒÂ¡lise de vendas
-- AnÃƒÂ¡lise financeira
-- PrevisÃƒÂ£o de estoque
-- RelatÃƒÂ³rios executivos
-- ExportaÃƒÂ§ÃƒÂ£o analÃƒÂ­tica
+- Gráficos comparativos
+- Análise de vendas
+- Análise financeira
+- Previsão de estoque
+- Relatórios executivos
+- Exportação analítica
 
 > Status: Planejado
 
 ---
 
-## DemonstraÃƒÂ§ÃƒÂ£o
+## Demonstração
 
 ### Demo Online
 
-> *Em breve: link para demonstraÃƒÂ§ÃƒÂ£o online.*
+> *Em breve: link para demonstração online.*
 
-Enquanto isso, vocÃƒÂª pode rodar o projeto localmente:
+Enquanto isso, você pode rodar o projeto localmente:
 
 ```bash
 git clone https://github.com/claytonmarcelo/Nexus-Business-Manager.git
@@ -556,13 +556,13 @@ cd backend && npm install && npm run dev
 cd frontend && npm install && npm run dev
 ```
 
-Acesse `http://localhost:5173` e faÃƒÂ§a login com:
+Acesse `http://localhost:5173` e faça login com:
 - **Email:** `admin@nexusdemo.com`
 - **Senha:** `123456`
 
 ---
 
-## Ã°Å¸â€˜Â¨Ã¢â‚¬ÂÃ°Å¸â€™Â» Desenvolvedor
+## 👨‍💻 Desenvolvedor
 
 <table>
   <tr>
@@ -571,31 +571,30 @@ Acesse `http://localhost:5173` e faÃƒÂ§a login com:
     </td>
     <td>
       <strong>C. Marcelo Dev.</strong><br>
-      <strong>Ã°Å¸â€œÂ</strong> Brasil<br><br>
+      <strong>📍</strong> Brasil<br><br>
       <a href="https://github.com/claytonmarcelo" target="_blank"><img src="https://img.shields.io/badge/GitHub-claytonmarcelo-181717?style=flat-square&logo=github"></a>
       <a href="https://www.youtube.com/@c.marcelodev.brasil" target="_blank"><img src="https://img.shields.io/badge/YouTube-CMarceloDev-FF0000?style=flat-square&logo=youtube"></a>
-      <a href="https://cmarcelodev.com" target="_blank"><img src="https://img.shields.io/badge/PortfÃƒÂ³lio-cmarcelodev.com-000000?style=flat-square"></a>
+      <a href="https://cmarcelodev.com" target="_blank"><img src="https://img.shields.io/badge/Portfólio-cmarcelodev.com-000000?style=flat-square"></a>
       <a href="https://www.linkedin.com/in/clayton-marcelo-dev/" target="_blank"><img src="https://img.shields.io/badge/LinkedIn-claytonmarcelo-0A66C2?style=flat-square&logo=linkedin"></a><br><br>
-      <em>Desenvolvedor Full Stack especializado em React, React Native, Node.js, Fastify, TypeScript, MySQL e desenvolvimento de soluÃƒÂ§ÃƒÂµes SaaS empresariais.</em>
+      <em>Desenvolvedor Full Stack especializado em React, React Native, Node.js, Fastify, TypeScript, MySQL e desenvolvimento de soluções SaaS empresariais.</em>
     </td>
   </tr>
 </table>
 
 ---
 
-## LicenÃƒÂ§a
+## Licença
 
-Este projeto estÃƒÂ¡ licenciado sob a **MIT License** Ã¢â‚¬â€ veja o arquivo [LICENSE](LICENSE) para detalhes.
+Este projeto está licenciado sob a **MIT License** — veja o arquivo [LICENSE](LICENSE) para detalhes.
 
-Leia a explicaÃƒÂ§ÃƒÂ£o simplificada:
-- [PortuguÃƒÂªs](docs/license-pt-br.md)
+Leia a explicação simplificada:
+- [Português](docs/license-pt-br.md)
 - [English](docs/en/license-en.md)
 
 ---
 
 <p align="center">
-  <em>Desenvolvido com dedicaÃƒÂ§ÃƒÂ£o por <strong>C. Marcelo Dev. Brasil</strong>.</em>
+  <em>Desenvolvido com dedicação por <strong>C. Marcelo Dev. Brasil</strong>.</em>
   <br>
-  <a href="https://github.com/claytonmarcelo/Nexus-Business-Manager">Ã°Å¸â€â€” GitHub</a>
+  <a href="https://github.com/claytonmarcelo/Nexus-Business-Manager">🔗 GitHub</a>
 </p>
-
