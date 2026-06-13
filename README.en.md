@@ -2,7 +2,7 @@
   <img
     src="assets/branding/Logo.png"
     alt="Nexus Business Manager"
-    width="550"
+    width="650"
   >
 </p>
 
@@ -16,7 +16,7 @@
 <p align="center">
   <a href="README.md">
     <img src="https://flagcdn.com/w20/br.png" width="20" alt="Brasil">
-    Português
+    PortuguÃªs
   </a>
   |
   <img src="https://flagcdn.com/w20/us.png" width="20" alt="USA">
@@ -178,21 +178,21 @@ Nexus unifies **everything in a single system** with centralized data, web and m
 
 | Module | Status |
 |----------|--------|
-| Authentication | ✅ |
-| Users | ✅ |
-| CRM | ✅ |
-| Products | ✅ |
-| Inventory | ✅ |
-| Suppliers | ✅ |
-| Purchases | ✅ |
-| Sales | ✅ |
-| Financial | ✅ |
-| Appointments | ✅ |
-| Dashboard | ✅ |
-| Reports | ✅ |
-| Notifications | ✅ |
-| Audit | ✅ |
-| Multi-company | ✅ |
+| Authentication | âœ… |
+| Users | âœ… |
+| CRM | âœ… |
+| Products | âœ… |
+| Inventory | âœ… |
+| Suppliers | âœ… |
+| Purchases | âœ… |
+| Sales | âœ… |
+| Financial | âœ… |
+| Appointments | âœ… |
+| Dashboard | âœ… |
+| Reports | âœ… |
+| Notifications | âœ… |
+| Audit | âœ… |
+| Multi-company | âœ… |
 
 ---
 
@@ -240,26 +240,26 @@ Nexus unifies **everything in a single system** with centralized data, web and m
 
 ```
 nexusbusinessmanager/
-├── backend/
-│   ├── src/
-│   │   ├── modules/
-│   │   ├── shared/
-│   │   └── tests/
-│   └── database/
-│       └── migrations/
-├── frontend/
-│   └── src/
-│       ├── pages/
-│       ├── components/
-│       └── contexts/
-├── mobile/
-├── database/
-├── docs/
-│   ├── en/
-│   └── screenshots/
-├── assets/
-└── .github/
-    └── workflows/
+â”œâ”€â”€ backend/
+â”‚   â”œâ”€â”€ src/
+â”‚   â”‚   â”œâ”€â”€ modules/
+â”‚   â”‚   â”œâ”€â”€ shared/
+â”‚   â”‚   â””â”€â”€ tests/
+â”‚   â””â”€â”€ database/
+â”‚       â””â”€â”€ migrations/
+â”œâ”€â”€ frontend/
+â”‚   â””â”€â”€ src/
+â”‚       â”œâ”€â”€ pages/
+â”‚       â”œâ”€â”€ components/
+â”‚       â””â”€â”€ contexts/
+â”œâ”€â”€ mobile/
+â”œâ”€â”€ database/
+â”œâ”€â”€ docs/
+â”‚   â”œâ”€â”€ en/
+â”‚   â””â”€â”€ screenshots/
+â”œâ”€â”€ assets/
+â””â”€â”€ .github/
+    â””â”€â”€ workflows/
 ```
 
 ---
@@ -304,32 +304,32 @@ The project implements multiple security layers:
 ## Architecture
 
 ```text
-┌─────────────────────────────┐
-│ Frontend                    │
-│ React + TypeScript          │
-└─────────────┬───────────────┘
-              │
-              ▼
-┌─────────────────────────────┐
-│ Backend API                 │
-│ Fastify + Node.js           │
-│ JWT + Zod + Prisma          │
-└─────────────┬───────────────┘
-              │
-              ▼
-┌─────────────────────────────┐
-│ Business Modules            │
-│ CRM • Inventory • Sales     │
-│ Financial • Reports         │
-│ Notifications • Audit       │
-│ Multi-company               │
-└─────────────┬───────────────┘
-              │
-              ▼
-┌─────────────────────────────┐
-│ MySQL 8                     │
-│ Multi-tenant Database       │
-└─────────────────────────────┘
+â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
+â”‚ Frontend                    â”‚
+â”‚ React + TypeScript          â”‚
+â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¬â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
+              â”‚
+              â–¼
+â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
+â”‚ Backend API                 â”‚
+â”‚ Fastify + Node.js           â”‚
+â”‚ JWT + Zod + Prisma          â”‚
+â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¬â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
+              â”‚
+              â–¼
+â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
+â”‚ Business Modules            â”‚
+â”‚ CRM â€¢ Inventory â€¢ Sales     â”‚
+â”‚ Financial â€¢ Reports         â”‚
+â”‚ Notifications â€¢ Audit       â”‚
+â”‚ Multi-company               â”‚
+â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¬â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
+              â”‚
+              â–¼
+â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
+â”‚ MySQL 8                     â”‚
+â”‚ Multi-tenant Database       â”‚
+â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
 ```
 
 ### Security
@@ -493,7 +493,7 @@ Complete documentation is available in the `docs/` folder:
 - [x] Complete bilingual documentation
 ### Future
 
-#### Phase 9 — App Marketplace
+#### Phase 9 â€” App Marketplace
 
 Future area to enable integration of modules, extensions and external services into Nexus Business Manager.
 
@@ -511,7 +511,7 @@ Future area to enable integration of modules, extensions and external services i
 
 > Status: Planned
 
-#### Phase 10 — BI and Business Intelligence
+#### Phase 10 â€” BI and Business Intelligence
 
 Future strategic analysis layer to transform operational data into management indicators.
 
@@ -552,7 +552,7 @@ Access `http://localhost:5173` and log in with:
 
 ---
 
-## 👨‍💻 Developer
+## ðŸ‘¨â€ðŸ’» Developer
 
 <table>
   <tr>
@@ -561,7 +561,7 @@ Access `http://localhost:5173` and log in with:
     </td>
     <td>
       <strong>C. Marcelo Dev.</strong><br>
-      <strong>📍</strong> Brazil<br><br>
+      <strong>ðŸ“</strong> Brazil<br><br>
       <a href="https://github.com/claytonmarcelo" target="_blank">
         <img src="https://img.shields.io/badge/GitHub-claytonmarcelo-181717?style=flat-square&logo=github" alt="GitHub">
       </a>
@@ -587,11 +587,11 @@ Access `http://localhost:5173` and log in with:
 
 ## License
 
-This project is licensed under the **MIT License** — see the [LICENSE](LICENSE) file for details.
+This project is licensed under the **MIT License** â€” see the [LICENSE](LICENSE) file for details.
 
 Read the simplified explanation:
 
-* [Português](docs/license-pt-br.md)
+* [PortuguÃªs](docs/license-pt-br.md)
 * [English](docs/en/license-en.md)
 
 ---
@@ -599,5 +599,5 @@ Read the simplified explanation:
 <p align="center">
   <em>Built with dedication by <strong>C. Marcelo Dev. Brazil</strong>.</em>
   <br>
-  <a href="https://github.com/claytonmarcelo/Nexus-Business-Manager">🔗 GitHub</a>
+  <a href="https://github.com/claytonmarcelo/Nexus-Business-Manager">ðŸ”— GitHub</a>
 </p>
