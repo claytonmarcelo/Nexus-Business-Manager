@@ -284,20 +284,20 @@ O Nexus Business Manager foi projetado com suporte nativo a **múltiplas empresa
 
 ---
 
-## Segurança
+## Security
 
-O projeto implementa múltiplas camadas de segurança:
+The project implements multiple security layers:
 
-| Camada          | Descrição                                      |
-|-----------------|------------------------------------------------|
-| **JWT**         | Tokens com expiração configurável              |
-| **bcryptjs**    | Hash seguro com salt para senhas               |
-| **Rate Limit**  | 100 requisições/min global, 5 tentativas de login |
-| **Helmet**      | Headers HTTP de segurança (XSS, CSP, HSTS)     |
-| **Zod**         | Validação rigorosa de todas as entradas        |
-| **Permissões**  | Hierarquia admin > manager > operator > viewer |
-| **Auditoria**   | Registro de todas as ações com IP e data       |
-| **CORS**        | Controle de origens permitidas                 |
+| Layer           | Description                                    |
+| --------------- | ---------------------------------------------- |
+| **JWT**         | Tokens with configurable expiration            |
+| **bcryptjs**    | Secure password hashing with salt              |
+| **Rate Limit**  | 100 requests/min globally, 5 login attempts    |
+| **Helmet**      | Security HTTP headers (XSS, CSP, HSTS)         |
+| **Zod**         | Strict validation of all inputs                |
+| **Permissions** | Hierarchy: admin > manager > operator > viewer |
+| **Audit**       | Logging of all actions with IP and timestamp   |
+| **CORS**        | Allowed origins control                        |
 
 ---
 
@@ -583,15 +583,17 @@ Acesse `http://localhost:5173` e faça login com:
 
 ---
 
-## Licença
+## License
 
-Este projeto está licenciado sob a **MIT License** — veja o arquivo [LICENSE](LICENSE) para detalhes.
+This project is licensed under the **MIT License** — see the [LICENSE](LICENSE) file for details.
 
-Leia a explicação simplificada:
-- [Português](docs/license-pt-br.md)
-- [English](docs/en/license-en.md)
+Read the simplified explanation:
+
+* [Português](docs/license-pt-br.md)
+* [English](docs/en/license-en.md)
 
 ---
+
 
 <p align="center">
   <em>Desenvolvido com dedicação por <strong>C. Marcelo Dev. Brasil</strong>.</em>
