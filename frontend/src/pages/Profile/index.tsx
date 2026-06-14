@@ -181,7 +181,7 @@ export function Profile() {
               Informações do Perfil
             </h2>
             {!editing && (
-              <GradientButton onClick={() => setEditing(true)} size="sm">
+              <GradientButton onClick={() => setEditing(true)} className="text-sm py-2 px-4">
                 Editar
               </GradientButton>
             )}
