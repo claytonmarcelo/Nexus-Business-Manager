@@ -183,12 +183,13 @@ export function Sidebar({ recolhido, alternarRecolhido, mobileAberto, fecharMobi
 
   const sidebarContent = (
     <div className="flex flex-col h-full">
-      <div className={`flex items-center justify-center transition-all duration-300 ${recolhido ? 'h-16 px-2' : 'h-[120px] px-4'}`}>
+      <div className={`flex items-center justify-center transition-all duration-300 ${recolhido ? 'h-20 px-2' : 'h-[140px] px-4'}`}>
         <div className="sidebar-logo-wrapper transition-all duration-300 ease-in-out">
           <img
             src="/assets/Logo.png"
             alt="Nexus Business Manager"
             className={`sidebar-logo transition-all duration-300 ease-in-out ${recolhido ? 'sidebar-logo-collapsed' : ''}`}
+            style={{ maxHeight: recolhido ? '32px' : '100%' }}
           />
         </div>
       </div>
