@@ -518,7 +518,7 @@ input:focus, textarea:focus, select:focus {
 }
 
 .sidebar-logo {
-  width: 150px;
+  width: 142.5px;
   max-width: 95%;
   height: auto;
   display: block;
@@ -529,8 +529,8 @@ input:focus, textarea:focus, select:focus {
 }
 
 .sidebar-logo-collapsed {
-  width: 40px !important;
-  max-width: 40px !important;
+  width: 38px !important;
+  max-width: 38px !important;
   opacity: 0.9;
 }
 
