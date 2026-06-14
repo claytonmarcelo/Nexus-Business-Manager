@@ -194,8 +194,6 @@ Nexus unifies **everything in a single system** with centralized data, web and m
 
 ---
 
-
-
 ## Tech Stack
 
 ### Backend
@@ -306,7 +304,6 @@ The project implements multiple security layers:
 | **CORS**        | Controlled allowed origins                    |
 
 ---
-
 
 ## Architecture
 
@@ -482,7 +479,6 @@ Complete documentation is available in the `docs/` folder:
 
 ---
 
-
 ## Roadmap
 
 ### Completed
@@ -596,9 +592,9 @@ Access `http://localhost:5173` and log in with:
   </em>
 </td>
 ```
+
   </tr>
 </table>
-
 
 ---
 
@@ -612,7 +608,6 @@ Read the simplified explanation:
 * [English](docs/en/license-en.md)
 
 ---
-
 
 <p align="center">
   <em>Built with dedication by <strong>C. Marcelo Dev. Brazil</strong>.</em>
