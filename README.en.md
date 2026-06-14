@@ -195,45 +195,51 @@ Nexus unifies **everything in a single system** with centralized data, web and m
 ---
 
 
+
 ## Tech Stack
 
 ### Backend
-| Technology   | Purpose                     |
-|--------------|-----------------------------|
-| Node.js      | JavaScript runtime          |
-| Fastify      | HTTP framework              |
-| TypeScript   | Static typing               |
-| JWT          | Stateless authentication    |
-| Zod          | Schema validation           |
-| bcryptjs     | Password hashing            |
-| mysql2       | MySQL driver                |
-| Prisma       | ORM (auth module)           |
+
+| Technology | Purpose                  |
+| ---------- | ------------------------ |
+| Node.js    | JavaScript runtime       |
+| Fastify    | HTTP framework           |
+| TypeScript | Static typing            |
+| JWT        | Stateless authentication |
+| Zod        | Schema validation        |
+| bcryptjs   | Password hashing         |
+| mysql2     | MySQL driver             |
+| Prisma     | ORM (auth module)        |
 
 ### Frontend
-| Technology   | Purpose                     |
-|--------------|-----------------------------|
-| React 18     | UI library                  |
-| Vite         | Bundler and dev server      |
-| Tailwind CSS | Styling framework           |
-| React Native | Mobile app                  |
-| Recharts     | Charts and graphs           |
-| Axios        | HTTP client                 |
+
+| Technology   | Purpose                |
+| ------------ | ---------------------- |
+| React 18     | UI library             |
+| Vite         | Bundler and dev server |
+| Tailwind CSS | Styling framework      |
+| React Native | Mobile app             |
+| Recharts     | Charts and graphs      |
+| Axios        | HTTP client            |
 
 ### Database
-| Technology   | Purpose                     |
-|--------------|-----------------------------|
-| MySQL 8+     | Relational database         |
-| Migrations   | Schema evolution            |
-| Seeds        | Initial data                |
+
+| Technology | Purpose             |
+| ---------- | ------------------- |
+| MySQL 8+   | Relational database |
+| Migrations | Schema evolution    |
+| Seeds      | Initial data        |
 
 ### DevOps
-| Technology      | Purpose                     |
-|-----------------|-----------------------------|
-| Git             | Version control             |
-| GitHub Actions  | CI/CD                       |
-| Vitest          | Unit tests                  |
+
+| Technology     | Purpose         |
+| -------------- | --------------- |
+| Git            | Version control |
+| GitHub Actions | CI/CD           |
+| Vitest         | Unit tests      |
 
 ---
+
 
 ## Folder Structure
 
@@ -288,18 +294,19 @@ Nexus Business Manager was designed with native **multi-company support** (SaaS 
 
 The project implements multiple security layers:
 
-| Layer           | Description                                  |
-|-----------------|----------------------------------------------|
-| **JWT**         | Tokens with configurable expiration          |
-| **bcryptjs**    | Secure password hashing with salt            |
-| **Rate Limit**  | 100 requests/min global, 5 login attempts    |
-| **Helmet**      | Security HTTP headers (XSS, CSP, HSTS)       |
-| **Zod**         | Strict input validation                      |
-| **Permissions** | Hierarchy admin > manager > operator > viewer|
-| **Audit**       | All actions logged with IP and timestamp     |
-| **CORS**        | Controlled allowed origins                   |
+| Layer           | Description                                   |
+| --------------- | --------------------------------------------- |
+| **JWT**         | Tokens with configurable expiration           |
+| **bcryptjs**    | Secure password hashing with salt             |
+| **Rate Limit**  | 100 requests/min global, 5 login attempts     |
+| **Helmet**      | Security HTTP headers (XSS, CSP, HSTS)        |
+| **Zod**         | Strict input validation                       |
+| **Permissions** | Hierarchy admin > manager > operator > viewer |
+| **Audit**       | All actions logged with IP and timestamp      |
+| **CORS**        | Controlled allowed origins                    |
 
 ---
+
 
 ## Architecture
 
@@ -462,18 +469,19 @@ DB_PASSWORD=
 
 Complete documentation is available in the `docs/` folder:
 
-| Document                  | Description                        |
-|---------------------------|------------------------------------|
-| [Architecture](docs/en/architecture.md) | System diagrams and flows        |
-| [Deployment](docs/en/deployment.md)     | Production deployment guide      |
-| [Backup](docs/en/backup.md)             | Database backup and restore      |
-| [Monitoring](docs/en/monitoring.md)     | Health check and logs            |
-| [Tests](docs/en/tests.md)               | Test execution and coverage      |
-| [Use Cases](docs/en/use-cases.md)       | Real-world application examples  |
-| [Demo Account](docs/demo-account.md)    | Demo credentials                 |
-| [License (EN)](docs/en/license-en.md)   | MIT License explanation          |
+| Document                                | Description                     |
+| --------------------------------------- | ------------------------------- |
+| [Architecture](docs/en/architecture.md) | System diagrams and flows       |
+| [Deployment](docs/en/deployment.md)     | Production deployment guide     |
+| [Backup](docs/en/backup.md)             | Database backup and restore     |
+| [Monitoring](docs/en/monitoring.md)     | Health check and logs           |
+| [Tests](docs/en/tests.md)               | Test execution and coverage     |
+| [Use Cases](docs/en/use-cases.md)       | Real-world application examples |
+| [Demo Account](docs/demo-account.md)    | Demo credentials                |
+| [License (EN)](docs/en/license-en.md)   | MIT License explanation         |
 
 ---
+
 
 ## Roadmap
 
@@ -596,15 +604,15 @@ Access `http://localhost:5173` and log in with:
 
 ## License
 
-This project is licensed under the **MIT License** Ã¢â‚¬â€ see the [LICENSE](LICENSE) file for details.
+This project is licensed under the **MIT License** — see the [LICENSE](LICENSE) file for details.
 
 Read the simplified explanation:
 
 * [Português](docs/license-pt-br.md)
 * [English](docs/en/license-en.md)
 
-
 ---
+
 
 <p align="center">
   <em>Built with dedication by <strong>C. Marcelo Dev. Brazil</strong>.</em>
