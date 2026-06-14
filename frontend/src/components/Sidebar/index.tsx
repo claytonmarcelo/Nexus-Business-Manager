@@ -183,14 +183,14 @@ export function Sidebar({ recolhido, alternarRecolhido, mobileAberto, fecharMobi
 
   const sidebarContent = (
     <div className="flex flex-col h-full">
-      <div className={`flex items-center justify-center transition-all duration-300 ${recolhido ? 'h-16 p-4' : 'h-[150px] p-0'}`}>
-        {recolhido ? (
-          <img src="/favicon.ico" alt="N" className="h-8 w-8 object-contain transition-all duration-300" />
-        ) : (
-          <div className="w-[150px] h-[150px] flex items-center justify-center">
-            <img src="/assets/Logo.png" alt="Nexus Business Manager" className="w-full h-full object-contain transition-all duration-300" />
-          </div>
-        )}
+      <div className={`flex items-center justify-center transition-all duration-300 ${recolhido ? 'h-16 px-2' : 'h-[120px] px-4'}`}>
+        <div className="sidebar-logo-wrapper transition-all duration-300 ease-in-out">
+          <img
+            src="/assets/Logo.png"
+            alt="Nexus Business Manager"
+            className={`sidebar-logo transition-all duration-300 ease-in-out ${recolhido ? 'sidebar-logo-collapsed' : ''}`}
+          />
+        </div>
       </div>
 
       <nav className="flex-1 px-2 py-2 space-y-0.5 overflow-y-auto overflow-x-hidden custom-scrollbar">
