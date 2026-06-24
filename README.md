@@ -25,7 +25,7 @@
 
 <p align="center">
   <a href="./LICENSE"><img src="https://img.shields.io/badge/license-MIT-green" alt="MIT License"></a>
-  <img src="https://img.shields.io/badge/version-1.0.0-blue" alt="Version">
+  <img src="https://img.shields.io/badge/version-1.1.0-blue" alt="Version">
   <img src="https://img.shields.io/badge/typescript-5.5-3178C6?logo=typescript" alt="TypeScript">
   <img src="https://img.shields.io/badge/node-%3E%3D20-339933?logo=node.js" alt="Node.js">
   <img src="https://img.shields.io/badge/fastify-4.28-000000?logo=fastify" alt="Fastify">
@@ -482,6 +482,31 @@ A documentação completa está disponível na pasta `docs/`:
 
 Consulte o arquivo [CHANGELOG.md](CHANGELOG.md) para visualizar todas as alterações do projeto.
 
+### Últimas Atualizações (v1.1.0 - 2026-06-24)
+
+#### 🎨 Interface & UX
+- **Sidebar adaptativo**: Logo ajusta-se automaticamente (expandido 142.5px / retraído 38px) com transição suave
+- **Redução visual 20%**: Sidebar 240px, header 54px, cards KPI 110px, gap 14px, fontes 0.85rem
+- **Logo não corta**: Container ajustado (expandido 140px / retraído 80px), max-height 32px no modo colapsado
+- **Cards KPI padronizados**: StatsCard reutilizável com cores temáticas (gold, green, blue, purple, rose)
+- **Tabelas compactas**: Font-size 0.85rem, padding 10px 12px
+
+#### 🗄️ Banco de Dados - 24 Migrações Completas
+- **Foreign Keys completas**: audit_logs, crm_leads (created_by), suggestions (company_id, user_id)
+- **system_settings expandido**: company_id, system_name, logo_url, favicon_url, primary_color, theme_mode
+- **system_settings corrigido**: company_id + 5 colunas em ALTER único (evita erro de coluna desconhecida)
+- **notifications**: coluna user_id + índice (escape `\`read\`` palavra reservada)
+- **crm_leads**: created_by nullable + FK ON DELETE SET NULL
+- **suggestions**: FK company_id + user_id ON DELETE CASCADE
+- **Índices de performance**: 21 índices nas tabelas principais (sales, purchases, products, clients, etc.)
+- **Todas 24 migrações aplicam sem erro**
+
+#### 🔧 Build & Qualidade
+- Frontend: `tsc --noEmit` ✅ + `vite build` ✅ (1.61MB JS, 62KB CSS)
+- Backend: `npm run build` ✅ (TypeScript 0 erros)
+- Migrações: 24/24 aplicam com sucesso
+- Graphify: 1.099 nodes, 2.021 edges, 133 communities, graph.html navegável
+
 ---
 
 ## Roadmap
@@ -500,6 +525,11 @@ Consulte o arquivo [CHANGELOG.md](CHANGELOG.md) para visualizar todas as altera�
 - [x] Pipeline de CI/CD
 - [x] Testes unitários automatizados
 - [x] Documentação completa bilíngue
+- [x] **Interface 20% mais compacta (v1.1.0)**
+- [x] **Banco 24/24 migrações + FKs completas (v1.1.0)**
+- [x] **StatsCard padronizado em todas páginas (v1.1.0)**
+- [x] **Sidebar logo adaptativo (v1.1.0)**
+- [x] **Graphify knowledge graph (v1.1.0)**
 
 ### Futuro
 
