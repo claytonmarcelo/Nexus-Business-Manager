@@ -52,4 +52,4 @@ CREATE INDEX IF NOT EXISTS idx_crm_leads_created_at ON crm_leads(created_at);
 -- Índices para notifications
 CREATE INDEX IF NOT EXISTS idx_notifications_company_id ON notifications(company_id);
 CREATE INDEX IF NOT EXISTS idx_notifications_user_id ON notifications(user_id);
-CREATE INDEX IF NOT EXISTS idx_notifications_read ON notifications(read);
+CREATE INDEX IF NOT EXISTS idx_notifications_read ON notifications(`read`);
