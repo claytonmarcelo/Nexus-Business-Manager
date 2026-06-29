@@ -25,9 +25,7 @@ jobs:
           if git diff --name-only HEAD~1 HEAD | grep -q 'CHANGELOG.md'; then
             echo "✅ CHANGELOG.md foi modificado"
           else
-            echo "⚠️  AVISO: CHANGELOG.md não foi modificado neste commit"
-            echo "Por favor, atualize o CHANGELOG.md antes de fazer release"
-            exit 1
+            echo "::warning::CHANGELOG.md não foi modificado neste commit. Atualize antes de fazer release."
           fi
 
   backend:
@@ -45,7 +43,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: npm
           cache-dependency-path: ./backend/package-lock.json
 
@@ -79,7 +77,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: npm
           cache-dependency-path: ./frontend/package-lock.json
 

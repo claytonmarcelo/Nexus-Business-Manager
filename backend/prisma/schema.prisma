@@ -4,7 +4,6 @@ generator client {
 
 datasource db {
   provider = "mysql"
-  url      = env("DATABASE_URL")
 }
 
 model Company {
@@ -18,8 +17,10 @@ model Company {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  users    User[]
-  products Product[]
+  users          User[]
+  products       Product[]
+  customers      Customer[]
+  stockMovements StockMovement[]
 
   @@map("companies")
 }
@@ -72,7 +73,7 @@ model Product {
   createdAt     DateTime @default(now()) @map("created_at")
   updatedAt     DateTime @updatedAt @map("updated_at")
 
-  company        Company         @relation(fields: [companyId], references: [id])
+  company        Company?        @relation(fields: [companyId], references: [id])
   stockMovements StockMovement[]
 
   @@map("products")
@@ -89,7 +90,9 @@ model StockMovement {
   referenceId   Int?     @map("reference_id")
   createdAt     DateTime @default(now()) @map("created_at")
 
-  product Product @relation(fields: [productId], references: [id])
+  product Product  @relation(fields: [productId], references: [id])
+  company Company? @relation(fields: [companyId], references: [id])
 
   @@map("stock_movements")
 }
+
