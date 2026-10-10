@@ -25,6 +25,8 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/), 
 - Alternador de tema perfeitamente centrado no cabeçalho (thumb simétrico no trilho, ícones sol/lua alinhados ao centro vertical), sem alterar cores, tamanho ou animação.
 
 ### Corrigido
+- **Responsividade geral (público + administrativo)**: guarda global `overflow-x: clip` impede a página de arrastar na horizontal sem quebrar o cabeçalho sticky; sidebar off-canvas fechada agora usa `visibility: hidden` (fora do alcance do toque/foco no celular); grades de KPIs e features fluidas com `minmax(min(…, 100%), 1fr)`; textos mono longos (e-mails/SKUs) quebram dentro da célula; alturas com `100dvh` respeitam as barras do navegador mobile. Prova: `tools/verify-responsive.cjs` (7 larguras × 8 rotas sem overflow).
+- **Configurações no celular**: cards agora fluem em grade responsiva (1 coluna no celular, 2+ no desktop) com espaçamento interno reduzido em telas pequenas, botões de tema e "Selecionar" em largura total.
 - Colisão de nomenclatura com o Bootstrap/AdminLTE: o modal próprio foi renomeado para `nx-dialog` (antes herdava `display:none` do framework e não abria) e as tabelas neutralizam as variáveis `--bs-table-*` (cabeçalho branco no tema escuro).
 
 ### Alterado

@@ -39,6 +39,7 @@ export function Settings() {
         </div>
       </div>
 
+      <div className="settings-grid">
       <section className="card-surface panel">
         <h2 className="panel-title">Aparência</h2>
         <div className="theme-choice" role="radiogroup" aria-label="Tema">
@@ -96,6 +97,7 @@ export function Settings() {
           </ul>
         )}
       </section>
+      </div>
     </div>
   );
 }

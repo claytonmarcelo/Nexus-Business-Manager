@@ -303,6 +303,7 @@
   white-space: nowrap;
 }
 .table tbody td { padding: 0.8rem 1rem; border-bottom: 1px solid var(--border); vertical-align: middle; }
+.table tbody td.mono { overflow-wrap: anywhere; }
 .table tbody tr:last-child td { border-bottom: none; }
 .table tbody tr:hover { background: color-mix(in srgb, var(--accent) 5%, transparent); }
 @media (max-width: 820px) {
@@ -354,7 +355,7 @@
 
 .kpi-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(220px, 100%), 1fr));
   gap: 1rem;
 }
 .kpi { padding: 1.1rem 1.25rem; border-radius: 16px; animation: nexus-fade 240ms ease both; }
@@ -383,7 +384,7 @@
 .kv { margin: 0; display: flex; flex-direction: column; gap: 0.55rem; font-size: 0.9rem; }
 .kv > div { display: flex; gap: 1rem; align-items: baseline; }
 .kv dt { color: var(--text-3); width: 160px; flex-shrink: 0; }
-.kv dd { margin: 0; color: var(--text); font-weight: 600; }
+.kv dd { margin: 0; color: var(--text); font-weight: 600; min-width: 0; overflow-wrap: anywhere; }
 
 .company-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.5rem; }
 .company-item {
@@ -397,11 +398,11 @@
   background: var(--surface-2);
 }
 .company-item.is-current { border-color: var(--accent); }
-.company-name { display: block; font-weight: 700; }
+.company-name { display: block; font-weight: 700; overflow-wrap: anywhere; }
 .company-meta { display: block; color: var(--text-3); font-size: 0.75rem; margin-top: 0.1rem; }
 
 /* Estrutura Admin (AdminShell) */
-.admin-shell { display: flex; min-height: 100vh; }
+.admin-shell { display: flex; min-height: 100vh; min-height: 100dvh; }
 .admin-sidebar {
   width: 264px;
   flex-shrink: 0;
@@ -512,12 +513,13 @@
 .rise-8 { animation-delay: 840ms; }
 
 /* Landing */
-.landing { min-height: 100vh; display: flex; flex-direction: column; }
+.landing { min-height: 100vh; min-height: 100dvh; display: flex; flex-direction: column; }
 .landing-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
+  flex-wrap: wrap;
   padding: 0.55rem clamp(1.25rem, 5vw, 4rem);
 }
 .landing-brand { display: flex; align-items: center; gap: 0.6rem; }
@@ -550,7 +552,7 @@
 .landing-subtitle { color: var(--text-2); font-size: 1.05rem; line-height: 1.65; max-width: 62ch; }
 .landing-features {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(240px, 100%), 1fr));
   gap: 1rem;
   padding: 1rem clamp(1.25rem, 5vw, 4rem) 4rem;
   max-width: 1200px;
@@ -585,7 +587,7 @@
 .landing-footer-dev { margin-left: auto; }
 
 /* Login */
-.login-page { position: relative; min-height: 100vh; display: grid; place-items: center; padding: 1.5rem; }
+.login-page { position: relative; min-height: 100vh; min-height: 100dvh; display: grid; place-items: center; padding: 1.5rem; }
 .login-top {
   position: fixed;
   top: 0; left: 0; right: 0;
@@ -668,7 +670,8 @@
     transform: translateX(-100%);
     transition: transform 200ms ease;
   }
-  .admin-shell.is-sidebar-open .admin-sidebar { transform: translateX(0); }
+  .admin-sidebar { visibility: hidden; }
+  .admin-shell.is-sidebar-open .admin-sidebar { transform: translateX(0); visibility: visible; }
   .admin-shell.is-sidebar-open .admin-scrim { display: block; }
   .admin-content { padding: 1rem; }
   .admin-header { padding: 0.75rem 1rem; }
@@ -686,7 +689,7 @@
 .admin-footer-dev { margin-left: auto; color: var(--text-3); }
 
 /* ===== Telas de autenticacao (Embossed / Neumorphism) ===== */
-.auth-page { position: relative; min-height: 100vh; display: grid; place-items: center; padding: 1.5rem; }
+.auth-page { position: relative; min-height: 100vh; min-height: 100dvh; display: grid; place-items: center; padding: 1.5rem; }
 .auth-card {
   width: min(368px, 100%);
   background: var(--surface);
@@ -797,4 +800,21 @@
 @media (prefers-reduced-motion: reduce) {
   .auth-card, .auth-success-badge, .auth-success-badge path { animation: none; }
   .neu-btn { transition: none; }
+}
+
+/* Configuroes: grade fluida de cards (2 colunas quando ha espaco, 1 no celular) */
+.settings-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(320px, 100%), 1fr));
+  gap: 1.25rem;
+  align-items: start;
+}
+.settings-grid .panel { margin: 0; }
+@media (max-width: 560px) {
+  .page { gap: 0.9rem; }
+  .panel { padding: 1rem; border-radius: 14px; }
+  .settings-grid { gap: 0.9rem; }
+  .theme-choice .btn { flex: 1; }
+  .company-item { flex-wrap: wrap; }
+  .company-item .btn { width: 100%; }
 }
