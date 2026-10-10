@@ -7,6 +7,8 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/), 
 
 ### Adicionado
 
+- **Módulo CRM (frontend)**: página `/app/crm` com funil de cinco estágios clicáveis (contagem e soma de valor por etapa), KPIs de valor em aberto, ganhos, perdidos e taxa de conversão, busca por nome/e-mail, filtro por estágio, mudança de estágio pelo seletor da linha ou pelo modal de detalhe — Ganho e Perdido pedem confirmação no SweetAlert2, e Ganho converte o lead em cliente na hora —, além de cadastro/edição no modal compartilhado e a entrada "CRM" no menu lateral (hexágono da marca, visível com `crm:read`).
+- **Prova automatizada do CRM** (`tools/shoot-crm.cjs`): 42 checagens de ponta a ponta (funil, KPIs, modal de cadastro, filtros, movimentação de estágio, conversão em cliente verificada na tela de Clientes, perda e reabertura, celular sem overflow), com `docs/screenshots/14-crm.png`, `14-crm-novo-lead.png`, `14-crm-detalhe.png` e `14-crm-celular.png`.
 - **Botão de alternância da sidebar (Sidebar Toggle)**: o hambúrguer de três linhas deu lugar a um ícone "panel left" desenhado em SVG (família Lucide/Heroicons), no cabeçalho à esquerda de "Business Manager", com fundo transparente, contorno arredondado (12px), hover suave e tom dourado da marca quando ativo; a divisória do ícone inverte de lado com transição de 280ms, reforçando visualmente o estado aberto/fechado.
 - **Modo trilha no desktop**: um clique recolhe a barra para 78px apenas com ícones, mantendo tooltip com o nome da seção ao passar o mouse ou focar pelo teclado, atalho "Ocultar nomes / Mostrar nomes" no rodapé da barra e preferência persistida em `localStorage` (`nexus.sidebar.collapsed`) entre visitas e recarregamentos.
 - **Gaveta lateral no tablet e celular (abaixo de 821px)**: o mesmo botão abre a sidebar como drawer deslizante sobre um véu escurecido, com fechamento por clique fora, tecla Esc, toque em um item do menu e botão "✕ Fechar menu" dentro da própria gaveta (o botão do cabeçalho fica atrás dela); ao girar o tablet os dois modos nunca ficam abertos ao mesmo tempo.
@@ -37,6 +39,7 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/), 
 
 ### Alterado
 
+- KPIs do funil agora concordam em número ("1 lead aguardando" / "3 leads aguardando") e os campos do modal de lead ganharam `label` associado ao campo, como no restante do sistema.
 - Total de venda/compra passou a viver no rodapé do modal (dica à esquerda, ações à direita) em vez de uma linha solta no corpo; o cadastro de fornecedor é renderizado fora do painel da lista para o overlay filho continuar ancorado no viewport.
 - Campos de formulario dos modais ganharam espaçamento inferior reduzido no último item e o rodapé dos modais usa a superfície `--surface-2` com borda superior, igual aos cabeçalhos.
 - Marca na sidebar administrativa agora exibe o nome completo "Nexus Business Manager" em uma linha, com o degradê cobre-ouro da landing.
