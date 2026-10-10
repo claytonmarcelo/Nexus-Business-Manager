@@ -6,6 +6,8 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/), 
 ## [Não lançado]
 
 ### Adicionado
+
+- **Módulo CRM (backend)**: leads com contato, origem, valor estimado e estágio (Novo/Contatado/Proposta/Ganho/Perdido), pipeline agregado por estágio com contagem e soma de valor, busca por nome/e-mail, conversão automática em cliente ao marcar "Ganho" (sem duplicar se repetir) e bloqueio de transição repetida; RBAC `crm:read/write`, auditoria `lead.*` + `client.create`, migração `add_crm` e 6 testes de integração (suíte agora com 54).
 - **Módulo Financeiro (backend)**: lançamentos de receita e despesa com valor, vencimento, status (Pendente/Pago/Cancelado) e vínculo opcional a cliente, fornecedor e categoria; categorias por tipo com unicidade (mesmo nome pode existir nos dois tipos), resumo mensal com receitas/despesas pagas, saldo, a receber/a pagar e atrasados, filtros por mês (AAAA-MM) e validação cruzada de categoria×tipo; RBAC `finance:read/write`, auditoria `finance.*`, migração `add_finance` e 5 testes de integração (suíte agora com 48).
 - **Módulo Financeiro (frontend)**: página `/app/financeiro` com KPIs do mês (receitas, despesas, saldo, atrasados), filtros de tipo/status/mês/busca, ações Pagar/Reabrir/Cancelar com confirmação SweetAlert2, modal de lançamento com alternador Receita/Despesa que recarrega as categorias cabíveis e central de categorias — prova de uso real em `docs/screenshots/13-financeiro.png`.
 - **Módulo Compras + Fornecedores (backend)**: fornecedores por empresa (nome único, exclusão lógica que preserva o histórico de compras), pedidos de compra com itens, totais calculados no servidor e status Rascunho/Recebida/Cancelada; receber dá entrada no estoque e atualiza o custo do produto, cancelar uma recebida estorna as unidades e é bloqueada se elas já foram consumidas; RBAC `supplier:read/write` e `purchase:read/write`, auditoria `supplier.*/purchase.*`, migração `add_suppliers_purchases` e 7 testes de integração (suíte agora com 43).
@@ -25,7 +27,8 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/), 
 - Testes de integração dos fluxos (cadastro, duplicidade, senha fraca, recuperação, reuso de código, revogação de sessões): suíte agora com 23 testes.
 
 ### Alterado
-- Marca na sidebar administrativa agora exibe o nome completo "Nexus Business Manager" em uma linha, com o degradê cobre-ouro da landing.
+
+- Campos de formulario dos modais ganharam espaçamento inferior reduzido no último item e o rodapé dos modais usa a superfície `--surface-2` com borda superior, igual aos cabeçalhos.- Marca na sidebar administrativa agora exibe o nome completo "Nexus Business Manager" em uma linha, com o degradê cobre-ouro da landing.
 - **Regra de logout**: ao sair do sistema o usuário volta automaticamente para a página de boas-vindas (`/`), com histórico substituído para o botão voltar não reabrir o painel (prova em `tools/verify-logout.cjs`).
 - Cartões de autenticação padronizados no mesmo tamanho (largura, tipografia e botões) para coerência entre login, cadastro e recuperação.
 - Logo das telas de autenticação ampliada 16% (62px → 72px) nas três páginas, mantendo a harmonia visual.
@@ -33,7 +36,7 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/), 
 - Alternador de tema perfeitamente centrado no cabeçalho (thumb simétrico no trilho, ícones sol/lua alinhados ao centro vertical), sem alterar cores, tamanho ou animação.
 
 ### Corrigido
-- **Modal de cliente com campos opcionais vazios**: ao cadastrar sem e-mail o envio levava `email: ""` e a API rejeitava com "E-mail inválido"; agora campos em branco viram `undefined` no payload (criação e edição).
+
 - **Nomes dos itens no detalhe da venda**: a listagem trazia os itens sem o produto associado e o modal de detalhe exibia "Produto removido"; o `include` do Prisma passou a carregar o nome do produto (asserção de regressão na suíte de vendas).
 - **Responsividade geral (público + administrativo)**: guarda global `overflow-x: clip` impede a página de arrastar na horizontal sem quebrar o cabeçalho sticky; sidebar off-canvas fechada agora usa `visibility: hidden` (fora do alcance do toque/foco no celular); grades de KPIs e features fluidas com `minmax(min(…, 100%), 1fr)`; textos mono longos (e-mails/SKUs) quebram dentro da célula; alturas com `100dvh` respeitam as barras do navegador mobile. Prova: `tools/verify-responsive.cjs` (7 larguras × 8 rotas sem overflow).
 - **Configurações no celular**: cards agora fluem em grade responsiva (1 coluna no celular, 2+ no desktop) com espaçamento interno reduzido em telas pequenas, botões de tema e "Selecionar" em largura total.

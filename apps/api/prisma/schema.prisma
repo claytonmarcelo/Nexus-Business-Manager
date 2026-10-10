@@ -34,6 +34,7 @@ model User {
   sales           Sale[]
   purchases Purchase[]
   financeEntries  FinanceEntry[]
+  leads           Lead[]
 
   @@map("users")
 }
@@ -56,6 +57,7 @@ model Company {
   purchases     Purchase[]
   financeCategories FinanceCategory[]
   financeEntries  FinanceEntry[]
+  leads           Lead[]
 
   @@map("companies")
 }
@@ -162,6 +164,7 @@ model Client {
   company   Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
   sales     Sale[]
   financeEntries  FinanceEntry[]
+  leads           Lead[]
 
   @@unique([companyId, document])
   @@index([companyId, name])
@@ -366,4 +369,27 @@ model FinanceEntry {
 
   @@index([companyId, status, dueDate])
   @@map("finance_entries")
+}
+
+
+model Lead {
+  id        String     @id @default(uuid()) @db.VarChar(36)
+  companyId String     @map("company_id") @db.VarChar(36)
+  clientId  String?    @map("client_id") @db.VarChar(36)
+  userId    String?    @map("user_id") @db.VarChar(36)
+  name      String     @db.VarChar(160)
+  email     String?    @db.VarChar(160)
+  phone     String?    @db.VarChar(40)
+  source    String?    @db.VarChar(60)
+  status    LeadStatus @default(NEW)
+  value     Decimal    @default(0) @db.Decimal(14, 2)
+  notes     String?    @db.VarChar(1000)
+  createdAt DateTime   @default(now()) @map("created_at")
+  updatedAt DateTime   @updatedAt @map("updated_at")
+  company   Company    @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  client    Client?    @relation(fields: [clientId], references: [id], onDelete: SetNull)
+  user      User?      @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([companyId, status, createdAt])
+  @@map("leads")
 }

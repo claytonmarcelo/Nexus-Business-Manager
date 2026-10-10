@@ -13,6 +13,7 @@ import { productsRoutes } from "./modules/products/products.routes";
 import { salesRoutes } from "./modules/sales/sales.routes";
 import { purchasesRoutes } from "./modules/purchases/purchases.routes";
 import { financeRoutes } from "./modules/finance/finance.routes";
+import { crmRoutes } from "./modules/crm/crm.routes";
 import { healthRoutes } from "./modules/health/health.routes";
 import { isProd } from "./config/env";
 
@@ -72,6 +73,7 @@ export function buildApp(): FastifyInstance {
   void app.register(salesRoutes, { prefix: "/api" });
   void app.register(purchasesRoutes, { prefix: "/api" });
   void app.register(financeRoutes, { prefix: "/api" });
+  void app.register(crmRoutes, { prefix: "/api" });
 
   return app;
 }
