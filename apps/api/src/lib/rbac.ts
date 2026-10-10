@@ -15,9 +15,11 @@ const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     "client:*",
     "product:*",
     "sale:*",
+    "supplier:*",
+    "purchase:*",
   ],
-  MANAGER: ["user:read", "company:read", "audit:read", "client:read", "client:write", "product:read", "product:write", "sale:read", "sale:write"],
-  STAFF: ["company:read", "client:read", "product:read", "sale:read"],
+  MANAGER: ["user:read", "company:read", "audit:read", "client:read", "client:write", "product:read", "product:write", "sale:read", "sale:write", "supplier:read", "supplier:write", "purchase:read", "purchase:write"],
+  STAFF: ["company:read", "client:read", "product:read", "sale:read", "supplier:read", "purchase:read"],
 };
 
 export function rolePermissions(role: Role): Permission[] {
