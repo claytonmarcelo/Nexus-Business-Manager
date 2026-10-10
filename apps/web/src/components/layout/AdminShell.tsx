@@ -27,9 +27,12 @@ export function AdminShell() {
 
   const items = NAV.filter((n) => !n.permission || can(n.permission));
 
+  // Regra do projeto: ao deslogar, o usuario volta SEMPRE para a
+  // pagina de boas-vindas (landing). replace() impede o voltar do navegador
+  // de reabrir o painel com sessao morta.
   async function handleLogout() {
     await logout();
-    navigate("/login");
+    navigate("/", { replace: true });
   }
 
   return (
