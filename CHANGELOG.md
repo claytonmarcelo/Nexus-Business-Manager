@@ -5,6 +5,10 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/), 
 
 ## [Não lançado]
 
+### Alterado
+- Página pública: herói agora é 100% marca — botões "Acessar o sistema" e "Conhecer recursos" removidos; o acesso ao sistema permanece no botão "Acessar" do topo.
+- Alternador de tema redesenhado como switch moderno (trilho em pílula, ícones sol/lua e thumb em degradê cobre que desliza), com `role=switch`, `aria-checked` e respeito a `prefers-reduced-motion`.
+
 ### Adicionado
 - Fundação vertical completa do frontend: AdminShell (sidebar, header, footer), Landing pública com "Acessar", Login real com JWT, Dashboard com KPIs vindos da API, Usuários (busca, papel editável, modal de novo membro), Auditoria, Configurações (tema, conta, troca de empresa) e páginas de erro 401/403/404/500 com identidade da marca.
 - Design system Premium Gourmet em `apps/web/src/styles/` (tokens de tema, global, componentes) com alternância dark ("noite sofisticada") / light ("dia elegante") persistida e sem preto/branco puros.

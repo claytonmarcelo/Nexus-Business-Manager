@@ -3,7 +3,8 @@ import { Logo } from "../components/Logo";
 import { ThemeToggle } from "../components/ThemeToggle";
 import { currentYear } from "../lib/format";
 
-// Página pública de boas-vindas (seção 17). Botão "Acessar" leva ao login real.
+// Página pública de boas-vindas (seção 17). O acesso ao sistema fica apenas no topo,
+// mantendo o herói limpo e focado na marca.
 export function Landing() {
   return (
     <div className="app-bg landing">
@@ -29,10 +30,6 @@ export function Landing() {
             O Nexus Business Manager reúne cadastro, usuários, controle de acesso por papel e
             auditoria em um ambiente seguro, responsivo e com identidade própria — do balcão à nuvem.
           </p>
-          <div className="landing-cta">
-            <Link to="/login" className="btn btn-brand btn-lg">Acessar o sistema</Link>
-            <a href="#recursos" className="btn btn-ghost btn-lg">Conhecer recursos</a>
-          </div>
         </div>
       </main>
 
