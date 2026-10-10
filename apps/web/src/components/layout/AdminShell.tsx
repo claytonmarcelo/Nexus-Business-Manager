@@ -16,6 +16,7 @@ const NAV: NavItem[] = [
   { to: "/app", label: "Dashboard", icon: "▦" },
   { to: "/app/clientes", label: "Clientes", icon: "◈", permission: "client:read" },
   { to: "/app/produtos", label: "Produtos", icon: "▣", permission: "product:read" },
+  { to: "/app/vendas", label: "Vendas", icon: "＄", permission: "sale:read" },
   { to: "/app/usuarios", label: "Usuários", icon: "◉", permission: "user:read" },
   { to: "/app/auditoria", label: "Auditoria", icon: "❐", permission: "audit:read" },
   { to: "/app/configuracoes", label: "Configurações", icon: "⚙" },

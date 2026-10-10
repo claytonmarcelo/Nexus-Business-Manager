@@ -10,6 +10,7 @@ import { usersRoutes } from "./modules/users/users.routes";
 import { auditRoutes } from "./modules/audit/audit.routes";
 import { clientsRoutes } from "./modules/clients/clients.routes";
 import { productsRoutes } from "./modules/products/products.routes";
+import { salesRoutes } from "./modules/sales/sales.routes";
 import { healthRoutes } from "./modules/health/health.routes";
 import { isProd } from "./config/env";
 
@@ -66,6 +67,7 @@ export function buildApp(): FastifyInstance {
   void app.register(auditRoutes, { prefix: "/api" });
   void app.register(clientsRoutes, { prefix: "/api" });
   void app.register(productsRoutes, { prefix: "/api" });
+  void app.register(salesRoutes, { prefix: "/api" });
 
   return app;
 }

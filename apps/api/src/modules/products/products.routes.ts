@@ -66,7 +66,7 @@ export async function productsRoutes(app: FastifyInstance): Promise<void> {
     assertPermission(ctx.role, "product:read");
     const { id } = req.params as { id: string };
     const product = await service.getProduct(ctx.companyId, id);
-    return product;
+    return service.serialize(product);
   });
 
   app.patch("/products/:id", { preHandler: [app.authenticate] }, async (req) => {

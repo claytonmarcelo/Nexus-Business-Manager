@@ -160,12 +160,16 @@ function ClientModal({ client, onClose, onSaved }: { client: ClientRow | "new"; 
 
   async function submit() {
     setBusy(true);
+    // Campos vazios viram undefined: a API rejeita string vazia como e-mail invalido.
+    const payload = Object.fromEntries(
+      Object.entries(form).map(([k, v]) => [k, v.trim() === "" ? undefined : v.trim()]),
+    );
     try {
       if (isNew) {
-        await api.post("/clients", form);
+        await api.post("/clients", payload);
         notify.success("Cliente cadastrado.");
       } else {
-        await api.patch("/clients/" + (client as ClientRow).id, form);
+        await api.patch("/clients/" + (client as ClientRow).id, payload);
         notify.success("Cliente atualizado.");
       }
       onSaved();

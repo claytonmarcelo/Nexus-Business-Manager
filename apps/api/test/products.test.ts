@@ -40,8 +40,8 @@ describe("Produtos + Estoque", () => {
     expect(movs.statusCode).toBe(200);
     const lista = movs.json() as { data: Array<{ kind: string; quantity: number }> };
     expect(lista.data.length).toBe(1);
-    expect(lista.data[0].kind).toBe("IN");
-    expect(lista.data[0].quantity).toBe(40);
+    expect(lista.data[0]?.kind).toBe("IN");
+    expect(lista.data[0]?.quantity).toBe(40);
 
     const edicao = await app.inject({
       method: "PATCH", url: `/api/products/${p.id}`, headers: auth(token),
@@ -111,8 +111,8 @@ describe("Produtos + Estoque", () => {
     const baixo = await app.inject({ method: "GET", url: "/api/products?lowStock=true", headers: auth(token) });
     const body = baixo.json() as { data: Array<{ name: string; lowStock: boolean }>; meta: { total: number } };
     expect(body.meta.total).toBe(1);
-    expect(body.data[0].name).toBe("Produto Critico");
-    expect(body.data[0].lowStock).toBe(true);
+    expect(body.data[0]?.name).toBe("Produto Critico");
+    expect(body.data[0]?.lowStock).toBe(true);
 
     const resumo = await app.inject({ method: "GET", url: "/api/products/stock-summary", headers: auth(token) });
     const s = resumo.json() as { totalProducts: number; lowStock: number; outOfStock: number };

@@ -12,7 +12,7 @@ import type {
 // Decimal do Prisma vira numero no JSON para nao quebrar o frontend.
 const num = (v: Prisma.Decimal | null) => (v === null ? null : Number(v));
 
-function serialize(p: {
+export function serialize(p: {
   id: string; companyId: string; name: string; sku: string | null; unit: string;
   categoryId: string | null; costPrice: Prisma.Decimal | null; salePrice: Prisma.Decimal;
   stockQuantity: Prisma.Decimal; minStock: Prisma.Decimal; trackStock: boolean;
