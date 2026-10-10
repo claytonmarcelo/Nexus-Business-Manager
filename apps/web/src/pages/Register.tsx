@@ -66,7 +66,7 @@ export function Register() {
 
       <main className="auth-card">
         <div className="auth-logo">
-          <Logo size={62} animation="heartbeat" />
+          <Logo size={72} animation="heartbeat" />
         </div>
         <h1 className="auth-title">Criar conta</h1>
         <p className="auth-sub">Inicie a sua jornada conosco</p>

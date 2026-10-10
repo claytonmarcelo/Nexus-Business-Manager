@@ -80,7 +80,7 @@ export function ForgotPassword() {
 
       <main className="auth-card">
         <div className="auth-logo">
-          <Logo size={62} animation="heartbeat" />
+          <Logo size={72} animation="heartbeat" />
         </div>
         <h1 className="auth-title">Recuperar senha</h1>
         <p className="auth-sub">{step === 1 ? "Informe o e-mail da sua conta" : "Digite o código e a nova senha"}</p>
