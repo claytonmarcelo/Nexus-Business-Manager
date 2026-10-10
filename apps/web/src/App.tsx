@@ -8,6 +8,7 @@ import { ForgotPassword } from "./pages/ForgotPassword";
 import { Dashboard } from "./pages/Dashboard";
 import { Users } from "./pages/Users";
 import { Clients } from "./pages/Clients";
+import { Products } from "./pages/Products";
 import { Audit } from "./pages/Audit";
 import { Settings } from "./pages/Settings";
 import { Forbidden, NotFound, Unauthorized } from "./pages/errors";
@@ -32,6 +33,7 @@ export function App() {
         >
           <Route index element={<Dashboard />} />
           <Route path="clientes" element={<Clients />} />
+          <Route path="produtos" element={<Products />} />
           <Route path="usuarios" element={<Users />} />
           <Route path="auditoria" element={<Audit />} />
           <Route path="configuracoes" element={<Settings />} />

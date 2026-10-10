@@ -6,6 +6,8 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/), 
 ## [Não lançado]
 
 ### Adicionado
+- **Módulo Produtos + Estoque (backend)**: categorias por empresa, produtos com SKU único, preços em Decimal, estoque mínimo e controle por item; movimentações de entrada/saída/ajuste transacionais (saída acima do saldo → 400), filtro de estoque baixo, resumo para KPIs, RBAC `product:read/write` em todos os papéis e trilha de auditoria completa. Migração `add_products_stock` e 7 testes de integração (suíte agora com 30).
+- **Módulo Produtos + Estoque (frontend)**: página `/app/produtos` com KPIs (ativos / estoque baixo / sem estoque), tabela paginada com busca e filtro "somente estoque baixo", modais de produto, movimentação, histórico e categoria — prova de uso real em `docs/screenshots/10-produtos.png`.
 - **Favicon oficial do projeto**: recorte do emblema hexagonal da logo gerado em alta qualidade (16/32/48px, apple-touch 180px, 512px maskable e `favicon.ico` multi-tamanho), declarado no `index.html` — script reprodutível em `tools/make-favicon.ps1`.
 - **Regra definitiva de acesso**: administrador global `nexusbussiness.admin@gmail.com` (OWNER em todas as empresas, protegido contra remoção/rebaixamento no backend e no seed) documentado em `CREDENCIAIS.md` na raiz do projeto.
 - **Política de senha** aplicada em todo o sistema (mínimo 8 caracteres, uma maiúscula e um especial): `passwordPolicy.ts` no backend + validação inline pt-BR nos formulários.
