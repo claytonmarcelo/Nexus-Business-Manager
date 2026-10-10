@@ -8,6 +8,7 @@ import { authRoutes } from "./modules/auth/auth.routes";
 import { companiesRoutes } from "./modules/companies/companies.routes";
 import { usersRoutes } from "./modules/users/users.routes";
 import { auditRoutes } from "./modules/audit/audit.routes";
+import { clientsRoutes } from "./modules/clients/clients.routes";
 import { healthRoutes } from "./modules/health/health.routes";
 import { isProd } from "./config/env";
 
@@ -62,6 +63,7 @@ export function buildApp(): FastifyInstance {
   void app.register(companiesRoutes, { prefix: "/api" });
   void app.register(usersRoutes, { prefix: "/api" });
   void app.register(auditRoutes, { prefix: "/api" });
+  void app.register(clientsRoutes, { prefix: "/api" });
 
   return app;
 }

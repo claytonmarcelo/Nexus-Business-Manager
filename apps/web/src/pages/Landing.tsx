@@ -10,7 +10,7 @@ export function Landing() {
     <div className="app-bg landing">
       <header className="landing-header">
         <div className="landing-brand">
-          <Logo size={40} />
+          <Logo size={34} />
           <span className="landing-brand-name">Nexus Business Manager</span>
         </div>
         <nav className="landing-actions">
@@ -23,7 +23,7 @@ export function Landing() {
 
       <main className="landing-hero animate-fade">
         <div className="landing-hero-inner">
-          <Logo size={120} animated className="landing-logo" />
+          <Logo size={210} animation="heartbeat" className="landing-logo" />
           <p className="landing-eyebrow">ERP SaaS · Multiempresa</p>
           <h1 className="landing-title">Gestão empresarial com precisão e elegância</h1>
           <p className="landing-subtitle">

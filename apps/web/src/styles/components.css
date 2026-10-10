@@ -76,9 +76,9 @@
   display: inline-flex;
   align-items: center;
   justify-content: space-between;
-  width: 62px;
-  height: 32px;
-  padding: 0 8px;
+  width: 54px;
+  height: 27px;
+  padding: 0 7px;
   border-radius: 999px;
   border: 1px solid var(--border);
   background: var(--surface-2);
@@ -89,7 +89,7 @@
 .theme-switch-icon {
   position: relative;
   z-index: 1;
-  font-size: 0.78rem;
+  font-size: 0.7rem;
   line-height: 1;
   color: var(--text-3);
   transition: color 160ms ease;
@@ -100,14 +100,14 @@
   position: absolute;
   top: 3px;
   left: 3px;
-  width: 26px;
-  height: 26px;
+  width: 21px;
+  height: 21px;
   border-radius: 50%;
   background: linear-gradient(135deg, var(--accent), var(--brand));
   box-shadow: 0 4px 10px -2px color-mix(in srgb, var(--accent) 60%, transparent);
   transition: transform 220ms cubic-bezier(0.4, 0, 0.2, 1);
 }
-.theme-switch[data-mode="dark"] .theme-switch-thumb { transform: translateX(30px); }
+.theme-switch[data-mode="dark"] .theme-switch-thumb { transform: translateX(26px); }
 @media (prefers-reduced-motion: reduce) {
   .theme-switch-thumb { transition: none; }
 }
@@ -380,7 +380,7 @@
   height: 100vh;
   overflow: auto;
 }
-.admin-brand { padding: 0.4rem 0.4rem 1.1rem; }
+.admin-brand { padding: 0.3rem 0.4rem 0.8rem; }
 .admin-brand-link {
   display: flex;
   align-items: center;
@@ -388,7 +388,7 @@
   text-decoration: none;
   color: var(--text);
 }
-.admin-brand-text { font-weight: 800; letter-spacing: 0.08em; }
+.admin-brand-text { letter-spacing: 0.08em; }
 .admin-nav { display: flex; flex-direction: column; gap: 0.25rem; }
 .admin-nav-item {
   display: flex;
@@ -414,7 +414,7 @@
   display: flex;
   align-items: center;
   gap: 1rem;
-  padding: 0.85rem 1.5rem;
+  padding: 0.45rem 1.5rem;
   border-bottom: 1px solid var(--border);
   background: var(--surface);
   position: sticky;
@@ -433,7 +433,7 @@
 .admin-user-company { color: var(--text-3); font-size: 0.75rem; }
 .admin-content { padding: 1.5rem; flex: 1; }
 .admin-footer {
-  padding: 1rem 1.5rem;
+  padding: 0.5rem 1.5rem;
   border-top: 1px solid var(--border);
   color: var(--text-3);
   font-size: 0.8rem;
@@ -472,10 +472,18 @@
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
-  padding: 1.1rem clamp(1.25rem, 5vw, 4rem);
+  padding: 0.55rem clamp(1.25rem, 5vw, 4rem);
 }
 .landing-brand { display: flex; align-items: center; gap: 0.6rem; }
-.landing-brand-name { font-weight: 800; letter-spacing: -0.01em; }
+/* Nome da marca com o degradê cobre-ouro da logo (uso global). */
+.brand-text, .landing-brand-name, .admin-brand-text {
+  background: linear-gradient(118deg, var(--brand) 0%, var(--accent) 55%, #E8C890 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
 .landing-actions { display: flex; align-items: center; gap: 0.7rem; }
 .landing-hero { flex: 1; display: grid; place-items: center; text-align: center; padding: clamp(2.5rem, 9vh, 6rem) 1.5rem; }
 .landing-hero-inner { display: flex; flex-direction: column; align-items: center; gap: 1.1rem; max-width: 780px; }
@@ -507,7 +515,7 @@
 .feature-card h3 { font-size: 1rem; margin-bottom: 0.4rem; }
 .feature-card p { color: var(--text-3); font-size: 0.88rem; line-height: 1.55; }
 .landing-footer {
-  padding: 1.25rem clamp(1.25rem, 5vw, 4rem);
+  padding: 0.6rem clamp(1.25rem, 5vw, 4rem);
   border-top: 1px solid var(--border);
   color: var(--text-3);
   font-size: 0.82rem;
@@ -519,17 +527,43 @@
 .landing-footer-dev { margin-left: auto; }
 
 /* Login */
-.login-page { min-height: 100vh; display: grid; place-items: center; padding: 1.5rem; grid-template-rows: auto 1fr; }
+.login-page { position: relative; min-height: 100vh; display: grid; place-items: center; padding: 1.5rem; }
 .login-top {
   position: fixed;
   top: 0; left: 0; right: 0;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 1rem clamp(1.25rem, 5vw, 4rem);
+  padding: 0.7rem clamp(1.25rem, 5vw, 4rem);
 }
-.login-back { color: var(--text-3); text-decoration: none; font-size: 0.85rem; }
-.login-back:hover { color: var(--accent); }
+.back-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.4rem 1rem 0.4rem 0.4rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface-2);
+  color: var(--text-2);
+  text-decoration: none;
+  font-size: 0.85rem;
+  font-weight: 600;
+  transition: border-color 160ms ease, color 160ms ease, background 160ms ease;
+}
+.back-pill-arrow {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--accent);
+  font-size: 0.9rem;
+  transition: transform 160ms ease;
+}
+.back-pill:hover { border-color: var(--accent); color: var(--text); }
+.back-pill:hover .back-pill-arrow { transform: translateX(-3px); background: linear-gradient(135deg, var(--accent), var(--brand)); color: #1a1208; border-color: transparent; }
 .login-card {
   width: min(420px, 100%);
   border-radius: 20px;

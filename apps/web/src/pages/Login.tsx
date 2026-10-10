@@ -35,11 +35,14 @@ export function Login() {
   return (
     <div className="app-bg login-page">
       <header className="login-top">
-        <Link to="/" className="login-back">← Voltar</Link>
+        <Link to="/" className="back-pill">
+          <span className="back-pill-arrow" aria-hidden="true">←</span>
+          <span>Voltar</span>
+        </Link>
         <ThemeToggle />
       </header>
       <main className="login-card card-surface animate-fade">
-        <Logo size={72} animated />
+        <Logo size={84} animation="heartbeat" />
         <h1 className="login-title">Entrar no Nexus</h1>
         <p className="login-sub">Acesse sua conta empresarial</p>
 

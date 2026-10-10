@@ -98,3 +98,11 @@ a {
 .animate-fade {
   animation: nexus-fade 0.35s ease both;
 }
+
+@keyframes nexus-heartbeat {
+  0%, 100% { transform: scale(1); }
+  12% { transform: scale(1.035); }
+  22% { transform: scale(1); }
+  30% { transform: scale(1.025); }
+  42% { transform: scale(1); }
+}

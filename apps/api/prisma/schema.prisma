@@ -41,8 +41,9 @@ model Company {
   active    Boolean       @default(true)
   createdAt DateTime      @default(now()) @map("created_at")
   updatedAt DateTime      @updatedAt @map("updated_at")
-  members   CompanyUser[]
-  auditLogs AuditLog[]
+  members     CompanyUser[]
+  auditLogs   AuditLog[]
+  clients     Client[]
 
   @@map("companies")
 }
@@ -94,4 +95,61 @@ model AuditLog {
   @@index([companyId, createdAt])
   @@index([userId])
   @@map("audit_logs")
+}
+
+// ===== Modulos empresariais (todos com isolamento por empresa, ADR-0002) =====
+
+enum SaleStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+}
+
+enum PurchaseStatus {
+  DRAFT
+  RECEIVED
+  CANCELLED
+}
+
+enum StockMovementKind {
+  IN
+  OUT
+  ADJUST
+}
+
+enum EntryType {
+  INCOME
+  EXPENSE
+}
+
+enum EntryStatus {
+  PENDING
+  PAID
+  CANCELLED
+}
+
+enum LeadStatus {
+  NEW
+  CONTACTED
+  PROPOSAL
+  WON
+  LOST
+}
+
+model Client {
+  id        String   @id @default(uuid()) @db.VarChar(36)
+  companyId String   @map("company_id") @db.VarChar(36)
+  name      String   @db.VarChar(160)
+  email     String?  @db.VarChar(160)
+  phone     String?  @db.VarChar(32)
+  document  String?  @db.VarChar(32)
+  notes     String?  @db.Text
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  company   Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@unique([companyId, document])
+  @@index([companyId, name])
+  @@map("clients")
 }

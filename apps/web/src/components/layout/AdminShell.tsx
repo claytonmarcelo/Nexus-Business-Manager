@@ -40,7 +40,7 @@ export function AdminShell() {
       <aside className="admin-sidebar" aria-label="Navegação principal">
         <div className="admin-brand">
           <Link to="/app" className="admin-brand-link" onClick={() => setSidebarOpen(false)}>
-            <Logo size={34} />
+            <Logo size={30} />
             <span className="admin-brand-text">NEXUS</span>
           </Link>
         </div>

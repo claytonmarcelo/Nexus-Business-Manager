@@ -22,8 +22,9 @@ export function ErrorPage({ code, title, message }: ErrorPageProps) {
         <h1 className="error-title">{title}</h1>
         <p className="error-message">{message}</p>
         <div className="error-actions">
-          <button type="button" className="btn btn-brand" onClick={() => navigate(-1)}>
-            Voltar
+          <button type="button" className="back-pill" onClick={() => navigate(-1)}>
+            <span className="back-pill-arrow" aria-hidden="true">←</span>
+            <span>Voltar</span>
           </button>
           <Link to="/" className="btn btn-ghost">
             Ir para o início

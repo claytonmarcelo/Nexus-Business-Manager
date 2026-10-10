@@ -6,6 +6,10 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/), 
 ## [Não lançado]
 
 ### Alterado
+- Texto de marca ("Nexus Business Manager" / "NEXUS") agora usa o degradê cobre-ouro extraído da logo, aplicado globalmente (`.brand-text`, landing e sidebar).
+- Cabeçalhos e rodapés do projeto ficaram mais baixos (landing, admin, login) e o switch de tema ganhou tamanho compacto.
+- Animação "batida de coração" na logo da boas-vindas e do login, lenta e suave (5,2s, escala máxima 1,035, com respeito a `prefers-reduced-motion`); logo da landing ampliada para 210px.
+- Botão "Voltar" redesenhado como pill moderno com seta em círculo (login e páginas de erro) e página de login centralizada verticalmente.
 - Página pública: herói agora é 100% marca — botões "Acessar o sistema" e "Conhecer recursos" removidos; o acesso ao sistema permanece no botão "Acessar" do topo.
 - Alternador de tema redesenhado como switch moderno (trilho em pílula, ícones sol/lua e thumb em degradê cobre que desliza), com `role=switch`, `aria-checked` e respeito a `prefers-reduced-motion`.
 
