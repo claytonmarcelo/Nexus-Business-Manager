@@ -1,0 +1,36 @@
+# Dependências
+node_modules/
+.pnp
+.pnp.js
+
+# Builds
+dist/
+build/
+*.tsbuildinfo
+
+# Ambiente / segredos
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# Logs
+*.log
+logs/
+npm-debug.log*
+
+# Editores / SO
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Testes / cobertura
+coverage/
+.nyc_output/
+
+# Prisma
+apps/api/prisma/*.db
+
+# Artefatos temporários
+tools/wf.cjs.bak
