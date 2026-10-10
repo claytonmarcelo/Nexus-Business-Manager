@@ -74,9 +74,38 @@ export async function getLead(companyId: string, id: string) {
   return lead;
 }
 
+// Campos editaveis do lead e como explica-los na trilha de auditoria.
+const CAMPOS_DO_LEAD = {
+  name: "nome",
+  email: "contato por e-mail",
+  phone: "contato por telefone",
+  source: "origem",
+  notes: "observações",
+} as const;
+
+// Resumo da edição: a aba Atividades mostra o que mudou em linguagem humana,
+// em vez de um código técnico ou de um UUID de lead.
+function mudancasDoLead(
+  antes: { name: string; email: string | null; phone: string | null; source: string | null; notes: string | null; value: Prisma.Decimal },
+  input: Partial<CreateLeadInput>,
+) {
+  const alteracoes: string[] = [];
+  for (const campo of Object.keys(CAMPOS_DO_LEAD) as (keyof typeof CAMPOS_DO_LEAD)[]) {
+    const novo = input[campo];
+    if (novo !== undefined && novo !== antes[campo]) alteracoes.push(CAMPOS_DO_LEAD[campo]);
+  }
+  const valorAntes = Number(antes.value);
+  const valorDepois = input.value === undefined ? valorAntes : Number(input.value);
+  if (valorAntes !== valorDepois) {
+    alteracoes.push("valor");
+    return { alteracoes, valor: { de: valorAntes, para: valorDepois } };
+  }
+  return { alteracoes, valor: null };
+}
+
 export async function createLead(companyId: string, input: CreateLeadInput, userId: string, ip: string) {
   const lead = await prisma.lead.create({ data: { companyId, userId, ...input } });
-  await audit({ userId, companyId, action: "lead.create", entity: "lead", entityId: lead.id, ip, metadata: { value: input.value } });
+  await audit({ userId, companyId, action: "lead.create", entity: "lead", entityId: lead.id, ip, metadata: { leadName: lead.name, value: input.value } });
   return getLead(companyId, lead.id).then(serialize);
 }
 
@@ -84,7 +113,16 @@ export async function updateLead(companyId: string, id: string, input: Partial<C
   const found = await prisma.lead.findFirst({ where: { id, companyId } });
   if (!found) throw notFound("Lead não encontrado");
   await prisma.lead.update({ where: { id }, data: input });
-  await audit({ userId, companyId, action: "lead.update", entity: "lead", entityId: id, ip });
+  const mudancas = mudancasDoLead(found, input);
+  await audit({
+    userId,
+    companyId,
+    action: "lead.update",
+    entity: "lead",
+    entityId: id,
+    ip,
+    metadata: { leadName: found.name, ...mudancas },
+  });
   return getLead(companyId, id).then(serialize);
 }
 
@@ -103,6 +141,14 @@ export async function changeStatus(companyId: string, id: string, status: LeadSt
     await audit({ userId, companyId, action: "client.create", entity: "client", entityId: client.id, ip, metadata: { origem: "lead " + id } });
   }
   await prisma.lead.update({ where: { id }, data: { status, clientId } });
-  await audit({ userId, companyId, action: "lead." + status.toLowerCase(), entity: "lead", entityId: id, ip });
+  await audit({
+    userId,
+    companyId,
+    action: "lead." + status.toLowerCase(),
+    entity: "lead",
+    entityId: id,
+    ip,
+    metadata: { leadName: found.name, de: found.status, para: status },
+  });
   return getLead(companyId, id).then(serialize);
 }

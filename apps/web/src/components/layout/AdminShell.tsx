@@ -20,6 +20,7 @@ const NAV: NavItem[] = [
   { to: "/app/compras", label: "Compras", icon: "⛁", permission: "purchase:read" },
   { to: "/app/financeiro", label: "Financeiro", icon: "◈", permission: "finance:read" },
   { to: "/app/crm", label: "CRM", icon: "⬡", permission: "crm:read" },
+  { to: "/app/agenda", label: "Agenda", icon: "▤", permission: "agenda:read" },
   { to: "/app/usuarios", label: "Usuários", icon: "◉", permission: "user:read" },
   { to: "/app/auditoria", label: "Auditoria", icon: "❐", permission: "audit:read" },
   { to: "/app/configuracoes", label: "Configurações", icon: "⚙" },
@@ -51,6 +52,10 @@ export function AdminShell() {
 
   // Estado da gaveta (mobile/tablet).
   const [drawerOpen, setDrawerOpen] = useState(false);
+  // Dica de nome no modo trilha. Vive fora da <aside> porque a barra rola
+  // internamente: um tooltip absoluto dentro dela alargaria o conteudo e
+  // abriria uma barra de rolagem horizontal no rodape do menu.
+  const [dica, setDica] = useState<{ texto: string; top: number; left: number } | null>(null);
   // Estado do modo trilha (desktop), persistido entre visitas.
   const [collapsed, setCollapsed] = useState(() => {
     try {
@@ -88,6 +93,12 @@ export function AdminShell() {
     if (isDesktop()) setCollapsed((v) => !v);
     else setDrawerOpen((v) => !v);
   }, []);
+
+  function mostrarDica(el: HTMLElement, texto: string) {
+    if (!collapsed || !window.matchMedia(DESKTOP_QUERY).matches) return;
+    const r = el.getBoundingClientRect();
+    setDica({ texto, top: r.top + r.height / 2, left: r.right + 10 });
+  }
 
   // Esc fecha a gaveta no celular (no desktop nao ha o que fechar: a barra
   // fixa continua visivel, apenas sem rotulos).
@@ -141,8 +152,11 @@ export function AdminShell() {
               key={item.to}
               to={item.to}
               end={item.to === "/app"}
-              onClick={() => setDrawerOpen(false)}
-              title={item.label}
+              onClick={() => { setDrawerOpen(false); setDica(null); }}
+              onMouseEnter={(e) => mostrarDica(e.currentTarget, item.label)}
+              onMouseLeave={() => setDica(null)}
+              onFocus={(e) => mostrarDica(e.currentTarget, item.label)}
+              onBlur={() => setDica(null)}
               aria-label={item.label}
               className={({ isActive }) => `admin-nav-item ${isActive ? "is-active" : ""}`}
             >
@@ -151,12 +165,13 @@ export function AdminShell() {
             </NavLink>
           ))}
         </nav>
-        <div className="admin-sidebar-foot">
-          <button type="button" className="admin-rail-hint" onClick={toggleSidebar}>
-            {collapsed ? "Mostrar nomes" : "Ocultar nomes"}
-          </button>
-        </div>
       </aside>
+
+      {dica && (
+        <span className="admin-rail-tip" role="tooltip" style={{ top: dica.top, left: dica.left }}>
+          {dica.texto}
+        </span>
+      )}
 
       <div className="admin-main">
         <header className="admin-header">

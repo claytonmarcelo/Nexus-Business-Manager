@@ -4,10 +4,12 @@ import { useAuth } from "../context/AuthContext";
 import { notify } from "../lib/notify";
 import { confirmAction } from "../lib/confirm";
 import { Modal, useDirty } from "../components/Modal";
-import { Pagination } from "../components/Pagination";
+import { Pagination, PAGE_SIZE_PADRAO } from "../components/Pagination";
+import { Tabs, TabPanel, useTabState, type TabItem } from "../components/Tabs";
 import { MODAL_COPY, modalTitle, notice } from "../lib/uiCopy";
 import { EmptyState, ErrorState, LoadingInline } from "../components/StateView";
-import { formatCurrency, formatDate } from "../lib/format";
+import { formatCurrency, formatDate, formatDateTime } from "../lib/format";
+import { descricaoDaAcao } from "../lib/auditLabels";
 
 type LeadStatus = "NEW" | "CONTACTED" | "PROPOSAL" | "WON" | "LOST";
 
@@ -18,6 +20,39 @@ interface LeadRow {
 }
 interface Stage { status: LeadStatus; count: number; value: number }
 interface Paged<T> { data: T[]; meta: { page: number; pageSize: number; total: number; totalPages: number } }
+
+// Campos exatos de crm() em apps/api/src/modules/reports/reports.service.ts.
+interface OrigemItem { origem: string; quantidade: number; valor: number; participacao: number }
+interface StatusItem { status: string; quantidade: number; valor: number; participacao: number }
+interface CrmRelatorio { total: number; origem: OrigemItem[]; status: StatusItem[]; diasMediosFechamento: number | null }
+
+// Trilha de auditoria dos leads (GET /audit?entity=lead).
+interface AuditLead {
+  id: string; action: string; entity: string; entityId: string | null;
+  ip: string | null; createdAt: string; userName: string | null; userEmail: string | null;
+  metadata?: {
+    leadName?: string | null;
+    de?: string;
+    para?: string;
+    alteracoes?: string[];
+    valor?: { de: number; para: number } | null;
+  } | null;
+}
+
+// Texto do historico: o codigo da auditoria vira frase de negocio, e os
+// metadados do servidor dizem o que mudou (estagio, valor, contato).
+function descricaoDoEvento(r: AuditLead): { titulo: string; detalhe: string | null; lead: string } {
+  const meta = r.metadata ?? {};
+  const partes: string[] = [];
+  if (meta.de && meta.para) partes.push("de " + rotuloStatus(meta.de) + " para " + rotuloStatus(meta.para));
+  if (meta.alteracoes && meta.alteracoes.length > 0) partes.push("ajustou " + meta.alteracoes.join(", "));
+  if (meta.valor) partes.push("valor foi para " + formatCurrency(meta.valor.para));
+  return {
+    titulo: descricaoDaAcao(r.action, r.entity),
+    detalhe: partes.length > 0 ? partes.join(" · ") : null,
+    lead: meta.leadName ?? (r.entityId ? "lead " + r.entityId.slice(0, 8) : "—"),
+  };
+}
 
 // Rotulos e cores do funil. O backend decide o estagio inicial (Novo) e converte
 // em cliente quando o lead passa a Ganho.
@@ -32,17 +67,28 @@ const STAGES: { status: LeadStatus; label: string; hint: string; tone: string }[
 const SOURCES = ["Indicação", "Site", "Instagram", "Facebook", "WhatsApp", "Google", "Evento", "Outros"];
 
 const stageInfo = (status: LeadStatus) => STAGES.find((s) => s.status === status) ?? STAGES[0];
+const rotuloStatus = (status: string) => STAGES.find((s) => s.status === status)?.label ?? status;
 
 // Portugues correto: "1 lead aguardando", "3 leads aguardando".
 const plural = (n: number, um: string, muitos: string) => n + " " + (n === 1 ? um : muitos);
 
-// Modulo CRM: funil com valor por estagio, filtro por etapa e mudanca de
-// estagio com confirmacao SweetAlert2 (nunca alert nativo).
+const ABAS: TabItem[] = [
+  { id: "funil", label: "Funil de Vendas", hint: "Pipeline por estágio e mudança de estágio" },
+  { id: "leads", label: "Leads", hint: "Lista com busca, filtros e cadastro" },
+  { id: "atividades", label: "Atividades", hint: "Análise de leads e histórico de auditoria" },
+];
+
+// Módulo CRM em três abas: funil (visualização por estágio), leads (operação da
+// lista) e atividades (análise do relatório + trilha de auditoria dos leads).
 export function CRM() {
   const { can } = useAuth();
+  const { active, onSelect } = useTabState(ABAS, "funil");
+  const podeAuditoria = can("audit:read");
+
   const [rows, setRows] = useState<Paged<LeadRow> | null>(null);
   const [stages, setStages] = useState<Stage[]>([]);
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(PAGE_SIZE_PADRAO);
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("");
   const [loading, setLoading] = useState(true);
@@ -50,28 +96,81 @@ export function CRM() {
   const [editing, setEditing] = useState<LeadRow | "new" | null>(null);
   const [detail, setDetail] = useState<LeadRow | null>(null);
 
-  const load = useCallback(async () => {
+  // Dados de análise (aba Atividades): buscados apenas com a aba ativa.
+  const [relatorio, setRelatorio] = useState<CrmRelatorio | null>(null);
+  const [relLoading, setRelLoading] = useState(true);
+  const [relError, setRelError] = useState<string | null>(null);
+  const [actPage, setActPage] = useState(1);
+  const [actSize, setActSize] = useState(PAGE_SIZE_PADRAO);
+  const [actRows, setActRows] = useState<Paged<AuditLead> | null>(null);
+  const [actLoading, setActLoading] = useState(true);
+  const [actError, setActError] = useState<string | null>(null);
+
+  const loadPipeline = useCallback(async () => {
+    try {
+      const { data } = await api.get<Stage[]>("/leads/pipeline");
+      setStages(data);
+    } catch (err) {
+      notify.error(extractErrorMessage(err));
+    }
+  }, []);
+
+  const loadLeads = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const [list, pipe] = await Promise.all([
-        api.get<Paged<LeadRow>>("/leads", {
-          params: { page, pageSize: 10, search: search || undefined, status: status || undefined },
-        }),
-        api.get<Stage[]>("/leads/pipeline"),
-      ]);
-      setRows(list.data);
-      setStages(pipe.data);
+      const { data } = await api.get<Paged<LeadRow>>("/leads", {
+        params: { page, pageSize, search: search || undefined, status: status || undefined },
+      });
+      setRows(data);
     } catch (err) {
       setError(extractErrorMessage(err));
     } finally {
       setLoading(false);
     }
-  }, [page, search, status]);
+  }, [page, pageSize, search, status]);
+
+  const loadCrmRelatorio = useCallback(async () => {
+    setRelLoading(true);
+    setRelError(null);
+    try {
+      const { data } = await api.get<CrmRelatorio>("/reports/crm");
+      setRelatorio(data);
+    } catch (err) {
+      setRelError(extractErrorMessage(err));
+    } finally {
+      setRelLoading(false);
+    }
+  }, [active]);
+
+  const loadAudit = useCallback(async () => {
+    setActLoading(true);
+    setActError(null);
+    try {
+      const { data } = await api.get<Paged<AuditLead>>("/audit", {
+        params: { page: actPage, pageSize: actSize, entity: "lead" },
+      });
+      setActRows(data);
+    } catch (err) {
+      setActError(extractErrorMessage(err));
+    } finally {
+      setActLoading(false);
+    }
+  }, [actPage, actSize, active]);
 
   useEffect(() => {
-    void load();
-  }, [load]);
+    if (active === "funil") void loadPipeline();
+  }, [active, loadPipeline]);
+
+  useEffect(() => {
+    if (active === "leads") void loadLeads();
+  }, [active, loadLeads]);
+
+  useEffect(() => {
+    if (active !== "atividades") return;
+    void loadCrmRelatorio();
+    if (podeAuditoria) void loadAudit();
+  }, [active, podeAuditoria, loadCrmRelatorio, loadAudit]);
 
   async function moveStage(lead: LeadRow, next: LeadStatus) {
     if (lead.status === next) return;
@@ -96,7 +195,9 @@ export function CRM() {
       const { data } = await api.patch<LeadRow>("/leads/" + lead.id + "/status", { status: next });
       notify.success("Lead movido para " + stageInfo(next).label.toLowerCase() + ".");
       setDetail((atual) => (atual && atual.id === data.id ? data : atual));
-      void load();
+      void loadPipeline();
+      void loadLeads();
+      if (active === "atividades") void loadAudit();
     } catch (err) {
       notify.error(extractErrorMessage(err));
     }
@@ -122,162 +223,303 @@ export function CRM() {
         ) : null}
       </div>
 
-      <div className="kpi-grid">
-        <div className="card-surface kpi">
-          <span className="kpi-label">Em aberto</span>
-          <div className="kpi-value mono">{formatCurrency(valorAberto)}</div>
-          <span className="kpi-hint">{plural(leadsAbertos, "lead", "leads")} aguardando fechamento</span>
-        </div>
-        <div className="card-surface kpi">
-          <span className="kpi-label">Ganhos</span>
-          <div className="kpi-value">{ganhos}</div>
-          <span className="kpi-hint">clientes vindos do funil</span>
-        </div>
-        <div className="card-surface kpi">
-          <span className="kpi-label">Perdidos</span>
-          <div className="kpi-value">{perdidos}</div>
-          <span className="kpi-hint">fora do funil por enquanto</span>
-        </div>
-        <div className="card-surface kpi">
-          <span className="kpi-label">Conversão</span>
-          <div className="kpi-value">{conversao}%</div>
-          <span className="kpi-hint">{decididos > 0 ? "de " + decididos + " leads decididos" : "nenhum lead decidido ainda"}</span>
-        </div>
-      </div>
+      <Tabs
+        tabs={ABAS}
+        active={active}
+        onSelect={(id) => { setPage(1); setActPage(1); onSelect(id); }}
+        ariaLabel="Seções do CRM"
+      />
 
-      <div className="pipeline-grid" role="group" aria-label="Estágios do funil">
-        {STAGES.map((stage) => {
-          const dado = stages.find((s) => s.status === stage.status);
-          const ativo = status === stage.status;
-          return (
-            <button
-              key={stage.status}
-              type="button"
-              className={"pipeline-card " + stage.tone + (ativo ? " is-active" : "")}
-              aria-pressed={ativo}
-              title={ativo ? "Mostrar todos os estágios" : "Ver apenas " + stage.label}
-              onClick={() => {
-                setStatus(ativo ? "" : stage.status);
-                setPage(1);
-              }}
-            >
-              <span className="pipeline-top">
-                <span className="pipeline-label">{stage.label}</span>
-                <span className="pipeline-count">{dado?.count ?? 0}</span>
-              </span>
-              <span className="pipeline-value mono">{formatCurrency(dado?.value ?? 0)}</span>
-              <span className="pipeline-hint">{stage.hint}</span>
-            </button>
-          );
-        })}
-      </div>
+      {/* ---- Aba Funil de Vendas ---- */}
+      <TabPanel id="funil" active={active}>
+        <div className="kpi-grid">
+          <div className="kpi card-surface">
+            <span className="kpi-label">Em aberto</span>
+            <div className="kpi-value mono">{formatCurrency(valorAberto)}</div>
+            <span className="kpi-hint">{plural(leadsAbertos, "lead", "leads")} aguardando fechamento</span>
+          </div>
+          <div className="kpi card-surface">
+            <span className="kpi-label">Ganhos</span>
+            <div className="kpi-value">{ganhos}</div>
+            <span className="kpi-hint">clientes vindos do funil</span>
+          </div>
+          <div className="kpi card-surface">
+            <span className="kpi-label">Perdidos</span>
+            <div className="kpi-value">{perdidos}</div>
+            <span className="kpi-hint">fora do funil por enquanto</span>
+          </div>
+          <div className="kpi card-surface">
+            <span className="kpi-label">Conversão</span>
+            <div className="kpi-value">{conversao}%</div>
+            <span className="kpi-hint">{decididos > 0 ? "de " + decididos + " leads decididos" : "nenhum lead decidido ainda"}</span>
+          </div>
+        </div>
 
-      <div className="toolbar">
-        <input
-          className="input"
-          type="search"
-          placeholder="Buscar por nome ou e-mail"
-          value={search}
-          onChange={(e) => { setSearch(e.target.value); setPage(1); }}
-          aria-label="Buscar leads"
-        />
-        <select
-          className="select"
-          style={{ maxWidth: 220 }}
-          value={status}
-          onChange={(e) => { setStatus(e.target.value); setPage(1); }}
-          aria-label="Filtrar por estágio"
-        >
-          <option value="">Todos os estágios</option>
-          {STAGES.map((s) => <option key={s.status} value={s.status}>{s.label}</option>)}
-        </select>
-        {status ? (
-          <button type="button" className="btn btn-ghost btn-sm" onClick={() => { setStatus(""); setPage(1); }}>
-            Limpar filtro
-          </button>
-        ) : null}
-      </div>
+        <div className="pipeline-grid" role="group" aria-label="Estágios do funil">
+          {STAGES.map((stage) => {
+            const dado = stages.find((s) => s.status === stage.status);
+            const ativo = status === stage.status;
+            return (
+              <button
+                key={stage.status}
+                type="button"
+                className={"pipeline-card " + stage.tone + (ativo ? " is-active" : "")}
+                aria-pressed={ativo}
+                title={ativo ? "Mostrar todos os estágios" : "Ver apenas " + stage.label}
+                onClick={() => {
+                  setStatus(ativo ? "" : stage.status);
+                  setPage(1);
+                }}
+              >
+                <span className="pipeline-top">
+                  <span className="pipeline-label">{stage.label}</span>
+                  <span className="pipeline-count">{dado?.count ?? 0}</span>
+                </span>
+                <span className="pipeline-value mono">{formatCurrency(dado?.value ?? 0)}</span>
+                <span className="pipeline-hint">{stage.hint}</span>
+              </button>
+            );
+          })}
+        </div>
+        <p className="nx-panel-sub">Selecione um estágio para filtrar os leads na aba Leads.</p>
+      </TabPanel>
 
-      {loading ? (
-        <LoadingInline />
-      ) : error ? (
-        <ErrorState message={error} onRetry={load} />
-      ) : rows && rows.data.length > 0 ? (
-        <div className="card-surface table-wrap">
-          <table className="table">
-            <thead>
-              <tr>
-                <th scope="col">Lead</th>
-                <th scope="col">Origem</th>
-                <th scope="col">Valor</th>
-                <th scope="col">Estágio</th>
-                <th scope="col">Responsável</th>
-                <th scope="col">Criado</th>
-                {can("crm:write") ? <th scope="col">Ações</th> : null}
-              </tr>
-            </thead>
-            <tbody>
-              {rows.data.map((lead) => (
-                <tr key={lead.id}>
-                  <td>
-                    <button type="button" className="lead-link" onClick={() => setDetail(lead)}>
-                      {lead.name}
-                    </button>
-                    <span className="lead-contact">
-                      {lead.email ?? lead.phone ?? "sem contato registrado"}
-                    </span>
-                  </td>
-                  <td>{lead.source ?? "—"}</td>
-                  <td className="mono">{formatCurrency(lead.value)}</td>
-                  <td>
-                    <span className={"status-pill " + stageInfo(lead.status).tone}>
-                      {stageInfo(lead.status).label}
-                    </span>
-                  </td>
-                  <td>{lead.userName ?? "—"}</td>
-                  <td className="mono">{formatDate(lead.createdAt)}</td>
-                  {can("crm:write") ? (
-                    <td>
-                      <div className="row-actions">
-                        <button type="button" className="btn btn-ghost btn-sm" onClick={() => setEditing(lead)}>Editar</button>
-                        <select
-                          className="select select-sm"
-                          value={lead.status}
-                          aria-label={"Mudar estágio de " + lead.name}
-                          onChange={(e) => void moveStage(lead, e.target.value as LeadStatus)}
-                        >
-                          {STAGES.map((s) => <option key={s.status} value={s.status}>{s.label}</option>)}
-                        </select>
-                      </div>
-                    </td>
-                  ) : null}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-          <Pagination
-            page={rows.meta.page}
-            pageSize={rows.meta.pageSize}
-            total={rows.meta.total}
-            totalPages={rows.meta.totalPages}
-            onChange={setPage}
+      {/* ---- Aba Leads ---- */}
+      <TabPanel id="leads" active={active}>
+        <div className="toolbar">
+          <input
+            className="input"
+            type="search"
+            placeholder="Buscar por nome ou e-mail"
+            value={search}
+            onChange={(e) => { setSearch(e.target.value); setPage(1); }}
+            aria-label="Buscar leads"
           />
+          <select
+            className="select"
+            style={{ maxWidth: 220 }}
+            value={status}
+            onChange={(e) => { setStatus(e.target.value); setPage(1); }}
+            aria-label="Filtrar por estágio"
+          >
+            <option value="">Todos os estágios</option>
+            {STAGES.map((s) => <option key={s.status} value={s.status}>{s.label}</option>)}
+          </select>
+          {status ? (
+            <button type="button" className="btn btn-ghost btn-sm" onClick={() => { setStatus(""); setPage(1); }}>
+              Limpar filtro
+            </button>
+          ) : null}
         </div>
-      ) : (
-        <EmptyState
-          title={status || search ? "Nenhum lead neste filtro" : "Nenhum lead no funil ainda"}
-          description={can("crm:write") ? "Registre o primeiro contato e acompanhe até o fechamento." : "Ajuste a busca ou o estágio."}
-          action={can("crm:write") && !status && !search ? (
-            <button type="button" className="btn btn-brand" onClick={() => setEditing("new")}>Novo lead</button>
-          ) : undefined}
-        />
-      )}
+
+        {loading ? (
+          <LoadingInline label="Carregando leads…" />
+        ) : error ? (
+          <ErrorState message={error} onRetry={loadLeads} />
+        ) : rows && rows.data.length > 0 ? (
+          <div className="card-surface table-wrap">
+            <table className="table">
+              <thead>
+                <tr>
+                  <th scope="col">Lead</th>
+                  <th scope="col">Origem</th>
+                  <th scope="col">Valor</th>
+                  <th scope="col">Estágio</th>
+                  <th scope="col">Responsável</th>
+                  <th scope="col">Criado</th>
+                  {can("crm:write") ? <th scope="col">Ações</th> : null}
+                </tr>
+              </thead>
+              <tbody>
+                {rows.data.map((lead) => (
+                  <tr key={lead.id}>
+                    <td>
+                      <button type="button" className="lead-link" onClick={() => setDetail(lead)}>
+                        {lead.name}
+                      </button>
+                      <span className="lead-contact">
+                        {lead.email ?? lead.phone ?? "sem contato registrado"}
+                      </span>
+                    </td>
+                    <td>{lead.source ?? "—"}</td>
+                    <td className="mono">{formatCurrency(lead.value)}</td>
+                    <td>
+                      <span className={"status-pill " + stageInfo(lead.status).tone}>
+                        {stageInfo(lead.status).label}
+                      </span>
+                    </td>
+                    <td>{lead.userName ?? "—"}</td>
+                    <td className="mono">{formatDate(lead.createdAt)}</td>
+                    {can("crm:write") ? (
+                      <td>
+                        <div className="row-actions">
+                          <button type="button" className="btn btn-ghost btn-sm" onClick={() => setEditing(lead)}>Editar</button>
+                          <select
+                            className="select select-sm"
+                            value={lead.status}
+                            aria-label={"Mudar estágio de " + lead.name}
+                            onChange={(e) => void moveStage(lead, e.target.value as LeadStatus)}
+                          >
+                            {STAGES.map((s) => <option key={s.status} value={s.status}>{s.label}</option>)}
+                          </select>
+                        </div>
+                      </td>
+                    ) : null}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            <Pagination
+              page={rows.meta.page}
+              pageSize={rows.meta.pageSize}
+              total={rows.meta.total}
+              totalPages={rows.meta.totalPages}
+              onChange={setPage}
+              onPageSizeChange={(n) => { setPageSize(n); setPage(1); }}
+              itemLabel="leads"
+              itemLabelSingular="lead"
+            />
+          </div>
+        ) : (
+          <EmptyState
+            title={status || search ? "Nenhum lead neste filtro" : "Nenhum lead no funil ainda"}
+            description={can("crm:write") ? "Registre o primeiro contato e acompanhe até o fechamento." : "Ajuste a busca ou o estágio."}
+            action={can("crm:write") && !status && !search ? (
+              <button type="button" className="btn btn-brand" onClick={() => setEditing("new")}>Novo lead</button>
+            ) : undefined}
+          />
+        )}
+      </TabPanel>
+
+      {/* ---- Aba Atividades ---- */}
+      <TabPanel id="atividades" active={active}>
+        <div className="nx-split">
+          <div className="card-surface panel">
+            <h2 className="nx-panel-title">Origem e status dos leads</h2>
+            <p className="nx-panel-sub">Números calculados sobre todos os leads da empresa ativa.</p>
+            {relLoading ? (
+              <LoadingInline label="Carregando a análise…" />
+            ) : relError ? (
+              <ErrorState message={relError} onRetry={loadCrmRelatorio} />
+            ) : relatorio ? (
+              <>
+                <div className="kpi-grid">
+                  <div className="kpi card-surface">
+                    <span className="kpi-label">Total de leads</span>
+                    <div className="kpi-value">{relatorio.total}</div>
+                    <span className="kpi-hint">em todas as origens</span>
+                  </div>
+                  <div className="kpi card-surface">
+                    <span className="kpi-label">Tempo médio de fechamento</span>
+                    <div className="kpi-value">{relatorio.diasMediosFechamento === null ? "—" : relatorio.diasMediosFechamento}</div>
+                    <span className="kpi-hint">{relatorio.diasMediosFechamento === null ? "sem leads fechados ainda" : plural(relatorio.diasMediosFechamento, "dia", "dias")}</span>
+                  </div>
+                </div>
+
+                <div className="nx-panel-title" style={{ fontSize: "0.85rem", marginTop: "0.4rem" }}>Por origem</div>
+                {relatorio.origem.length === 0 ? (
+                  <p className="nx-panel-sub" style={{ margin: "0.4rem 0 0" }}>Nenhuma origem informada.</p>
+                ) : (
+                  <ul className="nx-distrib">
+                    {relatorio.origem.map((o) => (
+                      <li key={o.origem} className="nx-distrib-row">
+                        <span className="nx-distrib-label" title={o.origem}>{o.origem}</span>
+                        <span className="nx-distrib-track">
+                          <span className="nx-distrib-fill" style={{ width: Math.max(2, Math.min(100, o.participacao)) + "%" }} />
+                        </span>
+                        <span className="nx-distrib-value">{formatCurrency(o.valor)} · {plural(o.quantidade, "lead", "leads")}</span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+
+                <div className="nx-panel-title" style={{ fontSize: "0.85rem", marginTop: "0.9rem" }}>Por estágio</div>
+                {relatorio.status.length === 0 ? (
+                  <p className="nx-panel-sub" style={{ margin: "0.4rem 0 0" }}>Nenhum lead cadastrado.</p>
+                ) : (
+                  <ul className="nx-distrib">
+                    {relatorio.status.map((s) => (
+                      <li key={s.status} className="nx-distrib-row">
+                        <span className="nx-distrib-label" title={rotuloStatus(s.status)}>{rotuloStatus(s.status)}</span>
+                        <span className="nx-distrib-track">
+                          <span className="nx-distrib-fill" style={{ width: Math.max(2, Math.min(100, s.participacao)) + "%" }} />
+                        </span>
+                        <span className="nx-distrib-value">{formatCurrency(s.valor)} · {plural(s.quantidade, "lead", "leads")}</span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </>
+            ) : (
+              <EmptyState title="Sem dados de análise" description="Cadastre leads para vê-los aqui." />
+            )}
+          </div>
+
+          <div className="card-surface panel">
+            <h2 className="nx-panel-title">Histórico de alterações</h2>
+            <p className="nx-panel-sub">
+              Trilha de auditoria dos leads: quem alterou, o que mudou e quando. Cada linha traduz a operação para a linguagem do negócio.
+            </p>
+            {!podeAuditoria ? (
+              <EmptyState title="Sem permissão para o histórico" description="Seu perfil não tem acesso à trilha de auditoria." />
+            ) : actLoading ? (
+              <LoadingInline label="Carregando o histórico…" />
+            ) : actError ? (
+              <ErrorState message={actError} onRetry={loadAudit} />
+            ) : actRows && actRows.data.length > 0 ? (
+              <div className="table-wrap nx-scroll">
+                <table className="table">
+                  <thead>
+                    <tr>
+                      <th scope="col">Quem</th>
+                      <th scope="col" className="col-acao">O que fez</th>
+                      <th scope="col">Lead</th>
+                      <th scope="col" className="col-quando">Quando</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {actRows.data.map((r) => {
+                      const evento = descricaoDoEvento(r);
+                      return (
+                        <tr key={r.id}>
+                          <td>
+                            <span className="company-name">{r.userName ?? "Sistema"}</span>
+                            <span className="company-meta">{r.userEmail ?? "—"}</span>
+                          </td>
+                          <td className="col-acao">
+                            <span className="company-name">{evento.titulo}</span>
+                            {evento.detalhe ? <span className="company-meta">{evento.detalhe}</span> : null}
+                          </td>
+                          <td>{evento.lead}</td>
+                          <td className="mono col-quando">{formatDateTime(r.createdAt)}</td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+                <Pagination
+                  page={actRows.meta.page}
+                  pageSize={actRows.meta.pageSize}
+                  total={actRows.meta.total}
+                  totalPages={actRows.meta.totalPages}
+                  onChange={setActPage}
+                  onPageSizeChange={(n) => { setActSize(n); setActPage(1); }}
+                  itemLabel="eventos"
+                  itemLabelSingular="evento"
+                />
+              </div>
+            ) : (
+              <EmptyState title="Nenhuma alteração registrada" description="As mudanças feitas nos leads aparecerão aqui." />
+            )}
+          </div>
+        </div>
+      </TabPanel>
 
       {editing ? (
         <LeadModal
           lead={editing}
           onClose={() => setEditing(null)}
-          onSaved={() => { setEditing(null); void load(); }}
+          onSaved={() => { setEditing(null); void loadPipeline(); void loadLeads(); }}
         />
       ) : null}
       {detail ? (

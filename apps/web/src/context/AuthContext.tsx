@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from "react";
-import { api } from "../lib/api";
+import { api, refreshSession } from "../lib/api";
 import { tokenStore } from "../lib/tokenStore";
 
 export interface SessionUser {
@@ -34,7 +34,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setStatus("authenticated");
   }, []);
 
-  // Bootstrap de sessão: tenta renovar via refresh token ao montar.
   useEffect(() => {
     let cancelled = false;
     (async () => {
@@ -43,15 +42,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setStatus("anonymous");
         return;
       }
+      // Bootstrap de sessão: uma unica renovacao compartilhada (ver lib/api.ts).
+      const novoAccess = await refreshSession();
+      if (cancelled) return;
+      if (!novoAccess) {
+        setStatus("anonymous");
+        return;
+      }
       try {
-        const { data } = await api.post("/auth/refresh", { refreshToken: refresh });
-        tokenStore.setAccess(data.accessToken);
-        tokenStore.setRefresh(data.refreshToken);
-        if (cancelled) return;
         await loadMe();
       } catch {
         tokenStore.clear();
-        if (!cancelled) setStatus("anonymous");
+        setStatus("anonymous");
       }
     })();
     return () => {

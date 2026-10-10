@@ -67,8 +67,9 @@ function estado() {
     iconTransform: svg ? getComputedStyle(svg).transform : "",
     labelDisplay: label ? getComputedStyle(label).display : "",
     brandDisplay: brand ? getComputedStyle(brand).display : "",
-    tooltip: first ? getComputedStyle(first, "::after").content : "",
-    tooltipOpacity: first ? getComputedStyle(first, "::after").opacity : "",
+    // A barra nao pode panar na horizontal: foi aqui que nasceu a barra de
+    // rolagem no pe do menu (o tooltip media dentro do conteudo rolavel).
+    sidebarOverflowX: sidebar ? sidebar.scrollWidth - sidebar.clientWidth : -1,
     scrimDisplay: (() => {
       const s = document.querySelector(".admin-scrim");
       return s ? getComputedStyle(s).display : "ausente";
@@ -116,13 +117,21 @@ function estado() {
   ok("icone gira com feedback (scaleX invertido)", e.iconTransform.startsWith("matrix(-1"), e.iconTransform);
   ok("aria-label vira expandir", e.ariaLabel === "Expandir menu lateral", e.ariaLabel);
   ok("aria-expanded passa a falso", e.ariaExpanded === "false");
-  ok("tooltip do item existe no modo trilha", /Dashboard/.test(e.tooltip), e.tooltip);
+  ok("sem rolagem horizontal dentro da sidebar", e.sidebarOverflowX <= 0, "estouro " + e.sidebarOverflowX + "px");
   ok("conteudo nao estoura a largura da janela", e.overflowX <= 0, "overflow " + e.overflowX);
 
   await page.hover(".admin-nav-item");
   await espera(250);
-  const tooltipVisivel = await page.evaluate(() => getComputedStyle(document.querySelector(".admin-nav-item"), "::after").opacity);
-  ok("tooltip aparece ao passar o mouse", Number(tooltipVisivel) === 1, tooltipVisivel);
+  const dica = await page.evaluate(() => {
+    const el = document.querySelector(".admin-rail-tip");
+    const sb = document.querySelector(".admin-sidebar");
+    if (!el) return null;
+    const r = el.getBoundingClientRect();
+    return { texto: el.textContent, foraDaBarra: r.left >= sb.getBoundingClientRect().right, visivel: r.width > 0, papel: el.getAttribute("role") };
+  });
+  ok("dica mostra o nome do item ao passar o mouse", Boolean(dica) && /Dashboard/.test(dica.texto), dica && dica.texto);
+  ok("dica aparece do lado de fora da barra", Boolean(dica) && dica.foraDaBarra === true);
+  ok("dica continua sem alargar a barra", (await page.evaluate(() => { const b = document.querySelector(".admin-sidebar"); return b.scrollWidth - b.clientWidth; })) <= 0);
   await semToast(page);
   await page.screenshot({ path: SHOTS + "/16-sidebar-colapsada.png" });
 

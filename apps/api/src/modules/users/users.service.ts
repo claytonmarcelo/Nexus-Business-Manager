@@ -75,3 +75,62 @@ export async function updateRole(companyId: string, userId: string, role: Role, 
   await audit({ userId: actorId, companyId, action: "user.update_role", entity: "user", entityId: userId, ip: ip ?? null, metadata: { role } });
   return { id: userId, role: updated.role };
 }
+
+// ---- Sessoes ativas (aba Sessoes da tela de Usuarios) ----
+// O refresh token e rotacionado e revogado no servidor, entao a unica lista
+// honesta de "onde estou logado" e o que ainda nao foi revogado nem expirou.
+export async function listSessions(companyId: string) {
+  const rows = await prisma.refreshToken.findMany({
+    where: {
+      revokedAt: null,
+      expiresAt: { gt: new Date() },
+      user: { memberships: { some: { companyId } } },
+    },
+    orderBy: { createdAt: "desc" },
+    take: 100,
+    include: {
+      user: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          memberships: { where: { companyId }, select: { role: true } },
+        },
+      },
+    },
+  });
+  return {
+    data: rows.map((r) => ({
+      id: r.id,
+      userId: r.userId,
+      usuario: r.user.name,
+      email: r.user.email,
+      papel: r.user.memberships[0]?.role ?? "STAFF",
+      origem: r.createdByIp,
+      criadaEm: r.createdAt,
+      expiraEm: r.expiresAt,
+    })),
+    meta: { total: rows.length },
+  };
+}
+
+// Encerra uma sessao: revoga o refresh token daquele dispositivo. O proximo
+// request daquela aba falha no refresh e derruba para o login.
+export async function revokeSession(companyId: string, sessionId: string, actorId: string, ip?: string) {
+  const registro = await prisma.refreshToken.findFirst({
+    where: { id: sessionId, user: { memberships: { some: { companyId } } } },
+  });
+  if (!registro) throw notFound("Sessão não encontrada");
+  if (registro.revokedAt) return { ok: true, ja: true };
+  await prisma.refreshToken.update({ where: { id: sessionId }, data: { revokedAt: new Date() } });
+  await audit({
+    userId: actorId,
+    companyId,
+    action: "user.revoke_session",
+    entity: "user",
+    entityId: registro.userId,
+    ip,
+    metadata: { sessionId },
+  });
+  return { ok: true };
+}

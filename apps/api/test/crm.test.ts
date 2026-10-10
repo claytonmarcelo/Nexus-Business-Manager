@@ -87,7 +87,7 @@ describe("CRM / leads", () => {
     expect(lead.clientName).toBe(nome);
 
     const clientes = await app.inject({ method: "GET", url: "/api/clients?pageSize=100", headers: auth(token) });
-    const lista = (clientes.json() as { data: Array<{ name: string; notes: string | null }> }).data;
+    const lista = (clientes.json() as { data: Array<{ id: string; name: string; notes: string | null }> }).data;
     const cliente = lista.find((c) => c.name === nome);
     expect(cliente).toBeDefined();
 

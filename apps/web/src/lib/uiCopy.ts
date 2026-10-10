@@ -45,7 +45,7 @@ export const STATE_COPY = {
 // ("Compra registrada." / "Categoria excluída.").
 export type EntityKey =
   | "client" | "product" | "sale" | "purchase" | "supplier"
-  | "entry" | "category" | "lead" | "member" | "stock" | "company";
+  | "entry" | "category" | "lead" | "event" | "member" | "stock" | "company";
 
 interface EntityCopy {
   label: string;
@@ -63,6 +63,7 @@ export const ENTITIES: Record<EntityKey, EntityCopy> = {
   entry: { label: "Lançamento", gender: "o", newTitle: "Novo lançamento", editTitle: "Editar lançamento" },
   category: { label: "Categoria", gender: "a", newTitle: "Nova categoria", editTitle: "Editar categoria" },
   lead: { label: "Lead", gender: "o", newTitle: "Novo lead", editTitle: "Editar lead" },
+  event: { label: "Compromisso", gender: "o", newTitle: "Novo compromisso", editTitle: "Editar compromisso" },
   member: { label: "Membro", gender: "o", newTitle: "Novo membro", editTitle: "Editar membro" },
   stock: { label: "Estoque", gender: "o", newTitle: "Movimentar estoque", editTitle: "Movimentar estoque" },
   company: { label: "Empresa", gender: "a", newTitle: "Nova empresa", editTitle: "Editar empresa" },

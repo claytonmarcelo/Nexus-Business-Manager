@@ -30,3 +30,35 @@ export async function audit(input: AuditInput): Promise<void> {
     console.error("[audit] falha ao registrar evento", input.action, input.entity);
   }
 }
+
+// Acoes que mexem no resultado do negocio, no dinheiro, no estoque ou no
+// acesso. A aba "Alteracoes Sensiveis" da Auditoria filtra por elas.
+// Mantida no servidor porque a mesma lista vale para qualquer tela futura
+// (alarmes, exportacoes) e para nao paginar um recorte errado no cliente.
+export function sensivelWhere() {
+  return {
+    OR: [
+      { action: { endsWith: ".delete" } },
+      {
+        action: {
+          in: [
+            "sale.cancelled",
+            "purchase.cancelled",
+            "finance.cancelled",
+            "finance.paid",
+            "lead.lost",
+            "lead.won",
+            "agenda.cancelled",
+            "stock.move",
+            "user.add",
+            "user.update_role",
+            "company.create",
+            "auth.reset_password",
+            "auth.forgot_password",
+            "auth.login.failed",
+          ],
+        },
+      },
+    ],
+  };
+}

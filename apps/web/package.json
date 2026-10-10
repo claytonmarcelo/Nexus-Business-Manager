@@ -10,6 +10,12 @@
     "typecheck": "tsc -b --noEmit"
   },
   "dependencies": {
+    "@fullcalendar/core": "6.1.21",
+    "@fullcalendar/daygrid": "6.1.21",
+    "@fullcalendar/interaction": "6.1.21",
+    "@fullcalendar/list": "6.1.21",
+    "@fullcalendar/react": "6.1.21",
+    "@fullcalendar/timegrid": "6.1.21",
     "admin-lte": "^4.10.0",
     "axios": "^1.7.7",
     "jquery": "^3.7.1",
