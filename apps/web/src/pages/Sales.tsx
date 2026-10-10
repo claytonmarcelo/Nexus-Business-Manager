@@ -3,7 +3,9 @@ import { api, extractErrorMessage } from "../lib/api";
 import { useAuth } from "../context/AuthContext";
 import { notify } from "../lib/notify";
 import { confirmAction } from "../lib/confirm";
+import { Modal, useDirty } from "../components/Modal";
 import { Pagination } from "../components/Pagination";
+import { ACTIONS, modalTitle } from "../lib/uiCopy";
 import { EmptyState, ErrorState, LoadingInline } from "../components/StateView";
 
 interface SaleItem { id: string; productId: string; productName: string | null; quantity: number; unitPrice: number; lineTotal: number }
@@ -159,6 +161,7 @@ function SaleModal({ onClose, onSaved }: { onClose: () => void; onSaved: () => v
   const [confirmNow, setConfirmNow] = useState(false);
   const [items, setItems] = useState<ItemDraft[]>([{ productId: "", quantity: "1", unitPrice: "" }]);
   const [saving, setSaving] = useState(false);
+  const dirty = useDirty({ clientId, notes, confirmNow, items });
   const [loadError, setLoadError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -223,9 +226,18 @@ function SaleModal({ onClose, onSaved }: { onClose: () => void; onSaved: () => v
   }
 
   return (
-    <div className="nx-dialog-overlay" role="dialog" aria-modal="true" aria-label="Novo pedido de venda" onClick={onClose}>
-      <div className="nx-dialog" onClick={(e) => e.stopPropagation()} style={{ width: "min(680px, 100%)" }}>
-        <h2 className="nx-dialog-title">Nova venda</h2>
+    <Modal
+      title={modalTitle("sale", true)}
+      subtitle="Some os itens, confirme agora para dar baixa no estoque ou salve como pedido pendente."
+      onClose={onClose}
+      onSubmit={() => void save()}
+      busy={saving}
+      dirty={dirty}
+      submitLabel="Registrar venda"
+      busyLabel="Registrando…"
+      size="lg"
+      hint={<span>Total: <strong className="mono">{brl.format(total)}</strong></span>}
+    >
 
         {loadError ? <ErrorState message={loadError} /> : null}
 
@@ -262,7 +274,7 @@ function SaleModal({ onClose, onSaved }: { onClose: () => void; onSaved: () => v
                 .join(" · ")}
             </p>
           ) : null}
-          <button type="button" className="btn btn-ghost btn-sm" onClick={() => setItems((prev) => [...prev, { productId: "", quantity: "1", unitPrice: "" }])}>+ Adicionar item</button>
+          <button type="button" className="btn btn-ghost btn-sm" onClick={() => setItems((prev) => [...prev, { productId: "", quantity: "1", unitPrice: "" }])}>{ACTIONS.addItem}</button>
         </div>
 
         <div className="field">
@@ -275,24 +287,19 @@ function SaleModal({ onClose, onSaved }: { onClose: () => void; onSaved: () => v
           Confirmar agora (baixa o estoque dos itens controlados)
         </label>
 
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "1rem", flexWrap: "wrap" }}>
-          <strong className="mono" style={{ fontSize: "1.1rem" }}>Total: {brl.format(total)}</strong>
-          <div className="nx-dialog-actions" style={{ marginTop: 0 }}>
-            <button type="button" className="btn btn-ghost" onClick={onClose}>Cancelar</button>
-            <button type="button" className="btn btn-brand" disabled={saving} onClick={() => void save()}>{saving ? "Salvando…" : "Registrar venda"}</button>
-          </div>
-        </div>
-      </div>
-    </div>
+    </Modal>
   );
 }
 
 // Detalhe da venda: cabeçalho com situação e lista dos itens com totais por linha.
 function SaleDetailModal({ sale, onClose }: { sale: SaleRow; onClose: () => void }) {
   return (
-    <div className="nx-dialog-overlay" role="dialog" aria-modal="true" aria-label="Detalhe da venda" onClick={onClose}>
-      <div className="nx-dialog" onClick={(e) => e.stopPropagation()}>
-        <h2 className="nx-dialog-title">Venda · <span className={"status-pill " + statusClass[sale.status]}>{statusLabel[sale.status]}</span></h2>
+    <Modal
+      title={<>Venda <span className={"status-pill " + statusClass[sale.status]}>{statusLabel[sale.status]}</span></>}
+      label="Detalhe da venda"
+      subtitle={(sale.clientName ?? "Consumidor final") + " · " + fmtData(sale.createdAt)}
+      onClose={onClose}
+    >
         <dl className="kv">
           <div><dt>Cliente</dt><dd>{sale.clientName ?? "Consumidor final"}</dd></div>
           <div><dt>Vendedor</dt><dd>{sale.userName ?? "—"}</dd></div>
@@ -310,10 +317,6 @@ function SaleDetailModal({ sale, onClose }: { sale: SaleRow; onClose: () => void
             </li>
           ))}
         </ul>
-        <div className="nx-dialog-actions">
-          <button type="button" className="btn btn-ghost" onClick={onClose}>Fechar</button>
-        </div>
-      </div>
-    </div>
+    </Modal>
   );
 }

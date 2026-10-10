@@ -3,7 +3,9 @@ import { api, extractErrorMessage } from "../lib/api";
 import { useAuth } from "../context/AuthContext";
 import { notify } from "../lib/notify";
 import { confirmAction } from "../lib/confirm";
+import { Modal, useDirty } from "../components/Modal";
 import { Pagination } from "../components/Pagination";
+import { ACTIONS, MODAL_COPY, modalTitle, notice } from "../lib/uiCopy";
 import { EmptyState, ErrorState, LoadingInline } from "../components/StateView";
 
 interface CategoryRow { id: string; name: string; type: "INCOME" | "EXPENSE" }
@@ -197,6 +199,7 @@ function EntryModal({ entry, onClose, onSaved }: { entry: EntryRow | "new"; onCl
   const [clients, setClients] = useState<Option[]>([]);
   const [suppliers, setSuppliers] = useState<Option[]>([]);
   const [busy, setBusy] = useState(false);
+  const dirty = useDirty(form);
 
   useEffect(() => {
     api.get<CategoryRow[]>("/finance/categories", { params: { type: form.type } })
@@ -234,10 +237,10 @@ function EntryModal({ entry, onClose, onSaved }: { entry: EntryRow | "new"; onCl
     try {
       if (isNew) {
         await api.post("/finance/entries", payload);
-        notify.success("Lançamento registrado.");
+        notify.success(notice("entry", "registered"));
       } else {
         await api.patch("/finance/entries/" + entry.id, payload);
-        notify.success("Lançamento atualizado.");
+        notify.success(notice("entry", "updated"));
       }
       onSaved();
       onClose();
@@ -251,9 +254,15 @@ function EntryModal({ entry, onClose, onSaved }: { entry: EntryRow | "new"; onCl
   const set = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => setForm({ ...form, [k]: e.target.value });
 
   return (
-    <div className="nx-dialog-overlay" role="dialog" aria-modal="true" aria-label={isNew ? "Novo lançamento" : "Editar lançamento"} onClick={onClose}>
-      <div className="nx-dialog" onClick={(e) => e.stopPropagation()}>
-        <h2 className="nx-dialog-title">{isNew ? "Novo lançamento" : "Editar lançamento"}</h2>
+    <Modal
+      title={modalTitle("entry", isNew)}
+      subtitle={isNew ? "Registre o que entra e o que sai da empresa." : "Ajuste os dados do lançamento."}
+      onClose={onClose}
+      onSubmit={() => void submit()}
+      busy={busy}
+      dirty={dirty}
+      hint={MODAL_COPY.requiredHint}
+    >
         <div className="field">
           <span className="field-label">Tipo</span>
           <div className="theme-choice">
@@ -296,12 +305,7 @@ function EntryModal({ entry, onClose, onSaved }: { entry: EntryRow | "new"; onCl
           <input type="checkbox" checked={form.paid} onChange={(e) => setForm({ ...form, paid: e.target.checked })} />
           {form.type === "INCOME" ? "Já recebido" : "Já pago"}
         </label>
-        <div className="nx-dialog-actions">
-          <button type="button" className="btn btn-ghost" onClick={onClose}>Cancelar</button>
-          <button type="button" className="btn btn-brand" disabled={busy} onClick={() => void submit()}>{busy ? "Salvando…" : "Salvar"}</button>
-        </div>
-      </div>
-    </div>
+    </Modal>
   );
 }
 
@@ -331,7 +335,7 @@ function CategoriesModal({ onClose }: { onClose: () => void }) {
     setBusy(true);
     try {
       await api.post("/finance/categories", { name: name.trim(), type });
-      notify.success("Categoria criada.");
+      notify.success(notice("category", "created"));
       setName("");
       void load();
     } catch (err) {
@@ -346,7 +350,7 @@ function CategoriesModal({ onClose }: { onClose: () => void }) {
     if (!ok) return;
     try {
       await api.delete("/finance/categories/" + c.id);
-      notify.success("Categoria excluída.");
+      notify.success(notice("category", "deleted"));
       void load();
     } catch (err) {
       notify.error(extractErrorMessage(err));
@@ -354,9 +358,7 @@ function CategoriesModal({ onClose }: { onClose: () => void }) {
   }
 
   return (
-    <div className="nx-dialog-overlay" role="dialog" aria-modal="true" aria-label="Categorias financeiras" onClick={onClose}>
-      <div className="nx-dialog" onClick={(e) => e.stopPropagation()}>
-        <h2 className="nx-dialog-title">Categorias financeiras</h2>
+    <Modal title="Categorias financeiras" subtitle="Separe receitas e despesas por tipo." onClose={onClose} size="lg">
         {can("finance:write") ? (
           <div className="toolbar" style={{ marginBottom: "0.9rem" }}>
             <input className="input" placeholder="Nova categoria" value={name} onChange={(e) => setName(e.target.value)} aria-label="Nome da categoria" />
@@ -364,7 +366,7 @@ function CategoriesModal({ onClose }: { onClose: () => void }) {
               <option value="INCOME">Receita</option>
               <option value="EXPENSE">Despesa</option>
             </select>
-            <button type="button" className="btn btn-brand btn-sm" disabled={busy} onClick={() => void add()}>Adicionar</button>
+            <button type="button" className="btn btn-brand btn-sm" disabled={busy} onClick={() => void add()}>{ACTIONS.add}</button>
           </div>
         ) : null}
         {rows.length > 0 ? (
@@ -382,10 +384,6 @@ function CategoriesModal({ onClose }: { onClose: () => void }) {
         ) : (
           <EmptyState title="Nenhuma categoria" description="Crie categorias para organizar seus lançamentos." />
         )}
-        <div className="nx-dialog-actions">
-          <button type="button" className="btn btn-ghost" onClick={onClose}>Fechar</button>
-        </div>
-      </div>
-    </div>
+    </Modal>
   );
 }

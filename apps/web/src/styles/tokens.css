@@ -86,3 +86,10 @@
   --neu-inset: inset 5px 5px 10px rgba(163, 141, 110, 0.26), inset -5px -5px 10px rgba(255, 255, 255, 0.9);
   --neu-press: 1px 1px 4px rgba(163, 141, 110, 0.3), -1px -1px 4px rgba(255, 255, 255, 0.85);
 }
+
+/* Aliases consumidos pelos componentes (.field-label, .page-sub, rodape de modal).
+   Sem definicao, var(--text-2) caia em currentColor e o texto perdia contraste. */
+:root {
+  --text-2: var(--text-muted);
+  --text-3: var(--text-faint);
+}

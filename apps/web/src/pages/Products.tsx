@@ -3,7 +3,9 @@ import { api, extractErrorMessage } from "../lib/api";
 import { useAuth } from "../context/AuthContext";
 import { notify } from "../lib/notify";
 import { confirmAction } from "../lib/confirm";
+import { Modal, useDirty } from "../components/Modal";
 import { Pagination } from "../components/Pagination";
+import { MODAL_COPY, modalTitle } from "../lib/uiCopy";
 import { EmptyState, ErrorState, LoadingInline } from "../components/StateView";
 
 interface ProductRow {
@@ -209,6 +211,7 @@ function ProductModal({ product, categories, onClose, onSaved }: {
     trackStock: p?.trackStock ?? true,
   });
   const [busy, setBusy] = useState(false);
+  const dirty = useDirty(form);
 
   async function submit() {
     if (!form.name.trim() || form.salePrice === "") {
@@ -245,11 +248,17 @@ function ProductModal({ product, categories, onClose, onSaved }: {
   }
 
   return (
-    <div className="nx-dialog-overlay" role="dialog" aria-modal="true" aria-label={isNew ? "Novo produto" : "Editar produto"}>
-      <div className="nx-dialog card-surface">
-        <h2 className="nx-dialog-title">{isNew ? "Novo produto" : "Editar produto"}</h2>
+    <Modal
+      title={modalTitle("product", isNew)}
+      subtitle={isNew ? "Cadastre o item que será vendido." : "Ajuste preço, estoque e categoria."}
+      onClose={onClose}
+      onSubmit={() => void submit()}
+      busy={busy}
+      dirty={dirty}
+      hint={MODAL_COPY.requiredHint}
+    >
         <div className="field">
-          <span className="field-label">Nome</span>
+          <span className="field-label">Nome *</span>
           <input className="input" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
         </div>
         <div className="auth-row" style={{ gap: "0.75rem", alignItems: "flex-start" }}>
@@ -294,14 +303,7 @@ function ProductModal({ product, categories, onClose, onSaved }: {
           <span className="neu-check-box" aria-hidden="true" />
           <span>Controlar estoque deste produto</span>
         </label>
-        <div className="nx-dialog-actions">
-          <button type="button" className="btn btn-ghost" onClick={onClose}>Cancelar</button>
-          <button type="button" className="btn btn-brand" onClick={submit} disabled={busy}>
-            {busy ? "Salvando…" : "Salvar"}
-          </button>
-        </div>
-      </div>
-    </div>
+    </Modal>
   );
 }
 
@@ -310,6 +312,7 @@ function MovementModal({ product, onClose, onSaved }: { product: ProductRow; onC
   const [quantity, setQuantity] = useState("");
   const [note, setNote] = useState("");
   const [busy, setBusy] = useState(false);
+  const dirty = useDirty({ kind, quantity, note });
 
   async function submit() {
     if (quantity === "" || Number(quantity) <= 0) {
@@ -331,9 +334,16 @@ function MovementModal({ product, onClose, onSaved }: { product: ProductRow; onC
 
   const labels = { IN: "Entrada", OUT: "Saída", ADJUST: "Ajuste (define o saldo)" } as const;
   return (
-    <div className="nx-dialog-overlay" role="dialog" aria-modal="true" aria-label="Movimentar estoque">
-      <div className="nx-dialog card-surface">
-        <h2 className="nx-dialog-title">Estoque — {product.name}</h2>
+    <Modal
+      title={"Estoque · " + product.name}
+      onClose={onClose}
+      onSubmit={() => void submit()}
+      busy={busy}
+      dirty={dirty}
+      submitLabel="Registrar"
+      busyLabel="Registrando…"
+      size="sm"
+    >
         <p className="page-sub" style={{ marginTop: "-0.5rem", marginBottom: "0.9rem" }}>
           Saldo atual: <strong className="mono">{product.stockQuantity} {product.unit}</strong> · mínimo {product.minStock}
         </p>
@@ -353,14 +363,7 @@ function MovementModal({ product, onClose, onSaved }: { product: ProductRow; onC
           <span className="field-label">Observação</span>
           <input className="input" value={note} onChange={(e) => setNote(e.target.value)} placeholder="Ex.: compra, inventário, perda" />
         </div>
-        <div className="nx-dialog-actions">
-          <button type="button" className="btn btn-ghost" onClick={onClose}>Cancelar</button>
-          <button type="button" className="btn btn-brand" onClick={submit} disabled={busy}>
-            {busy ? "Registrando…" : "Registrar"}
-          </button>
-        </div>
-      </div>
-    </div>
+    </Modal>
   );
 }
 
@@ -373,9 +376,7 @@ function HistoryModal({ product, onClose }: { product: ProductRow; onClose: () =
   }, [product.id]);
   const kindLabel = { IN: "Entrada", OUT: "Saída", ADJUST: "Ajuste" } as const;
   return (
-    <div className="nx-dialog-overlay" role="dialog" aria-modal="true" aria-label="Histórico de estoque">
-      <div className="nx-dialog card-surface">
-        <h2 className="nx-dialog-title">Histórico — {product.name}</h2>
+    <Modal title={"Histórico · " + product.name} onClose={onClose} size="lg">
         {!items ? <LoadingInline /> : items.data.length === 0 ? (
           <p className="text-muted">Nenhuma movimentação registrada.</p>
         ) : (
@@ -393,17 +394,14 @@ function HistoryModal({ product, onClose }: { product: ProductRow; onClose: () =
             ))}
           </ul>
         )}
-        <div className="nx-dialog-actions">
-          <button type="button" className="btn btn-ghost" onClick={onClose}>Fechar</button>
-        </div>
-      </div>
-    </div>
+    </Modal>
   );
 }
 
 function CategoryModal({ onClose, onSaved }: { onClose: () => void; onSaved: () => void }) {
   const [name, setName] = useState("");
   const [busy, setBusy] = useState(false);
+  const dirty = useDirty({ name });
   async function submit() {
     if (name.trim().length < 2) {
       notify.error("Informe um nome de categoria com pelo menos 2 caracteres.");
@@ -422,20 +420,21 @@ function CategoryModal({ onClose, onSaved }: { onClose: () => void; onSaved: () 
     }
   }
   return (
-    <div className="nx-dialog-overlay" role="dialog" aria-modal="true" aria-label="Nova categoria">
-      <div className="nx-dialog card-surface">
-        <h2 className="nx-dialog-title">Nova categoria</h2>
+    <Modal
+      title={modalTitle("category", true)}
+      onClose={onClose}
+      onSubmit={() => void submit()}
+      busy={busy}
+      dirty={dirty}
+      submitLabel="Criar"
+      busyLabel="Criando…"
+      hint={MODAL_COPY.requiredHint}
+      size="sm"
+    >
         <div className="field">
-          <span className="field-label">Nome</span>
+          <span className="field-label">Nome *</span>
           <input className="input" value={name} onChange={(e) => setName(e.target.value)} autoFocus />
         </div>
-        <div className="nx-dialog-actions">
-          <button type="button" className="btn btn-ghost" onClick={onClose}>Cancelar</button>
-          <button type="button" className="btn btn-brand" onClick={submit} disabled={busy}>
-            {busy ? "Salvando…" : "Criar"}
-          </button>
-        </div>
-      </div>
-    </div>
+    </Modal>
   );
 }

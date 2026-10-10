@@ -3,7 +3,9 @@ import { api, extractErrorMessage } from "../lib/api";
 import { useAuth } from "../context/AuthContext";
 import { notify } from "../lib/notify";
 import { confirmAction } from "../lib/confirm";
+import { Modal, useDirty } from "../components/Modal";
 import { Pagination } from "../components/Pagination";
+import { MODAL_COPY, modalTitle } from "../lib/uiCopy";
 import { EmptyState, ErrorState, LoadingInline } from "../components/StateView";
 
 interface ClientRow { id: string; name: string; email: string | null; phone: string | null; document: string | null; active: boolean; createdAt: string }
@@ -157,6 +159,8 @@ function ClientModal({ client, onClose, onSaved }: { client: ClientRow | "new"; 
       };
   const [form, setForm] = useState(initial);
   const [busy, setBusy] = useState(false);
+  // Avisa antes de descartar edicoes nao gravadas.
+  const dirty = useDirty(form);
 
   async function submit() {
     setBusy(true);
@@ -182,11 +186,16 @@ function ClientModal({ client, onClose, onSaved }: { client: ClientRow | "new"; 
   }
 
   return (
-    <div className="nx-dialog-overlay" role="dialog" aria-modal="true" aria-label={isNew ? "Novo cliente" : "Editar cliente"}>
-      <div className="nx-dialog card-surface">
-        <h2 className="nx-dialog-title">{isNew ? "Novo cliente" : "Editar cliente"}</h2>
+    <Modal
+      title={modalTitle("client", isNew)}
+      onClose={onClose}
+      onSubmit={() => void submit()}
+      busy={busy}
+      dirty={dirty}
+      hint={MODAL_COPY.requiredHint}
+    >
         <div className="field">
-          <span className="field-label">Nome</span>
+          <span className="field-label">Nome *</span>
           <input className="input" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
         </div>
         <div className="field">
@@ -205,13 +214,6 @@ function ClientModal({ client, onClose, onSaved }: { client: ClientRow | "new"; 
           <span className="field-label">Observações</span>
           <textarea className="input" rows={3} value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} />
         </div>
-        <div className="nx-dialog-actions">
-          <button type="button" className="btn btn-ghost" onClick={onClose}>Cancelar</button>
-          <button type="button" className="btn btn-brand" onClick={submit} disabled={busy}>
-            {busy ? "Salvando…" : "Salvar"}
-          </button>
-        </div>
-      </div>
-    </div>
+    </Modal>
   );
 }

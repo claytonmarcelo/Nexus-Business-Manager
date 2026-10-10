@@ -3,7 +3,9 @@ import { api, extractErrorMessage } from "../lib/api";
 import { useAuth } from "../context/AuthContext";
 import { notify } from "../lib/notify";
 import { confirmAction } from "../lib/confirm";
+import { Modal, useDirty } from "../components/Modal";
 import { Pagination } from "../components/Pagination";
+import { ACTIONS, MODAL_COPY, modalTitle } from "../lib/uiCopy";
 import { EmptyState, ErrorState, LoadingInline } from "../components/StateView";
 
 interface PurchaseItem { id: string; productId: string; productName: string | null; quantity: number; unitCost: number; lineTotal: number }
@@ -164,6 +166,7 @@ function PurchaseModal({ onClose, onSaved }: { onClose: () => void; onSaved: () 
   const [receiveNow, setReceiveNow] = useState(false);
   const [items, setItems] = useState<ItemDraft[]>([{ productId: "", quantity: "1", unitCost: "" }]);
   const [saving, setSaving] = useState(false);
+  const dirty = useDirty({ supplierId, notes, receiveNow, items });
   const [loadError, setLoadError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -229,9 +232,18 @@ function PurchaseModal({ onClose, onSaved }: { onClose: () => void; onSaved: () 
   }
 
   return (
-    <div className="nx-dialog-overlay" role="dialog" aria-modal="true" aria-label="Nova compra" onClick={onClose}>
-      <div className="nx-dialog" onClick={(e) => e.stopPropagation()} style={{ width: "min(680px, 100%)" }}>
-        <h2 className="nx-dialog-title">Nova compra</h2>
+    <Modal
+      title={modalTitle("purchase", true)}
+      subtitle="Informe o fornecedor e os custos; ao receber, o estoque dá entrada."
+      onClose={onClose}
+      onSubmit={() => void save()}
+      busy={saving}
+      dirty={dirty}
+      submitLabel="Registrar compra"
+      busyLabel="Registrando…"
+      size="lg"
+      hint={<span>Total: <strong className="mono">{brl.format(total)}</strong></span>}
+    >
         {loadError ? <ErrorState message={loadError} /> : null}
 
         <div className="field">
@@ -261,7 +273,7 @@ function PurchaseModal({ onClose, onSaved }: { onClose: () => void; onSaved: () 
               ) : <span />}
             </div>
           ))}
-          <button type="button" className="btn btn-ghost btn-sm" onClick={() => setItems((prev) => [...prev, { productId: "", quantity: "1", unitCost: "" }])}>+ Adicionar item</button>
+          <button type="button" className="btn btn-ghost btn-sm" onClick={() => setItems((prev) => [...prev, { productId: "", quantity: "1", unitCost: "" }])}>{ACTIONS.addItem}</button>
         </div>
 
         <div className="field">
@@ -274,24 +286,19 @@ function PurchaseModal({ onClose, onSaved }: { onClose: () => void; onSaved: () 
           Receber agora (dá entrada no estoque e atualiza o custo)
         </label>
 
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "1rem", flexWrap: "wrap" }}>
-          <strong className="mono" style={{ fontSize: "1.1rem" }}>Total: {brl.format(total)}</strong>
-          <div className="nx-dialog-actions" style={{ marginTop: 0 }}>
-            <button type="button" className="btn btn-ghost" onClick={onClose}>Cancelar</button>
-            <button type="button" className="btn btn-brand" disabled={saving} onClick={() => void save()}>{saving ? "Salvando…" : "Registrar compra"}</button>
-          </div>
-        </div>
-      </div>
-    </div>
+    </Modal>
   );
 }
 
 // Detalhe da compra com itens e custos.
 function PurchaseDetailModal({ purchase, onClose }: { purchase: PurchaseRow; onClose: () => void }) {
   return (
-    <div className="nx-dialog-overlay" role="dialog" aria-modal="true" aria-label="Detalhe da compra" onClick={onClose}>
-      <div className="nx-dialog" onClick={(e) => e.stopPropagation()}>
-        <h2 className="nx-dialog-title">Compra · <span className={"status-pill " + statusClass[purchase.status]}>{statusLabel[purchase.status]}</span></h2>
+    <Modal
+      title={<>Compra <span className={"status-pill " + statusClass[purchase.status]}>{statusLabel[purchase.status]}</span></>}
+      label="Detalhe da compra"
+      subtitle={(purchase.supplierName ?? "Fornecedor removido") + " · " + fmtData(purchase.createdAt)}
+      onClose={onClose}
+    >
         <dl className="kv">
           <div><dt>Fornecedor</dt><dd>{purchase.supplierName ?? "—"}</dd></div>
           <div><dt>Comprador</dt><dd>{purchase.userName ?? "—"}</dd></div>
@@ -309,11 +316,7 @@ function PurchaseDetailModal({ purchase, onClose }: { purchase: PurchaseRow; onC
             </li>
           ))}
         </ul>
-        <div className="nx-dialog-actions">
-          <button type="button" className="btn btn-ghost" onClick={onClose}>Fechar</button>
-        </div>
-      </div>
-    </div>
+    </Modal>
   );
 }
 
@@ -355,9 +358,8 @@ function SuppliersModal({ onClose }: { onClose: () => void }) {
   }
 
   return (
-    <div className="nx-dialog-overlay" role="dialog" aria-modal="true" aria-label="Fornecedores" onClick={onClose}>
-      <div className="nx-dialog" onClick={(e) => e.stopPropagation()} style={{ width: "min(760px, 100%)" }}>
-        <h2 className="nx-dialog-title">Fornecedores</h2>
+    <>
+    <Modal title="Fornecedores" subtitle="Cadastro de fornecedores da empresa ativa." onClose={onClose} size="xl">
         <div className="toolbar" style={{ marginBottom: "0.9rem" }}>
           <input className="input" type="search" placeholder="Buscar por nome" value={search}
             onChange={(e) => { setSearch(e.target.value); setPage(1); }} aria-label="Buscar fornecedor" />
@@ -388,13 +390,11 @@ function SuppliersModal({ onClose }: { onClose: () => void }) {
           <EmptyState title="Nenhum fornecedor" description={can("supplier:write") ? "Cadastre o primeiro fornecedor." : undefined} />
         )}
 
-        <div className="nx-dialog-actions">
-          <button type="button" className="btn btn-ghost" onClick={onClose}>Fechar</button>
-        </div>
-
-        {editing ? <SupplierFormModal supplier={editing} onClose={() => setEditing(null)} onSaved={() => void load()} /> : null}
-      </div>
-    </div>
+    </Modal>
+      {/* Por fora do Modal: dentro do painel, a animacao com transform cria
+          bloco de contencao e o overlay filho pararia de olhar para o viewport. */}
+      {editing ? <SupplierFormModal supplier={editing} onClose={() => setEditing(null)} onSaved={() => void load()} /> : null}
+    </>
   );
 }
 
@@ -410,6 +410,7 @@ function SupplierFormModal({ supplier, onClose, onSaved }: { supplier: SupplierR
         notes: supplier.notes ?? "",
       });
   const [busy, setBusy] = useState(false);
+  const dirty = useDirty(form);
 
   async function submit() {
     if (form.name.trim().length < 2) { notify.error("Informe o nome do fornecedor."); return; }
@@ -437,19 +438,20 @@ function SupplierFormModal({ supplier, onClose, onSaved }: { supplier: SupplierR
   const set = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => setForm({ ...form, [k]: e.target.value });
 
   return (
-    <div className="nx-dialog-overlay" role="dialog" aria-modal="true" aria-label={isNew ? "Novo fornecedor" : "Editar fornecedor"} style={{ zIndex: 80 }} onClick={onClose}>
-      <div className="nx-dialog" onClick={(e) => e.stopPropagation()}>
-        <h2 className="nx-dialog-title">{isNew ? "Novo fornecedor" : "Editar fornecedor"}</h2>
+    <Modal
+      title={modalTitle("supplier", isNew)}
+      onClose={onClose}
+      onSubmit={() => void submit()}
+      busy={busy}
+      dirty={dirty}
+      hint={MODAL_COPY.requiredHint}
+      zIndex={90}
+    >
         <div className="field"><span className="field-label">Nome *</span><input className="input" value={form.name} onChange={set("name")} /></div>
         <div className="field"><span className="field-label">E-mail</span><input className="input" type="email" value={form.email} onChange={set("email")} /></div>
         <div className="field"><span className="field-label">Telefone</span><input className="input" value={form.phone} onChange={set("phone")} /></div>
         <div className="field"><span className="field-label">Documento (CNPJ/CPF)</span><input className="input" value={form.document} onChange={set("document")} /></div>
         <div className="field"><span className="field-label">Observações</span><textarea className="input" rows={2} value={form.notes} onChange={set("notes")} /></div>
-        <div className="nx-dialog-actions">
-          <button type="button" className="btn btn-ghost" onClick={onClose}>Cancelar</button>
-          <button type="button" className="btn btn-brand" disabled={busy} onClick={() => void submit()}>{busy ? "Salvando…" : "Salvar"}</button>
-        </div>
-      </div>
-    </div>
+    </Modal>
   );
 }

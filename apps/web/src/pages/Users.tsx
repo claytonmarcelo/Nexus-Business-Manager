@@ -3,7 +3,9 @@ import { api, extractErrorMessage } from "../lib/api";
 import { useAuth } from "../context/AuthContext";
 import { notify } from "../lib/notify";
 import { confirmAction } from "../lib/confirm";
+import { Modal, useDirty } from "../components/Modal";
 import { Pagination } from "../components/Pagination";
+import { ACTIONS, MODAL_COPY, modalTitle } from "../lib/uiCopy";
 import { EmptyState, ErrorState, LoadingInline } from "../components/StateView";
 import { PasswordInput } from "../components/PasswordInput";
 
@@ -143,6 +145,7 @@ export function Users() {
 function AddMemberModal({ onClose, onCreated }: { onClose: () => void; onCreated: () => void }) {
   const [form, setForm] = useState({ name: "", email: "", password: "", role: "STAFF" });
   const [busy, setBusy] = useState(false);
+  const dirty = useDirty(form);
 
   async function submit() {
     setBusy(true);
@@ -159,33 +162,33 @@ function AddMemberModal({ onClose, onCreated }: { onClose: () => void; onCreated
   }
 
   return (
-    <div className="nx-dialog-overlay" role="dialog" aria-modal="true" aria-label="Novo membro">
-      <div className="nx-dialog card-surface">
-        <h2 className="nx-dialog-title">Novo membro</h2>
+    <Modal
+      title={modalTitle("member", true)}
+      onClose={onClose}
+      onSubmit={() => void submit()}
+      busy={busy}
+      dirty={dirty}
+      submitLabel={ACTIONS.add}
+      busyLabel="Adicionando…"
+      hint={MODAL_COPY.requiredHint}
+    >
         <div className="field">
-          <span className="field-label">Nome</span>
+          <span className="field-label">Nome *</span>
           <input className="input" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
         </div>
         <div className="field">
-          <span className="field-label">E-mail</span>
+          <span className="field-label">E-mail *</span>
           <input className="input" type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
         </div>
         <div className="field">
-          <PasswordInput label="Senha" value={form.password} onChange={(v) => setForm({ ...form, password: v })} autoComplete="new-password" required />
+          <PasswordInput label="Senha *" value={form.password} onChange={(v) => setForm({ ...form, password: v })} autoComplete="new-password" required />
         </div>
         <div className="field">
-          <span className="field-label">Papel</span>
+          <span className="field-label">Papel *</span>
           <select className="select" value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value })}>
             {ROLES.map((r) => <option key={r} value={r}>{r}</option>)}
           </select>
         </div>
-        <div className="nx-dialog-actions">
-          <button type="button" className="btn btn-ghost" onClick={onClose}>Cancelar</button>
-          <button type="button" className="btn btn-brand" onClick={submit} disabled={busy}>
-            {busy ? "Salvando…" : "Adicionar"}
-          </button>
-        </div>
-      </div>
-    </div>
+    </Modal>
   );
 }
