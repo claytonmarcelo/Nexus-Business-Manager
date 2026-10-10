@@ -11,6 +11,7 @@ import { Clients } from "./pages/Clients";
 import { Products } from "./pages/Products";
 import { Sales } from "./pages/Sales";
 import { Purchases } from "./pages/Purchases";
+import { Finance } from "./pages/Finance";
 import { Audit } from "./pages/Audit";
 import { Settings } from "./pages/Settings";
 import { Forbidden, NotFound, Unauthorized } from "./pages/errors";
@@ -38,6 +39,7 @@ export function App() {
           <Route path="produtos" element={<Products />} />
           <Route path="vendas" element={<Sales />} />
           <Route path="compras" element={<Purchases />} />
+          <Route path="financeiro" element={<Finance />} />
           <Route path="usuarios" element={<Users />} />
           <Route path="auditoria" element={<Audit />} />
           <Route path="configuracoes" element={<Settings />} />
