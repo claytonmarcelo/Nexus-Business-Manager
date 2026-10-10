@@ -5,7 +5,9 @@
   "description": "Nexus Business Manager — ERP SaaS multiempresa (reconstrução do zero).",
   "license": "UNLICENSED",
   "author": "Clayton Marcelo",
-  "engines": { "node": ">=20" },
+  "engines": {
+    "node": ">=20"
+  },
   "workspaces": [
     "apps/api",
     "apps/web"
@@ -18,5 +20,8 @@
     "test": "npm run test --workspace @nexus/api",
     "db:migrate": "npm run prisma:migrate --workspace @nexus/api",
     "db:seed": "npm run prisma:seed --workspace @nexus/api"
+  },
+  "devDependencies": {
+    "puppeteer-core": "^25.13.0"
   }
 }

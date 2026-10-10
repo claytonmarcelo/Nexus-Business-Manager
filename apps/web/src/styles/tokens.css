@@ -1,0 +1,78 @@
+/* Tokens de marca — fonte única da identidade (ADR-0003).
+   Cores extraídas da logo (docs/design/palette.md). Dark = "noite sofisticada",
+   Light = "dia elegante". Nenhum preto/branco puros como fundo dominante. */
+
+:root {
+  /* Paleta de marca (independente do tema) */
+  --copper-900: #5a1f1f;
+  --copper-700: #803030;
+  --copper-600: #883838;
+  --copper-500: #a85048;
+  --copper-400: #b05050;
+  --copper-300: #d07870;
+  --copper-200: #e09080;
+  --bronze-600: #a87040;
+  --gold-500: #b08850;
+  --gold-400: #c0a068;
+  --gold-300: #c8a870;
+  --gold-200: #d0b078;
+  --gold-100: #f8f0b0;
+
+  /* Tipografia */
+  --font-sans: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+
+  /* Raios e sombras */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+}
+
+/* ===== TEMA DARK (padrão) ===== */
+:root,
+[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #0b0d10;
+  --bg-elevated: #12151a;
+  --surface: #171b22;
+  --surface-2: #1e232c;
+  --border: #2a313c;
+  --border-strong: #3a4350;
+  --text: #f2ece4;
+  --text-muted: #a7adba;
+  --text-faint: #6b7280;
+  --brand: var(--copper-400);
+  --brand-strong: var(--copper-500);
+  --accent: var(--gold-300);
+  --ring: rgba(200, 168, 112, 0.55);
+  --success: #4fae7a;
+  --danger: #d0685f;
+  --warning: #d8a94f;
+  --info: #6aa6c8;
+  --shadow: 0 10px 30px -12px rgba(0, 0, 0, 0.6);
+  --overlay: rgba(5, 7, 10, 0.72);
+}
+
+/* ===== TEMA LIGHT ===== */
+[data-theme="light"] {
+  color-scheme: light;
+  --bg: #f5f1ea;
+  --bg-elevated: #efe8dd;
+  --surface: #fbf8f3;
+  --surface-2: #f2ece1;
+  --border: #e2d8c8;
+  --border-strong: #d3c5ad;
+  --text: #2a2320;
+  --text-muted: #6b5f55;
+  --text-faint: #948677;
+  --brand: var(--copper-600);
+  --brand-strong: var(--copper-700);
+  --accent: var(--gold-500);
+  --ring: rgba(168, 80, 72, 0.4);
+  --success: #2f855a;
+  --danger: #b0413a;
+  --warning: #b7791f;
+  --info: #2c6e91;
+  --shadow: 0 10px 30px -14px rgba(90, 60, 40, 0.28);
+  --overlay: rgba(245, 241, 234, 0.72);
+}
