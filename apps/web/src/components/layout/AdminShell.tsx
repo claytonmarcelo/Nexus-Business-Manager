@@ -14,6 +14,7 @@ interface NavItem {
 
 const NAV: NavItem[] = [
   { to: "/app", label: "Dashboard", icon: "▦" },
+  { to: "/app/clientes", label: "Clientes", icon: "◈", permission: "client:read" },
   { to: "/app/usuarios", label: "Usuários", icon: "◉", permission: "user:read" },
   { to: "/app/auditoria", label: "Auditoria", icon: "❐", permission: "audit:read" },
   { to: "/app/configuracoes", label: "Configurações", icon: "⚙" },
@@ -41,7 +42,7 @@ export function AdminShell() {
         <div className="admin-brand">
           <Link to="/app" className="admin-brand-link" onClick={() => setSidebarOpen(false)}>
             <Logo size={30} />
-            <span className="admin-brand-text">NEXUS</span>
+            <span className="admin-brand-text">Nexus Business Manager</span>
           </Link>
         </div>
         <nav className="admin-nav">

@@ -5,6 +5,24 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/), 
 
 ## [Não lançado]
 
+### Adicionado
+- **Regra definitiva de acesso**: administrador global `nexusbussiness.admin@gmail.com` (OWNER em todas as empresas, protegido contra remoção/rebaixamento no backend e no seed) documentado em `CREDENCIAIS.md` na raiz do projeto.
+- **Política de senha** aplicada em todo o sistema (mínimo 8 caracteres, uma maiúscula e um especial): `passwordPolicy.ts` no backend + validação inline pt-BR nos formulários.
+- **Fluxos de autenticação completos**: cadastro self-service (cria usuário + empresa própria como OWNER e já autentica), esqueci a senha em duas etapas com código de recuperação (30 min, uso único, revoga sessões) e rotas `/cadastro` e `/recuperar-senha`.
+- Telas de autenticação (Login, Criar conta, Recuperar senha) em estilo **Embossed/Neumorfismo** com tokens por tema, checkbox "Lembrar de mim" (salva apenas o e-mail), alternância suave entre telas, erros inline, botão ENTRAR com estado de carregamento e indicador animado de "Sucesso!" antes do redirecionamento.
+- Botão **olho para mostrar/ocultar senha** (`PasswordInput`) reutilizado no login, cadastro, recuperação e modal de novo membro.
+- Página de Clientes no frontend (tabela paginada, busca, modal criar/editar, desativar com confirmação, botões por permissão) — prova de uso real capturada em `docs/screenshots/07-clientes.png`.
+- Refatoração UX/UI da tela de boas-vindas: componentes de responsabilidade única (`components/landing/*`), textos isolados em `copy.ts`, animação de entrada escalonada (stagger) com respeito a `prefers-reduced-motion` e tipografia fluida.
+- Testes de integração dos fluxos (cadastro, duplicidade, senha fraca, recuperação, reuso de código, revogação de sessões): suíte agora com 23 testes.
+
+### Alterado
+- Marca na sidebar administrativa agora exibe o nome completo "Nexus Business Manager" em uma linha, com o degradê cobre-ouro da landing.
+- Cartões de autenticação padronizados no mesmo tamanho (largura, logo 62px, tipografia e botões) para coerência entre login, cadastro e recuperação.
+- Alternador de tema perfeitamente centrado no cabeçalho (thumb simétrico no trilho, ícones sol/lua alinhados ao centro vertical), sem alterar cores, tamanho ou animação.
+
+### Corrigido
+- Colisão de nomenclatura com o Bootstrap/AdminLTE: o modal próprio foi renomeado para `nx-dialog` (antes herdava `display:none` do framework e não abria) e as tabelas neutralizam as variáveis `--bs-table-*` (cabeçalho branco no tema escuro).
+
 ### Alterado
 - Texto de marca ("Nexus Business Manager" / "NEXUS") agora usa o degradê cobre-ouro extraído da logo, aplicado globalmente (`.brand-text`, landing e sidebar).
 - Cabeçalhos e rodapés do projeto ficaram mais baixos (landing, admin, login) e o switch de tema ganhou tamanho compacto.

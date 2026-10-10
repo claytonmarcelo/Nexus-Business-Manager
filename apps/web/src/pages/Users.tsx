@@ -5,6 +5,7 @@ import { notify } from "../lib/notify";
 import { confirmAction } from "../lib/confirm";
 import { Pagination } from "../components/Pagination";
 import { EmptyState, ErrorState, LoadingInline } from "../components/StateView";
+import { PasswordInput } from "../components/PasswordInput";
 
 interface Member { id: string; name: string; email: string; active: boolean; role: string; membershipId: string }
 interface Paged<T> { data: T[]; meta: { page: number; pageSize: number; total: number; totalPages: number } }
@@ -158,9 +159,9 @@ function AddMemberModal({ onClose, onCreated }: { onClose: () => void; onCreated
   }
 
   return (
-    <div className="modal-overlay" role="dialog" aria-modal="true" aria-label="Novo membro">
-      <div className="modal card-surface">
-        <h2 className="modal-title">Novo membro</h2>
+    <div className="nx-dialog-overlay" role="dialog" aria-modal="true" aria-label="Novo membro">
+      <div className="nx-dialog card-surface">
+        <h2 className="nx-dialog-title">Novo membro</h2>
         <div className="field">
           <span className="field-label">Nome</span>
           <input className="input" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
@@ -170,8 +171,7 @@ function AddMemberModal({ onClose, onCreated }: { onClose: () => void; onCreated
           <input className="input" type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
         </div>
         <div className="field">
-          <span className="field-label">Senha</span>
-          <input className="input" type="password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} />
+          <PasswordInput label="Senha" value={form.password} onChange={(v) => setForm({ ...form, password: v })} autoComplete="new-password" required />
         </div>
         <div className="field">
           <span className="field-label">Papel</span>
@@ -179,7 +179,7 @@ function AddMemberModal({ onClose, onCreated }: { onClose: () => void; onCreated
             {ROLES.map((r) => <option key={r} value={r}>{r}</option>)}
           </select>
         </div>
-        <div className="modal-actions">
+        <div className="nx-dialog-actions">
           <button type="button" className="btn btn-ghost" onClick={onClose}>Cancelar</button>
           <button type="button" className="btn btn-brand" onClick={submit} disabled={busy}>
             {busy ? "Salvando…" : "Adicionar"}

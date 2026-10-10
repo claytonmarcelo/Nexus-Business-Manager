@@ -51,6 +51,11 @@
   --info: #6aa6c8;
   --shadow: 0 10px 30px -12px rgba(0, 0, 0, 0.6);
   --overlay: rgba(5, 7, 10, 0.72);
+  /* Embossed/neumorfismo (tema noite): luz fria sutil + sombra profunda */
+  --neu-shadow: 7px 7px 16px rgba(0, 0, 0, 0.5), -7px -7px 16px rgba(255, 255, 255, 0.045), inset 1px 1px 0 rgba(255, 255, 255, 0.05);
+  --neu-shadow-sm: 4px 4px 9px rgba(0, 0, 0, 0.45), -4px -4px 9px rgba(255, 255, 255, 0.04);
+  --neu-inset: inset 4px 4px 9px rgba(0, 0, 0, 0.5), inset -4px -4px 9px rgba(255, 255, 255, 0.045);
+  --neu-press: 2px 2px 5px rgba(0, 0, 0, 0.5), -2px -2px 5px rgba(255, 255, 255, 0.04);
 }
 
 /* ===== TEMA LIGHT ===== */
@@ -75,4 +80,9 @@
   --info: #2c6e91;
   --shadow: 0 10px 30px -14px rgba(90, 60, 40, 0.28);
   --overlay: rgba(245, 241, 234, 0.72);
+  /* Embossed/neumorfismo (tema dia): creme com luz superior e sombra bronze */
+  --neu-shadow: 9px 9px 20px rgba(163, 141, 110, 0.32), -9px -9px 20px rgba(255, 255, 255, 0.92), inset 1px 1px 0 rgba(255, 255, 255, 0.75);
+  --neu-shadow-sm: 4px 4px 10px rgba(163, 141, 110, 0.24), -4px -4px 10px rgba(255, 255, 255, 0.88);
+  --neu-inset: inset 5px 5px 10px rgba(163, 141, 110, 0.26), inset -5px -5px 10px rgba(255, 255, 255, 0.9);
+  --neu-press: 1px 1px 4px rgba(163, 141, 110, 0.3), -1px -1px 4px rgba(255, 255, 255, 0.85);
 }

@@ -16,6 +16,7 @@ interface AuthCtx {
   user: SessionUser | null;
   status: "loading" | "authenticated" | "anonymous";
   login: (email: string, password: string, companyId?: string) => Promise<void>;
+  register: (name: string, email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   switchCompany: (companyId: string) => Promise<void>;
   can: (permission: string) => boolean;
@@ -79,6 +80,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [],
   );
 
+  // Cadastro self-service: a API cria usuario + empresa (OWNER) e ja devolve sessao.
+  const register = useCallback(
+    async (name: string, email: string, password: string) => {
+      const { data } = await api.post("/auth/register", { name, email, password });
+      tokenStore.setAccess(data.accessToken);
+      tokenStore.setRefresh(data.refreshToken);
+      setUser(data.user);
+      setStatus("authenticated");
+    },
+    [],
+  );
+
   const logout = useCallback(async () => {
     const refresh = tokenStore.getRefresh();
     try {
@@ -113,7 +126,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 
   return (
-    <Ctx.Provider value={{ user, status, login, logout, switchCompany, can }}>
+    <Ctx.Provider value={{ user, status, login, register, logout, switchCompany, can }}>
       {children}
     </Ctx.Provider>
   );

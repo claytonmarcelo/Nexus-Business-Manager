@@ -7,8 +7,8 @@ const OUT = path.join(__dirname, "..", "docs", "screenshots");
 fs.mkdirSync(OUT, { recursive: true });
 
 const BASE = "http://localhost:5173";
-const EMAIL = "admin@nexus.local";
-const SENHA = "Nexus@2026";
+const EMAIL = "nexusbussiness.admin@gmail.com"; // administrador definitivo (CREDENCIAIS.md)
+const SENHA = "senha-removida-do-git";
 
 async function shot(page, nome) {
   await new Promise((r) => setTimeout(r, 600));
@@ -30,14 +30,17 @@ async function shot(page, nome) {
   await page.goto(BASE + "/", { waitUntil: "networkidle0" });
   await shot(page, "01-landing");
 
-  // 2. Login
+  // 2. Login (senha digitada e visivel pelo botao olho)
   await page.goto(BASE + "/login", { waitUntil: "networkidle0" });
+  await page.waitForSelector("input[type=email]", { timeout: 15000 });
+  await page.waitForSelector("input[type=password]", { timeout: 15000 });
+  await page.type("input[type=email], input[name=email], input#email", EMAIL, { delay: 5 });
+  await page.type("input[type=password]", SENHA, { delay: 5 });
+  await page.waitForSelector(".eye-toggle", { timeout: 15000 });
+  await page.click(".eye-toggle"); // mostra a senha digitada
   await shot(page, "02-login");
 
   // Login real
-  await page.type("input[type=email], input[name=email], input#email", EMAIL, { delay: 5 });
-  const senhas = await page.$$("input[type=password]");
-  await senhas[0].type(SENHA, { delay: 5 });
   await Promise.all([
     page.waitForFunction(() => window.location.pathname.startsWith("/app"), { timeout: 15000 }),
     page.click("button[type=submit]"),
