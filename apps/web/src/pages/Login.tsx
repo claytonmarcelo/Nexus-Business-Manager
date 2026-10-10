@@ -19,17 +19,19 @@ export function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [remember, setRemember] = useState(false);
+  // Regra de UX: o e-mail lembrado fica APENAS no navegador, nunca visível no campo.
+  const [rememberedEmail, setRememberedEmail] = useState<string | null>(null);
   const [errors, setErrors] = useState<{ email?: string | null; password?: string | null }>({});
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // "Lembrar de mim": pré-preenche o e-mail salvo localmente (nunca a senha).
+  // "Lembrar de mim": guarda o e-mail localmente sem pré-preencher o campo (nunca a senha).
   useEffect(() => {
     try {
       const salvo = localStorage.getItem(REMEMBER_KEY);
       if (salvo) {
-        setEmail(salvo);
+        setRememberedEmail(salvo);
         setRemember(true);
       }
     } catch {
@@ -37,8 +39,14 @@ export function Login() {
     }
   }, []);
 
+  // E-mail efetivo: o digitado tem prioridade; se o campo estiver vazio usamos o lembrado.
+  const effectiveEmail = email.trim() || rememberedEmail || "";
+
   function validate(): boolean {
-    const errs = { email: validateEmail(email), password: validateRequired(password, "senha") };
+    const errs = {
+      email: effectiveEmail ? null : validateEmail(email),
+      password: validateRequired(password, "senha"),
+    };
     setErrors(errs);
     return !errs.email && !errs.password;
   }
@@ -49,9 +57,9 @@ export function Login() {
     if (!validate()) return;
     setSubmitting(true);
     try {
-      await login(email.trim(), password);
+      await login(effectiveEmail, password);
       try {
-        if (remember) localStorage.setItem(REMEMBER_KEY, email.trim());
+        if (remember) localStorage.setItem(REMEMBER_KEY, effectiveEmail);
         else localStorage.removeItem(REMEMBER_KEY);
       } catch {
         /* noop */
@@ -91,13 +99,16 @@ export function Login() {
             <input
               type="email"
               className={"neu-input" + (errors.email ? " is-error" : "")}
-              autoComplete="email"
+              autoComplete="off"
               placeholder="seu@email.com"
               value={email}
               onChange={(e) => { setEmail(e.target.value); if (errors.email) setErrors((x) => ({ ...x, email: null })); }}
-              onBlur={() => setErrors((x) => ({ ...x, email: validateEmail(email) }))}
+              onBlur={() => setErrors((x) => ({ ...x, email: email.trim() || rememberedEmail ? null : validateEmail(email) }))}
             />
             {errors.email && <span className="field-error">{errors.email}</span>}
+            {!errors.email && rememberedEmail && !email.trim() ? (
+              <span className="auth-hint">Usaremos automaticamente o e-mail lembrado neste navegador.</span>
+            ) : null}
           </div>
 
           <div className="field">

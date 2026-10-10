@@ -19,6 +19,7 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/), 
 - Marca na sidebar administrativa agora exibe o nome completo "Nexus Business Manager" em uma linha, com o degradê cobre-ouro da landing.
 - Cartões de autenticação padronizados no mesmo tamanho (largura, tipografia e botões) para coerência entre login, cadastro e recuperação.
 - Logo das telas de autenticação ampliada 16% (62px → 72px) nas três páginas, mantendo a harmonia visual.
+- **Regra de privacidade do "Lembrar de mim"**: o e-mail fica gravado no navegador para facilitar o acesso, mas nunca é exibido no campo — ele volta vazio com placeholder genérico e uma dica discreta; ao entrar apenas com a senha, o e-mail lembrado é usado em silêncio (prova automatizada em `tools/verify-remember.cjs`).
 - Alternador de tema perfeitamente centrado no cabeçalho (thumb simétrico no trilho, ícones sol/lua alinhados ao centro vertical), sem alterar cores, tamanho ou animação.
 
 ### Corrigido

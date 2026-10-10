@@ -12,12 +12,12 @@ const OUT = path.join(__dirname, "..", "docs", "screenshots");
   const page = await browser.newPage();
   const shot = async (nome) => { await new Promise((r) => setTimeout(r, 700)); await page.screenshot({ path: path.join(OUT, nome + ".png") }); console.log("capturado", nome); };
 
-  // 02-login: dados digitados + senha visivel (olho) + lembrar marcado
+  // 02-login: e-mail lembrado permanece invisivel (regra), senha digitada + olho
   await page.goto(BASE + "/login", { waitUntil: "networkidle0" });
-  await page.waitForSelector("input[type=email]");
-  await page.type("input[type=email]", "nexusbussiness.admin@gmail.com", { delay: 4 });
+  await page.evaluate(() => localStorage.setItem("nexus.remember.email", "nexusbussiness.admin@gmail.com"));
+  await page.goto(BASE + "/login", { waitUntil: "networkidle0" });
+  await page.waitForSelector("input[type=password]");
   await page.type("input[type=password]", "senha-removida-do-git", { delay: 4 });
-  await page.click(".neu-check");
   await page.click(".eye-toggle");
   await shot("02-login");
 
