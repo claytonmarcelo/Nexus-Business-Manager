@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Link, NavLink, Outlet, useNavigate } from "react-router-dom";
 import { Logo } from "../Logo";
 import { ThemeToggle } from "../ThemeToggle";
@@ -24,12 +24,80 @@ const NAV: NavItem[] = [
   { to: "/app/configuracoes", label: "Configurações", icon: "⚙" },
 ];
 
+// Abaixo disto a sidebar vira gaveta lateral (off-canvas); acima ela fica
+// fixa e o mesmo botao apenas recolhe os rotulos (modo trilha).
+const DESKTOP_QUERY = "(min-width: 821px)";
+const COLLAPSE_KEY = "nexus.sidebar.collapsed";
+
+// Icone "painel a esquerda" (familia Lucide/Heroicons): contorno do painel
+// com a divisoria marcando a area da sidebar. A divisoria troca de lado quando
+// o estado muda, dando o feedback de abrir/fechar sem usar hamburguer.
+function PanelLeftIcon() {
+  return (
+    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor"
+      strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false">
+      <rect x="3" y="4" width="18" height="16" rx="3.2" />
+      <path d="M9.6 4.4v15.2" />
+      <path d="M13.4 9.6h3.2" opacity="0.55" />
+      <path d="M13.4 13.2h2.2" opacity="0.35" />
+    </svg>
+  );
+}
+
 export function AdminShell() {
   const { user, can, logout } = useAuth();
-  const [sidebarOpen, setSidebarOpen] = useState(false);
   const navigate = useNavigate();
 
-  const items = NAV.filter((n) => !n.permission || can(n.permission));
+  // Estado da gaveta (mobile/tablet).
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  // Estado do modo trilha (desktop), persistido entre visitas.
+  const [collapsed, setCollapsed] = useState(() => {
+    try {
+      return localStorage.getItem(COLLAPSE_KEY) === "true";
+    } catch {
+      return false;
+    }
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(COLLAPSE_KEY, String(collapsed));
+    } catch {
+      /* modo privado do navegador: segue sem persistir */
+    }
+  }, [collapsed]);
+
+  // Ao girar o tablet / redimensionar a janela, os dois modos nao podem
+  // ficar abertos ao mesmo tempo.
+  useEffect(() => {
+    const mq = window.matchMedia(DESKTOP_QUERY);
+    const onChange = () => {
+      if (mq.matches) setDrawerOpen(false);
+      else setCollapsed(false);
+    };
+    onChange();
+    mq.addEventListener("change", onChange);
+    return () => mq.removeEventListener("change", onChange);
+  }, []);
+
+  const isDesktop = () => window.matchMedia(DESKTOP_QUERY).matches;
+  const visible = isDesktop() ? !collapsed : drawerOpen;
+
+  const toggleSidebar = useCallback(() => {
+    if (isDesktop()) setCollapsed((v) => !v);
+    else setDrawerOpen((v) => !v);
+  }, []);
+
+  // Esc fecha a gaveta no celular (no desktop nao ha o que fechar: a barra
+  // fixa continua visivel, apenas sem rotulos).
+  useEffect(() => {
+    if (!drawerOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setDrawerOpen(false);
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [drawerOpen]);
 
   // Regra do projeto: ao deslogar, o usuario volta SEMPRE para a
   // pagina de boas-vindas (landing). replace() impede o voltar do navegador
@@ -39,18 +107,32 @@ export function AdminShell() {
     navigate("/", { replace: true });
   }
 
+  const items = NAV.filter((n) => !n.permission || can(n.permission));
+  const rotuloBotao = isDesktop()
+    ? (collapsed ? "Expandir menu lateral" : "Recolher menu lateral")
+    : (drawerOpen ? "Fechar menu" : "Abrir menu");
+
   return (
-    <div className={`admin-shell ${sidebarOpen ? "is-sidebar-open" : ""}`}>
-      {sidebarOpen && (
-        <div className="admin-scrim" onClick={() => setSidebarOpen(false)} aria-hidden="true" />
+    <div className={"admin-shell" + (collapsed ? " is-collapsed" : "") + (drawerOpen ? " is-sidebar-open" : "")}>
+      {drawerOpen && (
+        <div className="admin-scrim" onClick={() => setDrawerOpen(false)} aria-hidden="true" />
       )}
 
-      <aside className="admin-sidebar" aria-label="Navegação principal">
+      <aside id="admin-sidebar" className="admin-sidebar" aria-label="Navegação principal">
         <div className="admin-brand">
-          <Link to="/app" className="admin-brand-link" onClick={() => setSidebarOpen(false)}>
+          <Link to="/app" className="admin-brand-link" title="Nexus Business Manager" onClick={() => setDrawerOpen(false)}>
             <Logo size={30} />
             <span className="admin-brand-text">Nexus Business Manager</span>
           </Link>
+          <button
+            type="button"
+            className="admin-drawer-close"
+            aria-label="Fechar menu"
+            title="Fechar menu"
+            onClick={() => setDrawerOpen(false)}
+          >
+            <span aria-hidden="true">{"✕"}</span>
+          </button>
         </div>
         <nav className="admin-nav">
           {items.map((item) => (
@@ -58,26 +140,36 @@ export function AdminShell() {
               key={item.to}
               to={item.to}
               end={item.to === "/app"}
-              onClick={() => setSidebarOpen(false)}
+              onClick={() => setDrawerOpen(false)}
+              title={item.label}
+              aria-label={item.label}
               className={({ isActive }) => `admin-nav-item ${isActive ? "is-active" : ""}`}
             >
               <span className="admin-nav-icon" aria-hidden="true">{item.icon}</span>
-              <span>{item.label}</span>
+              <span className="admin-nav-label">{item.label}</span>
             </NavLink>
           ))}
         </nav>
+        <div className="admin-sidebar-foot">
+          <button type="button" className="admin-rail-hint" onClick={toggleSidebar}>
+            {collapsed ? "Mostrar nomes" : "Ocultar nomes"}
+          </button>
+        </div>
       </aside>
 
       <div className="admin-main">
         <header className="admin-header">
           <button
             type="button"
-            className="admin-hamburger"
-            aria-label={sidebarOpen ? "Fechar menu" : "Abrir menu"}
-            aria-expanded={sidebarOpen}
-            onClick={() => setSidebarOpen((v) => !v)}
+            className={"admin-toggle" + (visible ? " is-on" : "")}
+            aria-label={rotuloBotao}
+            title={rotuloBotao}
+            aria-expanded={visible}
+            aria-controls="admin-sidebar"
+            aria-pressed={!collapsed}
+            onClick={toggleSidebar}
           >
-            <span /><span /><span />
+            <PanelLeftIcon />
           </button>
           <div className="admin-header-title">Business Manager</div>
           <div className="admin-header-actions">
