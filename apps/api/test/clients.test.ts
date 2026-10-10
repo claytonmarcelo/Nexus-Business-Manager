@@ -30,7 +30,7 @@ describe("Clientes", () => {
     expect(lista.statusCode).toBe(200);
     const body = lista.json() as { data: Array<{ id: string; name: string }>; meta: { total: number } };
     expect(body.meta.total).toBe(1);
-    expect(body.data[0].name).toBe("Padaria Aurora");
+    expect(body.data[0]?.name).toBe("Padaria Aurora");
 
     const edicao = await app.inject({
       method: "PATCH", url: `/api/clients/${id}`, headers: auth(token),

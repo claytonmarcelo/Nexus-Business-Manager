@@ -5,6 +5,7 @@ import { audit } from "../../lib/audit";
 import { paginate, skipTake, type PaginationInput } from "../../lib/pagination";
 import type { AddMemberInput } from "./users.schemas";
 import type { Role } from "@prisma/client";
+import { SUPER_ADMIN_EMAIL } from "../../lib/passwordPolicy";
 
 // Listagem SEMPRE filtrada por companyId (isolamento multiempresa, seção 35).
 export async function listMembers(companyId: string, p: PaginationInput, search?: string) {
@@ -60,8 +61,13 @@ export async function addMember(companyId: string, input: AddMemberInput, actorI
 export async function updateRole(companyId: string, userId: string, role: Role, actorId: string, ip?: string) {
   const membership = await prisma.companyUser.findUnique({
     where: { userId_companyId: { userId, companyId } },
+    include: { user: { select: { email: true } } },
   });
   if (!membership) throw notFound("Membro não encontrado nesta empresa");
+  // Regra definitiva: o administrador do sistema jamais perde o papel de OWNER.
+  if (membership.user.email.toLowerCase() === SUPER_ADMIN_EMAIL && role !== "OWNER") {
+    throw conflict("O administrador definitivo do sistema não pode ser rebaixado de OWNER");
+  }
   const updated = await prisma.companyUser.update({
     where: { id: membership.id },
     data: { role },

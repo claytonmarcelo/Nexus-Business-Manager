@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { paginationSchema } from "../../lib/pagination";
+import { strongPassword } from "../../lib/passwordPolicy";
 
 export const roleEnum = z.enum(["OWNER", "ADMIN", "MANAGER", "STAFF"]);
 
@@ -10,7 +11,7 @@ export const listUsersQuery = paginationSchema.extend({
 export const addMemberSchema = z.object({
   email: z.string().email(),
   name: z.string().min(2).max(120),
-  password: z.string().min(8).max(128),
+  password: strongPassword,
   role: roleEnum.default("STAFF"),
 });
 

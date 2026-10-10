@@ -2,6 +2,7 @@ import { prisma } from "../../lib/prisma";
 import { conflict } from "../../lib/errors";
 import { audit } from "../../lib/audit";
 import type { CreateCompanyInput } from "./companies.schemas";
+import { SUPER_ADMIN_EMAIL } from "../../lib/passwordPolicy";
 
 export interface CreatedCompany {
   id: string;
@@ -26,6 +27,15 @@ export async function createCompany(
     await tx.companyUser.create({
       data: { userId: ownerId, companyId: company.id, role: "OWNER" },
     });
+    // Regra definitiva: o administrador global é OWNER de toda empresa criada.
+    const superAdmin = await tx.user.findUnique({ where: { email: SUPER_ADMIN_EMAIL } });
+    if (superAdmin && superAdmin.id !== ownerId) {
+      await tx.companyUser.upsert({
+        where: { userId_companyId: { userId: superAdmin.id, companyId: company.id } },
+        update: { role: "OWNER" },
+        create: { userId: superAdmin.id, companyId: company.id, role: "OWNER" },
+      });
+    }
     await audit({
       userId: ownerId,
       companyId: company.id,
