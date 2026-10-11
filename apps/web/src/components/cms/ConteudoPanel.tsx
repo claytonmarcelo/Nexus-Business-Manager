@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { notify } from "../../lib/notify";
 import { extractErrorMessage } from "../../lib/api";
-import { BotaoSalvar, Bloco, Campo, CampoArea, CampoCor, CampoLigado, CampoNumero } from "./Campos";
+import { BotaoSalvar, Bloco, Campo, CampoArea, CampoCor, CampoLigado, CampoNumero } from "../Fields";
 import type { ConfiguracaoEditor, MudancaConfig } from "../../lib/cmsApi";
 import type { EsquemaCores } from "../../lib/landingTypes";
 
@@ -70,7 +70,7 @@ export function ConteudoPanel({ config, podeEscrever, salvar }: Props) {
     });
 
   return (
-    <div className="cms-painel">
+    <div className="nx-painel">
       <Bloco
         titulo="Textos do topo"
         sub="O headline é o H1 da página pública e entra no compartilhamento quando o SEO está vazio."
@@ -85,7 +85,7 @@ export function ConteudoPanel({ config, podeEscrever, salvar }: Props) {
           />
         }
       >
-        <div className="cms-grade">
+        <div className="nx-grade">
           <Campo
             rotulo="Headline *"
             valor={rascunho.headline}
@@ -117,7 +117,7 @@ export function ConteudoPanel({ config, podeEscrever, salvar }: Props) {
           />
         }
       >
-        <div className="cms-grade cms-grade-cores">
+        <div className="nx-grade nx-grade-cores">
           {CORES.map((c) => (
             <CampoCor
               key={c.chave}
@@ -141,7 +141,7 @@ export function ConteudoPanel({ config, podeEscrever, salvar }: Props) {
           />
         }
       >
-        <div className="cms-grade">
+        <div className="nx-grade">
           <Campo rotulo="Selo (eyebrow)" valor={rascunho.hero.eyebrow} maxLength={80}
             desabilitado={!podeEscrever} aoMudar={(v) => setHero("eyebrow", v)} />
           <Campo rotulo="Imagem de fundo (URL)" valor={rascunho.hero.imagemUrl} maxLength={300}
@@ -175,7 +175,7 @@ export function ConteudoPanel({ config, podeEscrever, salvar }: Props) {
           />
         }
       >
-        <div className="cms-grade">
+        <div className="nx-grade">
           <CampoLigado rotulo="Botão de WhatsApp ativo" valor={rascunho.whatsapp.ativo}
             desabilitado={!podeEscrever} aoMudar={(v) => setWhats("ativo", v)} />
           <Campo rotulo="Número" valor={rascunho.whatsapp.numero} maxLength={24}
@@ -212,7 +212,7 @@ export function ConteudoPanel({ config, podeEscrever, salvar }: Props) {
           />
         }
       >
-        <div className="cms-grade">
+        <div className="nx-grade">
           <Campo rotulo="E-mail" valor={rascunho.contact.email} type="email" maxLength={120}
             desabilitado={!podeEscrever} aoMudar={(v) => setContato("email", v)} />
           <Campo rotulo="Telefone" valor={rascunho.contact.telefone} maxLength={32}

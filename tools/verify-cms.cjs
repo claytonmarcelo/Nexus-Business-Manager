@@ -75,7 +75,7 @@ const textoDe = (page, seletor) =>
 /** Marca/desmarca o interruptor pelo texto do rótulo. */
 async function marcar(page, rotulo, quer) {
   return page.evaluate((texto, desejado) => {
-    const alvo = [...document.querySelectorAll(".cms-ligado")].find((l) =>
+    const alvo = [...document.querySelectorAll(".nx-ligado")].find((l) =>
       (l.textContent || "").includes(texto));
     const caixa = alvo?.querySelector("input[type=checkbox]");
     if (!caixa) return "sem campo";
@@ -86,7 +86,7 @@ async function marcar(page, rotulo, quer) {
 
 const estaMarcado = (page, rotulo) =>
   page.evaluate((texto) => {
-    const alvo = [...document.querySelectorAll(".cms-ligado")].find((l) =>
+    const alvo = [...document.querySelectorAll(".nx-ligado")].find((l) =>
       (l.textContent || "").includes(texto));
     const caixa = alvo?.querySelector("input[type=checkbox]");
     return caixa ? caixa.checked : null;
@@ -95,9 +95,9 @@ const estaMarcado = (page, rotulo) =>
 /** Rótulo do botão de gravar de um bloco — a tela precisa dizer o que o clique faz. */
 async function rotuloDoBotaoDoBloco(page, tituloDoBloco) {
   return page.evaluate((titulo) => {
-    const bloco = [...document.querySelectorAll(".cms-bloco")].find(
+    const bloco = [...document.querySelectorAll(".nx-bloco")].find(
       (b) => (b.querySelector(".panel-title")?.textContent || "").trim() === titulo);
-    return bloco?.querySelector(".cms-bloco-acao button")?.textContent.trim() ?? null;
+    return bloco?.querySelector(".nx-bloco-acao button")?.textContent.trim() ?? null;
   }, tituloDoBloco);
 }
 
@@ -105,9 +105,9 @@ async function rotuloDoBotaoDoBloco(page, tituloDoBloco) {
 async function salvarBloco(page, tituloDoBloco) {
   const rotulo = await rotuloDoBotaoDoBloco(page, tituloDoBloco);
   const clicado = await page.evaluate((titulo) => {
-    const bloco = [...document.querySelectorAll(".cms-bloco")].find(
+    const bloco = [...document.querySelectorAll(".nx-bloco")].find(
       (b) => (b.querySelector(".panel-title")?.textContent || "").trim() === titulo);
-    const botao = bloco?.querySelector(".cms-bloco-acao button");
+    const botao = bloco?.querySelector(".nx-bloco-acao button");
     if (!botao) return false;
     botao.click();
     return true;
@@ -282,10 +282,10 @@ async function limparRestos(momento) {
     ok("a linha \"em breve\" do CMS saiu do menu", !noMenu.emBreve);
 
     await Promise.all([
-      pagina.waitForSelector(".page-loader, .cms-painel", { timeout: 15000 }),
+      pagina.waitForSelector(".page-loader, .nx-painel", { timeout: 15000 }),
       pagina.click(".admin-nav-item[href=\"/app/cms\"]"),
     ]);
-    await pagina.waitForSelector(".cms-painel", { timeout: 15000 });
+    await pagina.waitForSelector(".nx-painel", { timeout: 15000 });
     await semToast(pagina);
     ok("o editor abre em /app/cms", pagina.url().includes("/app/cms"), pagina.url());
 
@@ -432,22 +432,22 @@ async function limparRestos(momento) {
     // == 6) Textos legais ==
     console.log("== 6) Publicar um texto legal ==");
     await pagina.click("[data-tab=\"legais\"]");
-    await pagina.waitForSelector(".cms-bloco", { timeout: 8000 });
-    const qualDocumento = await textoDe(pagina, ".cms-bloco .panel-title");
+    await pagina.waitForSelector(".nx-bloco", { timeout: 8000 });
+    const qualDocumento = await textoDe(pagina, ".nx-bloco .panel-title");
     ok("o editor abre no primeiro documento legal", String(qualDocumento) === "Termos de uso", String(qualDocumento));
-    await escrever(pagina, ".cms-bloco input[aria-label=\"Título do documento\"]", "Termos de uso do editor");
+    await escrever(pagina, ".nx-bloco input[aria-label=\"Título do documento\"]", "Termos de uso do editor");
     await escrever(pagina, ".cms-legal-texto", TERMOS_PROVA);
     await salvarBloco(pagina, "Termos de uso");
     await avisoDe(pagina, "Rascunho salvo");
     const antesPublicar = await chame("GET", "/public/legal/TERMS");
     ok("rascunho não aparece no site", antesPublicar.status === 404, "HTTP " + antesPublicar.status);
 
-    await clicarTexto(pagina, ".cms-bloco-acao button", "Publicar no site");
+    await clicarTexto(pagina, ".nx-bloco-acao button", "Publicar no site");
     await avisoDe(pagina, "Texto publicado");
     const depoisPublicar = await chame("GET", "/public/legal/TERMS");
     ok("publicado, a rota responde", depoisPublicar.status === 200, "HTTP " + depoisPublicar.status);
     ok("e o interruptor da tela acompanha a publicação", (await estaMarcado(pagina, "Publicado no site")) === true);
-    const rotulosLegais = await pagina.$$eval(".cms-bloco-acao button",
+    const rotulosLegais = await pagina.$$eval(".nx-bloco-acao button",
       (els) => els.map((e) => e.textContent.trim()));
     ok("o botão de publicar passa a se chamar Publicar de novo",
       rotulosLegais.includes("Publicar de novo"), rotulosLegais.join(" | "));
@@ -525,7 +525,7 @@ async function limparRestos(momento) {
     ok("com ele ligado o botão passa a se chamar Fechar o site",
       (await rotuloDoBotaoDoBloco(pagina, "Fechar ou abrir a plataforma")) === "Fechar o site",
       String(await rotuloDoBotaoDoBloco(pagina, "Fechar ou abrir a plataforma")));
-    await clicarTexto(pagina, ".cms-bloco-acao button", "Fechar o site");
+    await clicarTexto(pagina, ".nx-bloco-acao button", "Fechar o site");
     await pagina.waitForSelector(".nx-modal .btn-risk", { timeout: 8000 });
     const avisoFechar = await textoDe(pagina, ".nx-modal .nx-confirm-detalhe");
     ok("fechar o site pede confirmação explicando o 503",
@@ -560,7 +560,7 @@ async function limparRestos(momento) {
     await foto(telaManutencao, "20-cms-tela-manutencao");
     await telaManutencao.close();
 
-    await clicarTexto(pagina, ".cms-bloco-acao button", "Gerar código");
+    await clicarTexto(pagina, ".nx-bloco-acao button", "Gerar código");
     await pagina.waitForSelector(".cms-pulso-codigo", { timeout: 8000 });
     const pulso = await textoDe(pagina, ".cms-pulso-codigo");
     ok("o código aparece com 18 caracteres", /^[0-9a-f]{18}$/.test(String(pulso)), String(pulso));
@@ -580,7 +580,7 @@ async function limparRestos(momento) {
     ok("aí o botão diz Abrir o site, não Fechar o site",
       (await rotuloDoBotaoDoBloco(pagina, "Fechar ou abrir a plataforma")) === "Abrir o site",
       String(await rotuloDoBotaoDoBloco(pagina, "Fechar ou abrir a plataforma")));
-    await clicarTexto(pagina, ".cms-bloco-acao button", "Abrir o site");
+    await clicarTexto(pagina, ".nx-bloco-acao button", "Abrir o site");
     await avisoDe(pagina, "Modo manutenção atualizado");
     const reaberta = await chame("GET", "/clients?page=1");
     ok("o site volta a atender", reaberta.status === 200, "HTTP " + reaberta.status);
@@ -606,7 +606,7 @@ async function limparRestos(momento) {
       String(vitrineFinal.dados.cores.fundo));
 
     await pagina.goto(BASE + "/app/cms", { waitUntil: "networkidle0" });
-    await pagina.waitForSelector(".cms-painel", { timeout: 15000 });
+    await pagina.waitForSelector(".nx-painel", { timeout: 15000 });
     await semToast(pagina);
     ok("o editor recarrega mostrando o padrão do banco",
       (await valorDe(pagina, "input[aria-label=\"Headline *\"]")) === PADRAO.headline,

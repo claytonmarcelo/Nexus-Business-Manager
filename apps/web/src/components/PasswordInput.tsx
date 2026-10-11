@@ -7,11 +7,13 @@ interface PasswordInputProps {
   autoComplete?: string;
   required?: boolean;
   inputClassName?: string;
+  /** Texto do servidor para esta senha; fica logo abaixo do campo. */
+  erro?: string;
 }
 
 // Campo de senha com botão "olho" para o usuário conferir o que digitou.
 // O tipo do input alterna entre password/text sem perder o foco nem o valor.
-export function PasswordInput({ label, value, onChange, autoComplete = "current-password", required, inputClassName = "input" }: PasswordInputProps) {
+export function PasswordInput({ label, value, onChange, autoComplete = "current-password", required, inputClassName = "input", erro }: PasswordInputProps) {
   const [visible, setVisible] = useState(false);
   return (
     <div className="field">
@@ -48,6 +50,7 @@ export function PasswordInput({ label, value, onChange, autoComplete = "current-
           )}
         </button>
       </div>
+      {erro ? <span className="field-error" role="alert">{erro}</span> : null}
     </div>
   );
 }

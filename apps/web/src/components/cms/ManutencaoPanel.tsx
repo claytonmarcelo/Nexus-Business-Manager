@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { extractErrorMessage } from "../../lib/api";
 import { notify } from "../../lib/notify";
 import { confirmAction } from "../../lib/confirm";
-import { BotaoSalvar, Bloco, Campo, CampoArea, CampoLigado } from "./Campos";
+import { BotaoSalvar, Bloco, Campo, CampoArea, CampoLigado } from "../Fields";
 import { gerarPulso, type ConfiguracaoEditor, type ManutencaoConfig, type MudancaConfig } from "../../lib/cmsApi";
 
 // ===== Aba Manutenção =====
@@ -114,14 +114,14 @@ export function ManutencaoPanel({ config, podeEscrever, salvar }: Props) {
   const rotuloAcao = vaiFechar ? "Fechar o site" : vaiAbrir ? "Abrir o site" : "Salvar";
 
   return (
-    <div className="cms-painel">
+    <div className="nx-painel">
       <section className={"cms-alerta-manutencao " + (ativa ? "is-ativa" : "is-aberta")}>
         <span className="cms-alerta-marca" aria-hidden="true">{ativa ? "⚠" : "✓"}</span>
         <div>
           <p className="cms-alerta-titulo">
             {ativa ? "O site está fechado para manutenção." : "O site está aberto para qualquer visitante."}
           </p>
-          <p className="cms-bloco-sub">
+          <p className="nx-bloco-sub">
             {ativa
               ? "Quem abre a página pública vê a tela de manutenção com a mensagem e a contagem regressiva abaixo."
               : "Nenhuma rota de negócio está bloqueada."}
@@ -141,7 +141,7 @@ export function ManutencaoPanel({ config, podeEscrever, salvar }: Props) {
           />
         }
       >
-        <div className="cms-grade">
+        <div className="nx-grade">
           <CampoLigado
             rotulo="Manutenção ativa"
             valor={ativa}
@@ -214,7 +214,7 @@ export function ManutencaoPanel({ config, podeEscrever, salvar }: Props) {
             <code className="cms-pulso-codigo">{pulsoNovo}</code>
           </div>
         ) : (
-          <p className="cms-bloco-sub">
+          <p className="nx-bloco-sub">
             {manutencao.tokenPulso
               ? "Existe um código válido hoje: " + manutencao.tokenPulso.slice(0, 4) + "…"
               : "Nenhum código gerado ainda. Sem código, só entra quem vem de um IP permitido."}

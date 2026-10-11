@@ -93,3 +93,24 @@ export function extractErrorMessage(err: unknown, fallback = "Ocorreu um erro.")
   if (err instanceof Error) return err.message;
   return fallback;
 }
+
+/**
+ * Erro por campo do formulário. O 400 do Zod chega com issues[] — caminho e
+ * texto escritos junto da regra que vetou o valor — e é essa frase, e não um
+ * palpite nosso, que a tela mostra embaixo do campo. O "message" genérico
+ * ("Dados inválidos") continua no toast: sozinho ele não diz o que corrigir.
+ */
+export function extractFieldErrors(err: unknown): Record<string, string> {
+  const erros: Record<string, string> = {};
+  if (!axios.isAxiosError(err)) return erros;
+  const corpo = err.response?.data as { issues?: { path?: string; message?: string }[] } | undefined;
+  if (!corpo || !Array.isArray(corpo.issues)) return erros;
+  for (const issue of corpo.issues) {
+    const caminho = typeof issue.path === "string" ? issue.path : "";
+    const mensagem = typeof issue.message === "string" ? issue.message : "Valor inválido";
+    // O primeiro erro do campo manda: mostrar os dez de um CNPJ errado seria
+    // poluição, e a pessoa corrige o mesmo dígito de qualquer jeito.
+    if (!(caminho in erros)) erros[caminho] = mensagem;
+  }
+  return erros;
+}

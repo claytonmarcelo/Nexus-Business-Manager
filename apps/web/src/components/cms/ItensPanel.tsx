@@ -4,7 +4,7 @@ import { notify } from "../../lib/notify";
 import { confirmAction } from "../../lib/confirm";
 import { Modal, useDirty } from "../Modal";
 import { EmptyState, ErrorState, LoadingInline } from "../StateView";
-import { Campo, CampoEscolha, CampoLigado, CampoNumero } from "./Campos";
+import { Campo, CampoEscolha, CampoLigado, CampoNumero } from "../Fields";
 import {
   KINDS,
   criarItem,
@@ -209,7 +209,7 @@ export function ItensPanel({ podeEscrever }: Props) {
     setEditando((atual) => (atual ? { ...atual, ...mudanca } : atual));
 
   return (
-    <div className="cms-painel">
+    <div className="nx-painel">
       <div className="cms-tipos" role="group" aria-label="Tipo de conteúdo">
         {KINDS.map((k) => (
           <button
@@ -307,7 +307,7 @@ export function ItensPanel({ podeEscrever }: Props) {
           dirty={sujo}
           size="lg"
         >
-          <div className="cms-grade">
+          <div className="nx-grade">
             <Campo rotulo="Título *" valor={editando.title} maxLength={200}
               dica="De 2 a 200 caracteres." aoMudar={(v) => mudar({ title: v })} />
             <CampoNumero rotulo="Ordem" valor={editando.order} min={0} max={999}

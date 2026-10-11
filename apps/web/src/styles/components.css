@@ -41,6 +41,8 @@
 /* Campos */
 .field { display: flex; flex-direction: column; gap: 0.35rem; margin-bottom: 1rem; }
 .field-label { font-size: 0.82rem; font-weight: 600; color: var(--text-2); }
+/* Badge solto num .field (papel na empresa): flex-column esticaria a pílula na largura toda. */
+.field .badge { align-self: flex-start; }
 
 .input, .select {
   width: 100%;
@@ -872,18 +874,9 @@
   .neu-btn { transition: none; }
 }
 
-/* Configuroes: grade fluida de cards (2 colunas quando ha espaco, 1 no celular) */
-.settings-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(320px, 100%), 1fr));
-  gap: 1.25rem;
-  align-items: start;
-}
-.settings-grid .panel { margin: 0; }
 @media (max-width: 560px) {
   .page { gap: 0.9rem; }
   .panel { padding: 1rem; border-radius: 14px; }
-  .settings-grid { gap: 0.9rem; }
   .theme-choice .btn { flex: 1; }
   .company-item { flex-wrap: wrap; }
   .company-item .btn { width: 100%; }
@@ -1625,4 +1618,153 @@
 }
 @media (prefers-reduced-motion: reduce) {
   .nx-confirm-spin { animation: none; }
+}
+/* ===== Peças de formulário compartilhadas (components/Fields.tsx) =====
+   O cartão-bloco com título, explicação e botão de gravar nasceu no editor do
+   site público, onde uma página de cinco abas pediu componentes pequenos e
+   iguais. Hoje ele veste também as Configurações: por isso as classes genéricas
+   passaram a nx-* e moram aqui, junto dos campos; em cms.css sobrou só o que é
+   da vitrine (nota de SEO, redes, manutenção, textos legais). */
+
+.nx-painel { display: flex; flex-direction: column; gap: 1.5rem; }
+
+.nx-bloco-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.1rem;
+}
+
+.nx-bloco-sub {
+  margin: 0.3rem 0 0;
+  color: var(--text-2);
+  font-size: 0.86rem;
+  max-width: 62ch;
+}
+
+.nx-bloco-acao {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex: 0 0 auto;
+}
+
+/* Quando o bloco não tem botão — o papel da pessoa não grava — a ação vira aviso. */
+.nx-bloco-nota { color: var(--text-3); font-size: 0.78rem; }
+
+/* Dois campos por linha no desktop, um só quando aperta. */
+.nx-grade {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.1rem 1.25rem;
+}
+
+.nx-grade .field-full,
+.nx-grade > .field.field-full {
+  grid-column: 1 / -1;
+}
+
+.field-hint {
+  display: block;
+  margin-top: 0.35rem;
+  color: var(--text-3);
+  font-size: 0.78rem;
+}
+
+/* --- cor --- */
+.nx-cor-controle {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.nx-cor-swatch {
+  inline-size: 42px;
+  block-size: 38px;
+  padding: 2px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+  cursor: pointer;
+}
+
+.nx-cor-swatch:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.nx-campo-cor .input.mono {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+/* --- ligado/desligado --- */
+.nx-ligado {
+  display: flex;
+  /* A dica é flex-basis: 100%: sem permissão de quebra
+     ela espreme o rótulo e a palavra divide no meio. */
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 0.6rem;
+  padding: 0.55rem 0;
+  cursor: pointer;
+}
+
+.nx-ligado input[type="checkbox"] {
+  inline-size: 1.05rem;
+  block-size: 1.05rem;
+  margin-top: 0.12rem;
+  /* O mesmo tom dos checkboxes do resto do sistema (.check-line). */
+  accent-color: var(--accent);
+}
+
+.nx-ligado-rotulo {
+  font-weight: 600;
+  color: var(--text);
+}
+
+.nx-ligado .field-hint {
+  flex-basis: 100%;
+}
+
+/* --- pré-visualização do que se cadastra por endereço (logo) --- */
+.nx-previa {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  margin-top: 1rem;
+  padding: 0.9rem;
+  border: 1px dashed var(--border-strong);
+  border-radius: var(--radius-md);
+  background: var(--surface-2);
+}
+
+.nx-previa-img {
+  inline-size: 64px;
+  block-size: 64px;
+  object-fit: contain;
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  border: 1px solid var(--border);
+}
+
+@media (max-width: 820px) {
+  .nx-grade {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .nx-bloco-head {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .nx-previa {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .nx-cor-swatch {
+    transition: border-color 0.15s ease;
+  }
 }

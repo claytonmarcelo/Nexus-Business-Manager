@@ -61,10 +61,10 @@ const BASE = "http://localhost:5173";
 
   // 4) grade de configuracoes: colunas
   await page.goto(BASE + "/app/configuracoes", { waitUntil: "networkidle0" });
-  const colsMobile = await page.evaluate(() => getComputedStyle(document.querySelector(".settings-grid")).gridTemplateColumns.split(" ").length);
+  const colsMobile = await page.evaluate(() => getComputedStyle(document.querySelector(".nx-grade")).gridTemplateColumns.split(" ").length);
   await page.setViewport({ width: 1280, height: 800 });
   await new Promise((r) => setTimeout(r, 300));
-  const colsDesktop = await page.evaluate(() => getComputedStyle(document.querySelector(".settings-grid")).gridTemplateColumns.split(" ").length);
+  const colsDesktop = await page.evaluate(() => getComputedStyle(document.querySelector(".nx-grade")).gridTemplateColumns.split(" ").length);
   ok(colsMobile === 1, "configuracoes em 1 coluna no celular");
   ok(colsDesktop >= 2, "configuracoes em " + colsDesktop + " colunas no desktop");
 

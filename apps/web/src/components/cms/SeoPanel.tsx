@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { extractErrorMessage } from "../../lib/api";
 import { notify } from "../../lib/notify";
 import { LoadingInline } from "../StateView";
-import { BotaoSalvar, Bloco, Campo, CampoArea } from "./Campos";
+import { BotaoSalvar, Bloco, Campo, CampoArea } from "../Fields";
 import { lerNotaSeo, type ConfiguracaoEditor, type MudancaConfig, type NotaSeo } from "../../lib/cmsApi";
 
 // ===== Aba SEO =====
@@ -79,11 +79,11 @@ export function SeoPanel({ config, podeEscrever, salvar }: Props) {
   }
 
   return (
-    <div className="cms-painel">
+    <div className="nx-painel">
       <section className="card-surface panel cms-nota">
         <div>
           <h2 className="panel-title">Nota da vitrine</h2>
-          <p className="cms-bloco-sub">
+          <p className="nx-bloco-sub">
             Doze checagens sobre o que está publicado agora — nada de pontuação de enfeite.
           </p>
         </div>
@@ -94,13 +94,13 @@ export function SeoPanel({ config, podeEscrever, salvar }: Props) {
             <span className={"cms-nota-num is-" + classeNivel(nota.nivel)}>{nota.nota}</span>
             <div>
               <p className="cms-nota-nivel">{nota.nivel}</p>
-              <p className="cms-bloco-sub">
+              <p className="nx-bloco-sub">
                 {nota.pontos} de {nota.total} pontos · {nota.itens.filter((i) => !i.alcancado).length} pendência(s)
               </p>
             </div>
           </div>
         ) : (
-          <p className="cms-bloco-sub">A nota não pôde ser lida.</p>
+          <p className="nx-bloco-sub">A nota não pôde ser lida.</p>
         )}
       </section>
 
@@ -115,7 +115,7 @@ export function SeoPanel({ config, podeEscrever, salvar }: Props) {
           />
         }
       >
-        <div className="cms-grade">
+        <div className="nx-grade">
           {CAMPOS.map((c) => {
             const max = c.chave === "descricao" || c.chave === "ogDescricao" ? 400 : 180;
             const mudar = (v: string) => setSeo((atual) => ({ ...atual, [c.chave]: v }));

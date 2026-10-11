@@ -7,6 +7,7 @@ import { useAuth } from "../context/AuthContext";
 import { notify } from "../lib/notify";
 import { extractErrorMessage } from "../lib/api";
 import { validateEmail, validateName, validatePassword, validateConfirm } from "../lib/validators";
+import { PASSWORD_RULE_HINT } from "../lib/uiCopy";
 
 interface FieldErrors { name?: string | null; email?: string | null; password?: string | null; confirm?: string | null }
 
@@ -102,7 +103,7 @@ export function Register() {
 
           <div className="field">
             <PasswordInput label="Senha" value={form.password} onChange={set("password")} autoComplete="new-password" inputClassName={"neu-input" + (errors.password ? " is-error" : "")} />
-            <span className="auth-hint">Mínimo de 8 caracteres, com uma letra maiúscula e um caractere especial.</span>
+            <span className="auth-hint">{PASSWORD_RULE_HINT}</span>
             {errors.password && <span className="field-error">{errors.password}</span>}
           </div>
 

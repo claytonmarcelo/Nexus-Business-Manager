@@ -34,6 +34,10 @@ export const MODAL_COPY = {
   dialogBusy: "Salvando, aguarde",
 } as const;
 
+// A regra de senha é uma só em todo o produto, então a frase que a explica
+// também é: cadastro, recuperação e troca na conta dizem o mesmo texto.
+export const PASSWORD_RULE_HINT = "Mínimo de 8 caracteres, com uma letra maiúscula e um caractere especial.";
+
 export const STATE_COPY = {
   loading: "Carregando…",
   errorTitle: "Não foi possível concluir",

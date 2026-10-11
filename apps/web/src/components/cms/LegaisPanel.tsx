@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { extractErrorMessage } from "../../lib/api";
 import { notify } from "../../lib/notify";
 import { EmptyState, ErrorState, LoadingInline } from "../StateView";
-import { BotaoSalvar, Bloco, Campo, CampoArea, CampoLigado } from "./Campos";
+import { BotaoSalvar, Bloco, Campo, CampoArea, CampoLigado } from "../Fields";
 import { lerLegais, salvarLegal, type DocumentoLegal, type KindLegal } from "../../lib/cmsApi";
 import { slugPeloKind } from "../../lib/landingTypes";
 
@@ -86,7 +86,7 @@ export function LegaisPanel({ podeEscrever }: { podeEscrever: boolean }) {
   if (!docs) return <EmptyState title="Nenhum documento legal" />;
 
   return (
-    <div className="cms-painel">
+    <div className="nx-painel">
       <div className="cms-tipos" role="group" aria-label="Documento legal">
         {docs.map((d) => (
           <button
@@ -127,7 +127,7 @@ export function LegaisPanel({ podeEscrever }: { podeEscrever: boolean }) {
             </div>
           }
         >
-          <div className="cms-grade">
+          <div className="nx-grade">
             <Campo
               rotulo="Título do documento"
               valor={rascunho.title}

@@ -6,6 +6,7 @@ import { PasswordInput } from "../components/PasswordInput";
 import { api, extractErrorMessage } from "../lib/api";
 import { notify } from "../lib/notify";
 import { validateEmail, validatePassword, validateConfirm } from "../lib/validators";
+import { PASSWORD_RULE_HINT } from "../lib/uiCopy";
 
 // Fluxo em duas etapas: solicitar codigo e depois redefinir a senha.
 export function ForgotPassword() {
@@ -135,7 +136,7 @@ export function ForgotPassword() {
             </div>
             <div className="field">
               <PasswordInput label="Nova senha" value={password} onChange={(v) => { setPassword(v); if (errors.password) setErrors((x) => ({ ...x, password: null })); }} autoComplete="new-password" inputClassName={"neu-input" + (errors.password ? " is-error" : "")} />
-              <span className="auth-hint">Mínimo de 8 caracteres, com uma letra maiúscula e um caractere especial.</span>
+              <span className="auth-hint">{PASSWORD_RULE_HINT}</span>
               {errors.password && <span className="field-error">{errors.password}</span>}
             </div>
             <div className="field">
