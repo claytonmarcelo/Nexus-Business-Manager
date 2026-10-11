@@ -272,7 +272,9 @@ export async function updateEvent(companyId: string, id: string, input: UpdateEv
   }
 
   const dados = arrumaRecorrencia({ ...input, ...(fim ? { endAt: fim } : {}), recorrencia, recorrenciaAte });
-  await prisma.agendaEvent.update({ where: { id: atual.id }, data: dados });
+  // Fase 1c da auditoria: o where das escritas abaixo carrega o companyId — o
+  // id lido do evento (que já veio filtrado) ganha segunda tranca na gravação.
+  await prisma.agendaEvent.update({ where: { id: atual.id, companyId }, data: dados });
   await audit({ userId, companyId, action: "agenda.update", entity: "agenda-event", entityId: atual.id, ip });
   return getEventoDetalhado(companyId, atual.id, userId);
 }
@@ -283,7 +285,7 @@ export async function changeStatus(companyId: string, id: string, status: Agenda
   const atual = await getEvent(companyId, id);
   if (atual.status === status) throw badRequest("O compromisso já está neste estado");
 
-  await prisma.agendaEvent.update({ where: { id: atual.id }, data: { status } });
+  await prisma.agendaEvent.update({ where: { id: atual.id, companyId }, data: { status } });
   await audit({ userId, companyId, action: "agenda." + status.toLowerCase(), entity: "agenda-event", entityId: atual.id, ip });
   return getEventoDetalhado(companyId, atual.id, userId);
 }
@@ -292,7 +294,7 @@ export async function changeStatus(companyId: string, id: string, status: Agenda
 export async function deleteEvent(companyId: string, id: string, userId: string, ip: string) {
   bloqueiaOcorrencia(id);
   const atual = await getEvent(companyId, id);
-  await prisma.agendaEvent.delete({ where: { id: atual.id } });
+  await prisma.agendaEvent.delete({ where: { id: atual.id, companyId } });
   await audit({
     userId, companyId, action: "agenda.delete", entity: "agenda-event", entityId: atual.id, ip,
     metadata: { title: atual.title, ...(atual.recorrencia !== "NONE" ? { recorrencia: atual.recorrencia } : {}) },

@@ -99,7 +99,7 @@ export async function updateRole(
     throw conflict("O administrador definitivo do sistema não pode ser rebaixado de OWNER");
   }
   const updated = await prisma.companyUser.update({
-    where: { id: membership.id },
+    where: { id: membership.id, companyId },
     data: { role },
   });
   await audit({ userId: actorId, companyId, action: "user.update_role", entity: "user", entityId: userId, ip: ip ?? null, metadata: { role } });
@@ -162,7 +162,7 @@ export async function revokeSession(
     throw forbidden("Você encerra apenas as suas sessões; para restringir outra pessoa, altere o papel dela");
   }
   if (registro.revokedAt) return { ok: true, ja: true };
-  await prisma.refreshToken.update({ where: { id: sessionId }, data: { revokedAt: new Date() } });
+  await prisma.refreshToken.update({ where: { id: sessionId, userId: actorId }, data: { revokedAt: new Date() } });
   await audit({
     userId: actorId,
     companyId,

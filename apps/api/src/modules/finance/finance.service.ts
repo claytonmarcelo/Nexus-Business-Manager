@@ -66,10 +66,12 @@ export async function createCategory(companyId: string, input: FinanceCategoryIn
   return cat;
 }
 
+// Fase 1c da auditoria: as escritas abaixo carregam o companyId no where — a
+// linha de outra empresa não é nem apagada nem alterada (P2025 vira 404).
 export async function deleteCategory(companyId: string, id: string, userId: string, ip: string) {
   const found = await prisma.financeCategory.findFirst({ where: { id, companyId } });
   if (!found) throw notFound("Categoria não encontrada");
-  await prisma.financeCategory.delete({ where: { id } });
+  await prisma.financeCategory.delete({ where: { id, companyId } });
   await audit({ userId, companyId, action: "finance-category.delete", entity: "finance-category", entityId: id, ip });
   return { ok: true };
 }
@@ -164,7 +166,7 @@ export async function updateEntry(companyId: string, id: string, input: Partial<
   if (input.categoryId !== undefined) data.category = input.categoryId ? { connect: { id: input.categoryId } } : { disconnect: true };
   if (input.clientId !== undefined) data.client = input.clientId ? { connect: { id: input.clientId } } : { disconnect: true };
   if (input.supplierId !== undefined) data.supplier = input.supplierId ? { connect: { id: input.supplierId } } : { disconnect: true };
-  const entry = await prisma.financeEntry.update({ where: { id }, data });
+  const entry = await prisma.financeEntry.update({ where: { id, companyId }, data });
   await audit({ userId, companyId, action: "finance.update", entity: "finance-entry", entityId: id, ip });
   return getEntry(companyId, entry.id).then(serialize);
 }
@@ -174,7 +176,7 @@ export async function changeStatus(companyId: string, id: string, status: EntryS
   if (!found) throw notFound("Lançamento não encontrado");
   if (found.status === status) throw badRequest("O lançamento já está com este status");
   const entry = await prisma.financeEntry.update({
-    where: { id },
+    where: { id, companyId },
     data: { status, paidAt: status === "PAID" ? new Date() : null },
   });
   await audit({ userId, companyId, action: "finance." + status.toLowerCase(), entity: "finance-entry", entityId: id, ip });

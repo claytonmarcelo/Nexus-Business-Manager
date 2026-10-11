@@ -76,6 +76,13 @@ export function buildApp(): FastifyInstance {
     if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
       return reply.status(409).send({ error: "CONFLICT", message: "Registro duplicado" });
     }
+    // Prisma: update/delete que não achou a linha → 404. Desde a Fase 1c da
+    // auditoria as escritas de tenant carregam o companyId no where; se o id
+    // pertence a outra empresa a condição não casa e o Prisma joga P2025 —
+    // aqui isso vira um 404 honesto em vez de um 500 que vazaria o motivo.
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2025") {
+      return reply.status(404).send({ error: "NOT_FOUND", message: "Recurso não encontrado" });
+    }
     // Não vaza detalhes internos em produção (seção 47).
     req.log.error({ err: error }, "erro não tratado");
     const payload: Record<string, unknown> = { error: "INTERNAL_ERROR", message: "Erro interno do servidor" };

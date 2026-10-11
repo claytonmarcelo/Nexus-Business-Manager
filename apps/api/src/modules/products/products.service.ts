@@ -39,6 +39,8 @@ export function serialize(p: {
 }
 
 // ===== Categorias =====
+// Fase 1c da auditoria: cada update/delete abaixo carrega o companyId no where —
+// a linha de outra empresa não existe para a escrita (P2025 vira 404 no handler).
 export async function listCategories(companyId: string) {
   return prisma.productCategory.findMany({
     where: { companyId },
@@ -64,7 +66,7 @@ export async function updateCategory(companyId: string, id: string, input: { nam
   const cat = await prisma.productCategory.findFirst({ where: { id, companyId } });
   if (!cat) throw notFound("Categoria não encontrada");
   try {
-    const updated = await prisma.productCategory.update({ where: { id }, data: input });
+    const updated = await prisma.productCategory.update({ where: { id, companyId }, data: input });
     await audit({ userId, companyId, action: "category.update", entity: "product_category", entityId: id, ip });
     return updated;
   } catch (e) {
@@ -150,7 +152,7 @@ export async function updateProduct(companyId: string, id: string, input: Update
   await getProduct(companyId, id);
   if (input.categoryId !== undefined) await assertCategory(companyId, input.categoryId);
   try {
-    const product = await prisma.product.update({ where: { id }, data: input });
+    const product = await prisma.product.update({ where: { id, companyId }, data: input });
     await audit({ userId, companyId, action: "product.update", entity: "product", entityId: id, ip });
     return serialize(product);
   } catch (e) {
@@ -164,7 +166,7 @@ export async function updateProduct(companyId: string, id: string, input: Update
 // Exclusão lógica: preserva movimentacoes e futuros itens de venda.
 export async function deactivateProduct(companyId: string, id: string, userId: string, ip: string) {
   await getProduct(companyId, id);
-  await prisma.product.update({ where: { id }, data: { active: false } });
+  await prisma.product.update({ where: { id, companyId }, data: { active: false } });
   await audit({ userId, companyId, action: "product.delete", entity: "product", entityId: id, ip });
   return { ok: true };
 }
@@ -188,7 +190,7 @@ export async function moveStock(companyId: string, productId: string, input: Cre
     prisma.stockMovement.create({
       data: { companyId, productId, kind: input.kind, quantity: input.quantity, note: input.note, createdBy: userId },
     }),
-    prisma.product.update({ where: { id: productId }, data: { stockQuantity: newStock } }),
+    prisma.product.update({ where: { id: productId, companyId }, data: { stockQuantity: newStock } }),
   ]);
   await audit({
     userId, companyId, action: "stock.move", entity: "stock_movement", entityId: movement.id, ip,

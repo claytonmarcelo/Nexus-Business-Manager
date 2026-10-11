@@ -117,10 +117,12 @@ export async function createLead(companyId: string, input: CreateLeadInput, user
   return getLead(companyId, lead.id).then(serialize);
 }
 
+// Fase 1c da auditoria: as escritas de lead abaixo carregam o companyId no
+// where — id de outra empresa não atualiza nada (P2025 vira 404 no handler).
 export async function updateLead(companyId: string, id: string, input: Partial<CreateLeadInput>, userId: string, ip: string) {
   const found = await prisma.lead.findFirst({ where: { id, companyId } });
   if (!found) throw notFound("Lead não encontrado");
-  await prisma.lead.update({ where: { id }, data: input });
+  await prisma.lead.update({ where: { id, companyId }, data: input });
   const mudancas = mudancasDoLead(found, input);
   await audit({
     userId,
@@ -148,7 +150,7 @@ export async function changeStatus(companyId: string, id: string, status: LeadSt
     clientId = client.id;
     await audit({ userId, companyId, action: "client.create", entity: "client", entityId: client.id, ip, metadata: { origem: "lead " + id } });
   }
-  await prisma.lead.update({ where: { id }, data: { status, clientId } });
+  await prisma.lead.update({ where: { id, companyId }, data: { status, clientId } });
   await audit({
     userId,
     companyId,

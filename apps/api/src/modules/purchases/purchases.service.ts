@@ -40,6 +40,9 @@ function serialize(p: PurchaseWithRelations) {
 
 /* Fornecedores */
 
+// Fase 1c da auditoria: cada update/tx.update abaixo carrega o companyId no
+// where — a escrita em linha de outra empresa morre em P2025 (404 no handler),
+// sem depender da checagem prévia que já existia.
 export async function listSuppliers(companyId: string, p: PaginationInput, opts: { search?: string; active?: boolean }) {
   const where: Prisma.SupplierWhereInput = {
     companyId,
@@ -65,7 +68,7 @@ export async function createSupplier(companyId: string, input: CreateSupplierInp
 export async function updateSupplier(companyId: string, id: string, input: Partial<CreateSupplierInput>, userId: string, ip: string) {
   const found = await prisma.supplier.findFirst({ where: { id, companyId } });
   if (!found) throw notFound("Fornecedor não encontrado");
-  const supplier = await prisma.supplier.update({ where: { id }, data: input }).catch((e: unknown) => {
+  const supplier = await prisma.supplier.update({ where: { id, companyId }, data: input }).catch((e: unknown) => {
     if ((e as { code?: string }).code === "P2002") throw conflict("Já existe um fornecedor com este nome nesta empresa");
     throw e;
   });
@@ -77,7 +80,7 @@ export async function updateSupplier(companyId: string, id: string, input: Parti
 export async function deactivateSupplier(companyId: string, id: string, userId: string, ip: string) {
   const found = await prisma.supplier.findFirst({ where: { id, companyId } });
   if (!found) throw notFound("Fornecedor não encontrado");
-  const supplier = await prisma.supplier.update({ where: { id }, data: { active: false } });
+  const supplier = await prisma.supplier.update({ where: { id, companyId }, data: { active: false } });
   await audit({ userId, companyId, action: "supplier.delete", entity: "supplier", entityId: id, ip });
   return supplier;
 }
@@ -150,7 +153,7 @@ export async function createPurchase(companyId: string, input: CreatePurchaseInp
           data: { companyId, productId: prod.id, kind: "IN", quantity: i.quantity, note: "Compra " + created.id.slice(0, 8), createdBy: userId },
         });
         await tx.product.update({
-          where: { id: prod.id },
+          where: { id: prod.id, companyId },
           data: { stockQuantity: Number(prod.stockQuantity) + i.quantity, costPrice: i.unitCost },
         });
       }
@@ -178,7 +181,7 @@ export async function changeStatus(companyId: string, id: string, status: Purcha
           data: { companyId, productId: prod.id, kind: "IN", quantity: i.quantity, note: "Compra " + purchase.id.slice(0, 8), createdBy: userId },
         });
         await tx.product.update({
-          where: { id: prod.id },
+          where: { id: prod.id, companyId },
           data: { stockQuantity: Number(prod.stockQuantity) + Number(i.quantity), costPrice: Number(i.unitCost) },
         });
       }
@@ -193,10 +196,10 @@ export async function changeStatus(companyId: string, id: string, status: Purcha
         await tx.stockMovement.create({
           data: { companyId, productId: prod.id, kind: "OUT", quantity: i.quantity, note: "Estorno da compra " + purchase.id.slice(0, 8), createdBy: userId },
         });
-        await tx.product.update({ where: { id: prod.id }, data: { stockQuantity: Number(prod.stockQuantity) - Number(i.quantity) } });
+        await tx.product.update({ where: { id: prod.id, companyId }, data: { stockQuantity: Number(prod.stockQuantity) - Number(i.quantity) } });
       }
     }
-    await tx.purchase.update({ where: { id }, data: { status } });
+    await tx.purchase.update({ where: { id, companyId }, data: { status } });
   });
 
   await audit({ userId, companyId, action: "purchase." + status.toLowerCase(), entity: "purchase", entityId: id, ip });

@@ -310,7 +310,9 @@ export async function marcarLida(userId: string, companyId: string, id: string) 
   if (!found) throw notFound("Notificação não encontrada");
   if (found.readAt) return serializar(found);
   const atualizada = await prisma.notification.update({
-    where: { id },
+    // Fase 1c: marca como lida só a notificação desta pessoa nesta empresa —
+    // id de outro dono ou de outra empresa não altera nada (P2025 → 404).
+    where: { id, userId, companyId },
     data: { readAt: new Date() },
   });
   return serializar(atualizada);

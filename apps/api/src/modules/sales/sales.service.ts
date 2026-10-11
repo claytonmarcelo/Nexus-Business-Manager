@@ -112,7 +112,7 @@ export async function createSale(companyId: string, input: CreateSaleInput, user
         await tx.stockMovement.create({
           data: { companyId, productId: prod.id, kind: "OUT", quantity: i.quantity, note: "Venda " + created.id.slice(0, 8), createdBy: userId },
         });
-        await tx.product.update({ where: { id: prod.id }, data: { stockQuantity: Number(prod.stockQuantity) - i.quantity } });
+        await tx.product.update({ where: { id: prod.id, companyId }, data: { stockQuantity: Number(prod.stockQuantity) - i.quantity } });
       }
     }
     return created;
@@ -139,6 +139,9 @@ export async function createSale(companyId: string, input: CreateSaleInput, user
 }
 
 // Confirmar: baixa estoque. Cancelar: devolve estoque se estava confirmada.
+// Baixar/estornar estoque e trocar status: Fase 1c da auditoria — toda escrita
+// dentro da transação carrega o companyId no where, então nenhuma linha de outra
+// empresa muda mesmo que a checagem de cima um dia deixe de ser chamada.
 export async function changeStatus(companyId: string, id: string, status: "CONFIRMED" | "CANCELLED", userId: string, ip: string) {
   const sale = await prisma.sale.findFirst({ where: { id, companyId }, include: { items: true } });
   if (!sale) throw notFound("Venda não encontrada");
@@ -157,7 +160,7 @@ export async function changeStatus(companyId: string, id: string, status: "CONFI
         await tx.stockMovement.create({
           data: { companyId, productId: prod.id, kind: "OUT", quantity: i.quantity, note: "Venda " + sale.id.slice(0, 8), createdBy: userId },
         });
-        await tx.product.update({ where: { id: prod.id }, data: { stockQuantity: Number(prod.stockQuantity) - Number(i.quantity) } });
+        await tx.product.update({ where: { id: prod.id, companyId }, data: { stockQuantity: Number(prod.stockQuantity) - Number(i.quantity) } });
       }
     }
     if (status === "CANCELLED" && sale.status === "CONFIRMED") {
@@ -167,10 +170,10 @@ export async function changeStatus(companyId: string, id: string, status: "CONFI
         await tx.stockMovement.create({
           data: { companyId, productId: prod.id, kind: "IN", quantity: i.quantity, note: "Estorno da venda " + sale.id.slice(0, 8), createdBy: userId },
         });
-        await tx.product.update({ where: { id: prod.id }, data: { stockQuantity: Number(prod.stockQuantity) + Number(i.quantity) } });
+        await tx.product.update({ where: { id: prod.id, companyId }, data: { stockQuantity: Number(prod.stockQuantity) + Number(i.quantity) } });
       }
     }
-    await tx.sale.update({ where: { id }, data: { status } });
+    await tx.sale.update({ where: { id, companyId }, data: { status } });
   });
 
   await audit({ userId, companyId, action: "sale." + status.toLowerCase(), entity: "sale", entityId: id, ip });
