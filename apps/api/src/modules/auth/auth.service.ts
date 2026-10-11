@@ -118,16 +118,39 @@ export async function refresh(
     where: { tokenHash: hashToken(refreshToken) },
     include: { user: { include: { memberships: { include: { company: true } } } } },
   });
-  if (!record || record.revokedAt || record.expiresAt < new Date()) {
+  if (!record || record.expiresAt < new Date()) {
     throw unauthorized("Sessão expirada");
   }
+  // Fase 2 da auditoria: um refresh token rotacionado que volta a aparecer é
+  // a assinatura clássica de roubo — o dono legítimo nunca reapresenta o código
+  // que já trocou. Aqui a família inteira cai (todas as sessões vivas desta
+  // pessoa) e o evento fica na auditoria. Revogação por decisão — logout,
+  // encerrar sessão, troca de senha, recuperação — marca só revokedAt, sem
+  // usedAt, e por isso não dispara a reação em cadeia.
+  if (record.usedAt && record.revokedAt) {
+    await prisma.refreshToken.updateMany({
+      where: { userId: record.userId, revokedAt: null },
+      data: { revokedAt: new Date() },
+    });
+    await audit({
+      userId: record.userId,
+      action: "auth.refresh_reuse",
+      entity: "user",
+      entityId: record.userId,
+      ip,
+      metadata: { sessoesRevogadas: "todas", motivo: "token rotacionado reapresentado" },
+    });
+    throw unauthorized("Sessão expirada");
+  }
+  if (record.revokedAt) throw unauthorized("Sessão expirada");
   if (!record.user.active) throw forbidden("Usuário inativo");
   const membership = pickMembership(record.user.memberships);
 
-  // Rotação: revoga o token usado antes de emitir um novo.
+  // Rotação: revoga o token usado antes de emitir um novo — usado E revogado,
+  // para que a reapresentação dele seja reconhecível como reuso.
   await prisma.refreshToken.update({
     where: { id: record.id },
-    data: { revokedAt: new Date() },
+    data: { revokedAt: new Date(), usedAt: new Date() },
   });
   return issueTokens(app, record.userId, membership.companyId, membership.role, ip);
 }
@@ -261,12 +284,30 @@ export async function register(
   };
 }
 
-// Solicitação de recuperação: SEMPRE responde ok (não revela se o e-mail existe).
-// Em desenvolvimento (sem SMTP configurado) o token é devolvido para validar o fluxo.
+// Solicitação de recuperação: SEMPRE responde ok genérico (não revela se o
+// e-mail existe). O código só volta no HTTP com AUTH_EXPOSE_RESET_TOKEN=1 no
+// .env local — nunca por causa do NODE_ENV, que valeria também para qualquer
+// homologação exposta (item D da auditoria).
 export async function forgotPassword(email: string, ip?: string): Promise<{ ok: true; devToken?: string }> {
   const user = await prisma.user.findUnique({ where: { email } });
   if (!user || !user.active) {
     await audit({ userId: user?.id ?? null, action: "auth.forgot_password", entity: "user", ip, metadata: { email } });
+    return { ok: true };
+  }
+  // Regra definitiva (Fase 2): a recuperação não toca o administrador da
+  // plataforma. Nem token, nem revogação de sessões — a resposta continua o
+  // mesmo ok genérico. A senha dessa conta se troca de dentro (troca de senha
+  // autenticada) ou pelo seed local; um link de recuperação jamais pode ser
+  // porta para assumir a conta que protege a plataforma inteira.
+  if (user.platformRole === "SUPER_ADMIN") {
+    await audit({
+      userId: user.id,
+      action: "auth.forgot_password_bloqueado",
+      entity: "user",
+      entityId: user.id,
+      ip,
+      metadata: { motivo: "administrador da plataforma não passa pela recuperação" },
+    });
     return { ok: true };
   }
   const token = crypto.randomBytes(24).toString("hex");
@@ -275,7 +316,7 @@ export async function forgotPassword(email: string, ip?: string): Promise<{ ok: 
   });
   await prisma.refreshToken.updateMany({ where: { userId: user.id, revokedAt: null }, data: { revokedAt: new Date() } });
   await audit({ userId: user.id, action: "auth.forgot_password", entity: "user", entityId: user.id, ip });
-  return isProd ? { ok: true } : { ok: true, devToken: token };
+  return env.AUTH_EXPOSE_RESET_TOKEN === "1" ? { ok: true, devToken: token } : { ok: true };
 }
 
 // Redefinição com token: valida, troca a senha e derruba todas as sessões.
@@ -290,6 +331,11 @@ export async function resetPassword(
     include: { user: true },
   });
   if (!record || record.usedAt || record.expiresAt < new Date() || record.user.email !== email) {
+    throw unauthorized("Código de recuperação inválido ou expirado");
+  }
+  // Cinto extra do gate da recuperação: um token perdido de código antigo
+  // também não redefine senha de administrador de plataforma.
+  if (record.user.platformRole === "SUPER_ADMIN") {
     throw unauthorized("Código de recuperação inválido ou expirado");
   }
   const passwordHash = await hashPassword(password);

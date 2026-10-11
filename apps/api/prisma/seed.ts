@@ -19,8 +19,12 @@ if (!SUPER_PASSWORD) {
 }
 
 // Conta de desenvolvimento usada pela suíte de testes automatizados.
+// Fase 2 da auditoria: ela NÃO nasce em produção. Em NODE_ENV=production só
+// aparece se alguém escrever SEED_DEV_ACCOUNT=1 de propósito; fora produção
+// (dev, CI, testes) ela é criada como sempre foi.
 const DEV_EMAIL = "admin@nexus.local";
 const DEV_PASSWORD = "Nexus@2026";
+const CRIA_DEV = process.env.NODE_ENV !== "production" || process.env.SEED_DEV_ACCOUNT === "1";
 
 async function ensureUser(email: string, name: string, password: string) {
   const passwordHash = await bcrypt.hash(password, 12);
@@ -36,7 +40,7 @@ async function ensureUser(email: string, name: string, password: string) {
 
 async function main(): Promise<void> {
   const superAdmin = await ensureUser(SUPER_EMAIL, "Administrador Nexus", SUPER_PASSWORD);
-  const devAdmin = await ensureUser(DEV_EMAIL, "Administrador Nexus", DEV_PASSWORD);
+  const devAdmin = CRIA_DEV ? await ensureUser(DEV_EMAIL, "Administrador Nexus", DEV_PASSWORD) : null;
 
   const company = await prisma.company.upsert({
     where: { slug: "nexus-demo" },
@@ -54,11 +58,13 @@ async function main(): Promise<void> {
     });
   }
 
-  await prisma.companyUser.upsert({
-    where: { userId_companyId: { userId: devAdmin.id, companyId: company.id } },
-    update: { role: "OWNER" },
-    create: { userId: devAdmin.id, companyId: company.id, role: "OWNER" },
-  });
+  if (devAdmin) {
+    await prisma.companyUser.upsert({
+      where: { userId_companyId: { userId: devAdmin.id, companyId: company.id } },
+      update: { role: "OWNER" },
+      create: { userId: devAdmin.id, companyId: company.id, role: "OWNER" },
+    });
+  }
 
   // Rotinas-padrão do passo de Operações: o seed garante que a tela existe com
   // as rotinas do código. Enabled e histórico do operador são preservados.
@@ -70,11 +76,13 @@ async function main(): Promise<void> {
     });
   }
 
+  // Fase 2 da auditoria: o log confirma o seed sem imprimir senha nenhuma —
+  // o valor nunca foi para o terminal antes com o administrador, e a conta
+  // dev só aparece aqui quando foi criada de fato.
   // eslint-disable-next-line no-console
   console.log("Seed concluído:", {
     adminDefinitivo: SUPER_EMAIL,
-    senha: SUPER_PASSWORD + " (regra: 8+ chars, maiúscula e especial — ver CREDENCIAIS.md)",
-    dev: `${DEV_EMAIL} / ${DEV_PASSWORD}`,
+    contaDev: devAdmin ? `${DEV_EMAIL} (senha: Nexus@2026, só para desenvolvimento)` : "não criada (produção)",
     empresasComOwner: companies.length,
   });
 }

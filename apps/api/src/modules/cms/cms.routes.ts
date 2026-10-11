@@ -39,10 +39,11 @@ import {
 // não tem sessão. O contexto da empresa ativa continua sendo lido nas rotas de
 // escrita apenas para assinar a auditoria.
 export async function cmsRoutes(app: FastifyInstance): Promise<void> {
-  // ---- Leitura pública (sem sessão) ----
-  app.get("/public/landing", async () => payloadPublico());
+  // ---- Leitura pública (sem sessão; config.public marca a abertura para o
+  // gate da Fase 2, que exige a declaração explícita em toda rota aberta) ----
+  app.get("/public/landing", { config: { public: true } }, async () => payloadPublico());
 
-  app.get("/public/legal/:kind", async (req) => {
+  app.get("/public/legal/:kind", { config: { public: true } }, async (req) => {
     const kind = legalKindSchema.parse((req.params as { kind: string }).kind);
     const doc = await obterLegal(kind);
     // Texto só aparece no site depois de publicado pela administração.
@@ -53,7 +54,7 @@ export async function cmsRoutes(app: FastifyInstance): Promise<void> {
   // O visitante que tem o pulso informa o token; a resposta é só sim/não.
   app.post(
     "/public/bypass",
-    { config: { rateLimit: { max: 30, timeWindow: "1 minute" } } },
+    { config: { public: true, rateLimit: { max: 30, timeWindow: "1 minute" } } },
     async (req) => {
       const { token } = bypassSchema.parse(req.body);
       const estado = await estadoManutencao();

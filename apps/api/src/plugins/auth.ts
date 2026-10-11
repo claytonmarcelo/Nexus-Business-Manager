@@ -16,19 +16,23 @@ declare module "fastify" {
   }
 }
 
+// Função nomeada de propósito: o gate estrutural (plugins/gate.ts) reconhece a
+// proteção de rota por identidade desta função, não por string solta.
+export async function authenticate(req: FastifyRequest): Promise<void> {
+  try {
+    await req.jwtVerify();
+  } catch {
+    throw unauthorized("Token inválido ou expirado");
+  }
+}
+
 async function authPlugin(app: FastifyInstance): Promise<void> {
   await app.register(jwt, {
     secret: env.JWT_ACCESS_SECRET,
     sign: { expiresIn: env.JWT_ACCESS_TTL },
   });
 
-  app.decorate("authenticate", async (req: FastifyRequest) => {
-    try {
-      await req.jwtVerify();
-    } catch {
-      throw unauthorized("Token inválido ou expirado");
-    }
-  });
+  app.decorate("authenticate", authenticate);
 }
 
 export default fp(authPlugin, { name: "auth" });

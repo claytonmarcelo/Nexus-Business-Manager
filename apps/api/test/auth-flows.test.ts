@@ -1,6 +1,8 @@
 import { describe, it, expect, afterAll } from "vitest";
+import crypto from "node:crypto";
 import { app, makeAccount, login, cleanup, uid } from "./helpers";
 import { prisma } from "../src/lib/prisma";
+import { hashToken } from "../src/lib/tokens";
 
 // Fluxos de cadastro e recuperação de senha (regra: 8+, maiúscula, especial).
 describe("Cadastro e recuperação de senha", () => {
@@ -45,7 +47,7 @@ describe("Cadastro e recuperação de senha", () => {
     expect(body.issues.some((i) => i.path === "password" && /maiúscula/.test(i.message))).toBe(true);
   });
 
-  it("esqueci a senha: sempre 200 genérico e devolve código em desenvolvimento", async () => {
+  it("esqueci a senha: 200 genérico e o código não vaza na resposta", async () => {
     const f = await makeAccount("ADMIN");
     created.userIds.push(f.userId);
     created.companyIds.push(f.companyId);
@@ -62,7 +64,17 @@ describe("Cadastro e recuperação de senha", () => {
       payload: { email: f.email },
     });
     expect(res.statusCode).toBe(200);
-    expect(res.json().devToken).toBeTypeOf("string");
+    // Fase 2 da auditoria: sem SMTP o código só sai da API quando o ambiente
+    // declara AUTH_EXPOSE_RESET_TOKEN=1 (dev local). O default é fechar a
+    // porta — a resposta fica o mesmo ok genérico de antes.
+    const body = res.json() as Record<string, unknown>;
+    expect(body.ok).toBe(true);
+    expect(body.devToken).toBeUndefined();
+    expect(body.message).toBeUndefined();
+
+    // O token de recuperação é criado no banco, escondido atrás do hash.
+    const pend = await prisma.passwordResetToken.count({ where: { userId: f.userId, usedAt: null } });
+    expect(pend).toBe(1);
   });
 
   it("redefinição troca a senha, invalida reuso e derruba sessões", async () => {
@@ -73,8 +85,13 @@ describe("Cadastro e recuperação de senha", () => {
     const antigoRefresh = await app.inject({ method: "POST", url: "/api/auth/login", payload: { email: f.email, password: f.password } });
     const refreshToken = (antigoRefresh.json() as { refreshToken: string }).refreshToken;
 
-    const fp = await app.inject({ method: "POST", url: "/api/auth/forgot-password", payload: { email: f.email } });
-    const devToken = (fp.json() as { devToken: string }).devToken;
+    // Fase 2: a resposta do forgot não devolve mais o código. O teste gera um
+    // exatamente como o serviço faz (48 hex aleatórios; o banco guarda o hash),
+    // provando o fluxo de redefinição sem depender da porta de desenvolvimento.
+    const devToken = crypto.randomBytes(24).toString("hex");
+    await prisma.passwordResetToken.create({
+      data: { userId: f.userId, tokenHash: hashToken(devToken), expiresAt: new Date(Date.now() + 15 * 60_000) },
+    });
 
     // token inválido -> 401
     const ruim = await app.inject({

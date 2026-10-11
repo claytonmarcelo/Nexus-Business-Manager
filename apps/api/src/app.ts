@@ -4,6 +4,7 @@ import { Prisma } from "@prisma/client";
 import { AppError, badRequest } from "./lib/errors";
 import { registerSecurity } from "./plugins/security";
 import { registerMaintenance } from "./plugins/maintenance";
+import { registerAuthGate } from "./plugins/gate";
 import authPlugin from "./plugins/auth";
 import { authRoutes } from "./modules/auth/auth.routes";
 import { companiesRoutes } from "./modules/companies/companies.routes";
@@ -21,13 +22,19 @@ import { notificationsRoutes } from "./modules/notifications/notifications.route
 import { cmsRoutes } from "./modules/cms/cms.routes";
 import { cronRoutes } from "./modules/cron/cron.routes";
 import { healthRoutes } from "./modules/health/health.routes";
-import { isProd } from "./config/env";
+import { env, isProd } from "./config/env";
 
 export function buildApp(): FastifyInstance {
   const app = Fastify({
     logger: isProd
       ? { level: "info" }
       : { level: "info" },
+    // Fase 2 da auditoria: o IP real atrás de proxy só vale com TRUST_PROXY=1
+    // explícito — sem proxy na frente, o header é forjável e rate-limit,
+    // auditoria e bypass de manutenção mentiriam juntos. Body limit dito por
+    // nós, não herdado em silêncio do default do framework.
+    trustProxy: env.TRUST_PROXY === "1",
+    bodyLimit: env.BODY_LIMIT_BYTES,
   });
 
   // POST sem corpo (deslogar, marcar tudo lido, gerar o pulso da manutenção) é
@@ -50,6 +57,10 @@ export function buildApp(): FastifyInstance {
   // Manutencao antes das rotas: o gancho precisa estar na linha antes de
   // qualquer rota de negocio ser registrada no mesmo contexto.
   registerMaintenance(app);
+  // Gate estrutural (Fase 2): registrado aqui, antes da PRIMEIRA rota — a
+  // partir daqui toda rota nova sem autenticação e sem carimbo público derruba
+  // a subida em vez de nascer aberta.
+  registerAuthGate(app);
 
   app.setErrorHandler((error: FastifyError, req, reply) => {
     // Zod: validação de entrada (seção 47).

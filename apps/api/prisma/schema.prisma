@@ -119,6 +119,11 @@ model RefreshToken {
   tokenHash   String    @unique @map("token_hash")
   expiresAt   DateTime  @map("expires_at")
   revokedAt   DateTime? @map("revoked_at")
+  // Fase 2 da auditoria: `usedAt` marca o token como consumido pela rotação.
+  // Ele distingue o reuso malicioso de um token já rotacionado (a família
+  // inteira é derrubada) de uma revogação manual normal (logout, admin,
+  // recuperação de senha), que só grava `revokedAt`.
+  usedAt      DateTime? @map("used_at")
   createdByIp String?   @map("created_by_ip")
   createdAt   DateTime  @default(now()) @map("created_at")
   user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)

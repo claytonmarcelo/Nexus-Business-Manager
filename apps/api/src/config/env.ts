@@ -16,6 +16,18 @@ const schema = z.object({
   // "0" desliga o agendador das rotinas neste processo (ambiente multi-processo:
   // um único servidor agenda, os demais só atendem requisições).
   CRON_ENABLED: z.string().default("1"),
+  // Fase 2 da auditoria (item D): o código de recuperação NUNCA sai pelo HTTP
+  // por causa do NODE_ENV — só quando o .env local diz explicitamente
+  // AUTH_EXPOSE_RESET_TOKEN=1. Homologação ou dev exposto com o flag desligado
+  // não entrega reset de senha de ninguém.
+  AUTH_EXPOSE_RESET_TOKEN: z.string().default("0"),
+  // Atrás de proxy reverso o IP real vem de X-Forwarded-For; ligar isso sem
+  // proxy na frente permite forjar o IP de auditoria, bypass de manutenção e
+  // rate-limit. Por default fica desligado (1 = confia em um proxy imediato).
+  TRUST_PROXY: z.string().default("0"),
+  // Limite de corpo dito em uma lugar, em vez de deixar o default do Fastify
+  // decidido em outro.
+  BODY_LIMIT_BYTES: z.coerce.number().int().positive().default(1048576),
 });
 
 const parsed = schema.safeParse(process.env);
