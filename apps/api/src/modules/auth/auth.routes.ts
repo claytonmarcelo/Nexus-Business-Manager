@@ -1,5 +1,14 @@
 import type { FastifyInstance } from "fastify";
-import { loginSchema, refreshSchema, switchCompanySchema, registerSchema, forgotPasswordSchema, resetPasswordSchema } from "./schemas";
+import {
+  loginSchema,
+  refreshSchema,
+  switchCompanySchema,
+  registerSchema,
+  forgotPasswordSchema,
+  resetPasswordSchema,
+  updateProfileSchema,
+  changePasswordSchema,
+} from "./schemas";
 import * as authService from "./auth.service";
 import { resolveCompanyContext } from "../../lib/company-context";
 import { audit } from "../../lib/audit";
@@ -46,6 +55,29 @@ export async function authRoutes(app: FastifyInstance): Promise<void> {
   app.get("/me", { preHandler: [app.authenticate] }, async (req) => {
     const ctx = await resolveCompanyContext(req);
     return authService.getMe(ctx.userId, ctx.companyId);
+  });
+
+  // Perfil da própria conta: basta a sessão, não pede permissão de módulo.
+  app.patch("/me", { preHandler: [app.authenticate] }, async (req) => {
+    const ctx = await resolveCompanyContext(req);
+    const input = updateProfileSchema.parse(req.body);
+    return authService.updateProfile(ctx.userId, ctx.companyId, input, req.ip);
+  });
+
+  // Troca de senha autenticada: derruba todas as sessões e o app pede novo login.
+  app.post("/change-password", {
+    preHandler: [app.authenticate],
+    config: { rateLimit: { max: 5, timeWindow: "1 minute" } },
+  }, async (req) => {
+    const ctx = await resolveCompanyContext(req);
+    const body = changePasswordSchema.parse(req.body);
+    return authService.changePassword(
+      ctx.userId,
+      ctx.companyId,
+      body.currentPassword,
+      body.newPassword,
+      req.ip,
+    );
   });
 
   // Troca de empresa ativa: valida vínculo no backend e emite novo token (ADR-0002).

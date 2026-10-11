@@ -4,10 +4,11 @@ import { prisma } from "../../lib/prisma";
 import { hashPassword, verifyPassword } from "../../lib/password";
 import { hashToken, msUntil } from "../../lib/tokens";
 import { env, isProd } from "../../config/env";
-import { conflict, forbidden, unauthorized } from "../../lib/errors";
+import { badRequest, conflict, forbidden, notFound, unauthorized } from "../../lib/errors";
 import { audit } from "../../lib/audit";
 import type { AccessTokenPayload } from "../../plugins/auth";
 import { rolePermissions } from "../../lib/rbac";
+import { somenteDigitos } from "../../lib/brFields";
 
 export interface AuthTokens {
   accessToken: string;
@@ -19,10 +20,15 @@ export interface SessionUser {
   id: string;
   email: string;
   name: string;
+  phone: string | null;
   companyId: string;
   companyName: string;
   role: string;
   permissions: string[];
+  // Moeda, fuso e idioma da empresa ativa: as telas formatam com eles.
+  currency: string;
+  timezone: string;
+  language: string;
 }
 
 async function issueTokens(
@@ -49,7 +55,12 @@ async function issueTokens(
 }
 
 function pickMembership(
-  memberships: { companyId: string; role: string; company: { active: boolean; name: string } }[],
+  memberships: {
+    companyId: string;
+    role: string;
+    // A empresa inteira vem no include: a sessão carrega moeda, fuso e idioma.
+    company: { active: boolean; name: string; currency: string; timezone: string; language: string };
+  }[],
   requestedCompanyId?: string,
 ) {
   if (requestedCompanyId) {
@@ -152,17 +163,25 @@ export async function switchCompany(
 }
 
 function toSessionUser(
-  user: { id: string; email: string; name: string },
-  membership: { companyId: string; role: string; company: { name: string } },
+  user: { id: string; email: string; name: string; phone: string | null },
+  membership: {
+    companyId: string;
+    role: string;
+    company: { name: string; currency: string; timezone: string; language: string };
+  },
 ): SessionUser {
   return {
     id: user.id,
     email: user.email,
     name: user.name,
+    phone: user.phone,
     companyId: membership.companyId,
     companyName: membership.company.name,
     role: membership.role,
     permissions: rolePermissions(membership.role as never),
+    currency: membership.company.currency,
+    timezone: membership.company.timezone,
+    language: membership.company.language,
   };
 }
 
@@ -215,7 +234,7 @@ export async function register(
   await audit({ userId: user.id, companyId: membership.companyId, action: "auth.register", entity: "user", entityId: user.id, ip });
   return {
     tokens,
-    user: toSessionUser({ id: user.id, email: user.email, name: user.name }, membership),
+    user: toSessionUser({ id: user.id, email: user.email, name: user.name, phone: user.phone }, membership),
   };
 }
 
@@ -259,4 +278,104 @@ export async function resetPassword(
   ]);
   await audit({ userId: record.userId, action: "auth.reset_password", entity: "user", entityId: record.userId, ip });
   return { ok: true };
+}
+
+// ---- Conta: perfil e troca de senha ----
+
+// Nome e telefone da própria conta. Compara antes de gravar: sem diferença real,
+// não escreve no banco nem polui a auditoria.
+export async function updateProfile(
+  userId: string,
+  companyId: string,
+  input: { name?: string; phone?: string | null },
+  ip?: string,
+): Promise<{ user: SessionUser; alterados: string[] }> {
+  const atual = await prisma.user.findUnique({ where: { id: userId } });
+  if (!atual) throw notFound("Usuário não encontrado");
+
+  const dados: { name?: string; phone?: string | null } = {};
+  if (input.name !== undefined) dados.name = input.name.trim();
+  if (input.phone !== undefined) {
+    const digitos = somenteDigitos(input.phone ?? "");
+    dados.phone = digitos === "" ? null : digitos;
+  }
+
+  const alterados: string[] = [];
+  const antes: Record<string, string | null> = {};
+  const depois: Record<string, string | null> = {};
+  for (const campo of ["name", "phone"] as const) {
+    const novo = dados[campo];
+    if (novo === undefined) continue;
+    const anterior = atual[campo] ?? null;
+    if (anterior === novo) continue;
+    alterados.push(campo);
+    antes[campo] = anterior;
+    depois[campo] = novo;
+  }
+  if (alterados.length === 0) {
+    return { user: await getMe(userId, companyId), alterados };
+  }
+
+  await prisma.user.update({ where: { id: userId }, data: dados });
+  await audit({
+    userId,
+    companyId,
+    action: "auth.profile_updated",
+    entity: "user",
+    entityId: userId,
+    ip,
+    metadata: { campos: alterados, antes, depois },
+  });
+  return { user: await getMe(userId, companyId), alterados };
+}
+
+// Trocar a senha pela própria conta: confere a atual, adota a nova e derruba todas as
+// sessões ativas. Responder 400 (e não 401) evita que o app saia tentando renovar um
+// token que ainda é válido.
+export async function changePassword(
+  userId: string,
+  companyId: string,
+  currentPassword: string,
+  newPassword: string,
+  ip?: string,
+): Promise<{ ok: true; sessionsRevoked: number }> {
+  const user = await prisma.user.findUnique({ where: { id: userId } });
+  if (!user || !user.active) throw notFound("Usuário não encontrado");
+
+  const confere = await verifyPassword(currentPassword, user.passwordHash);
+  if (!confere) {
+    await audit({
+      userId,
+      companyId,
+      action: "auth.password_change.failed",
+      entity: "user",
+      entityId: userId,
+      ip,
+    });
+    throw badRequest("A senha atual não confere");
+  }
+  if (await verifyPassword(newPassword, user.passwordHash)) {
+    throw conflict("A nova senha é igual à atual");
+  }
+
+  const passwordHash = await hashPassword(newPassword);
+  const sessionsRevoked = await prisma.$transaction(async (tx) => {
+    await tx.user.update({ where: { id: userId }, data: { passwordHash } });
+    const derrubadas = await tx.refreshToken.updateMany({
+      where: { userId, revokedAt: null },
+      data: { revokedAt: new Date() },
+    });
+    return derrubadas.count;
+  });
+
+  await audit({
+    userId,
+    companyId,
+    action: "auth.password_changed",
+    entity: "user",
+    entityId: userId,
+    ip,
+    metadata: { sessionsRevoked },
+  });
+  return { ok: true, sessionsRevoked };
 }

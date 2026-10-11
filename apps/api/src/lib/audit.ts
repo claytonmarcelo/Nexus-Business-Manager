@@ -56,6 +56,8 @@ export function sensivelWhere() {
             "auth.reset_password",
             "auth.forgot_password",
             "auth.login.failed",
+            "auth.password_changed",
+            "company.settings.updated",
           ],
         },
       },
