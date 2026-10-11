@@ -1,0 +1,516 @@
+/* ===== Página pública montada pelo CMS =====
+   Este arquivo só existe depois que a vitrine passou a ler o banco. As regras
+   antigas da landing continuam em components.css; aqui entram as seções novas
+   (âncoras, herói com imagem, destaques, sobre + métricas, depoimentos, FAQs,
+   contato, WhatsApp, aviso de cookies e manutenção).
+
+   As cores do CMS chegam como variáveis aplicadas no elemento raiz da página
+   (lib/landingEstilo.ts), por isso tudo abaixo usa var(--...) sem valor fixo:
+   mudar cor no editor muda a tela inteira, nos dois temas. */
+
+html {
+  scroll-behavior: smooth;
+}
+
+/* As variáveis do CMS entram como estilo no elemento raiz da vitrine, e o
+   <body> resolve --text antes delas existir. Sem declarar a cor aqui, o texto
+   seria herdado do tema e não do cadastro: no tema claro com fundo escuro do
+   CMS a headline ficava escura sobre escuro e sumia. */
+.landing {
+  color: var(--text);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
+
+.landing-main {
+  flex: 1 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(2rem, 5vh, 3.5rem);
+  padding-bottom: clamp(2rem, 5vh, 3.5rem);
+}
+
+.landing-carregando {
+  align-items: center;
+  padding: clamp(2rem, 10vh, 6rem) clamp(1.25rem, 5vw, 4rem);
+  max-width: 720px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+/* ---- Âncoras do cabeçalho ---- */
+.landing-nav {
+  display: flex;
+  align-items: center;
+  gap: clamp(0.6rem, 2vw, 1.4rem);
+  flex: 1;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+.landing-nav a {
+  color: var(--text-2);
+  text-decoration: none;
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  padding: 0.35rem 0.1rem;
+  border-bottom: 1px solid transparent;
+  transition: color 160ms ease, border-color 160ms ease;
+}
+.landing-nav a:hover,
+.landing-nav a:focus-visible {
+  color: var(--accent);
+  border-bottom-color: color-mix(in srgb, var(--accent) 60%, transparent);
+}
+@media (max-width: 700px) {
+  .landing-nav {
+    display: none;
+  }
+}
+
+/* ---- Herói com imagem de fundo, overlay e desfoque ---- */
+.landing-hero {
+  position: relative;
+  flex: none;
+  min-height: clamp(20rem, 44vh, 34rem);
+  isolation: isolate;
+}
+.landing-hero-bg,
+.landing-hero-veil {
+  position: absolute;
+  inset: -2%;
+  z-index: -2;
+  background-size: cover;
+  background-position: center;
+  /* O desfoque é aplicado só nesta camada: o texto continua nítido. */
+  transform: scale(1.03);
+}
+.landing-hero-veil {
+  z-index: -1;
+  inset: 0;
+  background: #000;
+}
+.landing-hero-inner {
+  position: relative;
+}
+.landing-cta-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.7rem;
+  flex-wrap: wrap;
+  margin-top: 0.4rem;
+}
+
+/* ---- Destaques (banners) ---- */
+.landing-banners {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(280px, 100%), 1fr));
+  gap: 1rem;
+  padding: 0 clamp(1.25rem, 5vw, 4rem);
+  max-width: 1200px;
+  margin: 0 auto;
+  width: 100%;
+}
+.landing-banner {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  padding: 1rem;
+  border-radius: 16px;
+  overflow: hidden;
+}
+.landing-banner-img {
+  width: 100%;
+  height: 150px;
+  object-fit: cover;
+  border-radius: 12px;
+}
+.landing-banner h3 {
+  font-size: 1rem;
+}
+.landing-banner p {
+  color: var(--text-2);
+  font-size: 0.9rem;
+  line-height: 1.55;
+}
+.landing-banner a {
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+/* ---- Sobre + métricas cadastradas ---- */
+.landing-sobre {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+  gap: clamp(1rem, 4vw, 2.5rem);
+  align-items: start;
+  padding: 0 clamp(1.25rem, 5vw, 4rem);
+  max-width: 1200px;
+  margin: 0 auto;
+  width: 100%;
+}
+.landing-sobre h2,
+.landing-depoimentos h2,
+.landing-faqs h2,
+.landing-contato h2 {
+  font-size: clamp(1.35rem, 3vw, 1.9rem);
+  letter-spacing: -0.02em;
+  margin-bottom: 0.9rem;
+}
+.landing-sobre-texto p {
+  color: var(--text-2);
+  line-height: 1.7;
+  font-size: 0.95rem;
+  margin-bottom: 0.85rem;
+}
+.landing-metricas {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.75rem;
+}
+.landing-metricas li {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  padding: 1rem 1.1rem;
+  border-radius: 14px;
+}
+.landing-metricas strong {
+  font-size: 1.5rem;
+  color: var(--accent);
+  letter-spacing: -0.02em;
+}
+.landing-metricas span {
+  font-size: 0.88rem;
+  font-weight: 600;
+}
+.landing-metricas small {
+  color: var(--text-3);
+  font-size: 0.8rem;
+  line-height: 1.5;
+}
+@media (max-width: 860px) {
+  .landing-sobre {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ---- Depoimentos (só aparecem se cadastrados) ---- */
+.landing-depoimentos {
+  padding: 0 clamp(1.25rem, 5vw, 4rem);
+  max-width: 1200px;
+  margin: 0 auto;
+  width: 100%;
+}
+.landing-depoimentos-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(260px, 100%), 1fr));
+  gap: 1rem;
+}
+.landing-depoimento {
+  margin: 0;
+  padding: 1.2rem;
+  border-radius: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+.landing-depoimento blockquote {
+  margin: 0;
+  font-size: 0.95rem;
+  line-height: 1.65;
+  color: var(--text);
+}
+.landing-depoimento figcaption {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  font-size: 0.83rem;
+}
+.landing-depoimento figcaption span {
+  color: var(--text-3);
+}
+.landing-estrelas {
+  color: var(--accent);
+  letter-spacing: 0.12em;
+  font-size: 0.9rem;
+}
+.landing-estrelas .is-vazia {
+  color: color-mix(in srgb, var(--text-3) 45%, transparent);
+}
+
+/* ---- FAQs ---- */
+.landing-faqs {
+  padding: 0 clamp(1.25rem, 5vw, 4rem);
+  max-width: 900px;
+  margin: 0 auto;
+  width: 100%;
+}
+.landing-faqs-lista {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+.landing-faqs details {
+  border-radius: 14px;
+  padding: 0.9rem 1.1rem;
+}
+.landing-faqs summary {
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 0.95rem;
+  list-style: none;
+}
+.landing-faqs summary::-webkit-details-marker {
+  display: none;
+}
+.landing-faqs summary::after {
+  content: "+";
+  float: right;
+  color: var(--accent);
+  font-weight: 700;
+}
+.landing-faqs details[open] summary::after {
+  content: "−";
+}
+.landing-faqs details p {
+  margin: 0.7rem 0 0;
+  color: var(--text-2);
+  font-size: 0.9rem;
+  line-height: 1.65;
+}
+
+/* ---- Contato e redes ---- */
+.landing-contato {
+  padding: 0 clamp(1.25rem, 5vw, 4rem);
+  max-width: 1200px;
+  margin: 0 auto;
+  width: 100%;
+}
+.landing-contato-lista {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(220px, 100%), 1fr));
+  gap: 0.9rem;
+  margin: 0;
+}
+.landing-contato-lista div {
+  padding: 0.9rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--surface) 70%, transparent);
+}
+.landing-contato dt {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-3);
+  font-weight: 700;
+  margin-bottom: 0.25rem;
+}
+.landing-contato dd {
+  margin: 0;
+  font-size: 0.92rem;
+  color: var(--text);
+  overflow-wrap: anywhere;
+}
+.landing-redes {
+  display: flex;
+  gap: 0.9rem;
+  flex-wrap: wrap;
+  list-style: none;
+  margin: 1rem 0 0;
+  padding: 0;
+  font-size: 0.88rem;
+}
+
+/* ---- WhatsApp flutuante ---- */
+.landing-whatsapp {
+  position: fixed;
+  bottom: 1.1rem;
+  right: 1.1rem;
+  z-index: 40;
+  display: grid;
+  place-items: center;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: #25d366;
+  color: #062a14;
+  box-shadow: 0 12px 26px -12px rgba(0, 0, 0, 0.65);
+  transition: transform 160ms ease;
+}
+.landing-whatsapp:hover,
+.landing-whatsapp:focus-visible {
+  transform: translateY(-2px);
+}
+.landing-whatsapp.is-esquerda {
+  right: auto;
+  left: 1.1rem;
+}
+
+/* ---- Aviso de cookies ---- */
+.landing-cookies {
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: 1rem;
+  z-index: 45;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  max-width: min(760px, calc(100vw - 2rem));
+  padding: 0.85rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--bg-elevated);
+  box-shadow: var(--shadow);
+}
+.landing-cookies p {
+  margin: 0;
+  font-size: 0.83rem;
+  line-height: 1.5;
+  color: var(--text-2);
+}
+.landing-cookies-acoes {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  flex-shrink: 0;
+}
+.landing-cookies-link {
+  font-size: 0.8rem;
+  color: var(--text-3);
+}
+@media (max-width: 640px) {
+  .landing-cookies {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+
+/* ---- Tela de manutenção ---- */
+.landing-manutencao {
+  /* .landing é flex em coluna: place-items não centraliza no eixo principal,
+     então o card ficaria colado no topo. Alinha e justifica de forma explícita. */
+  align-items: center;
+  justify-content: center;
+  padding: clamp(1.5rem, 8vh, 5rem) 1.25rem;
+}
+.manutencao-card {
+  width: min(520px, 100%);
+  padding: clamp(1.5rem, 4vw, 2.2rem);
+  border-radius: 20px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.85rem;
+}
+.manutencao-card h1 {
+  font-size: clamp(1.3rem, 3.5vw, 1.7rem);
+  letter-spacing: -0.02em;
+  margin: 0;
+}
+.manutencao-msg {
+  margin: 0;
+  color: var(--text-2);
+  line-height: 1.65;
+  font-size: 0.95rem;
+}
+.manutencao-relogio {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--text-3);
+}
+.manutencao-relogio strong {
+  color: var(--accent);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+}
+.manutencao-previsao {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--text-3);
+}
+.manutencao-bypass {
+  width: 100%;
+  margin-top: 0.4rem;
+  text-align: left;
+}
+.manutencao-bypass-linha {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+.manutencao-bypass-linha .input {
+  flex: 1;
+  font-family: var(--font-mono);
+  letter-spacing: 0.08em;
+}
+.manutencao-ajuda {
+  margin: 0.4rem 0 0;
+  font-size: 0.75rem;
+  color: var(--text-3);
+}
+.manutencao-erro {
+  margin: 0.4rem 0 0;
+  font-size: 0.8rem;
+  color: var(--danger);
+}
+.manutencao-login {
+  font-size: 0.82rem;
+  color: var(--text-3);
+}
+
+/* ---- Documentos legais ---- */
+.landing-legal {
+  padding: clamp(1rem, 4vh, 2.5rem) clamp(1.25rem, 5vw, 4rem);
+}
+.landing-legal article {
+  max-width: 820px;
+  margin: 0 auto;
+  padding: clamp(1.3rem, 4vw, 2.2rem);
+  border-radius: 20px;
+}
+.landing-legal h1 {
+  font-size: clamp(1.4rem, 4vw, 2rem);
+  letter-spacing: -0.02em;
+  margin-bottom: 1rem;
+}
+.landing-legal p {
+  color: var(--text-2);
+  line-height: 1.75;
+  font-size: 0.95rem;
+  margin-bottom: 0.9rem;
+  overflow-wrap: anywhere;
+}
+.landing-legal-volta {
+  display: inline-block;
+  font-size: 0.82rem;
+  margin-bottom: 1rem;
+  color: var(--text-3);
+}
+
+/* ---- Rodapé com links legais ---- */
+.landing-footer-legais {
+  display: flex;
+  gap: 0.9rem;
+  flex-wrap: wrap;
+}
+.landing-footer-legais a {
+  color: var(--text-3);
+  text-decoration: none;
+  font-size: 0.8rem;
+}
+.landing-footer-legais a:hover,
+.landing-footer-legais a:focus-visible {
+  color: var(--accent);
+  text-decoration: underline;
+}

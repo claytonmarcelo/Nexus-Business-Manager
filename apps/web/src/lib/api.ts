@@ -9,6 +9,10 @@ api.interceptors.request.use((config) => {
   if (tokenStore.access) {
     config.headers.Authorization = `Bearer ${tokenStore.access}`;
   }
+  // Site em manutencao: quem recebeu o pulso nesta aba o apresenta em toda
+  // chamada, e a API libera aquela pessoa sem abrir o site para os outros.
+  const pulso = tokenStore.getPulso();
+  if (pulso) config.headers["X-Nexus-Pulse"] = pulso;
   return config;
 });
 

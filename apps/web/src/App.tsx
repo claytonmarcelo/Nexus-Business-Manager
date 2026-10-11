@@ -16,6 +16,7 @@ import { CRM } from "./pages/CRM";
 import { Agenda } from "./pages/Agenda";
 import { Audit } from "./pages/Audit";
 import { Settings } from "./pages/Settings";
+import { Legal } from "./pages/Legal";
 import { Forbidden, NotFound, Unauthorized } from "./pages/errors";
 
 export function App() {
@@ -26,6 +27,7 @@ export function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/cadastro" element={<Register />} />
         <Route path="/recuperar-senha" element={<ForgotPassword />} />
+        <Route path="/legal/:slug" element={<Legal />} />
         <Route path="/403" element={<Forbidden />} />
         <Route path="/401" element={<Unauthorized />} />
         <Route
