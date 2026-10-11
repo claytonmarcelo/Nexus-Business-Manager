@@ -77,6 +77,87 @@ describe("Cadastro e recuperação de senha", () => {
     expect(pend).toBe(1);
   });
 
+  it("pedir recuperação não derruba as sessões de quem tem o e-mail", async () => {
+    const f = await makeAccount("STAFF");
+    created.userIds.push(f.userId);
+    created.companyIds.push(f.companyId);
+
+    const entrada = await app.inject({
+      method: "POST", url: "/api/auth/login",
+      payload: { email: f.email, password: f.password },
+    });
+    const refreshToken = (entrada.json() as { refreshToken: string }).refreshToken;
+    const antes = await prisma.refreshToken.count({ where: { userId: f.userId, revokedAt: null } });
+    expect(antes).toBe(1);
+
+    // A7: a solicitação é apenas uma solicitação. Antes dela, qualquer pessoa que
+    // soubesse o e-mail deslogava a vítima toda vez que apertasse "esqueci a
+    // senha" — negação de serviço sem nenhum roubo envolvido.
+    const pediu = await app.inject({
+      method: "POST", url: "/api/auth/forgot-password",
+      payload: { email: f.email },
+    });
+    expect(pediu.statusCode).toBe(200);
+
+    const depois = await prisma.refreshToken.count({ where: { userId: f.userId, revokedAt: null } });
+    expect(depois).toBe(1);
+    const renovado = await app.inject({
+      method: "POST", url: "/api/auth/refresh",
+      payload: { refreshToken },
+    });
+    expect(renovado.statusCode).toBe(200);
+
+    // e a sessão continua viva depois de todas as solicitações seguintes
+    for (let i = 0; i < 3; i += 1) {
+      await app.inject({ method: "POST", url: "/api/auth/forgot-password", payload: { email: f.email } });
+    }
+    const vivas = await prisma.refreshToken.count({ where: { userId: f.userId, revokedAt: null } });
+    expect(vivas).toBeGreaterThan(0);
+
+    // a queda de sessão acontece onde ela protege de fato: na troca de senha
+    const token = await prisma.passwordResetToken.findFirst({
+      where: { userId: f.userId, usedAt: null },
+      orderBy: { createdAt: "desc" },
+    });
+    expect(token).not.toBeNull();
+    // o banco guarda só o hash, então o código em si vem do caminho de
+    // desenvolvimento: aqui o teste escreve um token novo, exatamente como o
+    // serviço faria, e usa o hash correspondente.
+    const codigo = crypto.randomBytes(24).toString("hex");
+    await prisma.passwordResetToken.update({
+      where: { id: token!.id },
+      data: { tokenHash: hashToken(codigo) },
+    });
+    const redefine = await app.inject({
+      method: "POST", url: "/api/auth/reset-password",
+      payload: { email: f.email, token: codigo, password: "Nova@2026x" },
+    });
+    expect(redefine.statusCode).toBe(200);
+    const sobras = await prisma.refreshToken.count({ where: { userId: f.userId, revokedAt: null } });
+    expect(sobras).toBe(0);
+  });
+
+  it("e-mail inexistente e e-mail existente recebem a mesma resposta", async () => {
+    const f = await makeAccount("STAFF");
+    created.userIds.push(f.userId);
+    created.companyIds.push(f.companyId);
+
+    const inexistente = await app.inject({
+      method: "POST", url: "/api/auth/forgot-password",
+      payload: { email: `${uid("some")}@nexus.test` },
+    });
+    const existente = await app.inject({
+      method: "POST", url: "/api/auth/forgot-password",
+      payload: { email: f.email },
+    });
+    expect(inexistente.statusCode).toBe(200);
+    expect(existente.statusCode).toBe(200);
+    expect(existente.json()).toEqual(inexistente.json());
+    // quem não existe no sistema não ganha token de recuperação nenhum
+    const orphan = await prisma.passwordResetToken.count({ where: { user: { email: `${uid("x")}@nexus.test` } } });
+    expect(orphan).toBe(0);
+  });
+
   it("redefinição troca a senha, invalida reuso e derruba sessões", async () => {
     const f = await makeAccount("STAFF");
     created.userIds.push(f.userId);

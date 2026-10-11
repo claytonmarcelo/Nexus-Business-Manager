@@ -285,9 +285,10 @@ export async function register(
 }
 
 // Solicitação de recuperação: SEMPRE responde ok genérico (não revela se o
-// e-mail existe). O código só volta no HTTP com AUTH_EXPOSE_RESET_TOKEN=1 no
-// .env local — nunca por causa do NODE_ENV, que valeria também para qualquer
-// homologação exposta (item D da auditoria).
+// e-mail existe). O código só volta no HTTP quando o .env local pede
+// explicitamente (AUTH_EXPOSE_RESET_TOKEN=1) E o ambiente não é produção. O flag
+// sozinho já bastava para o dev, mas a fase A7 quis o par: NODE_ENV=production
+// não entrega reset de ninguém, mesmo com o flag aceso por engano num deploy.
 export async function forgotPassword(email: string, ip?: string): Promise<{ ok: true; devToken?: string }> {
   const user = await prisma.user.findUnique({ where: { email } });
   if (!user || !user.active) {
@@ -314,9 +315,18 @@ export async function forgotPassword(email: string, ip?: string): Promise<{ ok: 
   await prisma.passwordResetToken.create({
     data: { userId: user.id, tokenHash: hashToken(token), expiresAt: new Date(Date.now() + RESET_TTL_MS) },
   });
-  await prisma.refreshToken.updateMany({ where: { userId: user.id, revokedAt: null }, data: { revokedAt: new Date() } });
+  // A7 do prompt de mercado: pedir recuperação NÃO derruba mais as sessões da
+  // pessoa. Antes, qualquer um que soubesse o e-mail deslogava a vítima todas as
+  // vezes que apertasse "esqueci a senha" — uma porta de negação de serviço
+  // escancarada, sem nenhum roubo envolvido. A queda de sessões acontece no
+  // momento em que a senha realmente muda (`resetPassword`), que é onde ela
+  // protege alguém de verdade.
   await audit({ userId: user.id, action: "auth.forgot_password", entity: "user", entityId: user.id, ip });
-  return env.AUTH_EXPOSE_RESET_TOKEN === "1" ? { ok: true, devToken: token } : { ok: true };
+  // A7 do prompt de mercado: além do flag explícito do .env, o código de
+  // recuperação nunca sai pelo HTTP quando o ambiente é produção. O zod de
+  // `env.ts` já recusa a subida com AUTH_EXPOSE_RESET_TOKEN=1 em produção (A9);
+  // esta é a segunda trava, para o caminho nunca depender só da configuração.
+  return env.AUTH_EXPOSE_RESET_TOKEN === "1" && !isProd ? { ok: true, devToken: token } : { ok: true };
 }
 
 // Redefinição com token: valida, troca a senha e derruba todas as sessões.
