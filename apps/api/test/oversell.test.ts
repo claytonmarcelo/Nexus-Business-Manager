@@ -146,4 +146,70 @@ describe("Estoque atômico sob concorrência (Fase 3a)", () => {
     const final = await prisma.purchase.findUniqueOrThrow({ where: { id }, select: { status: true } });
     expect(await saldo(productId)).toBe(final.status === "RECEIVED" ? 3 : 0);
   });
+
+  // A3 do prompt de mercado, no caso que a validação linha a linha nunca viu:
+  // a mesma nota pedindo o MESMO produto duas vezes. Cada linha de 6 passava
+  // sozinha na comparação com o saldo 10, e a baixa absoluta escrevia uma vez
+  // só — vendia 6 e cobrava 12. Hoje o saldo é decidido dentro da transação,
+  // linha por linha, e a segunda baixa não casa: a nota inteira volta.
+  it("mesmo produto em duas linhas (6+6) sobre saldo 10: 400 e nada aconteceu", async () => {
+    const { token } = await account();
+    const productId = await produto(token, 10);
+    const clientId = await cliente(token);
+
+    const res = await app.inject({
+      method: "POST", url: "/api/sales", headers: auth(token),
+      payload: {
+        clientId,
+        confirm: true,
+        items: [
+          { productId, quantity: 6, unitPrice: 10 },
+          { productId, quantity: 6, unitPrice: 10 },
+        ],
+      },
+    });
+    expect(res.statusCode).toBe(400);
+
+    // O saldo não foi "quase" mexido: a transação voltou inteira.
+    expect(await saldo(productId)).toBe(10);
+    expect(await prisma.stockMovement.count({ where: { productId, kind: "OUT" } })).toBe(0);
+    expect(await prisma.sale.count({ where: { clientId } })).toBe(0);
+  });
+
+  // A outra ponta da A3: o saldo final tem que conferir com a soma das
+  // movimentações. Se a baixa fosse uma conta de JavaScript escrita por cima,
+  // a corrida deixaria para trás um número que o razão não sabe explicar.
+  it("depois de entrada, saída e recusa, o saldo é exatamente a conta do razão", async () => {
+    const { token } = await account();
+    const productId = await produto(token, 10);
+    const clientId = await cliente(token);
+
+    await app.inject({
+      method: "POST", url: `/api/products/${productId}/movements`, headers: auth(token),
+      payload: { kind: "OUT", quantity: 2, note: "Perda de inventário" },
+    });
+    // Venda de 6: passa (sobravam 8).
+    const primeira = await app.inject({
+      method: "POST", url: "/api/sales", headers: auth(token),
+      payload: { clientId, confirm: true, items: [{ productId, quantity: 6, unitPrice: 10 }] },
+    });
+    expect(primeira.statusCode).toBe(201);
+    // Venda de 6 outra vez: sobraram 2, e o banco diz não.
+    const segunda = await app.inject({
+      method: "POST", url: "/api/sales", headers: auth(token),
+      payload: { clientId, confirm: true, items: [{ productId, quantity: 6, unitPrice: 10 }] },
+    });
+    expect(segunda.statusCode).toBe(400);
+
+    const entradas = await prisma.stockMovement.aggregate({ where: { productId, kind: "IN" }, _sum: { quantity: true } });
+    const saidas = await prisma.stockMovement.aggregate({ where: { productId, kind: "OUT" }, _sum: { quantity: true } });
+    // ADJUST declara um saldo absoluto de propósito (é contagem de inventário, não
+    // movimento), então a invariante do razão vale neste produto enquanto ele não
+    // houver passado por um — e aqui não passou.
+    expect(await prisma.stockMovement.count({ where: { productId, kind: "ADJUST" } })).toBe(0);
+    expect(await saldo(productId)).toBe(
+      Number(entradas._sum.quantity ?? 0) - Number(saidas._sum.quantity ?? 0),
+    );
+    expect(await saldo(productId)).toBe(2);
+  });
 });
