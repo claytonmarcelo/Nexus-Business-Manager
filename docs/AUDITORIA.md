@@ -329,3 +329,11 @@ todas as fases sem nova escolha de opções.*
   corrida de oversell da Fase 3 agora tem onde existir — sem InnoDB não havia transação de fato.
 - Suíte verde com FKs valendo (16 arquivos, 113 testes), typecheck e build limpos, provas de
   navegador rerodadas (CMS 115, rotinas 37, notificações 85, configurações 108).
+- **Camada de escrita por construção (sub-fase 1c)**: todos os `update`/`delete` dos serviços de
+  tenant agora filtram pelo `companyId` dentro do próprio `where` (notificação amarra `userId` +
+  `companyId`; papel de membro e sessão fazem o mesmo pela linha própria). A proteção antes só
+  existia na leitura de confirmação logo acima de cada escrita — um chamamento futuro sem essa
+  leitura atravessava empresas. O P2025 do Prisma virou 404 no handler central. Auth (conta da
+  própria pessoa) e CMS/Rotinas (plataforma, `assertPlatformAdmin`) ficaram fora por desenho.
+  Suíte 16/113 verde com a camada ativa; prova de notificações 85/85 rerodada. Falta agora a
+  varredura sistemática de intrusão A×B por endpoint (sub-fase 1d).
