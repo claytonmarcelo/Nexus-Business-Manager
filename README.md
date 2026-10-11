@@ -22,15 +22,16 @@
   <img src="https://img.shields.io/badge/Vite-5-646CFF?logo=vite&logoColor=white" alt="Vite 5">
   <img src="https://img.shields.io/badge/AdminLTE-4.10-343a40?logo=laravel&logoColor=white" alt="AdminLTE 4.10">
   <img src="https://img.shields.io/badge/Tailwind-4-06B6D4?logo=tailwindcss&logoColor=white" alt="Tailwind 4">
-  <img src="https://img.shields.io/badge/testes-80%20testes%20em%2014%20arquivos-brightgreen" alt="80 testes em 14 arquivos">
+  <img src="https://img.shields.io/badge/testes-81%20testes%20em%2014%20arquivos-brightgreen" alt="81 testes em 14 arquivos">
 </p>
 
 <p align="center">
   <sub>Estágio atual: a fundação e os módulos do dia a dia estão no ar — autenticação, papéis,
   multiempresa, clientes, produtos e estoque, vendas, compras, financeiro, CRM, agenda, auditoria e
-  equipe. Duas frentes têm API sem tela: o CMS da página pública (conteúdo, textos legais, SEO e modo
-  manutenção já no servidor; a landing montada a partir dele e o editor ainda não) e as notificações
-  (o sino na tela ainda não chegou). O que existe como tabela pronta mas sem módulo (modelos de
+  equipe. A página pública já é montada a partir do conteúdo do banco — cores, herói, capacidades,
+  depoimentos, métricas, dúvidas, contato, textos legais e a tela de modo manutenção; o que falta ali é a
+  tela do editor <code>/app/cms</code>. Nas notificações a API entrega tudo e falta o sino na tela. O que
+  existe como tabela pronta mas sem módulo (modelos de
   e-mail, rotinas agendadas e gateways de pagamento) e o que ainda nem tem tabela está marcado um por um em
   <a href="#m%C3%B3dulos">Módulos</a> e no <a href="#roadmap">Roadmap</a>. Nada no menu aponta para uma
   rota que não existe: módulo em construção aparece apagado, com "em breve".</sub>
@@ -43,7 +44,8 @@
 Capturas do sistema rodando (Fastify + Prisma sobre MySQL no backend, React + AdminLTE 4 no frontend),
 todas no quadro de **1440×900**, duas por linha e na mesma escala de exibição. Cada imagem é um link: o
 clique abre o arquivo no tamanho capturado. As seis primeiras são a série da fundação, nos dois temas; as
-seis seguintes mostram os módulos operacionais do mesmo jeito que a pessoa os vê depois de entrar.
+seis seguintes mostram os módulos operacionais do mesmo jeito que a pessoa os vê depois de entrar; as duas
+linhas finais são a vitrine montada a partir do conteúdo do banco, o modo manutenção e os textos legais.
 
 Os números que aparecem nas telas saíram do banco local de desenvolvimento no dia das capturas. O `seed`
 cria a empresa `nexus-demo` **vazia** — não há dados de fachada no código; os registros que os indicadores
@@ -75,6 +77,14 @@ contam vieram das provas automatizadas e dos testes de integração, que escreve
 | :--: | :--: |
 | <a href="docs/screenshots/13-financeiro.png"><img src="docs/screenshots/13-financeiro.png" alt="Tela do Financeiro com os KPIs do mês, lançamentos a pagar e receber e a central de categorias" width="360"></a> | <a href="docs/screenshots/14-crm.png"><img src="docs/screenshots/14-crm.png" alt="Tela do CRM com o funil de cinco estágios, contagem e soma de valor por etapa e os KPIs de conversão" width="360"></a> |
 
+| Vitrine montada pelo CMS · tema escuro | Vitrine montada pelo CMS · tema claro |
+| :--: | :--: |
+| <a href="docs/screenshots/19-landing-cms-dark.png"><img src="docs/screenshots/19-landing-cms-dark.png" alt="Página pública com a paleta, o herói, o banner, as capacidades, o depoimento, a métrica e a FAQ cadastrados no banco, em tema escuro" width="360"></a> | <a href="docs/screenshots/19-landing-cms-claro.png"><img src="docs/screenshots/19-landing-cms-claro.png" alt="A mesma vitrine com o alternador no tema dia: a paleta cadastrada no CMS continua mandando no fundo e no texto" width="360"></a> |
+
+| Modo manutenção | Texto legal publicado |
+| :--: | :--: |
+| <a href="docs/screenshots/19-manutencao.png"><img src="docs/screenshots/19-manutencao.png" alt="Tela de manutenção com a mensagem cadastrada, a contagem regressiva até a previsão de volta e o campo do código de pulso" width="360"></a> | <a href="docs/screenshots/19-legal-termos.png"><img src="docs/screenshots/19-legal-termos.png" alt="Página /legal/termos renderizando o documento publicado no banco, parágrafo por parágrafo" width="360"></a> |
+
 </div>
 
 Duas séries fora do quadro de 1440×900 existem no repositório e são honestas sobre o próprio tamanho: as
@@ -82,6 +92,12 @@ capturas da Agenda e da navegação por abas (`docs/screenshots/17-agenda-*.png`
 feitas em **1440×960**, porque a barra de abas e o calendário não cabem nos 900 de altura. As capturas do
 diálogo de confirmação e da sidebar (`16-sidebar-*.png`, `17-confirm-*.png`) mostram celular em 390px de
 largura quando a legenda diz isso.
+
+As capturas da vitrine (`19-*.png`) saíram do meio de `tools/verify-landing-cms.cjs` e são 1440×900,
+menos `19-landing-cms-celular.png`, que é 390×844 porque mostra a barra de navegação recolhida no celular. O
+conteúdo nelas — "Gestão empresarial com a cara do seu negócio", as capacidades e o depoimento de exemplo — foi
+cadastrado pela própria prova, pela API, conferido na tela e apagado no fim, para a vitrine voltar ao padrão
+da casa. `01-landing.png` é a mesma página com o banco do jeito que ele está hoje.
 
 ---
 
@@ -286,14 +302,29 @@ A parte que grava e calcula está no ar; a parte que toca a pessoa (o sino no ca
 
 ### Página pública
 
-A rota `/` hoje é a landing estática da marca: cabeçalho com logo e troca de tema, herói com o emblema
-animado, título, subtítulo e a chamada para entrar, quatro cartões de capacidade e rodapé — textos isolados
-em `landing/copy.ts`, animação escalonada respeitando `prefers-reduced-motion`.
+A rota `/` é a vitrine da plataforma montada a partir do conteúdo do banco. `pages/Landing.tsx` busca
+`GET /api/public/landing` e pinta a página com o que está cadastrado: as sete cores da marca entram como
+variáveis CSS no elemento raiz, o herói recebe título, subtítulo, dois botões e imagem de fundo, e as faixas
+de capacidades, banners, depoimentos, métricas e dúvidas saem dos itens ativos, na ordem cadastrada. Os textos
+moram em `landing/copy.ts`, a animação de entrada é escalonada e respeita `prefers-reduced-motion`, e o
+emblema continua animado no topo.
 
-O CMS que coloca esse conteúdo no banco, para editar sem deploy, está no ar do lado do servidor; a landing
-consumindo ele e a tela do editor ainda não. A vitrine é uma só para toda a plataforma, então o conteúdo não
-tem `company_id` e as permissões `content:read`/`content:write` ficaram com o OWNER:
+O que não existe no banco não aparece na tela. Sem depoimento ou métrica publicados a seção some, e as
+âncoras do cabeçalho encolhem para o que realmente está na página; com o banco vazio a vitrine continua de pé
+com as quatro capacidades do produto e os textos padrão da casa — nenhum número, cliente ou depoimento
+inventado. A vitrine é uma só para toda a plataforma, então o conteúdo não tem `company_id` e as permissões
+`content:read`/`content:write` ficaram com o OWNER:
 
+- **Contato, redes e WhatsApp na tela** — `ContactSection` mostra telefone discável, e-mail, endereço e
+  horário de atendimento; o rodapé lista as redes do bloco `social`; o botão flutuante do WhatsApp entra na
+  posição escolhida (esquerda ou direita) e só quando o canal está ligado. O aviso de cookies aparece na
+  primeira visita e guarda a escolha no navegador
+- **Textos legais em `/legal/:kind`** — Termos, Privacidade e LGPD publicados pela API, divididos em
+  parágrafos. Sem texto publicado a página diz isso em vez de escrever cláusula, e um slug desconhecido cai no
+  mesmo aviso
+- **Modo manutenção na tela** — com o modo ligado a vitrine dá lugar ao cartão com a mensagem cadastrada, a
+  contagem regressiva ao vivo até a previsão de volta e o campo do código de pulso; aceito o código, o site
+  volta na mesma aba e o pulso vive só naquela aba (`sessionStorage`), sem ir para o disco
 - **Configuração (`GET/PATCH /api/cms/config`)** — cores, WhatsApp, SEO, herói (CTAs, imagem de fundo,
   overlay e desfoque), redes e contato. A gravação é bloco a bloco: mexer nas cores não apaga o WhatsApp, e
   o bloco ausente cai no padrão da casa
@@ -309,6 +340,8 @@ tem `company_id` e as permissões `content:read`/`content:write` ficaram com o O
   `/api/health`, `/api/auth`, `/api/public` e `/api/cms` ficam abertos porque é por ali que se desliga o
   modo. Passam o token de pulso (18 hex, comparado em tempo constante) e os IPs permitidos; o bypass público
   devolve só `{liberado}`
+
+Falta ainda a tela do editor (`/app/cms`): hoje o conteúdo se cadastra pela API.
 
 ---
 
@@ -332,9 +365,9 @@ tem `company_id` e as permissões `content:read`/`content:write` ficaram com o O
 | Usuários e membros de empresa | ✅ | ✅ 6 rotas | ✅ | no ar |
 | Notificações e preferências | ✅ | ✅ 7 rotas | 🚧 | backend no ar, sino e tela por fazer |
 | Configurações da conta e aparência | ✅ | ✅ | 🚧 | tema, conta e troca de empresa no ar; endereço, logo, moeda, fuso e meta têm coluna e não têm tela |
-| CMS da página pública (cores, banners, FAQ, depoimentos) | ✅ | ✅ 14 rotas | 🚧 | config bloco a bloco, itens com `meta`, payload público com cache e nota SEO no ar; landing e editor `/app/cms` por fazer |
-| Documentos legais (Termos, Privacidade, LGPD) | ✅ | ✅ | 🚧 | edição em `/api/cms/legal` e rota pública que só responde publicado; falta a tela |
-| Modo manutenção da plataforma | ✅ (mesma tabela) | ✅ | 🚧 | 503 com mensagem e previsão, allowlist de volta, pulso em tempo constante e IP permitido; falta a tela |
+| CMS da página pública (cores, herói, capacidades, banners, depoimentos, métricas, FAQ) | ✅ | ✅ 14 rotas | ✅ | no ar: a vitrine `/` é montada pelo conteúdo do banco; falta o editor `/app/cms` |
+| Documentos legais (Termos, Privacidade, LGPD) | ✅ | ✅ | ✅ | `/legal/:kind` mostra só o que está publicado; a edição ainda é pela API |
+| Modo manutenção da plataforma | ✅ (mesma tabela) | ✅ | ✅ | 503 com mensagem e previsão na API e na tela, contagem regressiva, pulso em tempo constante, IP permitido e o código guardado na aba |
 | Modelos de e-mail | ✅ | 🚧 | 🚧 | tabela `email_templates` criada; SMTP ainda não existe |
 | Rotinas agendadas (cron) | ✅ | 🚧 | 🚧 | tabela `cron_jobs` criada, sem executor |
 | Gateways e cobranças | ✅ | 🚧 | 🚧 | tabelas com provedores (`MERCADO_PAGO`, `EFI`, `STRIPE`) e ambiente; **nenhuma integração inventada** enquanto não houver credencial real |
@@ -402,7 +435,8 @@ importa só o CSS do AdminLTE) e `sweetalert2` (substituído pelo diálogo de co
         migrations/            12 migrations, da fundação ao conteúdo da vitrine
         seed.ts                admin global + conta de dev + empresa nexus-demo (vazia)
       src/
-        app.ts                 15 módulos + modo manutenção antes das rotas + handler de erro e 404
+        app.ts                 15 módulos + modo manutenção antes das rotas + parser de corpo vazio
+                               + handler de erro e 404
         config/env.ts          .env validado com Zod (subida falha cedo)
         lib/                   errors, rbac, company-context, audit, pagination, tokens, password, prisma
         plugins/               security.ts, auth.ts (decorator `authenticate`),
@@ -414,13 +448,14 @@ importa só o CSS do AdminLTE) e `sweetalert2` (substituído pelo diálogo de co
     web/
       src/
         App.tsx                rotas públicas, /app/* protegida e as páginas de erro
-        styles/                tokens.css, tailwind.css, global.css, components.css
-        lib/                   api, confirm, notify, csv, format, auditLabels, uiCopy, validators, tokenStore
+        styles/                tokens.css, tailwind.css, global.css, components.css, landing.css
+        lib/                   api, confirm, notify, csv, format, auditLabels, uiCopy, validators,
+                               tokenStore, landingApi, landingTypes, landingEstilo
         context/               AuthContext, ThemeContext
         components/            AdminShell, Tabs, Pagination, Modal, ConfirmationModal, StateView,
                                PasswordInput, ProtectedRoute, ThemeToggle, landing/, layout/
-        pages/                 Landing, Login, Register, ForgotPassword, Dashboard, Clients, Products,
-                               Sales, Purchases, Finance, CRM, Agenda, Users, Audit, Settings, erros
+        pages/                 Landing, Legal, Login, Register, ForgotPassword, Dashboard, Clients,
+                               Products, Sales, Purchases, Finance, CRM, Agenda, Users, Audit, Settings, erros
   assets/brand/logo/           logo oficial e os recortes usados pelo favicon
   docs/
     ANALISE.md                 matriz de análise da fase 1, com evidências
@@ -612,7 +647,7 @@ processo com a mensagem do caminho exato, em vez de deixar o serviço subir queb
 
 ```bash
 npm run typecheck          # api + web
-npm test                   # 14 arquivos · 80 testes de integração contra MySQL real
+npm test                   # 14 arquivos · 81 testes de integração contra MySQL real
 npm run build              # produção (tsc + vite build)
 ```
 
@@ -624,13 +659,14 @@ npm run build              # produção (tsc + vite build)
 | `pagination.test.ts` | `{data, meta}` coerente e `pageSize` acima do limite → 400 |
 | `clients.test.ts`, `products.test.ts`, `sales.test.ts`, `purchases.test.ts`, `finance.test.ts`, `crm.test.ts`, `agenda.test.ts` | regras de negócio de cada módulo, incluindo baixa e estorno de estoque, custo atualizado na compra recebida, conversão de lead em cliente e expansão de recorrência |
 | `notifications.test.ts` | aviso chega à equipe mas não a quem agiu, prioridade do estoque zerado, preferência por tipo, contador do sino, varredura uma vez por mês e bloqueio de varredura por atendente |
-| `cms.test.ts` | payload público sem vazamento de pulso, RBAC por papel, merge bloco a bloco, item que nasce, some e exclui de verdade, texto legal antes e depois de publicar, nota SEO e o modo manutenção com pulso e IP |
+| `cms.test.ts` | payload público sem vazamento de pulso, RBAC por papel, merge bloco a bloco, item que nasce, some e exclui de verdade, texto legal antes e depois de publicar, nota SEO, o modo manutenção com pulso e IP, e POST sem corpo aceito enquanto JSON escrito errado continua 400 |
 
 Além da suíte, o repositório guarda provas que dirigem o navegador (Puppeteer) e medem pixels, com as
 capturas desta página como subproduto:
 
 | Prova | Checagens |
 |---|---|
+| `tools/verify-landing-cms.cjs` | 105 — a vitrine montada pelo banco: texto, paleta nos dois temas, âncoras, itens, contato, WhatsApp, cookies, SEO, páginas legais, três larguras sem arrasto e a manutenção de ponta a ponta (contagem, pulso, IP e o código na sessão) |
 | `tools/verify-sidebar.cjs` | 87 — ordem e tipografia das seis camadas, itens por permissão, modo trilha, peek, linhas "em breve" e o tema claro |
 | `tools/verify-acoes-confirm.cjs` | 88 — coluna de ações de nove tabelas, anatomia do diálogo, trava de duplo clique, Esc durante a requisição, tema claro e celular |
 | `tools/shoot-tabs.cjs` | 447 — abas, paginação, respiro medido e legibilidade do histórico em 9 páginas, desktop e celular |
@@ -662,8 +698,9 @@ Fundação (auth, RBAC, multiempresa, auditoria, tema, estados globais, Toastr, 
 paginação, páginas de erro) · cadastros operacionais (clientes, produtos e estoque) · operação (vendas com
 baixa e estorno, compras e fornecedores, financeiro, CRM com conversão, agenda com recorrência e FullCalendar
 6) · painel com relatórios agregados e CSV · equipe, matriz RBAC e sessões com revogação · notificações no
-servidor com preferências e varredura · CMS da vitrine no servidor (configuração bloco a bloco,
-itens por tipo com `meta`, textos legais publicados, nota de SEO medida e modo manutenção com pulso e IP) ·
+servidor com preferências e varredura · CMS da vitrine no servidor e na tela (configuração bloco a bloco,
+itens por tipo com `meta`, a página pública montada a partir do banco, textos legais publicados, nota de SEO
+medida e modo manutenção com contagem regressiva, pulso e IP) ·
 sidebar em camadas com peek e gaveta · abas e paginação padronizadas em todas as telas · identidade Premium
 Gourmet nos dois temas, favicon oficial e as provas automatizadas desta página · credencial do administrador
 fora do git, com histórico reescrito antes do primeiro push.
@@ -673,8 +710,8 @@ fora do git, com histórico reescrito antes do primeiro push.
 1. **Sino e tela de notificações** — o backend já entrega `/count`, lista e preferências; falta a interface
 2. **Configurações completas** — endereço, logo, moeda, fuso, idioma e meta de receita têm coluna e não têm
    tela; falta o formulário com as regras de cada campo
-3. **CMS na tela** — a landing montada a partir do banco e o editor `/app/cms`; o servidor já entrega
-   conteúdo, textos legais, SEO medido e modo manutenção
+3. **Editor do CMS** — `/app/cms` com as abas de conteúdo, itens, textos legais, SEO e manutenção; a
+   vitrine já é montada a partir do banco, falta a tela de quem cadastra
 4. **Modelos de e-mail** — a tela de Termos, Privacidade e LGPD depende da mesma rota de edição do CMS;
    SMTP só depois de haver credencial real
 5. **Rotinas agendadas** — executor das varreduras hoje manuais (contas vencidas, relatório diário)
@@ -701,7 +738,8 @@ O detalhamento está em [`CHANGELOG.md`](CHANGELOG.md) (Keep a Changelog, mais n
 | `3b5c6c5 → 99cae5b` | Notificações persistentes no servidor e o diálogo central de confirmação |
 | `d81c164 → e18a855` | Sidebar em camadas com o mapa real do produto; a senha do administrador saiu do repositório, com histórico reescrito |
 | `7e507d8` | Provas da sidebar e do diálogo recapturadas |
-| `60941a3 → ca156a7` | README como ficha do produto e CMS da vitrine no servidor: conteúdo bloco a bloco, itens com `meta`, textos legais publicados, SEO medido e modo manutenção com pulso e IP |
+| `60941a3 → 02971b4` | README como ficha do produto e CMS da vitrine no servidor: conteúdo bloco a bloco, itens com `meta`, textos legais publicados, SEO medido e modo manutenção com pulso e IP |
+| `2c50ea4 → 5e44160` | A página pública passou a ser montada a partir do banco — paleta, herói, capacidades, depoimentos, métricas, dúvidas, contato, WhatsApp, cookies, `/legal/:kind` e a tela de manutenção com contagem e pulso; POST sem corpo voltou a ser ação e a suíte fechou em 81 testes |
 
 ---
 
