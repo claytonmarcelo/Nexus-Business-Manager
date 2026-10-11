@@ -5,6 +5,40 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/), 
 
 ## [Não lançado]
 
+### Política de estoque por empresa (Fase 3b da auditoria)
+
+> Fase 3 da auditoria comercial (`docs/AUDITORIA.md`), sub-fase 3b: a regra de saldo é decisão da
+> empresa, não do sistema. A Fase 3a deixou o estoque atômico e bloqueado por padrão — certa para a
+> padaria, errada para o distribuidor que lança a nota antes da mercadoria chegar. Agora cada empresa
+> escolhe, numa chave própria da tela de Configurações, e o banco continua sendo quem decide.
+- Nova coluna `companies.allow_negative_stock` (migration `20261011210000_add_company_allow_negative_stock`,
+  `BOOLEAN NOT NULL DEFAULT false`) — o padrão é o comportamento da 3a: nenhuma saída passa sem saldo.
+- Novo `permiteEstoqueNegativo(companyId)` em `lib/stock.ts`: fonte única da política, lida uma vez antes
+  da transação em cada entrada que pode baixar saldo — nunca pedida dentro do loop de itens.
+- A política vale exatamente para as três portas de saída: confirmar venda, estorno de compra recebida
+  cancelada e lançamento manual OUT. Subida de estoque e ajuste (ADJUST) não têm nada a ver com a chave.
+- Com a chave ligada, o pré-check amigável do `createSale` (aquele que comparava saldo em JS antes de
+  abrir a transação) é pulado de propósito — com permissão para negativo, ele viraria uma porta falsa
+  bloqueando o que a empresa autorizou. Sem a chave, ele continua mostrando o nome do produto na tela.
+- Mensagem do count-0 no `baixarEstoque` agora distingue os dois motivos reais: "não pertence a esta
+  empresa" de "este produto não controla estoque" — com a política ligada, um produto sem rastreamento
+  não pode receber OUT nem por transbordo.
+- A escrita parcial de Configurações ganhou o primeiro campo booleano do pipeline (`allowNegativeStock`
+  no `PATCH /companies/current`, `Record<string, string | number | boolean | null>` nas mudanças): chave
+  ausente não toca, repetir o valor atual devolve `alterados: []`, e o `company.settings.updated` da
+  auditoria já registra o de/para sozinho.
+- Novo bloco "Política de estoque" na aba Empresa (`BlocoPoliticaEstoque` em `EmpresaPanel.tsx`, com a
+  peça `CampoLigado` que já existia): botão de gravar do próprio bloco, como nos outros cinco, e aviso
+  escrito dos dois lados da chave.
+- Novo `test/estoque-politica.test.ts` (5): padrão fechado, a chave ligada aceitando negativo pelas três
+  portas de saída, gravação idempotente, MANAGER sem acesso (403) e texto no lugar de booleano (400).
+- Achado da prova de navegador: o aviso do botão desligar no componente tinha ficado com a redação
+  antiga enquanto a prova esperava a nova — dois textos escritos à mão divergindo na terceira tela,
+  exatamente o que as peças compartilhadas existem para evitar. Normalizados nas duas pontas.
+- Validação: typecheck da API e do painel limpos, build Vite OK; suíte completa 20 arquivos / 145 testes
+  verdes; prova de configurações 115 checagens / 0 falhas (dois ciclos do switch, seis blocos na aba),
+  com as capturas da tela renovadas.
+
 ### Integridade de negócio (Fase 3a da auditoria — estoque atômico)
 
 > Fase 3 da auditoria comercial (`docs/AUDITORIA.md`), sub-fase 3a: o CRÍTICO de oversell. Enquanto a

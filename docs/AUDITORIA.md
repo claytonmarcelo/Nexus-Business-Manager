@@ -406,3 +406,19 @@ A sub-fase 3a fecha o CRÍTICO de oversell e os ALTO de escrita absoluta de esto
 Pendências declaradas da Fase 3: 3b política de estoque por empresa (UI + campo), 3c meia-noite no fuso da empresa, 3d dinheiro em Decimal/centavos nos relatórios, 3e vínculo venda↔financeiro com parcelamento.
 
 Validação da sub-fase: typecheck da API limpo; suíte 19 arquivos / 140 testes verdes (5 novos). Backend-only — nenhuma tela alterada, provas de navegador não afetadas.
+
+## Adenda da execução — Fase 3 em andamento — sub-fase 3b (política de estoque por empresa) encerrada — 2026-10-11
+
+A sub-fase 3b transforma o `permitirNegativo` que a 3a deixou como parâmetro morto em decisão da empresa, guardada no cadastro dela e escrita na tela de Configurações.
+- Coluna `companies.allow_negative_stock` (`BOOLEAN NOT NULL DEFAULT false`, migration `20261011210000_add_company_allow_negative_stock`, reversível) — o default preserva exatamente o comportamento da 3a, nenhuma empresa acordou com o estoque destrancado.
+- `permiteEstoqueNegativo(companyId)` em `lib/stock.ts` é a fonte única: lida uma vez antes de abrir a transação, nunca por item.
+- A chave liga só as três portas de saída (`baixarEstoque`): confirmar venda, estorno de compra recebida-cancelada e OUT manual. `subirEstoque` e ADJUST continuam fora — política de saldo não é política de entrada.
+- No `createSale`, ligado o permissivo, o pré-check em JS é pulado de propósito: com saldo negativo autorizado ele seria uma porta falsa. Desligado, continua dando o nome do produto na cara antes de a transação começar.
+- Count-0 do `baixarEstoque` passou a diferenciar "não pertence à empresa" de "não controla estoque" — com a política ligada, produto sem rastreamento ainda não aceita OUT.
+- Escrita parcial de Configurações ganhou o primeiro booleano do pipeline (`companies.schemas.ts`, `mudancas` widening para `string | number | boolean | null`); sem chave extra de validação, sem campo novo fora da guarda.
+- Painel: bloco "Política de estoque" na aba Empresa com a peça `CampoLigado` e gravação própria, como os outros cinco; `settingsApi.ts` espelha o campo nos dois sentidos.
+- Achado da prova: o `toastr` do botão desligar no componente tinha redação antiga enquanto a prova esperava a nova — divergência escrita à mão entre tela e prova, descoberta com diagnóstico em navegador real e normalizada nos dois lados.
+
+Pendências declaradas da Fase 3: 3c meia-noite no fuso da empresa, 3d dinheiro em Decimal/centavos nos relatórios, 3e vínculo venda↔financeiro com parcelamento.
+
+Validação da sub-fase: typecheck da API limpo; typecheck e build do painel limpos; suíte 20 arquivos / 145 testes verdes (novos `test/estoque-politica.test.ts` com 5); prova de navegador de Configurações 115 checagens / 0 falhas, com o switch provado nos dois sentidos e as capturas da aba Empresa renovadas.
