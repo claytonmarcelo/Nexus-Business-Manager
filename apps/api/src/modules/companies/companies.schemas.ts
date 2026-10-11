@@ -102,6 +102,12 @@ export const updateCompanySchema = z
     // nem string — porque a tela manda o estado do switch e o .strict() não
     // perdoa tipo inventado.
     allowNegativeStock: z.boolean().optional(),
+    // Fase 3e: as duas chaves do lançamento automático, uma por lado. São duas e
+    // não uma porque o medo é diferente em cada ponta: ligar a venda sem querer
+    // duplica a receita de quem já anota o que entra; ligar a compra faz o mesmo
+    // com o que sai. Cada lado se liga quando a pessoa quiser.
+    autoFinanceSales: z.boolean().optional(),
+    autoFinancePurchases: z.boolean().optional(),
   })
   .strict()
   .refine((valor) => Object.keys(valor).length > 0, "Envie ao menos um campo para gravar");

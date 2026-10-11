@@ -49,11 +49,31 @@ export function somarCentavos(valores: Iterable<Valor>): number {
   return total;
 }
 
+/**
+ * Divide um montante em `partes` parcelas EXATAS em centavo: a soma do que sai
+ * daqui é o total que entrou, sempre. A conta é o piso inteiro em cada parte e o
+ * resto todo na última — R$ 100,00 em 3 parcelas são R$ 33,33 + R$ 33,33 +
+ * R$ 33,34, não três valores de 33,3333 que a coluna de duas casas truncaria em
+ * R$ 99,99 e o cliente cobraria do caixa.
+ *
+ * Por que o resto vai na última e não na primeira ou distribuído: é o critério
+ * do carnê brasileiro (a última parcela fecha a conta) e o efeito colateral é
+ * bom — quem confere as primeiras parcelas contra o preço vê um valor redondo.
+ */
+export function dividirCentavos(totalCentavos: number, partes: number): number[] {
+  const n = Math.trunc(partes);
+  if (!Number.isFinite(n) || n < 1) return [totalCentavos];
+  if (n === 1) return [totalCentavos];
+  const cada = Math.floor(totalCentavos / n);
+  const parcelas = new Array<number>(n - 1).fill(cada);
+  parcelas.push(totalCentavos - cada * (n - 1));
+  return parcelas;
+}
+
 /** Centavos de volta em valor de duas casas: só na borda da resposta JSON. */
 export function moedaDeCentavos(cents: number): number {
   return cents / 100;
 }
-
 /** Centavos prontos para escrever numa coluna DECIMAL(x,2). */
 export function decimalDeCentavos(cents: number): Prisma.Decimal {
   return new Prisma.Decimal(cents).div(100);

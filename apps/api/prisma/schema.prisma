@@ -79,6 +79,16 @@ model Company {
   // verdadeiro = a baixa acontece mesmo sem saldo e o negativo fica visível
   // como dívida de estoque a acertar.
   allowNegativeStock Boolean          @default(false) @map("allow_negative_stock")
+  // Fase 3e da auditoria: venda confirmada e compra recebida existiam sem
+  // reflexo nenhum no financeiro — o relatório mostrava a receita e o caixa
+  // nunca tinha visto aquele dinheiro. O vínculo passa a ser gerado pelo
+  // sistema, mas desligado por padrão nas duas pontas: uma empresa que já lança
+  // a receita à mão receberia o dobro dela no dia em que ligasse a opção sem
+  // querer. São duas chaves e não uma só porque venda e compra são decisões de
+  // hábito diferentes: há quem confira o dinheiro que entra e lance o que sai
+  // à mão, e o contrário também existe.
+  autoFinanceSales Boolean            @default(false) @map("auto_finance_sales")
+  autoFinancePurchases Boolean        @default(false) @map("auto_finance_purchases")
   createdAt         DateTime          @default(now()) @map("created_at")
   updatedAt         DateTime          @updatedAt @map("updated_at")
   members           CompanyUser[]
@@ -297,6 +307,10 @@ model Sale {
   userId    String?    @map("user_id") @db.VarChar(36)
   status    SaleStatus @default(PENDING)
   total     Decimal    @db.Decimal(14, 2)
+  // Fase 3e: em quantas parcelas mensais o total se divide. 1 (padrão) é "à
+  // vista" — uma única parcela com o valor cheio, que é exatamente o que o
+  // financeiro mostrava quando o lançamento era feito à mão.
+  installments Int      @default(1)
   notes     String?    @db.VarChar(500)
   createdAt DateTime   @default(now()) @map("created_at")
   updatedAt DateTime   @updatedAt @map("updated_at")
@@ -304,6 +318,10 @@ model Sale {
   client    Client?    @relation(fields: [clientId], references: [id], onDelete: SetNull)
   user      User?      @relation(fields: [userId], references: [id], onDelete: SetNull)
   items     SaleItem[]
+  // Procedência dos lançamentos gerados (lib/installments.ts). SetNull e não
+  // Cascade: lançamento é escrituração — a venda pode sair do sistema, o
+  // lançamento que já foi pago não sai junto com ela.
+  financeEntries FinanceEntry[]
 
   @@index([companyId, status, createdAt])
   @@map("sales")
@@ -350,6 +368,9 @@ model Purchase {
   userId     String?        @map("user_id") @db.VarChar(36)
   status     PurchaseStatus @default(DRAFT)
   total      Decimal        @db.Decimal(14, 2)
+  // Mesma régua da venda (Fase 3e): quantas parcelas mensais o fornecedor vai
+  // receber. 1 é à vista.
+  installments Int          @default(1)
   notes      String?        @db.VarChar(500)
   createdAt  DateTime       @default(now()) @map("created_at")
   updatedAt  DateTime       @updatedAt @map("updated_at")
@@ -357,6 +378,7 @@ model Purchase {
   supplier   Supplier       @relation(fields: [supplierId], references: [id], onDelete: Restrict)
   user       User?          @relation(fields: [userId], references: [id], onDelete: SetNull)
   items      PurchaseItem[]
+  financeEntries FinanceEntry[]
 
   @@index([companyId, status, createdAt])
   @@map("purchases")
@@ -403,6 +425,14 @@ model FinanceEntry {
   dueDate     DateTime         @map("due_date") @db.Date
   paidAt      DateTime?        @map("paid_at")
   notes       String?          @db.VarChar(500)
+  // Fase 3e: de qual venda ou compra este lançamento nasceu. Os dois são
+  // opcionais e se excluem na camada de serviço (um lançamento gerado vem de um
+  // documento só); manual tem os dois nulos. `saleId`/`purchaseId` ficam quando
+  // o documento é apagado — SetNull, porque despesa e receita escrituradas não
+  // somem junto do pedido, e porque o teste de limpeza já apaga
+  // `finance_entries` antes de `sales`/`purchases`.
+  saleId      String?          @map("sale_id") @db.VarChar(36)
+  purchaseId  String?          @map("purchase_id") @db.VarChar(36)
   createdAt   DateTime         @default(now()) @map("created_at")
   updatedAt   DateTime         @updatedAt @map("updated_at")
   company     Company          @relation(fields: [companyId], references: [id], onDelete: Cascade)
@@ -410,8 +440,12 @@ model FinanceEntry {
   client      Client?          @relation(fields: [clientId], references: [id], onDelete: SetNull)
   supplier    Supplier?        @relation(fields: [supplierId], references: [id], onDelete: SetNull)
   user        User?            @relation(fields: [userId], references: [id], onDelete: SetNull)
+  sale        Sale?            @relation(fields: [saleId], references: [id], onDelete: SetNull)
+  purchase    Purchase?        @relation(fields: [purchaseId], references: [id], onDelete: SetNull)
 
   @@index([companyId, status, dueDate])
+  @@index([saleId])
+  @@index([purchaseId])
   @@map("finance_entries")
 }
 

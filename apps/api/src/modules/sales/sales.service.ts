@@ -5,7 +5,12 @@ import { paginate, skipTake, type PaginationInput } from "../../lib/pagination";
 import { audit } from "../../lib/audit";
 import { baixarEstoque, permiteEstoqueNegativo, subirEstoque } from "../../lib/stock";
 import { transacaoEstoque } from "../../lib/tx";
-import { decimalDeCentavos, linhaDecimal, moedaDeCentavos, somarCentavos } from "../../lib/money";
+import { decimalDeCentavos, centavos, linhaDecimal, moedaDeCentavos, somarCentavos } from "../../lib/money";
+import {
+  gerarParcelasDoDocumento,
+  politicaDeLançamento,
+  removerParcelasDoDocumento,
+} from "../../lib/installments";
 import type { CreateSaleInput } from "./sales.schemas";
 import { avisoEstoqueBaixo, avisoVenda } from "../notifications/notifications.service";
 
@@ -15,7 +20,7 @@ const num = (v: Prisma.Decimal) => Number(v);
 
 interface SaleWithRelations {
   id: string; status: "PENDING" | "CONFIRMED" | "CANCELLED"; notes: string | null;
-  total: Prisma.Decimal; createdAt: Date; updatedAt: Date;
+  total: Prisma.Decimal; installments: number; createdAt: Date; updatedAt: Date;
   client: { name: string } | null;
   user: { name: string } | null;
   items: { id: string; productId: string; quantity: Prisma.Decimal; unitPrice: Prisma.Decimal; lineTotal: Prisma.Decimal }[];
@@ -26,6 +31,10 @@ function serialize(sale: SaleWithRelations) {
     id: sale.id,
     status: sale.status,
     total: num(sale.total),
+    // Fase 3e: quantas parcelas o total se divide (1 = à vista). O carnê em si
+    // é o que o Financeiro já lista — cada parcela é um lançamento com o próprio
+    // vencimento e o próprio "pago".
+    installments: sale.installments,
     notes: sale.notes,
     clientName: sale.client?.name ?? null,
     userName: sale.user?.name ?? null,
@@ -103,6 +112,11 @@ export async function createSale(companyId: string, input: CreateSaleInput, user
   // o banco dentro da transação, e um "insuficiente" aqui travaria na porta o
   // que a empresa autorizou.
   const permiteNegativo = input.confirm ? await permiteEstoqueNegativo(companyId) : false;
+  // Fase 3e: a política de lançamento é lida fora da transação (é decisão de
+  // cadastro, não dado da venda), mas o que ela manda fazer acontece dentro
+  // dela: ou a venda confirma com o carnê no caixa, ou nenhum dos dois existe.
+  const politica = input.confirm ? await politicaDeLançamento(companyId) : null;
+  let lançamentosGerados = 0;
   if (input.confirm && !permiteNegativo) {
     for (const i of itens) {
       const prod = byId.get(i.productId)!;
@@ -120,6 +134,7 @@ export async function createSale(companyId: string, input: CreateSaleInput, user
         userId,
         status: input.confirm ? "CONFIRMED" : "PENDING",
         total,
+        installments: input.installments,
         notes: input.notes,
         items: { create: itens },
       },
@@ -136,13 +151,28 @@ export async function createSale(companyId: string, input: CreateSaleInput, user
           nota: "Venda " + created.id.slice(0, 8), createdBy: userId,
         });
       }
+      // Fase 3e: confirmada com a política ligada, a nota entra no caixa em
+      // parcelas mensais — gerada na mesma transação da baixa de estoque.
+      if (politica?.autoFinanceSales) {
+        lançamentosGerados = await gerarParcelasDoDocumento({
+          tx, companyId, documentoId: created.id,
+          totalCentavos, parcelas: created.installments, base: new Date(), userId,
+          lado: { tipo: "INCOME", documento: "VENDA", saleId: created.id, pessoa: input.clientId ?? null },
+        });
+      }
     }
     return created;
   });
 
   // A auditoria guarda o valor como número de duas casas: metadata é JSON, e o
   // valor já está fechado — é a mesma quantia, lida do centavo exato.
-  await audit({ userId, companyId, action: "sale.create", entity: "sale", entityId: sale.id, ip, metadata: { total: moedaDeCentavos(totalCentavos), confirm: input.confirm, items: itens.length } });
+  await audit({
+    userId, companyId, action: "sale.create", entity: "sale", entityId: sale.id, ip,
+    metadata: {
+      total: moedaDeCentavos(totalCentavos), confirm: input.confirm, items: itens.length,
+      installments: input.installments, financeEntries: lançamentosGerados,
+    },
+  });
 
   // Venda ja criada confirmada: o aviso de negocio e o de estoque baixo saem
   // juntos, porque o estoque baixou na mesma transacao (secoes 38 e 44).
@@ -177,6 +207,13 @@ export async function changeStatus(companyId: string, id: string, status: "CONFI
 
   const items = sale.items;
   const permiteNegativo = await permiteEstoqueNegativo(companyId);
+  // Fase 3e: confirmar gera o carnê, cancelar tira o que ainda não aconteceu. A
+  // leitura da política só importa na ida — na volta, o que foi gerado com a
+  // política ligada precisa ser removido mesmo que ela tenha sido desligada no
+  // meio-tempo, senão sobrava receita fantasma no caixa de uma venda anulada.
+  const politica = status === "CONFIRMED" ? await politicaDeLançamento(companyId) : null;
+  let lançamentosGerados = 0;
+  let parcelasRemovidas = 0;
   await transacaoEstoque(async (tx) => {
     const reivindicado = await tx.sale.updateMany({
       where: { id, companyId, status: sale.status },
@@ -195,6 +232,14 @@ export async function changeStatus(companyId: string, id: string, status: "CONFI
           nota: "Venda " + sale.id.slice(0, 8), createdBy: userId,
         });
       }
+      if (politica?.autoFinanceSales) {
+        lançamentosGerados = await gerarParcelasDoDocumento({
+          tx, companyId, documentoId: id,
+          totalCentavos: centavos(sale.total), parcelas: sale.installments,
+          base: new Date(), userId,
+          lado: { tipo: "INCOME", documento: "VENDA", saleId: id, pessoa: sale.clientId ?? null },
+        });
+      }
     }
     if (status === "CANCELLED" && sale.status === "CONFIRMED") {
       for (const i of items) {
@@ -206,9 +251,20 @@ export async function changeStatus(companyId: string, id: string, status: "CONFI
         });
       }
     }
+    if (status === "CANCELLED") {
+      parcelasRemovidas = await removerParcelasDoDocumento({
+        tx, companyId, lado: { documento: "VENDA", saleId: id },
+      });
+    }
   });
 
-  await audit({ userId, companyId, action: "sale." + status.toLowerCase(), entity: "sale", entityId: id, ip });
+  await audit({
+    userId, companyId, action: "sale." + status.toLowerCase(), entity: "sale", entityId: id, ip,
+    metadata:
+      status === "CONFIRMED"
+        ? { installments: sale.installments, financeEntries: lançamentosGerados }
+        : { parcelasRemovidas },
+  });
 
   const registrada = await getSale(companyId, id);
   await avisoVenda(

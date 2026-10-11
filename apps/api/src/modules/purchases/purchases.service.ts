@@ -5,7 +5,12 @@ import { paginate, skipTake, type PaginationInput } from "../../lib/pagination";
 import { audit } from "../../lib/audit";
 import { baixarEstoque, permiteEstoqueNegativo, subirEstoque } from "../../lib/stock";
 import { transacaoEstoque } from "../../lib/tx";
-import { decimalDeCentavos, linhaDecimal, moedaDeCentavos, somarCentavos } from "../../lib/money";
+import { decimalDeCentavos, centavos, linhaDecimal, moedaDeCentavos, somarCentavos } from "../../lib/money";
+import {
+  gerarParcelasDoDocumento,
+  politicaDeLançamento,
+  removerParcelasDoDocumento,
+} from "../../lib/installments";
 import type { CreatePurchaseInput, CreateSupplierInput } from "./purchases.schemas";
 
 const num = (v: Prisma.Decimal) => Number(v);
@@ -14,7 +19,7 @@ type PurchaseStatus = "DRAFT" | "RECEIVED" | "CANCELLED";
 
 interface PurchaseWithRelations {
   id: string; status: PurchaseStatus; notes: string | null;
-  total: Prisma.Decimal; createdAt: Date; updatedAt: Date;
+  total: Prisma.Decimal; installments: number; createdAt: Date; updatedAt: Date;
   supplier: { name: string } | null;
   user: { name: string } | null;
   items: { id: string; productId: string; quantity: Prisma.Decimal; unitCost: Prisma.Decimal; lineTotal: Prisma.Decimal; product?: { name?: string } | null }[];
@@ -25,6 +30,8 @@ function serialize(p: PurchaseWithRelations) {
     id: p.id,
     status: p.status,
     total: num(p.total),
+    // Fase 3e: parcelas mensais do custo, do lado da despesa a pagar.
+    installments: p.installments,
     notes: p.notes,
     supplierName: p.supplier?.name ?? null,
     userName: p.user?.name ?? null,
@@ -143,6 +150,11 @@ export async function createPurchase(companyId: string, input: CreatePurchaseInp
   const totalCentavos = somarCentavos(itens.map((i) => i.lineTotal));
   const total = decimalDeCentavos(totalCentavos);
 
+  // Fase 3e: política lida antes da transação, efeito escrito dentro dela — ou a
+  // compra entra no estoque com a despesa no caixa, ou não entra em lugar nenhum.
+  const politica = input.receive ? await politicaDeLançamento(companyId) : null;
+  let lançamentosGerados = 0;
+
   const purchase = await transacaoEstoque(async (tx) => {
     const created = await tx.purchase.create({
       data: {
@@ -151,6 +163,7 @@ export async function createPurchase(companyId: string, input: CreatePurchaseInp
         userId,
         status: input.receive ? "RECEIVED" : "DRAFT",
         total,
+        installments: input.installments,
         notes: input.notes,
         items: { create: itens },
       },
@@ -167,11 +180,20 @@ export async function createPurchase(companyId: string, input: CreatePurchaseInp
           nota: "Compra " + created.id.slice(0, 8), createdBy: userId,
         });
       }
+      // Fase 3e: recebida com a política ligada, a compra nasce como despesa a
+      // pagar no caixa — o outro lado da mesma moeda da venda confirmada.
+      if (politica?.autoFinancePurchases) {
+        lançamentosGerados = await gerarParcelasDoDocumento({
+          tx, companyId, documentoId: created.id,
+          totalCentavos, parcelas: created.installments, base: new Date(), userId,
+          lado: { tipo: "EXPENSE", documento: "COMPRA", purchaseId: created.id, pessoa: supplier.id },
+        });
+      }
     }
     return created;
   });
 
-  await audit({ userId, companyId, action: "purchase.create", entity: "purchase", entityId: purchase.id, ip, metadata: { total: moedaDeCentavos(totalCentavos), receive: input.receive, items: itens.length } });
+  await audit({ userId, companyId, action: "purchase.create", entity: "purchase", entityId: purchase.id, ip, metadata: { total: moedaDeCentavos(totalCentavos), receive: input.receive, items: itens.length, installments: input.installments, financeEntries: lançamentosGerados } });
   return getPurchase(companyId, purchase.id).then(serialize);
 }
 
@@ -190,6 +212,12 @@ export async function changeStatus(companyId: string, id: string, status: Purcha
   // Fase 3b: estornar uma compra recebida RETIRA estoque — se aquele tanto já
   // foi vendido, a política da empresa decide se o saldo pode ficar devendo.
   const permiteNegativo = await permiteEstoqueNegativo(companyId);
+  // Fase 3e: receber lança a despesa, cancelar tira o que ainda não foi pago. A
+  // volta não depende da política estar ligada — o que nasceu com ela ligada
+  // precisa sair, senão a compra anulada deixaria despesa fantasma no caixa.
+  const politica = status === "RECEIVED" ? await politicaDeLançamento(companyId) : null;
+  let lançamentosGerados = 0;
+  let parcelasRemovidas = 0;
   await transacaoEstoque(async (tx) => {
     const reivindicado = await tx.purchase.updateMany({
       where: { id, companyId, status: purchase.status },
@@ -208,6 +236,14 @@ export async function changeStatus(companyId: string, id: string, status: Purcha
           nota: "Compra " + purchase.id.slice(0, 8), createdBy: userId,
         });
       }
+      if (politica?.autoFinancePurchases) {
+        lançamentosGerados = await gerarParcelasDoDocumento({
+          tx, companyId, documentoId: id,
+          totalCentavos: centavos(purchase.total), parcelas: purchase.installments,
+          base: new Date(), userId,
+          lado: { tipo: "EXPENSE", documento: "COMPRA", purchaseId: id, pessoa: purchase.supplierId },
+        });
+      }
     }
     if (status === "CANCELLED" && purchase.status === "RECEIVED") {
       for (const i of purchase.items) {
@@ -220,8 +256,19 @@ export async function changeStatus(companyId: string, id: string, status: Purcha
         });
       }
     }
+    if (status === "CANCELLED") {
+      parcelasRemovidas = await removerParcelasDoDocumento({
+        tx, companyId, lado: { documento: "COMPRA", purchaseId: id },
+      });
+    }
   });
 
-  await audit({ userId, companyId, action: "purchase." + status.toLowerCase(), entity: "purchase", entityId: id, ip });
+  await audit({
+    userId, companyId, action: "purchase." + status.toLowerCase(), entity: "purchase", entityId: id, ip,
+    metadata:
+      status === "RECEIVED"
+        ? { installments: purchase.installments, financeEntries: lançamentosGerados }
+        : { parcelasRemovidas },
+  });
   return getPurchase(companyId, id).then(serialize);
 }

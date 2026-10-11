@@ -162,6 +162,36 @@ export function diasAtrasNoCalendario(timeZone: string, dias: number, base: Date
   return new Date(calendarioDaEmpresa(timeZone, base).getTime() - dias * DIA_MS);
 }
 
+/** Quantos dias tem o mês `mes` (1-based) do `ano` dado — 28/29/30/31. */
+function diasNoMes(ano: number, mes: number): number {
+  // Dia 0 do mês seguinte é o último dia do mês pedido; `Date.UTC` faz a conta
+  // por nós e o fuso não entra nela porque tudo aqui é calendário em UTC.
+  return new Date(Date.UTC(ano, mes, 0)).getUTCDate();
+}
+
+/**
+ * O mesmo dia de calendário `meses` meses à frente, ainda ancorado à meia-noite
+ * UTC (Fase 3e: é assim que nasce o vencimento de cada parcela).
+ *
+ * Não dá para somar `meses * 30 dias`: "mensal" é calendário, e trinta dias de
+ * fevereiro não são um mês. Também não dá para jogar em `Date.UTC(y, m + meses,
+ * dia)`: ali o dia 31 de janeiro vira 3 de março, porque `Date.UTC` transborda o
+ * excesso em vez de clampar. Então a conta é em dois tempos — o mês-alvo vem do
+ * aritmética de meses, e o dia é o menor entre o dia de origem e o último dia
+ * daquele mês. Uma venda fechada no dia 31 parcela em 28/29 de fevereiro, 31 de
+ * março, 30 de abril: é o que o carnê do cliente diz, e é o que o fluxo de caixa
+ * mostra sem inventar um dia que não existe.
+ */
+export function mesesDepoisNoCalendario(base: Date, meses: number): Date {
+  const ano = base.getUTCFullYear();
+  const mes = base.getUTCMonth(); // 0-based
+  const dia = base.getUTCDate();
+  const total = ano * 12 + mes + meses;
+  const alvoAno = Math.floor(total / 12);
+  const alvoMes = total - alvoAno * 12; // 0-based outra vez
+  return new Date(Date.UTC(alvoAno, alvoMes, Math.min(dia, diasNoMes(alvoAno, alvoMes + 1))));
+}
+
 /** O fuso registrado no cadastro; empresa que não existe mais é UTC. */
 export async function fusoDaEmpresa(companyId: string): Promise<string> {
   const empresa = await prisma.company.findUnique({

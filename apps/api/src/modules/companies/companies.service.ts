@@ -113,6 +113,10 @@ export interface EmpresaConfig {
   language: string;
   revenueTarget: number | null;
   allowNegativeStock: boolean;
+  /** Fase 3e: venda confirmada gera lançamento de receita? */
+  autoFinanceSales: boolean;
+  /** Fase 3e: compra recebida gera lançamento de despesa? */
+  autoFinancePurchases: boolean;
 }
 
 function serializaEmpresa(c: Company): EmpresaConfig {
@@ -138,6 +142,8 @@ function serializaEmpresa(c: Company): EmpresaConfig {
     language: c.language,
     revenueTarget: c.revenueTarget === null ? null : Number(c.revenueTarget.toString()),
     allowNegativeStock: c.allowNegativeStock,
+    autoFinanceSales: c.autoFinanceSales,
+    autoFinancePurchases: c.autoFinancePurchases,
   };
 }
 
@@ -171,7 +177,8 @@ export async function updateCompanySettings(
 
   const guardados: Record<string, unknown> = atual;
   // Booleano entrou no vocabulário da configuração com a política de estoque
-  // (Fase 3b): antes só havia texto e número parcial neste dicionário.
+  // (Fase 3b) e virou três com as chaves de lançamento automático (Fase 3e):
+  // antes só havia texto e número parcial neste dicionário.
   const mudancas: Record<string, string | number | boolean | null> = {};
 
   for (const [campo, valor] of Object.entries(input)) {

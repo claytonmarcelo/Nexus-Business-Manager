@@ -40,6 +40,15 @@ export const createPurchaseSchema = z.object({
   supplierId: z.string().trim().min(1, "Fornecedor obrigatório"),
   notes: z.string().trim().max(500).optional().transform(emptyToUndef),
   receive: z.boolean().default(false),
+  // Fase 3e: o mesmo parcelamento da venda, do lado da despesa — quantas parcelas
+  // mensais o fornecedor vai receber. 1 é à vista, e ausente também é: quem não
+  // fala de parcelas não pode ser barrado na porta.
+  installments: z.coerce
+    .number()
+    .int("Número de parcelas deve ser inteiro")
+    .min(1, "A compra tem pelo menos uma parcela")
+    .max(120, "O parcelamento vai no máximo até 120 vezes")
+    .default(1),
   items: z.array(purchaseItemSchema).min(1, "Inclua ao menos um item na compra"),
 });
 
