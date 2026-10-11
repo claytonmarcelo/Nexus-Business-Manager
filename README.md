@@ -22,7 +22,7 @@
   <img src="https://img.shields.io/badge/Vite-5-646CFF?logo=vite&logoColor=white" alt="Vite 5">
   <img src="https://img.shields.io/badge/AdminLTE-4.10-343a40?logo=laravel&logoColor=white" alt="AdminLTE 4.10">
   <img src="https://img.shields.io/badge/Tailwind-4-06B6D4?logo=tailwindcss&logoColor=white" alt="Tailwind 4">
-  <img src="https://img.shields.io/badge/testes-81%20testes%20em%2014%20arquivos-brightgreen" alt="81 testes em 14 arquivos">
+  <img src="https://img.shields.io/badge/testes-113%20testes%20em%2016%20arquivos-brightgreen" alt="113 testes em 16 arquivos">
 </p>
 
 <p align="center">
@@ -30,9 +30,10 @@
   multiempresa, clientes, produtos e estoque, vendas, compras, financeiro, CRM, agenda, auditoria e
   equipe. A página pública já é montada a partir do conteúdo do banco — cores, herói, capacidades,
   depoimentos, métricas, dúvidas, contato, textos legais e a tela de modo manutenção; o editor
-  <code>/app/cms</code> cadastra tudo isso, e nas notificações o sino do cabeçalho e a tela
-  <code>/app/notificacoes</code> estão no ar. O que existe como tabela pronta mas sem módulo (modelos de
-  e-mail, rotinas agendadas e gateways de pagamento) e o que ainda nem tem tabela está marcado um por um em
+  <code>/app/cms</code> cadastra tudo isso; nas notificações o sino do cabeçalho e a tela
+  <code>/app/notificacoes</code> estão no ar, e <code>/app/rotinas</code> mostra, pausa e dispara as três varreduras
+  que o sistema faz sozinho no horário marcado. O que existe como tabela pronta mas sem módulo (modelos de
+  e-mail e gateways de pagamento) e o que ainda nem tem tabela está marcado um por um em
   <a href="#m%C3%B3dulos">Módulos</a> e no <a href="#roadmap">Roadmap</a>. Nada no menu aponta para uma
   rota que não existe: módulo em construção aparece apagado, com "em breve".</sub>
 </p>
@@ -43,10 +44,9 @@
 
 Capturas do sistema rodando (Fastify + Prisma sobre MySQL no backend, React + AdminLTE 4 no frontend),
 todas no quadro de **1440×900**, duas por linha e na mesma escala de exibição. Cada imagem é um link: o
-clique abre o arquivo no tamanho capturado. As seis primeiras são a série da fundação, nos dois temas; as
-seis seguintes mostram os módulos operacionais do mesmo jeito que a pessoa os vê depois de entrar; as linhas
-finais são a vitrine montada a partir do conteúdo do banco com o editor do CMS, e os avisos do painel — o sino
-no cabeçalho, a lista paginada e as preferências por tipo.
+clique abre o arquivo no tamanho capturado. As seis abaixo são o caminho mais curto pelo produto: a
+vitrine pública, a entrada, o painel com os números da empresa ativa, as vendas, o financeiro e o editor
+que monta a vitrine. O resto das capturas continua no repositório — saiu da galeria, não do disco.
 
 Os números que aparecem nas telas saíram do banco local de desenvolvimento no dia das capturas. O `seed`
 cria a empresa `nexus-demo` **vazia** — não há dados de fachada no código; os registros que os indicadores
@@ -58,79 +58,23 @@ contam vieram das provas automatizadas e dos testes de integração, que escreve
 | :--: | :--: |
 | <a href="docs/screenshots/01-landing.png"><img src="docs/screenshots/01-landing.png" alt="Página pública de boas-vindas em tema escuro, com a marca animada no palco, título, subtítulo e o switch de tema" width="360"></a> | <a href="docs/screenshots/02-login.png"><img src="docs/screenshots/02-login.png" alt="Tela de login com e-mail, senha com botão de revelar, lembrar de mim e link de recuperação, em relevo neumórfico no tema escuro" width="360"></a> |
 
-| Painel (Dashboard) | Equipe, papéis e permissões |
+| Painel (Dashboard) | Vendas |
 | :--: | :--: |
-| <a href="docs/screenshots/03-dashboard.png"><img src="docs/screenshots/03-dashboard.png" alt="Painel em tema escuro com os cartões de indicadores contados no banco da empresa ativa, abas de Metas e Alertas" width="360"></a> | <a href="docs/screenshots/04-usuarios.png"><img src="docs/screenshots/04-usuarios.png" alt="Tela de Usuários na aba Permissões (RBAC), com a matriz de recursos e ações por papel e a paginação no rodapé" width="360"></a> |
+| <a href="docs/screenshots/03-dashboard.png"><img src="docs/screenshots/03-dashboard.png" alt="Painel em tema escuro com os cartões de indicadores contados no banco da empresa ativa, abas de Metas e Alertas" width="360"></a> | <a href="docs/screenshots/11-vendas.png"><img src="docs/screenshots/11-vendas.png" alt="Tela de Vendas com a lista de pedidos, pílulas de situação e as ações de confirmar e cancelar" width="360"></a> |
 
-| Auditoria corporativa | Configurações · tema claro |
+| Financeiro | Editor da vitrine · tema escuro |
 | :--: | :--: |
-| <a href="docs/screenshots/05-auditoria.png"><img src="docs/screenshots/05-auditoria.png" alt="Tela de Auditoria em tema escuro com a trilha de logs da empresa, filtros e marcação das alterações sensíveis" width="360"></a> | <a href="docs/screenshots/06-configuracoes-claro.png"><img src="docs/screenshots/06-configuracoes-claro.png" alt="Tela de Configurações no tema dia, aba Minha conta: os dados da pessoa, o papel na empresa ativa e a troca de senha, cada bloco gravando sozinho" width="360"></a> |
-
-| Clientes | Produtos e estoque |
-| :--: | :--: |
-| <a href="docs/screenshots/07-clientes.png"><img src="docs/screenshots/07-clientes.png" alt="Tela de Clientes com KPIs, busca, tabela paginada e a coluna de ações na mesma linha" width="360"></a> | <a href="docs/screenshots/10-produtos.png"><img src="docs/screenshots/10-produtos.png" alt="Tela de Produtos com o catálogo, estoque, movimentações e os cartões de estoque baixo e sem estoque" width="360"></a> |
-
-| Vendas | Compras e fornecedores |
-| :--: | :--: |
-| <a href="docs/screenshots/11-vendas.png"><img src="docs/screenshots/11-vendas.png" alt="Tela de Vendas com a lista de pedidos, pílulas de situação e as ações de confirmar e cancelar" width="360"></a> | <a href="docs/screenshots/12-compras.png"><img src="docs/screenshots/12-compras.png" alt="Tela de Compras com os pedidos por fornecedor e o status rascunho, recebida e cancelada" width="360"></a> |
-
-| Financeiro | CRM (funil de leads) |
-| :--: | :--: |
-| <a href="docs/screenshots/13-financeiro.png"><img src="docs/screenshots/13-financeiro.png" alt="Tela do Financeiro com os KPIs do mês, lançamentos a pagar e receber e a central de categorias" width="360"></a> | <a href="docs/screenshots/14-crm.png"><img src="docs/screenshots/14-crm.png" alt="Tela do CRM com o funil de cinco estágios, contagem e soma de valor por etapa e os KPIs de conversão" width="360"></a> |
-
-| Vitrine montada pelo CMS · tema escuro | Vitrine montada pelo CMS · tema claro |
-| :--: | :--: |
-| <a href="docs/screenshots/19-landing-cms-dark.png"><img src="docs/screenshots/19-landing-cms-dark.png" alt="Página pública com a paleta, o herói, o banner, as capacidades, o depoimento, a métrica e a FAQ cadastrados no banco, em tema escuro" width="360"></a> | <a href="docs/screenshots/19-landing-cms-claro.png"><img src="docs/screenshots/19-landing-cms-claro.png" alt="A mesma vitrine com o alternador no tema dia: a paleta cadastrada no CMS continua mandando no fundo e no texto" width="360"></a> |
-
-| Modo manutenção | Texto legal publicado |
-| :--: | :--: |
-| <a href="docs/screenshots/19-manutencao.png"><img src="docs/screenshots/19-manutencao.png" alt="Tela de manutenção com a mensagem cadastrada, a contagem regressiva até a previsão de volta e o campo do código de pulso" width="360"></a> | <a href="docs/screenshots/19-legal-termos.png"><img src="docs/screenshots/19-legal-termos.png" alt="Página /legal/termos renderizando o documento publicado no banco, parágrafo por parágrafo" width="360"></a> |
-
-| Editor `/app/cms` · Conteúdo (tema noite) | Editor · Conteúdo (tema dia) |
-| :--: | :--: |
-| <a href="docs/screenshots/20-cms-conteudo-dark.png"><img src="docs/screenshots/20-cms-conteudo-dark.png" alt="Editor do site público na aba Conteúdo, tema escuro: textos do topo, as sete cores da vitrine com quadrado e hexadecimal, herói, WhatsApp, contato e redes, cada bloco com o seu botão de gravar" width="360"></a> | <a href="docs/screenshots/20-cms-conteudo-claro.png"><img src="docs/screenshots/20-cms-conteudo-claro.png" alt="A mesma aba Conteúdo no tema dia, com o painel claro e a paleta cadastrada continuando legível" width="360"></a> |
-
-| Itens da vitrine | Textos legais |
-| :--: | :--: |
-| <a href="docs/screenshots/20-cms-itens.png"><img src="docs/screenshots/20-cms-itens.png" alt="Aba Itens com o seletor de tipo, a lista dos cadastros e as ações de editar, esconder e excluir" width="360"></a> | <a href="docs/screenshots/20-cms-legais.png"><img src="docs/screenshots/20-cms-legais.png" alt="Aba Textos legais com Termos publicado, o botão discreto de rascunho e o dourado de publicar, e o endereço público do documento" width="360"></a> |
-
-| Nota de SEO | Modo manutenção |
-| :--: | :--: |
-| <a href="docs/screenshots/20-cms-seo.png"><img src="docs/screenshots/20-cms-seo.png" alt="Aba SEO com a nota da página, o nível colorido e as 12 checagens da API com o peso de cada uma" width="360"></a> | <a href="docs/screenshots/20-cms-manutencao.png"><img src="docs/screenshots/20-cms-manutencao.png" alt="Aba Manutenção com o interruptor, a mensagem, a previsão de volta, os IPs permitidos e o código de pulso gerado na tela" width="360"></a> |
-
-| Sino no cabeçalho | Tela de avisos |
-| :--: | :--: |
-| <a href="docs/screenshots/21-notificacoes-sino.png"><img src="docs/screenshots/21-notificacoes-sino.png" alt="Cabeçalho do painel com o sino e o contador de não lidos, o painel aberto ao lado com os últimos seis avisos e o atalho para a conta completa" width="360"></a> | <a href="docs/screenshots/21-notificacoes-tela.png"><img src="docs/screenshots/21-notificacoes-tela.png" alt="Tela /app/notificacoes na aba Todos os avisos: pílulas de não lidos e urgentes, chips de filtro por tipo com contagem e a lista paginada no servidor" width="360"></a> |
-
-| Só os não lidos | Preferências por tipo |
-| :--: | :--: |
-| <a href="docs/screenshots/21-notificacoes-naolidos.png"><img src="docs/screenshots/21-notificacoes-naolidos.png" alt="Aba Não lidos com o filtro Financeiro aplicado, o badge de contagem na aba e as ações Abrir e Marcar lida na linha" width="360"></a> | <a href="docs/screenshots/21-notificacoes-preferencias.png"><img src="docs/screenshots/21-notificacoes-preferencias.png" alt="Aba Preferências com os cinco tipos de aviso, o canal in-app de cada um e o canal de e-mail desligado com o motivo" width="360"></a> |
+| <a href="docs/screenshots/13-financeiro.png"><img src="docs/screenshots/13-financeiro.png" alt="Tela do Financeiro com os KPIs do mês, lançamentos a pagar e receber e a central de categorias" width="360"></a> | <a href="docs/screenshots/20-cms-conteudo-dark.png"><img src="docs/screenshots/20-cms-conteudo-dark.png" alt="Editor do site público na aba Conteúdo, tema escuro: textos do topo, as sete cores da vitrine com quadrado e hexadecimal, herói, WhatsApp, contato e redes, cada bloco com o seu botão de gravar" width="360"></a> |
 
 </div>
 
-Duas séries fora do quadro de 1440×900 existem no repositório e são honestas sobre o próprio tamanho: as
-capturas da Agenda e da navegação por abas (`docs/screenshots/17-agenda-*.png` e `18-tabs-*.png`) foram
-feitas em **1440×960**, porque a barra de abas e o calendário não cabem nos 900 de altura. As capturas do
-diálogo de confirmação e da sidebar (`16-sidebar-*.png`, `17-confirm-*.png`) mostram celular em 390px de
-largura quando a legenda diz isso.
-
-As capturas da vitrine (`19-*.png`) saíram do meio de `tools/verify-landing-cms.cjs` e são 1440×900,
-menos `19-landing-cms-celular.png`, que é 390×844 porque mostra a barra de navegação recolhida no celular. O
-conteúdo nelas — "Gestão empresarial com a cara do seu negócio", as capacidades e o depoimento de exemplo — foi
-cadastrado pela própria prova, pela API, conferido na tela e apagado no fim, para a vitrine voltar ao padrão
-da casa. `01-landing.png` é a mesma página com o banco do jeito que ele está hoje.
-
-As capturas do editor (`20-*.png`) saíram de `tools/verify-cms.cjs`, em 1440×900, menos
-`20-cms-celular.png` (390×844). Nelas está o conteúdo que a própria prova cadastrou pela tela — a headline
-"Gestão empresarial com precisão e elegância" é o padrão da casa porque a prova devolve a vitrine ao padrão
-no último passo, e confere isso recarregando o editor.
-
-As capturas dos avisos (`21-notificacoes-*.png`) saíram de `tools/verify-notificacoes.cjs`, em 1440×900, menos
-`21-notificacoes-celular.png` (390×844). Os doze lançamentos vencidos que enchem o sino vieram da própria prova:
-ela cadastra contas a pagar vencidas pela API, dispara a varredura administrativa, confere número, painel,
-paginação e preferências na tela, e no fim apaga os avisos e os lançamentos que fabricou pelo Prisma — o produto
-não tem rota para excluir aviso, então limpar dado de teste é responsabilidade de quem o criou. As capturas da
-sidebar (`16-*.png`) e do editor (`20-*.png`) foram recapturadas na mesma rodada e mostram o sino no cabeçalho.
+As outras capturas continuam em `docs/screenshots/` com a origem declarada: a vitrine montada pelo banco
+(`19-*`) saiu de `tools/verify-landing-cms.cjs`; o editor (`20-*`), de `tools/verify-cms.cjs`; os avisos
+(`21-*`), de `tools/verify-notificacoes.cjs`; as rotinas agendadas (`23-*`), de `tools/verify-rotinas.cjs`;
+a agenda e a navegação por abas (`17-*`, `18-*`) saíram em **1440×960** porque calendário e barra de abas
+não cabem nos 900 de altura; e os arquivos com `-celular` no nome têm 390×844. Nas capturas de prova o
+conteúdo cadastrado pela própria volta ao padrão da casa no último passo — `01-landing.png` é a vitrine
+com o banco do jeito que ele está hoje.
 
 ---
 
@@ -324,6 +268,22 @@ qualquer tela do painel — sem recarregar a página, sem biblioteca de ícones 
 - Quem não tem `settings:write` lê tudo e não grava nada: no lugar do botão, o bloco explica que só quem
   administra a empresa grava ali
 
+### Rotinas agendadas
+
+- Três varreduras no relógio do servidor, escrevendo aviso pelo mecanismo de notificações que já existia:
+  contas vencidas às 07:00, estoque baixo às 07:05 e o relatório do dia anterior às 08:00 — o sino avisa sem
+  que ninguém precise abrir uma tela
+- O cron é interpretado por parser próprio de cinco peças, com lista, intervalo e passo; agenda
+  inválida volta 400 apontando a peça, e a tela mostra a tradução em português ("todos os dias às 07:00")
+- O executor é um só: o relógio e o botão "Executar agora" chamam a mesma função, que não deixa a mesma
+  rotina rodar duas vezes ao mesmo tempo e grava última execução, status, mensagem e duração na `cron_jobs`
+- Cada varredura tem chave de duplicação por dia ou por mês — rodar duas vezes no mesmo dia não gera dois
+  avisos — e o relatório diário só chega a quem ligou a preferência daquele tipo
+- `/app/rotinas` traz agenda, próxima execução e último resultado de cada rotina, com pausar passando pelo
+  diálogo de confirmação; rotas e botões só para quem tem `settings:write`
+- `CRON_ENABLED=0` desliga o relógio do processo: a suíte de testes sobe o app sem relógio nenhum, e um
+  segundo servidor não marca a hora duas vezes
+
 ### Auditoria, equipe e sessões
 
 - Trilha de auditoria por empresa com autor, ação, entidade, `entity_id`, metadados, IP e hora; escrita é
@@ -459,7 +419,7 @@ se o site está aberto ou em manutenção. A vitrine é única para toda a plata
 | Documentos legais (Termos, Privacidade, LGPD) | ✅ | ✅ | ✅ | `/legal/:kind` mostra só o que está publicado; rascunho e publicação na aba Textos legais do editor |
 | Modo manutenção da plataforma | ✅ (mesma tabela) | ✅ | ✅ | 503 com mensagem e previsão na API e na tela, contagem regressiva, pulso em tempo constante, IP permitido e o código guardado na aba |
 | Modelos de e-mail | ✅ | 🚧 | 🚧 | tabela `email_templates` criada; SMTP ainda não existe |
-| Rotinas agendadas (cron) | ✅ | 🚧 | 🚧 | tabela `cron_jobs` criada, sem executor |
+| Rotinas agendadas (cron) | ✅ | ✅ 3 rotas | ✅ | no ar: `/app/rotinas` com as três varreduras do relógio — contas vencidas, estoque baixo e relatório diário —, liga/pausa e "Executar agora" |
 | Gateways e cobranças | ✅ | 🚧 | 🚧 | tabelas com provedores (`MERCADO_PAGO`, `EFI`, `STRIPE`) e ambiente; **nenhuma integração inventada** enquanto não houver credencial real |
 | Ordens de serviço / atendimento em campo | 🚧 | 🚧 | 🚧 | só a linha "em breve" no menu — sem tabela, sem rota, sem botão morto |
 | SaaS: planos, assinaturas e faturas | 🚧 | 🚧 | 🚧 | a caminho |
@@ -525,30 +485,30 @@ importa só o CSS do AdminLTE) e `sweetalert2` (substituído pelo diálogo de co
         migrations/            12 migrations, da fundação ao conteúdo da vitrine
         seed.ts                admin global + conta de dev + empresa nexus-demo (vazia)
       src/
-        app.ts                 15 módulos + modo manutenção antes das rotas + parser de corpo vazio
+        app.ts                 16 módulos + modo manutenção antes das rotas + parser de corpo vazio
                                + handler de erro e 404
         config/env.ts          .env validado com Zod (subida falha cedo)
         lib/                   errors, rbac, company-context, audit, pagination, tokens, password, prisma
         plugins/               security.ts, auth.ts (decorator `authenticate`),
                                    maintenance.ts (gancho global com allowlist de volta)
         modules/               auth, companies, users, audit, clients, products, sales,
-                               purchases, finance, crm, agenda, reports, notifications, cms, health
+                               purchases, finance, crm, agenda, reports, notifications, cms, cron, health
                                — cada módulo com <x>.routes.ts e <x>.service.ts
-        test/                  14 arquivos de integração contra MySQL real + helpers.ts
+        test/                  16 arquivos de integração contra MySQL real + helpers.ts
     web/
       src/
         App.tsx                rotas públicas, /app/* protegida e as páginas de erro
         styles/                tokens.css, tailwind.css, global.css, components.css, landing.css,
                                cms.css, notificacoes.css
         lib/                   api, confirm, notify, csv, format, auditLabels, uiCopy, validators,
-                               tokenStore, landingApi, landingTypes, landingEstilo, cmsApi, notificationsApi
+                               tokenStore, landingApi, landingTypes, landingEstilo, cmsApi, notificationsApi, cronApi
         context/               AuthContext, ThemeContext
         components/            Tabs, Pagination, Modal, ConfirmationModal, StateView,
                                PasswordInput, ProtectedRoute, ThemeToggle, landing/, cms/,
                                layout/ (AdminShell, NotificationBell)
         pages/                 Landing, Legal, Login, Register, ForgotPassword, Dashboard, Clients,
                                Products, Sales, Purchases, Finance, CRM, Agenda, Users, Audit, Settings,
-                               Cms, Notifications, erros
+                               Cms, Notifications, Rotinas, erros
   assets/brand/logo/           logo oficial e os recortes usados pelo favicon
   docs/
     ANALISE.md                 matriz de análise da fase 1, com evidências
@@ -616,7 +576,7 @@ tipados como `VarChar(36)` para manter as chaves compostas dentro do limite do I
 | Vendas e compras | `Sale`, `SaleItem`, `Supplier`, `Purchase`, `PurchaseItem` |
 | Financeiro | `FinanceCategory`, `FinanceEntry` |
 | Notificações | `Notification`, `NotificationPreference` |
-| Site público e operações (API no ar, tela por fazer) | `LandingConfig`, `LandingItem`, `LegalDocument`, `EmailTemplate`, `CronJob`, `PaymentGateway` |
+| Site público e operações | `LandingConfig`, `LandingItem`, `LegalDocument`, `CronJob`, `EmailTemplate`, `PaymentGateway` — site, manutenção e rotinas já têm tela; modelos de e-mail e gateways seguem só tabela |
 
 Quinze enums dão o vocabulário: `Role`, `SaleStatus`, `PurchaseStatus`, `StockMovementKind`, `EntryType`,
 `EntryStatus`, `LeadStatus`, `AgendaEventType`, `AgendaRecurrence`, `AgendaStatus`,
@@ -740,7 +700,7 @@ processo com a mensagem do caminho exato, em vez de deixar o serviço subir queb
 
 ```bash
 npm run typecheck          # api + web
-npm test                   # 14 arquivos · 81 testes de integração contra MySQL real
+npm test                   # 16 arquivos · 113 testes de integração contra MySQL real
 npm run build              # produção (tsc + vite build)
 ```
 
@@ -753,6 +713,8 @@ npm run build              # produção (tsc + vite build)
 | `clients.test.ts`, `products.test.ts`, `sales.test.ts`, `purchases.test.ts`, `finance.test.ts`, `crm.test.ts`, `agenda.test.ts` | regras de negócio de cada módulo, incluindo baixa e estorno de estoque, custo atualizado na compra recebida, conversão de lead em cliente e expansão de recorrência |
 | `notifications.test.ts` | aviso chega à equipe mas não a quem agiu, prioridade do estoque zerado, preferência por tipo, contador do sino, varredura uma vez por mês e bloqueio de varredura por atendente |
 | `cms.test.ts` | payload público sem vazamento de pulso, RBAC por papel, merge bloco a bloco, item que nasce, some e exclui de verdade, texto legal antes e depois de publicar, nota SEO, o modo manutenção com pulso e IP, e POST sem corpo aceito enquanto JSON escrito errado continua 400 |
+| `settings.test.ts` | escrita parcial que não apaga o bloco que não veio, `""` e `null` que limpam, CNPJ conferido no servidor, DDD, UF, moeda e fuso fora da lista rejeitados, campo inventado em 400, `settings:write` só para dono e administrador, conta editável por todo papel e troca de senha que derruba as outras sessões |
+| `cron.test.ts` | as cinco peças com lista, intervalo e passo, as formas inválidas que voltam 400, a agenda traduzida, o RBAC de `/ops/jobs`, liga e pausa, e as três rotinas executadas de verdade — vencida que grava aviso com chave de duplicação, estoque crítico e relatório diário que só chega a quem ligou a preferência |
 
 Além da suíte, o repositório guarda provas que dirigem o navegador (Puppeteer) e medem pixels, com as
 capturas desta página como subproduto:
@@ -762,6 +724,8 @@ capturas desta página como subproduto:
 | `tools/verify-notificacoes.cjs` | 85 — o sino e a tela de avisos sobre dado fabricado pela própria prova: número conferido com a API, painel com os seis recentes, marcar lida no banco seguindo para o Financeiro, as três abas com badge, paginação medida contra `meta.total` do servidor, filtro por tipo, CRM sem aviso do tipo, marcar todos até o vazio, preferências gravadas, lidas de novo após reload e devolvidas ao padrão, tema claro e os 390px |
 | `tools/verify-cms.cjs` | 115 — o editor `/app/cms` aba por aba: cada gravação conferida no payload público e na vitrine renderizada, item criado/escondido/editado/excluído pelo modal, texto legal saindo do 404 para a página, nota de SEO igual na tela e na API, o site fechado em 503 com mensagem e relógio, o código de pulso gerado e usado, tudo devolvido ao padrão, os dois temas e os 390px |
 | `tools/verify-landing-cms.cjs` | 105 — a vitrine montada pelo banco: texto, paleta nos dois temas, âncoras, itens, contato, WhatsApp, cookies, SEO, páginas legais, três larguras sem arrasto e a manutenção de ponta a ponta (contagem, pulso, IP e o código na sessão) |
+| `tools/verify-configuracoes.cjs` | 108 — as quatro abas do `/app/configuracoes` gravando de verdade: telefone e CNPJ conferidos na tela e na API, um bloco salvo sem tocar nos outros, CEP/UF/cidade, moeda que chega à sessão e ao painel, meta que vira régua, o STAFF lendo tudo sem botão de gravar, troca de senha que não despeja a pessoa, os dois temas e os 390px — com empresa e conta devolvidas ao estado de antes |
+| `tools/verify-rotinas.cjs` | 37 — a tela `/app/rotinas` com as três varreduras, agenda traduzida e próxima execução conferidas contra a API; "Executar agora" que grava o aviso no banco e mostra no toast a mensagem da rotina; pausar pelo diálogo de confirmação e retomar; o atendente sem permissão; o tema claro e os 390px — jobs, avisos e usuário de prova devolvidos ao estado de antes |
 | `tools/verify-sidebar.cjs` | 87 — ordem e tipografia das seis camadas, itens por permissão, modo trilha, peek, linhas "em breve" e o tema claro |
 | `tools/verify-acoes-confirm.cjs` | 88 — coluna de ações de nove tabelas, anatomia do diálogo, trava de duplo clique, Esc durante a requisição, tema claro e celular |
 | `tools/shoot-tabs.cjs` | 447 — abas, paginação, respiro medido e legibilidade do histórico em 9 páginas, desktop e celular |
@@ -798,19 +762,19 @@ paginação no servidor · CMS da vitrine no servidor e na tela (configuração 
 itens por tipo com `meta`, a página pública montada a partir do banco, textos legais publicados, nota de SEO
 medida e modo manutenção com contagem regressiva, pulso e IP) · editor `/app/cms` com as cinco abas de
 conteúdo, itens, textos legais, SEO e manutenção, cada bloco gravando sozinho · tela de Configurações em quatro abas (conta, empresa, aparência e
-empresas), com cadastro, endereço, moeda, fuso, idioma, logo e meta de receita gravando bloco a bloco ·
+empresas), com cadastro, endereço, moeda, fuso, idioma, logo e meta de receita gravando bloco a bloco · rotinas agendadas no relógio do
+servidor com parser de cron próprio, executor único e a tela `/app/rotinas` com liga/pausa ·
 sidebar em camadas com peek e gaveta · abas e paginação padronizadas em todas as telas · identidade Premium
 Gourmet nos dois temas, favicon oficial e as provas automatizadas desta página · credencial do administrador
 fora do git, com histórico reescrito antes do primeiro push.
 
 ### A seguir
 
-1. **Modelos de e-mail** — a tela de Termos, Privacidade e LGPD depende da mesma rota de edição do CMS;
+1. **Modelos de e-mail** — cadastrar e editar os modelos guardados em `email_templates`;
    SMTP só depois de haver credencial real
-2. **Rotinas agendadas** — executor das varreduras hoje manuais (contas vencidas, relatório diário)
-3. **Gateways e cobranças** — só com credencial de ambiente; nada de integração de fachada
-4. **Ordens de serviço / atendimento** — módulo novo com o mesmo padrão de estado vigiado e auditoria
-5. **SaaS: planos, assinaturas e faturas** · **backup e restauração** · **CI** com suíte automatizada na
+2. **Gateways e cobranças** — só com credencial de ambiente; nada de integração de fachada
+3. **Ordens de serviço / atendimento** — módulo novo com o mesmo padrão de estado vigiado e auditoria
+4. **SaaS: planos, assinaturas e faturas** · **backup e restauração** · **CI** com suíte automatizada a
    cada push
 
 ---
@@ -835,6 +799,8 @@ O detalhamento está em [`CHANGELOG.md`](CHANGELOG.md) (Keep a Changelog, mais n
 | `2c50ea4 → 5e44160` | A página pública passou a ser montada a partir do banco — paleta, herói, capacidades, depoimentos, métricas, dúvidas, contato, WhatsApp, cookies, `/legal/:kind` e a tela de manutenção com contagem e pulso; POST sem corpo voltou a ser ação e a suíte fechou em 81 testes |
 | `4793f16 → sino` | O sino entrou em cena: contador no cabeçalho em toda tela do painel, painel dos seis avisos recentes, `/app/notificacoes` com três abas, filtro por tipo, paginação no servidor e preferências, o sino liberado no portão de manutenção e a prova `verify-notificacoes.cjs` com 85 checagens e seis capturas |
 | `5dce492 → editor` | O editor do CMS chegou: `/app/cms` com as cinco abas, o botão de manutenção que acompanha o rascunho, rascunho e publicação em cores diferentes, a nota de SEO com as 12 checagens na tela, o atalho único para a vitrine e a prova `verify-cms.cjs` com 115 checagens e dez capturas |
+| `d529919 → da9e17e` | Configurações da conta e da empresa em quatro abas: cadastro conferido no servidor, moeda/fuso/idioma regendo o painel, logo, meta de receita e troca de senha que derruba as outras sessões; prova `verify-configuracoes.cjs` com 108 checagens e a suíte em 102 testes |
+| `da9e17e → rotinas` | O relógio do servidor entrou em cena: parser de cron próprio, três varreduras que avisam pelo sino, executor único para a agenda e para o botão "Executar agora", `/app/rotinas` com liga/pausa, prova `verify-rotinas.cjs` com 37 checagens e a suíte em 113 testes |
 
 ---
 
