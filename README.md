@@ -22,15 +22,16 @@
   <img src="https://img.shields.io/badge/Vite-5-646CFF?logo=vite&logoColor=white" alt="Vite 5">
   <img src="https://img.shields.io/badge/AdminLTE-4.10-343a40?logo=laravel&logoColor=white" alt="AdminLTE 4.10">
   <img src="https://img.shields.io/badge/Tailwind-4-06B6D4?logo=tailwindcss&logoColor=white" alt="Tailwind 4">
-  <img src="https://img.shields.io/badge/testes-70%20testes%20em%2013%20arquivos-brightgreen" alt="70 testes em 13 arquivos">
+  <img src="https://img.shields.io/badge/testes-80%20testes%20em%2014%20arquivos-brightgreen" alt="80 testes em 14 arquivos">
 </p>
 
 <p align="center">
   <sub>Estágio atual: a fundação e os módulos do dia a dia estão no ar — autenticação, papéis,
-  multiempresa, clientes, produtos e estoque, vendas, compras, financeiro, CRM, agenda, auditoria,
-  equipe e notificações (o backend delas; o sino na tela ainda não chegou). O que existe como tabela
-  pronta mas sem tela (CMS da página pública, documentos legais, modelos de e-mail, rotinas agendadas e
-  gateways de pagamento) e o que ainda nem tem tabela está marcado um por um em
+  multiempresa, clientes, produtos e estoque, vendas, compras, financeiro, CRM, agenda, auditoria e
+  equipe. Duas frentes têm API sem tela: o CMS da página pública (conteúdo, textos legais, SEO e modo
+  manutenção já no servidor; a landing montada a partir dele e o editor ainda não) e as notificações
+  (o sino na tela ainda não chegou). O que existe como tabela pronta mas sem módulo (modelos de
+  e-mail, rotinas agendadas e gateways de pagamento) e o que ainda nem tem tabela está marcado um por um em
   <a href="#m%C3%B3dulos">Módulos</a> e no <a href="#roadmap">Roadmap</a>. Nada no menu aponta para uma
   rota que não existe: módulo em construção aparece apagado, com "em breve".</sub>
 </p>
@@ -287,9 +288,27 @@ A parte que grava e calcula está no ar; a parte que toca a pessoa (o sino no ca
 
 A rota `/` hoje é a landing estática da marca: cabeçalho com logo e troca de tema, herói com o emblema
 animado, título, subtítulo e a chamada para entrar, quatro cartões de capacidade e rodapé — textos isolados
-em `landing/copy.ts`, animação escalonada respeitando `prefers-reduced-motion`. O CMS que coloca cor,
-banners, depoimentos, FAQ, textos legais, SEO e manutenção no banco — para editar sem deploy — está em
-construção: as tabelas existem, o módulo de API e o editor `/app/cms` ainda não.
+em `landing/copy.ts`, animação escalonada respeitando `prefers-reduced-motion`.
+
+O CMS que coloca esse conteúdo no banco, para editar sem deploy, está no ar do lado do servidor; a landing
+consumindo ele e a tela do editor ainda não. A vitrine é uma só para toda a plataforma, então o conteúdo não
+tem `company_id` e as permissões `content:read`/`content:write` ficaram com o OWNER:
+
+- **Configuração (`GET/PATCH /api/cms/config`)** — cores, WhatsApp, SEO, herói (CTAs, imagem de fundo,
+  overlay e desfoque), redes e contato. A gravação é bloco a bloco: mexer nas cores não apaga o WhatsApp, e
+  o bloco ausente cai no padrão da casa
+- **Itens por tipo (`/api/cms/items`)** — banners, capacidades, depoimentos (estrelas e empresa), métricas
+  (valor e formato) e FAQs, com ordem e ativo/inativo; o `meta` Json guarda os extras de cada tipo
+- **Leitura pública (`GET /api/public/landing`)** — o payload anônimo com cache de 10 segundos, cinco
+  grupos de itens e o resumo da manutenção, de onde o token de pulso nunca sai
+- **Textos legais** — Termos, Privacidade e LGPD em `/api/cms/legal`, e `/api/public/legal/:kind` responde
+  404 enquanto o texto não estiver publicado
+- **SEO medido (`GET /api/cms/seo/score`)** — nota e nível a partir de 12 checagens do que está de fato
+  publicado, incluindo contato visível e textos legais
+- **Modo manutenção** — gancho antes das rotas fecha a API de negócio com 503, mensagem e previsão, mas
+  `/api/health`, `/api/auth`, `/api/public` e `/api/cms` ficam abertos porque é por ali que se desliga o
+  modo. Passam o token de pulso (18 hex, comparado em tempo constante) e os IPs permitidos; o bypass público
+  devolve só `{liberado}`
 
 ---
 
@@ -313,8 +332,9 @@ construção: as tabelas existem, o módulo de API e o editor `/app/cms` ainda n
 | Usuários e membros de empresa | ✅ | ✅ 6 rotas | ✅ | no ar |
 | Notificações e preferências | ✅ | ✅ 7 rotas | 🚧 | backend no ar, sino e tela por fazer |
 | Configurações da conta e aparência | ✅ | ✅ | 🚧 | tema, conta e troca de empresa no ar; endereço, logo, moeda, fuso e meta têm coluna e não têm tela |
-| CMS da página pública (cores, banners, FAQ, depoimentos) | ✅ | 🚧 | 🚧 | tabelas `landing_configs`, `landing_items`, `legal_documents` criadas; módulo e editor por fazer |
-| Documentos legais (Termos, Privacidade, LGPD) | ✅ | 🚧 | 🚧 | tabela criada, sem rota nem tela |
+| CMS da página pública (cores, banners, FAQ, depoimentos) | ✅ | ✅ 14 rotas | 🚧 | config bloco a bloco, itens com `meta`, payload público com cache e nota SEO no ar; landing e editor `/app/cms` por fazer |
+| Documentos legais (Termos, Privacidade, LGPD) | ✅ | ✅ | 🚧 | edição em `/api/cms/legal` e rota pública que só responde publicado; falta a tela |
+| Modo manutenção da plataforma | ✅ (mesma tabela) | ✅ | 🚧 | 503 com mensagem e previsão, allowlist de volta, pulso em tempo constante e IP permitido; falta a tela |
 | Modelos de e-mail | ✅ | 🚧 | 🚧 | tabela `email_templates` criada; SMTP ainda não existe |
 | Rotinas agendadas (cron) | ✅ | 🚧 | 🚧 | tabela `cron_jobs` criada, sem executor |
 | Gateways e cobranças | ✅ | 🚧 | 🚧 | tabelas com provedores (`MERCADO_PAGO`, `EFI`, `STRIPE`) e ambiente; **nenhuma integração inventada** enquanto não houver credencial real |
@@ -379,17 +399,18 @@ importa só o CSS do AdminLTE) e `sweetalert2` (substituído pelo diálogo de co
     api/
       prisma/
         schema.prisma          27 models, 15 enums, todas as tabelas com @@map
-        migrations/            11 migrations, da fundação ao bloco de admin/CMS/operações
+        migrations/            12 migrations, da fundação ao conteúdo da vitrine
         seed.ts                admin global + conta de dev + empresa nexus-demo (vazia)
       src/
-        app.ts                 registro dos 14 módulos + handler de erro e de 404
+        app.ts                 15 módulos + modo manutenção antes das rotas + handler de erro e 404
         config/env.ts          .env validado com Zod (subida falha cedo)
         lib/                   errors, rbac, company-context, audit, pagination, tokens, password, prisma
-        plugins/               security.ts, auth.ts (decorator `authenticate`)
+        plugins/               security.ts, auth.ts (decorator `authenticate`),
+                                   maintenance.ts (gancho global com allowlist de volta)
         modules/               auth, companies, users, audit, clients, products, sales,
-                               purchases, finance, crm, agenda, reports, notifications, health
+                               purchases, finance, crm, agenda, reports, notifications, cms, health
                                — cada módulo com <x>.routes.ts e <x>.service.ts
-        test/                  13 arquivos de integração contra MySQL real + helpers.ts
+        test/                  14 arquivos de integração contra MySQL real + helpers.ts
     web/
       src/
         App.tsx                rotas públicas, /app/* protegida e as páginas de erro
@@ -467,7 +488,7 @@ tipados como `VarChar(36)` para manter as chaves compostas dentro do limite do I
 | Vendas e compras | `Sale`, `SaleItem`, `Supplier`, `Purchase`, `PurchaseItem` |
 | Financeiro | `FinanceCategory`, `FinanceEntry` |
 | Notificações | `Notification`, `NotificationPreference` |
-| Site público e operações (sem tela ainda) | `LandingConfig`, `LandingItem`, `LegalDocument`, `EmailTemplate`, `CronJob`, `PaymentGateway` |
+| Site público e operações (API no ar, tela por fazer) | `LandingConfig`, `LandingItem`, `LegalDocument`, `EmailTemplate`, `CronJob`, `PaymentGateway` |
 
 Quinze enums dão o vocabulário: `Role`, `SaleStatus`, `PurchaseStatus`, `StockMovementKind`, `EntryType`,
 `EntryStatus`, `LeadStatus`, `AgendaEventType`, `AgendaRecurrence`, `AgendaStatus`,
@@ -477,12 +498,12 @@ Unicidade que importa: e-mail global; `slug` de empresa; `company_users (user_id
 cliente, SKU de produto, nome de categoria, nome de fornecedor e nome+tipo de categoria financeira são únicos
 **dentro da empresa**, não no banco inteiro. `dedupe_key` segura a duplicação de aviso nas varreduras.
 
-Onze migrations, na ordem em que chegaram:
+Doze migrations, na ordem em que chegaram:
 
 ```text
 init_foundation → add_clients → add_auth_flows → add_products_stock → add_sales →
 add_suppliers_purchases → add_finance → add_crm → add_agenda → add_agenda_recorrencia →
-add_admin_cms_ops
+add_admin_cms_ops → add_cms_content
 ```
 
 Comandos:
@@ -513,7 +534,7 @@ cp apps/api/.env.example apps/api/.env
 # edite apps/api/.env: DATABASE_URL, JWT_ACCESS_SECRET, JWT_REFRESH_SECRET
 # e SEED_ADMIN_PASSWORD com a senha do administrador definitivo (CREDENCIAIS.md)
 
-npm run db:migrate            # aplica as 11 migrations
+npm run db:migrate            # aplica as 12 migrations
 npm run db:seed               # admin global + admin@nexus.local + empresa nexus-demo (vazia)
 ```
 
@@ -576,10 +597,11 @@ processo com a mensagem do caminho exato, em vez de deixar o serviço subir queb
 |---|---|
 | Senha | bcrypt 12 rounds; política de 8+/maiúscula/especial no backend e nos formulários; nenhum valor de senha registrado no git, e o histórico foi reescrito antes do primeiro push |
 | Tokens | access JWT de curta duração; refresh hasheado (HMAC-SHA256) com rotação, revogação por sessão e revogação total ao trocar a senha de recuperação |
-| Autorização | mapa central `recurso:ação` verificado no servidor em toda rota de escrita; 403 antes de qualquer botão existir na tela |
+| Autorização | mapa central `recurso:ação` verificado no servidor em toda rota de escrita; 403 antes de qualquer botão existir na tela. Conteúdo do site público é recurso `content`, só do OWNER |
 | Isolamento | empresa ativa vem do token e é revalidada contra `company_users` a cada request; toda leitura filtra por `companyId`, então registro de outra empresa devolve 404; teste dedicado de vazamento entre tenants |
 | Validação | Zod em todas as entradas; categorias e tipos cruzados validados; `pageSize` acima do limite devolve 400 |
-| Tráfego | helmet, CORS restrito por env, rate-limit global 100/min e limites próprios em login (10/min), cadastro e recuperação (5/min) |
+| Tráfego | helmet, CORS restrito por env, rate-limit global 100/min e limites próprios em login (10/min), cadastro e recuperação (5/min) e bypass da manutenção (30/min) |
+| Disponibilidade | modo manutenção fecha a API de negócio com 503 e deixa `/api/health`, `/api/auth`, `/api/public` e `/api/cms` abertos; quem entra com o token de pulso (comparação em tempo constante) ou o IP permitido |
 | Auditoria | toda escrita relevante grava autor, empresa, ação, entidade, metadados e IP; tela somente leitura; marcação de alteração sensível feita no servidor |
 | Respostas de erro | handler central com códigos coerentes (400/401/403/404/409/429/500) e sem stack em produção |
 | Terceiros | **nenhuma integração inventada**: gateways de pagamento e SMTP têm tabela mas não têm chamada; o canal de e-mail fica guardado e desligado enquanto não houver credencial real |
@@ -590,7 +612,7 @@ processo com a mensagem do caminho exato, em vez de deixar o serviço subir queb
 
 ```bash
 npm run typecheck          # api + web
-npm test                   # 13 arquivos · 70 testes de integração contra MySQL real
+npm test                   # 14 arquivos · 80 testes de integração contra MySQL real
 npm run build              # produção (tsc + vite build)
 ```
 
@@ -602,6 +624,7 @@ npm run build              # produção (tsc + vite build)
 | `pagination.test.ts` | `{data, meta}` coerente e `pageSize` acima do limite → 400 |
 | `clients.test.ts`, `products.test.ts`, `sales.test.ts`, `purchases.test.ts`, `finance.test.ts`, `crm.test.ts`, `agenda.test.ts` | regras de negócio de cada módulo, incluindo baixa e estorno de estoque, custo atualizado na compra recebida, conversão de lead em cliente e expansão de recorrência |
 | `notifications.test.ts` | aviso chega à equipe mas não a quem agiu, prioridade do estoque zerado, preferência por tipo, contador do sino, varredura uma vez por mês e bloqueio de varredura por atendente |
+| `cms.test.ts` | payload público sem vazamento de pulso, RBAC por papel, merge bloco a bloco, item que nasce, some e exclui de verdade, texto legal antes e depois de publicar, nota SEO e o modo manutenção com pulso e IP |
 
 Além da suíte, o repositório guarda provas que dirigem o navegador (Puppeteer) e medem pixels, com as
 capturas desta página como subproduto:
@@ -639,19 +662,21 @@ Fundação (auth, RBAC, multiempresa, auditoria, tema, estados globais, Toastr, 
 paginação, páginas de erro) · cadastros operacionais (clientes, produtos e estoque) · operação (vendas com
 baixa e estorno, compras e fornecedores, financeiro, CRM com conversão, agenda com recorrência e FullCalendar
 6) · painel com relatórios agregados e CSV · equipe, matriz RBAC e sessões com revogação · notificações no
-servidor com preferências e varredura · sidebar em camadas com peek e gaveta · abas e paginação padronizadas
-em todas as telas · identidade Premium Gourmet nos dois temas, favicon oficial e as provas automatizadas
-desta página · credencial do administrador fora do git, com histórico reescrito antes do primeiro push.
+servidor com preferências e varredura · CMS da vitrine no servidor (configuração bloco a bloco,
+itens por tipo com `meta`, textos legais publicados, nota de SEO medida e modo manutenção com pulso e IP) ·
+sidebar em camadas com peek e gaveta · abas e paginação padronizadas em todas as telas · identidade Premium
+Gourmet nos dois temas, favicon oficial e as provas automatizadas desta página · credencial do administrador
+fora do git, com histórico reescrito antes do primeiro push.
 
 ### A seguir
 
 1. **Sino e tela de notificações** — o backend já entrega `/count`, lista e preferências; falta a interface
 2. **Configurações completas** — endereço, logo, moeda, fuso, idioma e meta de receita têm coluna e não têm
    tela; falta o formulário com as regras de cada campo
-3. **CMS da página pública** — módulo de API, editor `/app/cms` e a landing montada a partir do banco, com
-   manutenção, bypass e SEO medido
-4. **Documentos legais e modelos de e-mail** — Termos, Privacidade e LGPD publicados pela tela; SMTP só
-   depois de haver credencial real
+3. **CMS na tela** — a landing montada a partir do banco e o editor `/app/cms`; o servidor já entrega
+   conteúdo, textos legais, SEO medido e modo manutenção
+4. **Modelos de e-mail** — a tela de Termos, Privacidade e LGPD depende da mesma rota de edição do CMS;
+   SMTP só depois de haver credencial real
 5. **Rotinas agendadas** — executor das varreduras hoje manuais (contas vencidas, relatório diário)
 6. **Gateways e cobranças** — só com credencial de ambiente; nada de integração de fachada
 7. **Ordens de serviço / atendimento** — módulo novo com o mesmo padrão de estado vigiado e auditoria
@@ -676,6 +701,7 @@ O detalhamento está em [`CHANGELOG.md`](CHANGELOG.md) (Keep a Changelog, mais n
 | `3b5c6c5 → 99cae5b` | Notificações persistentes no servidor e o diálogo central de confirmação |
 | `d81c164 → e18a855` | Sidebar em camadas com o mapa real do produto; a senha do administrador saiu do repositório, com histórico reescrito |
 | `7e507d8` | Provas da sidebar e do diálogo recapturadas |
+| `60941a3 → ca156a7` | README como ficha do produto e CMS da vitrine no servidor: conteúdo bloco a bloco, itens com `meta`, textos legais publicados, SEO medido e modo manutenção com pulso e IP |
 
 ---
 
