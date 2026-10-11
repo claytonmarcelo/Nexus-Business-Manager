@@ -7,7 +7,13 @@ import { SOBRE_LANDING } from "./copy";
 // que o dono do site cadastre uma métrica de verdade na seção seguinte.
 export function AboutSection({ metricas }: { metricas: ItemMetrica[] }) {
   return (
-    <section className="landing-sobre" id="sobre" aria-label="Sobre o sistema">
+    // Sem métrica cadastrada a segunda coluna da grade ficaria vazia: a classe
+    // abaixo devolve a linha inteira ao texto, com comprimento de leitura próprio.
+    <section
+      className={"landing-sobre" + (metricas.length > 0 ? "" : " landing-sobre-sem-metricas")}
+      id="sobre"
+      aria-label="Sobre o sistema"
+    >
       <div className="landing-sobre-texto">
         <h2>{SOBRE_LANDING.titulo}</h2>
         {SOBRE_LANDING.paragrafos.map((paragrafo) => (

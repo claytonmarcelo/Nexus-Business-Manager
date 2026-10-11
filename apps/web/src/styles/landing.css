@@ -154,6 +154,16 @@ html {
   margin: 0 auto;
   width: 100%;
 }
+/* Sem métrica cadastrada a segunda coluna seria só um buraco na tela: o texto
+   ocupa a linha e ele mesmo mede o próprio comprimento de leitura. */
+.landing-sobre-sem-metricas {
+  grid-template-columns: minmax(0, 1fr);
+}
+/* A coluna de leitura vem para o meio da linha: texto largo sem métricas ao
+   lado deixaria metade da tela em branco, que é o defeito que se queria tirar. */
+.landing-sobre-sem-metricas .landing-sobre-texto {
+  margin-inline: auto;
+}
 .landing-sobre h2,
 .landing-depoimentos h2,
 .landing-faqs h2,
@@ -162,11 +172,31 @@ html {
   letter-spacing: -0.02em;
   margin-bottom: 0.9rem;
 }
+/* A barra curta de cobre é a única assinatura deste título — os demais h2 da
+   vitrine seguem no traço de sempre. */
+.landing-sobre h2::after {
+  content: "";
+  display: block;
+  width: 64px;
+  height: 3px;
+  margin-top: 0.55rem;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--accent), transparent);
+}
 .landing-sobre-texto p {
   color: var(--text-2);
-  line-height: 1.7;
-  font-size: 0.95rem;
-  margin-bottom: 0.85rem;
+  line-height: 1.75;
+  font-size: 1rem;
+  max-width: 72ch;
+  margin-bottom: 1.1rem;
+}
+.landing-sobre-texto p:last-child {
+  margin-bottom: 0;
+}
+/* O primeiro parágrafo é a apresentação do produto: um degrau acima do resto. */
+.landing-sobre-texto p:first-of-type {
+  color: var(--text);
+  font-size: 1.06rem;
 }
 .landing-metricas {
   list-style: none;
