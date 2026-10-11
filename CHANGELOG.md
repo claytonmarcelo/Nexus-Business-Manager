@@ -5,6 +5,79 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/), 
 
 ## [Não lançado]
 
+### A venda confirmada caiu no financeiro, em parcelas que fecham o centavo (Fase 3e da auditoria)
+
+> Fase 3 da auditoria comercial (`docs/AUDITORIA.md`), sub-fase 3e: fechar o [ALTO] "Venda não conversa com
+> financeiro" e a ausência de parcelamento anotada no achado do dinheiro. O produto tinha dois caixas que não
+> se falavam — confirmar uma venda baixava estoque, mudava o relatório e não escrevia NADA na tela de Contas.
+> Quem quisesse ver o dinheiro real tinha que reescrever à mão, no dia seguinte, o valor, o cliente e a data
+> que o sistema já sabia. E não existia onde dizer "em três vezes": `Parcelamento não existe`, dizia a
+> auditoria, e dizia certo.
+
+- Migration nova `20261011230000_add_documento_vinculo_financeiro` (com o bloco `-- Revert:` escrito dentro):
+  `installments` em `sales` e `purchases` (`INTEGER NOT NULL DEFAULT 1`), `auto_finance_sales` e
+  `auto_finance_purchases` em `companies` (`BOOLEAN NOT NULL DEFAULT false`) e a procedência do lançamento —
+  `sale_id` / `purchase_id` em `finance_entries`, cada um com índice e FK `ON DELETE SET NULL`.
+- `Sale` e `Purchase` ganharam `financeEntries`; `FinanceEntry` ganhou `sale`/`purchase`. É `SetNull` e não
+  `Cascade` por decisão declarada: lançamento é escrituração. O pedido pode sair do sistema; a despesa que já
+  foi paga não sai junto com ele.
+- Novo `apps/api/src/lib/installments.ts`, casa única da regra: `politicaDeLançamento`,
+  `gerarParcelasDoDocumento` e `removerParcelasDoDocumento`. Vendas e compras chamam; mais ninguém escreve
+  lançamento de documento ali, e um lançamento manual continua com os dois vínculos nulos — é isso que o
+  separa do gerado.
+- Gera no CONFIRMAR / RECEBER, não no criar. Rascunho que nunca virou nada não tem o direito de infligir
+  receita e despesa no caixa. Os lançamentos nascem DENTRO da mesma transação que baixou o estoque: se um
+  INSERT falhar, a confirmação inteira volta — não existe nota confirmada com metade do carnê no caixa.
+- A divisão é em centavo (`dividirCentavos`, novo em `lib/money.ts`): piso em cada parcela e o resto todo na
+  última, que fecha a conta. R$ 100,00 em 3 são 33,33 + 33,33 + 33,34 — somam a nota, e não os R$ 99,99 que a
+  coluna de duas casas produziria se cada parcela fosse redonda por conta própria.
+- Vencimento é calendário, não trinta dias: `mesesDepoisNoCalendario` (`lib/time.ts`) anda `i` meses a partir
+  do dia da empresa (Fase 3c) e clampa no último dia do mês-alvo. Uma venda fechada no dia 31 parcela em
+  28/29 de fevereiro, 31 de março e 30 de abril; `Date.UTC(y, m+3, 31)` inventaria um dia 3 de março.
+- A política é por empresa e DESLIGADA nas duas pontas. Ligada sem perguntar duplica o lançamento de quem já
+  anota à mão. São duas chaves e não uma porque venda e compra são hábitos diferentes: há quem confira o
+  dinheiro que entra e lance o que sai manualmente — e o contrário também existe.
+- Cancelar tira só o que ainda não aconteceu: `deleteMany` em `PENDING` com o vínculo do documento. Parcela
+  paga (`PAID`) e cancelada (`CANCELLED`) ficam — apagar em silêncio seria o sistema inventando um passado
+  diferente do que aconteceu. E a limpeza NÃO depende da política estar ligada: quem desligou a opção depois
+  de gerar ainda vê o carnê da nota anulada sair do caixa.
+- Nota de valor zero não gera nada (nem três linhas de R$ 0,00 no meio do mês); a categoria "Vendas"/"Compras"
+  é provisionada por `upsert` na chave `(companyId, name, type)` — uma por empresa, não uma por documento.
+- A porta do parcelamento: `installments` em venda e compra é `z.coerce.number().int().min(1).max(120)
+  .default(1)`. Ausente é à vista — a tela antes desta fase, os integradores e os testes de isolamento não
+  podiam ser barrados. O teto de 120 é um carnê mensal de dez anos: sem ele, um número digitado à mão gera
+  dezenas de milhares de linhas no caixa com um clique. O `serialize` dos dois documentos devolve
+  `installments`; os lançamentos NÃO devolvem o vínculo no JSON — quem precisa saber de qual nota a parcela
+  veio é a descrição (`Venda DEE563FA — parcela 2 de 3`) e o banco.
+- `PATCH /companies/current` aceitou as duas chaves booleanas, na mesma régua da política de estoque (3b):
+  opcional, estrito, e gravado só quando enviado. O `audit` de venda e compra passou a registrar
+  `installments` e quantos lançamentos aquele movimento gerou.
+- `apps/web/src/lib/money.ts` (novo) fecha o achado levado da 3d: o painel pré-mastigava o dinheiro com
+  `parseFloat(valor.replace(",", "."))`, e o `replace` só troca a PRIMEIRA vírgula — "1.290,50" virava 1,29
+  ANTES de sair do navegador, e nenhuma porta da API conserta o que chegou mastigado. `lerNumero`/`valorNumerico`
+  seguem byte a byte a mesma regra da porta `moeda()` do servidor (ponto e vírgula juntos = milhar brasileiro;
+  só vírgula = decimal; só ponto = texto já no formato de máquina), e o CRM mantém o rigor de antes: texto que
+  não é dinheiro continua texto, e é a porta da API que responde, em vez de um `NaN` virar 0 silencioso.
+- Vendas e Compras ganharam o seletor de parcelas (À vista, 2× … 12×) no formulário de nova venda e no modal
+  de compra, com a nota dizendo onde o dinheiro cai e que a última parcela fecha a conta; a linha, o rodapé e
+  o payload usam o parse novo; o detalhe dos dois documentos passou a mostrar o parcelamento. Fechado em 12 e
+  não em 120 porque as doze de um pedido de balcão são o que a tela oferece — o teto maior continua na API.
+- Configurações → aba Empresa ganhou o sétimo bloco, "Lançamento automático no financeiro", com dois switches
+  independentes e a escrita parcial de sempre: cada botão manda só a chave que é dele.
+- Novo `apps/api/test/parcelamento.test.ts` (10 casos): política desligada não escreve nada, à vista gera uma
+  linha no dia da empresa, 3 parcelas fecham o centavo com vencimento mensal clampado, rascunho não lança e
+  confirmar escreve o carnê inteiro, cancelar tira as pendentes e preserva a paga, compra recebida gera despesa
+  na categoria Compras, a categoria automática nasce uma vez só, uma empresa não enxerga o carnê da outra, a
+  porta recusa parcela que não é número, e as duas contas puras (dividir centavo e andar no calendário).
+- Novo `tools/verify-parcelamento.cjs`: prova de navegador completa com empresa de prova criada e apagada pelo
+  script — 55 checagens / 0 falhas. O seletor com as doze opções, o preço digitado "1.290,50" valendo
+  R$ 1.290,50 na linha (com o parser antigo seriam R$ 2,58), pendente que escreve zero, confirmar que escreve
+  três, o financeiro mostrando as parcelas certas na tela, cancelar esvaziando o caixa e estornando o estoque,
+  e a compra em 2× caindo como despesa. Capturas `24-parcelamento-formulario/financeiro/compra.png`.
+- Validação: typecheck da API e do painel limpos, suíte completa 23 arquivos / 176 testes verdes (eram
+  22 / 166). Prova de Configurações re-rodada com o bloco novo: 127 checagens / 0 falhas (eram 115), capturas
+  da aba Empresa renovadas mais `22-configuracoes-lancamento-automatico.png`.
+
 ### Dinheiro em centavo (Fase 3d da auditoria)
 
 > Fase 3 da auditoria comercial (`docs/AUDITORIA.md`), sub-fase 3d: as colunas do banco sempre foram

@@ -22,7 +22,7 @@
   <img src="https://img.shields.io/badge/Vite-5-646CFF?logo=vite&logoColor=white" alt="Vite 5">
   <img src="https://img.shields.io/badge/AdminLTE-4.10-343a40?logo=laravel&logoColor=white" alt="AdminLTE 4.10">
   <img src="https://img.shields.io/badge/Tailwind-4-06B6D4?logo=tailwindcss&logoColor=white" alt="Tailwind 4">
-  <img src="https://img.shields.io/badge/testes-113%20testes%20em%2016%20arquivos-brightgreen" alt="113 testes em 16 arquivos">
+  <img src="https://img.shields.io/badge/testes-176%20testes%20em%2023%20arquivos-brightgreen" alt="176 testes em 23 arquivos">
 </p>
 
 <p align="center">
@@ -32,7 +32,8 @@
   depoimentos, métricas, dúvidas, contato, textos legais e a tela de modo manutenção; o editor
   <code>/app/cms</code> cadastra tudo isso; nas notificações o sino do cabeçalho e a tela
   <code>/app/notificacoes</code> estão no ar, e <code>/app/rotinas</code> mostra, pausa e dispara as três varreduras
-  que o sistema faz sozinho no horário marcado. O que existe como tabela pronta mas sem módulo (modelos de
+  que o sistema faz sozinho no horário marcado, e a nota confirmada já cai no financeiro em parcelas mensais
+  que fecham o centavo. O que existe como tabela pronta mas sem módulo (modelos de
   e-mail e gateways de pagamento) e o que ainda nem tem tabela está marcado um por um em
   <a href="#m%C3%B3dulos">Módulos</a> e no <a href="#roadmap">Roadmap</a>. Nada no menu aponta para uma
   rota que não existe: módulo em construção aparece apagado, com "em breve".</sub>
@@ -71,6 +72,8 @@ contam vieram das provas automatizadas e dos testes de integração, que escreve
 As outras capturas continuam em `docs/screenshots/` com a origem declarada: a vitrine montada pelo banco
 (`19-*`) saiu de `tools/verify-landing-cms.cjs`; o editor (`20-*`), de `tools/verify-cms.cjs`; os avisos
 (`21-*`), de `tools/verify-notificacoes.cjs`; as rotinas agendadas (`23-*`), de `tools/verify-rotinas.cjs`;
+as Configurações (`22-*`), de `tools/verify-configuracoes.cjs`; e a venda parcelada caindo no financeiro
+(`24-*`), de `tools/verify-parcelamento.cjs`;
 a agenda e a navegação por abas (`17-*`, `18-*`) saíram em **1440×960** porque calendário e barra de abas
 não cabem nos 900 de altura; e os arquivos com `-celular` no nome têm 390×844. Nas capturas de prova o
 conteúdo cadastrado pela própria volta ao padrão da casa no último passo — `01-landing.png` é a vitrine
@@ -200,16 +203,26 @@ São as telas e regras que existem hoje no repositório. O que ainda não está 
 - **Vendas**: pedido com múltiplos itens, total, bruto e subtotais de linha calculados **no servidor** —
   o valor enviado pelo navegador é descartado; status `PENDING`/`CONFIRMED`/`CANCELLED` com transição
   vigiada; confirmar dá baixa no estoque com as saídas registradas, cancelar uma confirmada devolve as
-  unidades; cliente e produtos são validados como pertencentes à mesma empresa
+  unidades; cliente e produtos são validados como pertencentes à mesma empresa; e o total se divide em
+  parcelas mensais (`installments`, 1 = à vista)
 - Pedido rascunho que nunca entrou em vigor não anuncia "venda cancelada" à equipe — o aviso de venda só
   sai quando a venda de fato entra em vigor ou é cancelada de verdade
 - **Compras**: pedido com itens e custo unitário, status `DRAFT`/`RECEIVED`/`CANCELLED`; receber dá
   entrada no estoque e atualiza o custo do produto; cancelar uma compra recebida estorna as unidades e é
-  bloqueado se a mercadoria já foi consumida
+  bloqueado se a mercadoria já foi consumida; mesmo parcelamento da venda, do lado do fornecedor
 - **Financeiro**: lançamentos de receita e despesa com valor, vencimento, status
   (`PENDING`/`PAID`/`CANCELLED`) e vínculo opcional a cliente, fornecedor e categoria; categorias por tipo
   (o mesmo nome pode existir nos dois); resumo mensal com receitas e despesas pagas, saldo, a receber, a
   pagar e atrasados; filtro por mês no formato `AAAA-MM` e validação cruzada de categoria × tipo
+- **Venda e compra caem no financeiro** (`Company.autoFinanceSales` / `autoFinancePurchases`, desligados por
+  padrão nas duas pontas, cada lado com a sua chave): confirmada a venda — ou recebida a compra — com a
+  chave ligada, a nota gera no caixa uma linha por parcela mensal, criada na MESMA transação que baixou o
+  estoque, em centavo exato, com a última parcela fechando a conta (R$ 100,00 em 3 são 33,33 + 33,33 +
+  33,34) e vencimento no mesmo dia do mês seguinte, clampado no último dia quando o mês não tem aquele dia.
+  Cada lançamento guarda de qual documento veio (`saleId`/`purchaseId`), a categoria "Vendas"/"Compras" nasce
+  uma vez só por empresa, e cancelar tira apenas as parcelas ainda pendentes — o que já foi pago fica à vista
+  para o dono estornar de propósito. Ligado sem perguntar duplicaria o caixa de quem já lança à mão, por
+  isso o padrão é desligado
 - **CRM**: leads com contato, origem, valor estimado e estágio (`NEW`/`CONTACTED`/`PROPOSAL`/`WON`/`LOST`),
   funil com contagem e soma por etapa, transição repetida bloqueada, e marcar **Ganho** converte o lead em
   cliente na hora — sem duplicar se repetir
@@ -260,6 +273,9 @@ qualquer tela do painel — sem recarregar a página, sem biblioteca de ícones 
 - Empresa: cadastro (nome, razão social, nome fantasia, CNPJ com dígito verificador conferido, e-mail,
   telefone), endereço com as 27 UFs, moeda, fuso e idioma, logo por endereço público com prévia e meta de
   receita do mês, que vira a régua do painel
+- Política da empresa, em blocos independentes: saída de estoque que pode deixar saldo negativo (Fase 3b) e
+  as duas chaves de lançamento automático no financeiro — venda confirmada e compra recebida, cada uma com o
+  seu botão, porque o hábito de quem anota o que entra não é o de quem anota o que sai (Fase 3e)
 - Máscara não é validação: CNPJ, telefone e CEP se organizam durante a digitação, mas quem confere os
   algarismos e decide se o valor existe é a API (`apps/api/src/lib/brFields.ts`) — a tela não guarda uma
   segunda cópia da regra para discordar da primeira
@@ -405,9 +421,9 @@ se o site está aberto ou em manutenção. A vitrine é única para toda a plata
 | Multiempresa (isolamento e troca) | ✅ | ✅ | ✅ (Configurações) | no ar |
 | Clientes | ✅ | ✅ 5 rotas | ✅ | no ar |
 | Produtos, categorias e estoque | ✅ | ✅ 11 rotas | ✅ | no ar |
-| Vendas (pedido, itens, baixa) | ✅ | ✅ 4 rotas | ✅ | no ar |
+| Vendas (pedido, itens, baixa, parcelas) | ✅ | ✅ 4 rotas | ✅ | no ar |
 | Compras e fornecedores | ✅ | ✅ 8 rotas | ✅ | no ar |
-| Financeiro (lançamentos e resumo) | ✅ | ✅ 9 rotas | ✅ | no ar |
+| Financeiro (lançamentos, resumo e o carnê que a nota gera) | ✅ | ✅ 9 rotas | ✅ | no ar |
 | CRM (leads e funil) | ✅ | ✅ 6 rotas | ✅ | no ar |
 | Agenda (janela, recorrência, FullCalendar) | ✅ | ✅ 7 rotas | ✅ | no ar |
 | Painel e relatórios agregados | ✅ | ✅ 8 rotas | ✅ | no ar |
@@ -466,7 +482,7 @@ importa só o CSS do AdminLTE) e `sweetalert2` (substituído pelo diálogo de co
 
 | Peça | Para quê |
 |---|---|
-| `apps/api/src/lib/` | erros centralizados, RBAC, contexto de empresa, auditoria, paginação, política de senha, tokens, bcrypt |
+| `apps/api/src/lib/` | erros centralizados, RBAC, contexto de empresa, auditoria, paginação, política de senha, tokens, bcrypt, dinheiro em centavo (`money.ts`), o dia da empresa (`time.ts`) e o carnê que a nota gera no caixa (`installments.ts`) |
 | `apps/api/src/plugins/` | segurança (helmet/CORS/rate-limit) e o decorator `authenticate` |
 | `apps/web/src/lib/` | `api` (axios + renovação), `notify`, `confirm`, `csv`, `format`, `auditLabels`, `uiCopy`, `validators`, `tokenStore`, `cmsApi` |
 | `apps/web/src/components/` | `AdminShell`, `Logo`, `Tabs`, `Pagination`, `Modal`, `ConfirmationModal`, `StateView`, `PageLoader`, `ErrorPage`, `PasswordInput`, `ProtectedRoute`, `ThemeToggle`, a suíte `landing/` e o editor `cms/` (`Campos` + os cinco painéis de aba) |
@@ -700,7 +716,7 @@ processo com a mensagem do caminho exato, em vez de deixar o serviço subir queb
 
 ```bash
 npm run typecheck          # api + web
-npm test                   # 16 arquivos · 113 testes de integração contra MySQL real
+npm test                   # 23 arquivos · 176 testes de integração contra MySQL real
 npm run build              # produção (tsc + vite build)
 ```
 
@@ -715,6 +731,13 @@ npm run build              # produção (tsc + vite build)
 | `cms.test.ts` | payload público sem vazamento de pulso, RBAC por papel, merge bloco a bloco, item que nasce, some e exclui de verdade, texto legal antes e depois de publicar, nota SEO, o modo manutenção com pulso e IP, e POST sem corpo aceito enquanto JSON escrito errado continua 400 |
 | `settings.test.ts` | escrita parcial que não apaga o bloco que não veio, `""` e `null` que limpam, CNPJ conferido no servidor, DDD, UF, moeda e fuso fora da lista rejeitados, campo inventado em 400, `settings:write` só para dono e administrador, conta editável por todo papel e troca de senha que derruba as outras sessões |
 | `cron.test.ts` | as cinco peças com lista, intervalo e passo, as formas inválidas que voltam 400, a agenda traduzida, o RBAC de `/ops/jobs`, liga e pausa, e as três rotinas executadas de verdade — vencida que grava aviso com chave de duplicação, estoque crítico e relatório diário que só chega a quem ligou a preferência |
+| `intrusao.test.ts`, `multiempresa.test.ts` | um OWNER da empresa A ataca todas as rotas com os ids da empresa B e leva 404, 403 ou 400 em cada porta — a varredura é por rota, não por módulo |
+| `seguranca.test.ts` | portas que não podem subir sem chave, reuso de refresh tratado como roubo (a família inteira de sessões cai) e os cabeçalhos de produção |
+| `oversell.test.ts` | duas confirmações simultâneas da mesma nota: o estoque decide no banco, e a segunda leva recusa em vez de baixar duas vezes |
+| `estoque-politica.test.ts` | a saída barrada enquanto a empresa não autorizou, o negativo visível depois de ligar a chave, e a política lida por empresa nas três portas de saída |
+| `fuso-dia.test.ts` | meia-noite de São Paulo, Tóquio e Calcutá calculadas à mão, borda de calendário contra borda de instante, série diária e contas vencidas no dia da empresa, e o fuso quebrado que não derruba painel nem sino |
+| `dinheiro-decimal.test.ts` | meio centavo que sobe na base 10, a armadilha do `round` do decimal embutido no Prisma, 2026 parcelas de R$ 0,10 fechando em 20 260 centavos, a porta nos três formatos de digitação e a invariante total = soma das linhas em nota real |
+| `parcelamento.test.ts` | política desligada que não escreve caixa nenhum, à vista que gera uma linha no dia da empresa, 3 parcelas fechando o centavo com vencimento mensal clampado, rascunho que só lança ao confirmar, cancelar que tira as pendentes e preserva a paga, despesa da compra recebida, categoria automática criada uma vez, o carnê invisível para a outra empresa e a porta que recusa parcela inválida |
 
 Além da suíte, o repositório guarda provas que dirigem o navegador (Puppeteer) e medem pixels, com as
 capturas desta página como subproduto:
@@ -724,7 +747,8 @@ capturas desta página como subproduto:
 | `tools/verify-notificacoes.cjs` | 85 — o sino e a tela de avisos sobre dado fabricado pela própria prova: número conferido com a API, painel com os seis recentes, marcar lida no banco seguindo para o Financeiro, as três abas com badge, paginação medida contra `meta.total` do servidor, filtro por tipo, CRM sem aviso do tipo, marcar todos até o vazio, preferências gravadas, lidas de novo após reload e devolvidas ao padrão, tema claro e os 390px |
 | `tools/verify-cms.cjs` | 115 — o editor `/app/cms` aba por aba: cada gravação conferida no payload público e na vitrine renderizada, item criado/escondido/editado/excluído pelo modal, texto legal saindo do 404 para a página, nota de SEO igual na tela e na API, o site fechado em 503 com mensagem e relógio, o código de pulso gerado e usado, tudo devolvido ao padrão, os dois temas e os 390px |
 | `tools/verify-landing-cms.cjs` | 105 — a vitrine montada pelo banco: texto, paleta nos dois temas, âncoras, itens, contato, WhatsApp, cookies, SEO, páginas legais, três larguras sem arrasto e a manutenção de ponta a ponta (contagem, pulso, IP e o código na sessão) |
-| `tools/verify-configuracoes.cjs` | 108 — as quatro abas do `/app/configuracoes` gravando de verdade: telefone e CNPJ conferidos na tela e na API, um bloco salvo sem tocar nos outros, CEP/UF/cidade, moeda que chega à sessão e ao painel, meta que vira régua, o STAFF lendo tudo sem botão de gravar, troca de senha que não despeja a pessoa, os dois temas e os 390px — com empresa e conta devolvidas ao estado de antes |
+| `tools/verify-configuracoes.cjs` | 127 — as quatro abas do `/app/configuracoes` gravando de verdade: telefone e CNPJ conferidos na tela e na API, um bloco salvo sem tocar nos outros (agora são sete blocos na aba Empresa, cada um mandando só as chaves que são suas), CEP/UF/cidade, moeda que chega à sessão e ao painel, meta que vira régua, as duas políticas por empresa, o STAFF lendo tudo sem botão de gravar, troca de senha que não despeja a pessoa, os dois temas e os 390px — com empresa e conta devolvidas ao estado de antes |
+| `tools/verify-parcelamento.cjs` | 55 — a venda parcelada de ponta a ponta na tela, sobre uma empresa de prova criada e apagada pela própria volta: o seletor de doze parcelas, o preço digitado "1.290,50" valendo R$ 1.290,50 na linha e no rodapé, nota pendente que não escreve caixa nenhum, confirmar que escreve as três parcelas exatas no financeiro, o cancelamento que esvazia o caixa e devolve o estoque, e a compra recebida em 2× caindo como despesa na categoria Compras |
 | `tools/verify-rotinas.cjs` | 37 — a tela `/app/rotinas` com as três varreduras, agenda traduzida e próxima execução conferidas contra a API; "Executar agora" que grava o aviso no banco e mostra no toast a mensagem da rotina; pausar pelo diálogo de confirmação e retomar; o atendente sem permissão; o tema claro e os 390px — jobs, avisos e usuário de prova devolvidos ao estado de antes |
 | `tools/verify-sidebar.cjs` | 87 — ordem e tipografia das seis camadas, itens por permissão, modo trilha, peek, linhas "em breve" e o tema claro |
 | `tools/verify-acoes-confirm.cjs` | 88 — coluna de ações de nove tabelas, anatomia do diálogo, trava de duplo clique, Esc durante a requisição, tema claro e celular |
@@ -762,7 +786,10 @@ paginação no servidor · CMS da vitrine no servidor e na tela (configuração 
 itens por tipo com `meta`, a página pública montada a partir do banco, textos legais publicados, nota de SEO
 medida e modo manutenção com contagem regressiva, pulso e IP) · editor `/app/cms` com as cinco abas de
 conteúdo, itens, textos legais, SEO e manutenção, cada bloco gravando sozinho · tela de Configurações em quatro abas (conta, empresa, aparência e
-empresas), com cadastro, endereço, moeda, fuso, idioma, logo e meta de receita gravando bloco a bloco · rotinas agendadas no relógio do
+empresas), com cadastro, endereço, moeda, fuso, idioma, logo e meta de receita gravando bloco a bloco ·
+integridade de negócio auditada e fechada (estoque decidido pelo banco, política de negativo por empresa,
+meia-noite no fuso da empresa, dinheiro em centavo do banco ao JSON e a venda confirmada caindo no financeiro
+em parcelas mensais que fecham a conta) · rotinas agendadas no relógio do
 servidor com parser de cron próprio, executor único e a tela `/app/rotinas` com liga/pausa ·
 sidebar em camadas com peek e gaveta · abas e paginação padronizadas em todas as telas · identidade Premium
 Gourmet nos dois temas, favicon oficial e as provas automatizadas desta página · credencial do administrador
@@ -801,6 +828,7 @@ O detalhamento está em [`CHANGELOG.md`](CHANGELOG.md) (Keep a Changelog, mais n
 | `5dce492 → editor` | O editor do CMS chegou: `/app/cms` com as cinco abas, o botão de manutenção que acompanha o rascunho, rascunho e publicação em cores diferentes, a nota de SEO com as 12 checagens na tela, o atalho único para a vitrine e a prova `verify-cms.cjs` com 115 checagens e dez capturas |
 | `d529919 → da9e17e` | Configurações da conta e da empresa em quatro abas: cadastro conferido no servidor, moeda/fuso/idioma regendo o painel, logo, meta de receita e troca de senha que derruba as outras sessões; prova `verify-configuracoes.cjs` com 108 checagens e a suíte em 102 testes |
 | `da9e17e → rotinas` | O relógio do servidor entrou em cena: parser de cron próprio, três varreduras que avisam pelo sino, executor único para a agenda e para o botão "Executar agora", `/app/rotinas` com liga/pausa, prova `verify-rotinas.cjs` com 37 checagens e a suíte em 113 testes |
+| `rotinas → Fase 3` | A auditoria comercial (`docs/AUDITORIA.md`) virou execução: Fase 1 blindou o isolamento (escrita com a empresa no `where` por construção, super admin separado do admin de empresa, portas fechadas sem chave, suíte de intrusão A×B) e a Fase 3 fechou a integridade de negócio — estoque decidido pelo banco, política de negativo por empresa, meia-noite no fuso da empresa, dinheiro em centavo do banco ao JSON e a venda confirmada caindo no financeiro em parcelas que fecham o centavo; suíte em 176 testes e as provas `verify-parcelamento.cjs` (55) e `verify-configuracoes.cjs` (127) |
 
 ---
 
