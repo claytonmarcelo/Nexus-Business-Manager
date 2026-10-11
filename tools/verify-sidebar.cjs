@@ -184,7 +184,7 @@ function estado() {
     ok("titulo de camada com letter-spacing de tracking", parseFloat(estiloTitulo.espaco) > 0, estiloTitulo.espaco);
     ok("titulo de camada usa o cinz do sistema", estiloTitulo.cor === "rgb(107, 114, 128)", estiloTitulo.cor);
   }
-  ok("modulos ainda sem obra aparecem na camada", e.emBreve.map((x) => x.nome).join(", ") === "Ordens de Serviço, Gateways & Cobranças, CMS & Site Público", e.emBreve.map((x) => x.nome).join(", "));
+  ok("modulos ainda sem obra aparecem na camada", e.emBreve.map((x) => x.nome).join(", ") === "Ordens de Serviço, Gateways & Cobranças", e.emBreve.map((x) => x.nome).join(", "));
   ok("na barra larga o em breve tem ponto no icone e texto acessivel", e.emBreve.every((x) => x.rotuloVisivel && x.ponto && x.etiqueta === "em breve"), e.emBreve.map((x) => x.nome + ":" + (x.ponto ? "ponto" : "sem ponto")).join(", "));
   {
     const soon = await page.evaluate(() => {
