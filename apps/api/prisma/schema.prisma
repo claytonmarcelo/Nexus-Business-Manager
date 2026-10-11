@@ -131,6 +131,14 @@ model CompanyUser {
 model RefreshToken {
   id          String    @id @default(uuid()) @db.VarChar(36)
   userId      String    @map("user_id") @db.VarChar(36)
+  // A4 do prompt de mercado: a empresa ativa da sessão mora no refresh token,
+  // não só no access token (que vence em minutos). Sem esta coluna, toda
+  // renovação caía na primeira empresa ativa do usuário — quem trocava para a B
+  // acordava na A depois do primeiro refresh silencioso. Nullable de propósito:
+  // os tokens emitidos antes da migration continuam válidos, com o
+  // comportamento antigo. É coluna simples, sem chave estrangeira, porque o
+  // ciclo de vida da sessão é curto e não pode travar a exclusão de uma empresa.
+  companyId   String?   @map("company_id") @db.VarChar(36)
   tokenHash   String    @unique @map("token_hash")
   expiresAt   DateTime  @map("expires_at")
   revokedAt   DateTime? @map("revoked_at")
@@ -144,6 +152,9 @@ model RefreshToken {
   user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
+  // A6: a aba Sessões pergunta "o que está aberto nesta empresa?". Sem índice,
+  // cada listagem varre a tabela inteira de tokens.
+  @@index([companyId])
   @@map("refresh_tokens")
 }
 

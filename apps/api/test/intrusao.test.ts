@@ -7,9 +7,10 @@ import { prisma } from "../src/lib/prisma";
 // foi; B ataca toda rota de escrita (e toda leitura por id) com os ids da
 // empresa A, mandando payloads perfeitamente válidos — o único erro de B é
 // apontar para a linha de outra empresa. Nenhum ataque pode passar: 404 na
-// linha que não é dele, 403 onde a regra é da pessoa (sessão), 400 quando a
-// tentativa é conectar um registro de A num cadastro de B. No fim cada linha
-// de A é conferida no banco para provar que nada foi tocado em silêncio. Esta
+// linha que não é dele (inclusive a sessão aberta em outra empresa, desde a
+// A6), 400 quando a tentativa é conectar um registro de A num cadastro de B.
+// No fim cada linha de A é conferida no banco para provar que nada foi tocado
+// em silêncio. Esta
 // é a rede que segura a camada da Fase 1c: mesmo que uma chamada futura pule
 // a leitura de confirmação, o companyId dentro do where não deixa escrever.
 
@@ -145,8 +146,12 @@ describe("Intrusão A×B em todas as rotas de escrita de tenant", () => {
     await atacar(404, "PATCH", `/api/notifications/${ids.aviso}/read`);
   });
 
-  it("sessão: derrubar o login de A pela rota da empresa de B → 403 (regra da pessoa, não da empresa)", async () => {
-    await atacar(403, "DELETE", `/api/users/sessions/${sessaoA}`);
+  it("sessão: derrubar o login de A pela rota da empresa de B → 404 (A6: sessão responde pela empresa)", async () => {
+    // Antes da A6 o refresh token não sabia em que empresa abriu, e esta rota
+    // derrubava a sessão de A a partir do contexto de B (403 pela regra da
+    // pessoa). Com a empresa gravada no token, o id de outra empresa é 404: nem
+    // confirmar que a sessão existe cruzando tenant interessa a B.
+    await atacar(404, "DELETE", `/api/users/sessions/${sessaoA}`);
   });
 
   it("usuários: mudar o papel de quem não é membro da empresa de B → 404", async () => {

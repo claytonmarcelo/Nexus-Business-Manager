@@ -23,7 +23,8 @@ export async function usersRoutes(app: FastifyInstance): Promise<void> {
   app.get("/users/sessions", { preHandler: [app.authenticate] }, async (req) => {
     const ctx = await resolveCompanyContext(req);
     assertPermission(ctx.role, "user:read");
-    return service.listSessions(ctx.companyId);
+    // A6: o papel de quem pergunta decide se o IP de origem aparece.
+    return service.listSessions(ctx.companyId, ctx.role);
   });
 
   app.delete("/users/sessions/:sessionId", { preHandler: [app.authenticate] }, async (req) => {

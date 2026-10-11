@@ -133,12 +133,17 @@ export async function updateRole(
 // ---- Sessoes ativas (aba Sessoes da tela de Usuarios) ----
 // O refresh token e rotacionado e revogado no servidor, entao a unica lista
 // honesta de "onde estou logado" e o que ainda nao foi revogado nem expirou.
-export async function listSessions(companyId: string) {
+export async function listSessions(companyId: string, actorRole: string) {
   const rows = await prisma.refreshToken.findMany({
     where: {
       revokedAt: null,
       expiresAt: { gt: new Date() },
-      user: { memberships: { some: { companyId } } },
+      // A6: a pergunta é "o que está aberto NESTA empresa". Antes a busca ia
+      // pelo gráfico de vínculos (`user.memberships.some.companyId`), então a
+      // aba Sessões de A listava — e deixava encerrar — a sessão que a pessoa
+      // abriu na B. Os tokens antigos, sem empresa gravada, ficam de fora: não
+      // há como afirmar a qual empresa pertencem, e mostrá-los seria inventar.
+      companyId,
     },
     orderBy: { createdAt: "desc" },
     take: 100,
@@ -153,6 +158,10 @@ export async function listSessions(companyId: string) {
       },
     },
   });
+  // A6: o IP de origem é dado de segurança, não de operação do dia. Só quem
+  // cuida da equipe (proprietário e administrador) lê; gerente e atendente
+  // veem a sessão sem a origem dela.
+  const podeVerOrigem = actorRole === "OWNER" || actorRole === "ADMIN";
   return {
     data: rows.map((r) => ({
       id: r.id,
@@ -160,7 +169,7 @@ export async function listSessions(companyId: string) {
       usuario: r.user.name,
       email: r.user.email,
       papel: r.user.memberships[0]?.role ?? "STAFF",
-      origem: r.createdByIp,
+      origem: podeVerOrigem ? r.createdByIp : null,
       criadaEm: r.createdAt,
       expiraEm: r.expiresAt,
     })),
@@ -170,10 +179,11 @@ export async function listSessions(companyId: string) {
 
 // Encerra uma sessao: revoga o refresh token daquele dispositivo. O proximo
 // request daquela aba falha no refresh e derruba para o login.
-// Fase 1 da auditoria: sessao pertence à pessoa, não à empresa — o refresh
-// token não tem companyId, e um ADMIN de A com um usuário em comum podia
-// derrubar a sessão de B. Agora cada pessoa encerra as próprias sessões pela
-// rota de tenant; para restringir outra pessoa, o caminho é o papel.
+// Fase 1 da auditoria deixou cada pessoa dona das próprias sessões (para
+// restringir outra pessoa, o caminho é o papel). A6 completou o cerco: agora a
+// sessão também responde pela empresa em que abriu, e o id de uma sessão de
+// outra empresa devolve 404 — confirmar que ele existe já seria um vazamento
+// entre tenants. Token antigo, sem empresa gravada, segue a regra de pessoa.
 export async function revokeSession(
   companyId: string,
   sessionId: string,
@@ -181,7 +191,9 @@ export async function revokeSession(
   ip: string | undefined,
 ) {
   const registro = await prisma.refreshToken.findFirst({ where: { id: sessionId } });
-  if (!registro) throw notFound("Sessão não encontrada");
+  if (!registro || (registro.companyId !== null && registro.companyId !== companyId)) {
+    throw notFound("Sessão não encontrada");
+  }
   if (registro.userId !== actorId) {
     throw forbidden("Você encerra apenas as suas sessões; para restringir outra pessoa, altere o papel dela");
   }

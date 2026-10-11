@@ -47,6 +47,10 @@ async function issueTokens(
   await prisma.refreshToken.create({
     data: {
       userId,
+      // A4: a empresa ativa gruda no refresh token. O access token que carrega o
+      // `cid` morre em 15 minutos; se a empresa não sobreviver à renovação, a
+      // pessoa volta para a primeira empresa ativa sem perceber.
+      companyId,
       tokenHash: hashToken(refreshToken),
       expiresAt: new Date(Date.now() + msUntil(env.JWT_REFRESH_TTL)),
       createdByIp: ip ?? null,
@@ -56,15 +60,15 @@ async function issueTokens(
   return { accessToken, refreshToken, expiresIn: env.JWT_ACCESS_TTL };
 }
 
-function pickMembership(
-  memberships: {
-    companyId: string;
-    role: string;
-    // A empresa inteira vem no include: a sessão carrega moeda, fuso e idioma.
-    company: { active: boolean; name: string; currency: string; timezone: string; language: string };
-  }[],
-  requestedCompanyId?: string,
-) {
+// O vínculo tal como vem do `include` usado em login/refresh: a empresa inteira
+// acompanha, porque a sessão carrega moeda, fuso e idioma dela.
+type VinculoComEmpresa = {
+  companyId: string;
+  role: string;
+  company: { active: boolean; name: string; currency: string; timezone: string; language: string };
+};
+
+function pickMembership(memberships: VinculoComEmpresa[], requestedCompanyId?: string) {
   if (requestedCompanyId) {
     const found = memberships.find((m) => m.companyId === requestedCompanyId);
     if (!found) throw forbidden("Você não pertence a esta empresa");
@@ -74,6 +78,20 @@ function pickMembership(
   const active = memberships.find((m) => m.company.active);
   if (!active) throw forbidden("Nenhuma empresa ativa vinculada ao usuário");
   return active;
+}
+
+// A4: a renovação devolve a empresa em que o token de refresh foi emitido. Se o
+// vínculo com ela caiu ou a empresa adormeceu enquanto o token estava na
+// carteira da pessoa, ela não é derrubada no meio do trabalho nem deixada
+// gravando na empresa errada em silêncio: volta para a primeira empresa ainda
+// ativa. Sem empresa ativa nenhuma, o `pickMembership` responde 403 e o app
+// manda fazer login de novo. Token antigo (sem empresa gravada) mantém o
+// comportamento histórico de escolher a primeira ativa.
+function renovacaoDaEmpresa(memberships: VinculoComEmpresa[], companyId: string | null) {
+  if (!companyId) return pickMembership(memberships);
+  const daquelaEmpresa = memberships.find((m) => m.companyId === companyId);
+  if (daquelaEmpresa?.company.active) return daquelaEmpresa;
+  return pickMembership(memberships);
 }
 
 export async function login(
@@ -144,7 +162,7 @@ export async function refresh(
   }
   if (record.revokedAt) throw unauthorized("Sessão expirada");
   if (!record.user.active) throw forbidden("Usuário inativo");
-  const membership = pickMembership(record.user.memberships);
+  const membership = renovacaoDaEmpresa(record.user.memberships, record.companyId);
 
   // Rotação: revoga o token usado antes de emitir um novo — usado E revogado,
   // para que a reapresentação dele seja reconhecível como reuso.
