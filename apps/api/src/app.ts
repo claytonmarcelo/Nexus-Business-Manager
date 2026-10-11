@@ -3,6 +3,7 @@ import { ZodError } from "zod";
 import { Prisma } from "@prisma/client";
 import { AppError } from "./lib/errors";
 import { registerSecurity } from "./plugins/security";
+import { registerMaintenance } from "./plugins/maintenance";
 import authPlugin from "./plugins/auth";
 import { authRoutes } from "./modules/auth/auth.routes";
 import { companiesRoutes } from "./modules/companies/companies.routes";
@@ -17,6 +18,7 @@ import { crmRoutes } from "./modules/crm/crm.routes";
 import { agendaRoutes } from "./modules/agenda/agenda.routes";
 import { reportsRoutes } from "./modules/reports/reports.routes";
 import { notificationsRoutes } from "./modules/notifications/notifications.routes";
+import { cmsRoutes } from "./modules/cms/cms.routes";
 import { healthRoutes } from "./modules/health/health.routes";
 import { isProd } from "./config/env";
 
@@ -29,6 +31,9 @@ export function buildApp(): FastifyInstance {
 
   void registerSecurity(app);
   void app.register(authPlugin);
+  // Manutencao antes das rotas: o gancho precisa estar na linha antes de
+  // qualquer rota de negocio ser registrada no mesmo contexto.
+  registerMaintenance(app);
 
   app.setErrorHandler((error: FastifyError, req, reply) => {
     // Zod: validação de entrada (seção 47).
@@ -80,6 +85,7 @@ export function buildApp(): FastifyInstance {
   void app.register(agendaRoutes, { prefix: "/api" });
   void app.register(reportsRoutes, { prefix: "/api" });
   void app.register(notificationsRoutes, { prefix: "/api" });
+  void app.register(cmsRoutes, { prefix: "/api" });
 
   return app;
 }

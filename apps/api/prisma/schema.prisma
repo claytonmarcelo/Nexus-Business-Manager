@@ -530,6 +530,11 @@ model LandingConfig {
   whatsapp    Json
   seo         Json
   maintenance Json
+  // Blocos da vitrine que nao fazem sentido como linha avulsa: o heroi (CTAs,
+  // imagem de fundo, overlay e desfoque) e os canais de contato e redes.
+  hero        Json?
+  social      Json?
+  contact     Json?
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
 
@@ -538,7 +543,9 @@ model LandingConfig {
 
 enum LandingItemKind {
   BANNER
+  FEATURE
   TESTIMONIAL
+  METRIC
   FAQ
 }
 
@@ -551,6 +558,10 @@ model LandingItem {
   link      String?         @db.VarChar(200)
   author    String?         @db.VarChar(120)
   role      String?         @db.VarChar(120)
+  // Extras por tipo: estrelas e empresa no depoimento, valor e formato da
+  // metrica, icone e rota da capacidade. Fica fora das colunas fixas porque
+  // cada tipo tem o seu proprio desenho.
+  meta      Json?
   order     Int             @default(0) @map("sort_order")
   active    Boolean         @default(true)
   createdAt DateTime        @default(now()) @map("created_at")

@@ -73,6 +73,9 @@ const RECURSOS: { recurso: string; rotulo: string }[] = [
   { recurso: "company", rotulo: "Empresa" },
   { recurso: "audit", rotulo: "Auditoria" },
   { recurso: "settings", rotulo: "Configurações" },
+  // O site público é da plataforma, não da empresa: content:read/write ficam
+  // com quem responde pela vitrine inteira (OWNER, que segura "*").
+  { recurso: "content", rotulo: "Site público (CMS)" },
 ];
 
 export function matrizPermissoes() {
