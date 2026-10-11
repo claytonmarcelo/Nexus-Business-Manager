@@ -5,6 +5,7 @@ import { paginate, skipTake, type PaginationInput } from "../../lib/pagination";
 import { audit } from "../../lib/audit";
 import { baixarEstoque, permiteEstoqueNegativo, subirEstoque } from "../../lib/stock";
 import { transacaoEstoque } from "../../lib/tx";
+import { decimalDeCentavos, linhaDecimal, moedaDeCentavos, somarCentavos } from "../../lib/money";
 import type { CreatePurchaseInput, CreateSupplierInput } from "./purchases.schemas";
 
 const num = (v: Prisma.Decimal) => Number(v);
@@ -127,13 +128,20 @@ export async function createPurchase(companyId: string, input: CreatePurchaseInp
   const byId = new Map(products.map((x) => [x.id, x]));
   if (byId.size !== new Set(productIds).size) throw badRequest("Um dos produtos não pertence a esta empresa ou está inativo");
 
-  let total = 0;
+  // Fase 3d: linha em Decimal com uma única rodada na base 10 e total somado em
+  // centavo — o mesmo critério da venda, porque compra e venda são a mesma
+  // aritmética com sinais opostos.
   const itens = input.items.map((i) => {
     const prod = byId.get(i.productId)!;
-    const lineTotal = Math.round(i.quantity * i.unitCost * 100) / 100;
-    total = Math.round((total + lineTotal) * 100) / 100;
-    return { productId: prod.id, quantity: i.quantity, unitCost: i.unitCost, lineTotal };
+    return {
+      productId: prod.id,
+      quantity: i.quantity,
+      unitCost: i.unitCost,
+      lineTotal: linhaDecimal(i.quantity, i.unitCost),
+    };
   });
+  const totalCentavos = somarCentavos(itens.map((i) => i.lineTotal));
+  const total = decimalDeCentavos(totalCentavos);
 
   const purchase = await transacaoEstoque(async (tx) => {
     const created = await tx.purchase.create({
@@ -163,7 +171,7 @@ export async function createPurchase(companyId: string, input: CreatePurchaseInp
     return created;
   });
 
-  await audit({ userId, companyId, action: "purchase.create", entity: "purchase", entityId: purchase.id, ip, metadata: { total, receive: input.receive, items: itens.length } });
+  await audit({ userId, companyId, action: "purchase.create", entity: "purchase", entityId: purchase.id, ip, metadata: { total: moedaDeCentavos(totalCentavos), receive: input.receive, items: itens.length } });
   return getPurchase(companyId, purchase.id).then(serialize);
 }
 

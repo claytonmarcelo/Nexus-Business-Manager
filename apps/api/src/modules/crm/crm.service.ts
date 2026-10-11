@@ -3,6 +3,7 @@ import { prisma } from "../../lib/prisma";
 import { badRequest, notFound } from "../../lib/errors";
 import { paginate, skipTake, type PaginationInput } from "../../lib/pagination";
 import { audit } from "../../lib/audit";
+import { centavos, moedaDeCentavos } from "../../lib/money";
 import { avisoNovoLead } from "../notifications/notifications.service";
 import { LEAD_STATUSES, type CreateLeadInput, type LeadStatusValue } from "./crm.schemas";
 
@@ -95,11 +96,16 @@ function mudancasDoLead(
     const novo = input[campo];
     if (novo !== undefined && novo !== antes[campo]) alteracoes.push(CAMPOS_DO_LEAD[campo]);
   }
-  const valorAntes = Number(antes.value);
-  const valorDepois = input.value === undefined ? valorAntes : Number(input.value);
+  // Fase 3d: a comparação do "mudou o valor?" é em centavo, não em double — dois
+  // valores que a tela mostra iguais não podem gerar registro de alteração falsa.
+  const valorAntes = centavos(antes.value);
+  const valorDepois = input.value === undefined ? valorAntes : centavos(input.value);
   if (valorAntes !== valorDepois) {
     alteracoes.push("valor");
-    return { alteracoes, valor: { de: valorAntes, para: valorDepois } };
+    return {
+      alteracoes,
+      valor: { de: moedaDeCentavos(valorAntes), para: moedaDeCentavos(valorDepois) },
+    };
   }
   return { alteracoes, valor: null };
 }
@@ -110,7 +116,7 @@ export async function createLead(companyId: string, input: CreateLeadInput, user
   await avisoNovoLead(companyId, {
     leadId: lead.id,
     name: lead.name,
-    value: Number(input.value ?? 0),
+    value: moedaDeCentavos(centavos(input.value)),
     source: input.source ?? null,
     fromUserId: userId,
   });

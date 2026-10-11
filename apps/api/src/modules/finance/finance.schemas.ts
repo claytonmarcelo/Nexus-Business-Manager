@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { paginationSchema } from "../../lib/pagination";
+import { moeda } from "../../lib/money";
 
 const emptyToUndef = (v: string | undefined) =>
   v === undefined || v.trim() === "" ? undefined : v.trim();
@@ -23,7 +24,9 @@ export const listFinanceEntriesQuery = paginationSchema.extend({
 export const financeEntrySchema = z.object({
   type: z.enum(["INCOME", "EXPENSE"]),
   description: z.string().trim().min(3, "Descrição muito curta").max(200),
-  amount: z.coerce.number().positive("Valor deve ser maior que zero").max(99999999),
+  // Fase 3d: o valor entra como centavo exato. "maior que zero" com duas casas
+  // obrigatórias é o mesmo que `minimo: 0.01` — o zero nunca foi lançamento.
+  amount: moeda({ minimo: 0.01, mensagem: "Valor deve ser maior que zero e no máximo 99.999.999,99" }),
   dueDate: z.coerce.date(),
   categoryId: z.string().trim().max(36).optional().transform(emptyToUndef),
   clientId: z.string().trim().max(36).optional().transform(emptyToUndef),

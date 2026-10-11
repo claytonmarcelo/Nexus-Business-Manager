@@ -5,9 +5,12 @@ import { paginate, skipTake, type PaginationInput } from "../../lib/pagination";
 import { audit } from "../../lib/audit";
 import { baixarEstoque, permiteEstoqueNegativo, subirEstoque } from "../../lib/stock";
 import { transacaoEstoque } from "../../lib/tx";
+import { decimalDeCentavos, linhaDecimal, moedaDeCentavos, somarCentavos } from "../../lib/money";
 import type { CreateSaleInput } from "./sales.schemas";
 import { avisoEstoqueBaixo, avisoVenda } from "../notifications/notifications.service";
 
+// A conversão para número só acontece na borda da resposta JSON (Fase 3d).
+// Entre o banco e a conta, o valor viaja em Decimal ou em centavo inteiro.
 const num = (v: Prisma.Decimal) => Number(v);
 
 interface SaleWithRelations {
@@ -78,13 +81,22 @@ export async function createSale(companyId: string, input: CreateSaleInput, user
   const byId = new Map(products.map((x) => [x.id, x]));
   if (byId.size !== new Set(productIds).size) throw badRequest("Um dos produtos não pertence a esta empresa ou está inativo");
 
-  let total = 0;
+  // Fase 3d: cada linha é `quantidade × preço` arredondada UMA vez na base 10,
+  // e o total da nota é a soma dos CENTAVOS dessas linhas. Antes era
+  // `Math.round(q * preço * 100)/100` somado em double e arredondado de novo a
+  // cada item — em uma nota com muitos itens o erro de vírgula flutuante nascia
+  // aqui e ia escrito no banco como o valor cobrado do cliente.
   const itens = input.items.map((i) => {
     const prod = byId.get(i.productId)!;
-    const lineTotal = Math.round(i.quantity * i.unitPrice * 100) / 100;
-    total = Math.round((total + lineTotal) * 100) / 100;
-    return { productId: prod.id, quantity: i.quantity, unitPrice: i.unitPrice, lineTotal };
+    return {
+      productId: prod.id,
+      quantity: i.quantity,
+      unitPrice: i.unitPrice,
+      lineTotal: linhaDecimal(i.quantity, i.unitPrice),
+    };
   });
+  const totalCentavos = somarCentavos(itens.map((i) => i.lineTotal));
+  const total = decimalDeCentavos(totalCentavos);
 
   // Fase 3b: a pré-checada amigável só existe onde a política da empresa NÃO
   // deixa o saldo passar para negativo — com a política ligada, quem decide é
@@ -128,7 +140,9 @@ export async function createSale(companyId: string, input: CreateSaleInput, user
     return created;
   });
 
-  await audit({ userId, companyId, action: "sale.create", entity: "sale", entityId: sale.id, ip, metadata: { total, confirm: input.confirm, items: itens.length } });
+  // A auditoria guarda o valor como número de duas casas: metadata é JSON, e o
+  // valor já está fechado — é a mesma quantia, lida do centavo exato.
+  await audit({ userId, companyId, action: "sale.create", entity: "sale", entityId: sale.id, ip, metadata: { total: moedaDeCentavos(totalCentavos), confirm: input.confirm, items: itens.length } });
 
   // Venda ja criada confirmada: o aviso de negocio e o de estoque baixo saem
   // juntos, porque o estoque baixou na mesma transacao (secoes 38 e 44).
@@ -141,7 +155,7 @@ export async function createSale(companyId: string, input: CreateSaleInput, user
   if (input.confirm) {
     await avisoVenda(
       companyId,
-      { saleId: sale.id, total, itens: itens.length, fromUserId: userId },
+      { saleId: sale.id, total: moedaDeCentavos(totalCentavos), itens: itens.length, fromUserId: userId },
       true,
     );
   }

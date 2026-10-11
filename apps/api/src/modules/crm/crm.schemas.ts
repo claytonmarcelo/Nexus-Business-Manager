@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { paginationSchema } from "../../lib/pagination";
+import { moeda } from "../../lib/money";
 
 const emptyToUndef = (v: string | undefined) =>
   v === undefined || v.trim() === "" ? undefined : v.trim();
@@ -17,7 +18,9 @@ export const createLeadSchema = z.object({
   email: z.string().trim().email("E-mail inválido").max(160).optional().transform(emptyToUndef),
   phone: z.string().trim().max(40).optional().transform(emptyToUndef),
   source: z.string().trim().max(60).optional().transform(emptyToUndef),
-  value: z.coerce.number().min(0).max(99999999).default(0),
+  // O default é o texto que o schema devolve: um lead sem valor declarado nasce
+  // com "0.00" e não com um número que a camada de serviço teria que converter.
+  value: moeda({ mensagem: "Valor do lead inválido — zero ou maior, até 99.999.999,99" }).default("0.00"),
   notes: z.string().trim().max(1000).optional().transform(emptyToUndef),
 });
 

@@ -4,6 +4,7 @@ import { badRequest, conflict, notFound } from "../../lib/errors";
 import { paginate, skipTake, type PaginationInput } from "../../lib/pagination";
 import { audit } from "../../lib/audit";
 import { calendarioDaEmpresa, fusoDaEmpresa, mesNoFuso } from "../../lib/time";
+import { centavos, moedaDeCentavos } from "../../lib/money";
 import type { FinanceCategoryInput, FinanceEntryInput } from "./finance.schemas";
 
 const num = (v: Prisma.Decimal) => Number(v);
@@ -204,16 +205,20 @@ export async function summary(companyId: string, month?: string) {
     prisma.financeEntry.aggregate({ where: { ...base, type: "EXPENSE", status: "PENDING" }, _sum: { amount: true } }),
     prisma.financeEntry.aggregate({ where: { companyId, status: "PENDING", dueDate: { lt: hoje } }, _sum: { amount: true }, _count: { _all: true } }),
   ]);
-  const incomeTotal = num(income._sum.amount ?? new Prisma.Decimal(0));
-  const expenseTotal = num(expense._sum.amount ?? new Prisma.Decimal(0));
+  // Fase 3d: o `_sum` chega do banco em DECIMAL e virava double logo aqui; a
+  // subtração `entradas - saídas` era feita em vírgula flutuante e depois
+  // "consertada" com `Math.round(...*100)/100`. Em centavo a diferença é
+  // inteira, e o round deixa de ser chamado — ele era a cola, não a conta.
+  const entradas = centavos(income._sum.amount);
+  const saidas = centavos(expense._sum.amount);
   return {
     month: month ?? mesNoFuso(fuso),
-    income: incomeTotal,
-    expense: expenseTotal,
-    balance: Math.round((incomeTotal - expenseTotal) * 100) / 100,
-    pendingIncome: num(pendingIncome._sum.amount ?? new Prisma.Decimal(0)),
-    pendingExpense: num(pendingExpense._sum.amount ?? new Prisma.Decimal(0)),
+    income: moedaDeCentavos(entradas),
+    expense: moedaDeCentavos(saidas),
+    balance: moedaDeCentavos(entradas - saidas),
+    pendingIncome: moedaDeCentavos(centavos(pendingIncome._sum.amount)),
+    pendingExpense: moedaDeCentavos(centavos(pendingExpense._sum.amount)),
     overdueCount: overdue._count._all,
-    overdueAmount: num(overdue._sum.amount ?? new Prisma.Decimal(0)),
+    overdueAmount: moedaDeCentavos(centavos(overdue._sum.amount)),
   };
 }

@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { paginationSchema } from "../../lib/pagination";
+import { moeda } from "../../lib/money";
 
 const emptyToUndef = (v: string | undefined) =>
   v === undefined || v.trim() === "" ? undefined : v.trim();
@@ -32,7 +33,7 @@ export const listPurchasesQuery = paginationSchema.extend({
 export const purchaseItemSchema = z.object({
   productId: z.string().trim().min(1, "Produto obrigatório"),
   quantity: z.coerce.number().positive("Quantidade deve ser maior que zero").max(999999),
-  unitCost: z.coerce.number().min(0).max(99999999),
+  unitCost: moeda({ mensagem: "Custo unitário inválido — zero ou maior, até 99.999.999,99" }),
 });
 
 export const createPurchaseSchema = z.object({

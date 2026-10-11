@@ -3,6 +3,7 @@ import {
   cepValido, cnpjValido, emailValido, fusoValido, idiomaValido,
   moedaValida, telefoneValido, ufValida, urlValida,
 } from "../../lib/brFields";
+import { moeda } from "../../lib/money";
 
 export const createCompanySchema = z.object({
   name: z.string().min(2).max(120),
@@ -89,10 +90,12 @@ export const updateCompanySchema = z
       .refine(idiomaValido, "Idioma: escolha um dos cadastrados na lista")
       .optional(),
     // Decimal(14,2) no banco: nada acima de 9.999.999.999,99 tem onde morar.
-    revenueTarget: z
-      .number()
-      .min(0, "A meta de receita não pode ser negativa")
-      .max(9_999_999_999.99, "Meta de receita longa demais")
+    // Fase 3d: entra como dinheiro (`moeda`), então a meta gravada é o centavo
+    // exato — `null` continua significando "sem meta", como a tela envia.
+    revenueTarget: moeda({
+      maximo: 9_999_999_999.99,
+      mensagem: "A meta de receita não pode ser negativa e tem teto de 9.999.999.999,99",
+    })
       .nullable()
       .optional(),
     // Fase 3b: política de estoque da empresa. Booleano de verdade — nem "0"/"1",

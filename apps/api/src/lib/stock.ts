@@ -32,8 +32,10 @@ export interface Movimentacao {
   // continua sendo a verdade contábil do que saiu.
   permitirNegativo?: boolean;
   // Custo da última entrada (compra): grava na mesma unidade atômica do
-  // increment, em vez de um update absoluto separado.
-  custo?: Prisma.Decimal | number;
+  // increment, em vez de um update absoluto separado. Aceita o texto de duas
+  // casas que sai do `moeda()` do schema (Fase 3d) porque o Prisma escreve
+  // DECIMAL a partir de string sem passar por vírgula flutuante.
+  custo?: Prisma.Decimal | number | string;
 }
 
 export async function baixarEstoque(o: Movimentacao): Promise<void> {

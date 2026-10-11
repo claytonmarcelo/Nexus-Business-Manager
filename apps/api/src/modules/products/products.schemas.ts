@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { paginationSchema } from "../../lib/pagination";
+import { moeda } from "../../lib/money";
 
 // ===== Categorias =====
 export const createCategorySchema = z.object({
@@ -13,7 +14,9 @@ export const updateCategorySchema = z
   .refine((o) => Object.keys(o).length > 0, { message: "Nada para atualizar" });
 
 // ===== Produtos =====
-const money = z.coerce.number().min(0, "Preço não pode ser negativo").max(99999999);
+// Fase 3d: dinheiro entra como texto de duas casas (ver `lib/money.ts`), quantidade
+// continua número porque a coluna é DECIMAL(12,3) de medida, não de valor.
+const money = moeda({ mensagem: "Preço inválido — zero ou maior, até 99.999.999,99" });
 const qty = z.coerce.number().min(0, "Quantidade não pode ser negativa").max(99999999);
 
 const emptyToUndef = (v: string | undefined) =>

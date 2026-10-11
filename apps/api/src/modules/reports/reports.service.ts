@@ -1,6 +1,14 @@
 import { Prisma } from "@prisma/client";
 import { prisma } from "../../lib/prisma";
 import {
+  centavos,
+  mediaPorUnidade,
+  moedaDeCentavos,
+  porcentagem,
+  somarCentavos,
+  variacaoPercentual,
+} from "../../lib/money";
+import {
   calendarioDaEmpresa,
   diasAtrasNoCalendario,
   diaDeCalendario,
@@ -25,6 +33,14 @@ function num(v: unknown): number {
   return Number(v);
 }
 
+// Fase 3d da auditoria: dinheiro NÃO passa mais por aqui. `arredonda` ficou só
+// com as MEDIDAS (estoque em DECIMAL(12,3), quantidade movimentada) e com as
+// razões de contagem (conversão do funil), que não são valor. O que é dinheiro
+// soma em centavo através de `lib/money.ts` e só vira número de duas casas na
+// linha do `return`: painel após painel aqui acumulava doubles em `reduce` e
+// confiava no round do fim para esconder a poeira — 2026 lançamentos de R$ 0,10
+// chegavam a 202,5999999999927752, com a etiqueta salva pelo `arredonda` e a
+// divisão (ticket, participação, curva ABC) envenenada pelo número torto.
 function arredonda(v: number): number {
   return Math.round(v * 100) / 100;
 }
@@ -78,22 +94,27 @@ export async function recortesDaEmpresa(companyId: string, base?: Date): Promise
 
 // Meta nominal do mês, cadastrada em Configurações da empresa. Sem alvo definido
 // a função devolve null: o Dashboard não inventa percentual sobre nada.
+// Fase 3d: a conta do "quanto falta" e do "ritmo por dia" é em centavo — o alvo
+// e a receita do mês chegam inteiros, e o número de duas casas só aparece na
+// resposta. O percentual da meta é o caso mais visível: antes era a divisão de
+// dois doubles que o `Math.round` do fim tinha que adivinhar; agora 88% são
+// 352/400 contados em centavo.
 function metaDeReceita(
   alvo: Prisma.Decimal | null | undefined,
-  receita: number,
+  receitaCentavos: number,
   mes: Periodo,
   hojeDia: Date,
 ) {
-  const alvoNumero = arredonda(num(alvo));
-  if (alvoNumero <= 0) return null;
-  const faltando = arredonda(Math.max(0, alvoNumero - receita));
+  const alvoCentavos = centavos(alvo);
+  if (alvoCentavos <= 0) return null;
+  const faltandoCentavos = Math.max(0, alvoCentavos - receitaCentavos);
   const diasRestantes = Math.max(1, Math.ceil((mes.ate.getTime() - hojeDia.getTime()) / 86_400_000));
   return {
-    alvo: alvoNumero,
-    atingido: arredonda((receita / alvoNumero) * 100),
-    faltando,
+    alvo: moedaDeCentavos(alvoCentavos),
+    atingido: porcentagem(receitaCentavos, alvoCentavos),
+    faltando: moedaDeCentavos(faltandoCentavos),
     diasRestantes,
-    ritmoDiario: faltando === 0 ? 0 : arredonda(faltando / diasRestantes),
+    ritmoDiario: faltandoCentavos === 0 ? 0 : mediaPorUnidade(faltandoCentavos, diasRestantes),
   };
 }
 
@@ -203,11 +224,11 @@ export async function overview(companyId: string) {
   const criticos = produtosBaixos.filter((p) => num(p.stockQuantity) <= 0);
   const alerta = produtosBaixos.filter((p) => num(p.stockQuantity) > 0 && num(p.stockQuantity) < num(p.minStock));
 
-  const receitaAtual = arredonda(num(vendasAtual._sum.total));
-  const receitaAnterior = arredonda(num(vendasAnterior._sum.total));
-  const variacao = receitaAnterior > 0
-    ? arredonda(((receitaAtual - receitaAnterior) / receitaAnterior) * 100)
-    : null;
+  // A soma do mês vem do banco (`_sum.total` em DECIMAL) e virou centavo assim
+  // que chegou aqui: a partir deste ponto a conta é inteira até a resposta.
+  const receitaAtual = centavos(vendasAtual._sum.total);
+  const receitaAnterior = centavos(vendasAnterior._sum.total);
+  const variacao = variacaoPercentual(receitaAtual, receitaAnterior);
 
   const meta = metaDeReceita(empresaMeta?.revenueTarget, receitaAtual, atual, hojeDia);
 
@@ -238,7 +259,7 @@ export async function overview(companyId: string) {
     alertas.push({
       chave: "financeiro-atrasado", perm: "finance:read",
       titulo: "Lançamentos vencidos",
-      texto: "Há " + arredonda(num(atrasadas._sum.amount)) + " em contas vencidas não resolvidas",
+      texto: "Há " + moedaDeCentavos(centavos(atrasadas._sum.amount)) + " em contas vencidas não resolvidas",
       quantidade: atrasadas._count._all,
       grau: "critico",
       rota: "/app/financeiro?aba=contas",
@@ -280,10 +301,10 @@ export async function overview(companyId: string) {
     // local, e o painel mostraria "11" com o mês de dentro ainda em "10".
     periodo: mesNoFuso(fuso),
     vendas: {
-      receita: receitaAtual,
+      receita: moedaDeCentavos(receitaAtual),
       pedidos: vendasAtual._count._all,
-      ticket: vendasAtual._count._all ? arredonda(receitaAtual / vendasAtual._count._all) : 0,
-      receitaAnterior,
+      ticket: mediaPorUnidade(receitaAtual, vendasAtual._count._all),
+      receitaAnterior: moedaDeCentavos(receitaAnterior),
       pedidosAnterior: vendasAnterior._count._all,
       variacao,
       pendentes: vendasPendentes,
@@ -307,18 +328,18 @@ export async function overview(companyId: string) {
       })),
     },
     financeiro: {
-      aReceber: arredonda(num(receber._sum.amount)),
+      aReceber: moedaDeCentavos(centavos(receber._sum.amount)),
       aReceberQtd: receber._count._all,
-      aPagar: arredonda(num(pagar._sum.amount)),
+      aPagar: moedaDeCentavos(centavos(pagar._sum.amount)),
       aPagarQtd: pagar._count._all,
-      vencido: arredonda(num(atrasadas._sum.amount)),
+      vencido: moedaDeCentavos(centavos(atrasadas._sum.amount)),
       vencidoQtd: atrasadas._count._all,
     },
     crm: {
       abertos: leadsAbertos,
       ganhos: leadsGanhos,
       perdidos: leadsPerdidos,
-      valorNoFunil: arredonda(num(valorFunil._sum.value)),
+      valorNoFunil: moedaDeCentavos(centavos(valorFunil._sum.value)),
       conversao: leadsGanhos + leadsPerdidos > 0
         ? arredonda((leadsGanhos / (leadsGanhos + leadsPerdidos)) * 100)
         : null,
@@ -351,17 +372,21 @@ export async function clientes(companyId: string) {
     }),
   ]);
 
+  // Fase 3d: o faturamento por cliente chega somado pelo banco (`_sum.total`) e
+  // atravessa a curva ABC em centavo inteiro. Antes a curva somava doubles
+  // arredondados a cada cliente, e a fronteira entre A e B (80%) dependia de
+  // quanto o arredondamento tinha empurrado para cima ou para baixo.
   const compras = new Map(porCliente.map((p) => [p.clientId as string, p]));
   const comValor = porCliente
-    .map((p) => ({ id: p.clientId as string, total: arredonda(num(p._sum.total)), pedidos: p._count._all }))
-    .sort((a, b) => b.total - a.total);
+    .map((p) => ({ id: p.clientId as string, centavos: centavos(p._sum.total), pedidos: p._count._all }))
+    .sort((a, b) => b.centavos - a.centavos);
 
-  const faturamentoTotal = comValor.reduce((soma, c) => soma + c.total, 0);
+  const faturamentoCentavos = comValor.reduce((soma, c) => soma + c.centavos, 0);
   let acumulado = 0;
   const curva = new Map<string, "A" | "B" | "C">();
   for (const c of comValor) {
-    acumulado += c.total;
-    const participacao = faturamentoTotal > 0 ? acumulado / faturamentoTotal : 1;
+    acumulado += c.centavos;
+    const participacao = faturamentoCentavos > 0 ? acumulado / faturamentoCentavos : 1;
     curva.set(c.id, participacao <= 0.8 ? "A" : participacao <= 0.95 ? "B" : "C");
   }
 
@@ -389,8 +414,8 @@ export async function clientes(companyId: string) {
   const segmentos = ["A", "B", "C"].map((nivel) => {
     const ids = cadastro.filter((c) => curva.get(c.id) === nivel).map((c) => c.id);
     const clientes2 = ids.length;
-    const totalNivel = ids.reduce((soma, id) => soma + arredonda(num(compras.get(id)?._sum.total ?? 0)), 0);
-    return { nivel, clientes: clientes2, faturamento: arredonda(totalNivel) };
+    const centavosDoNivel = ids.reduce((soma, id) => soma + centavos(compras.get(id)?._sum.total ?? null), 0);
+    return { nivel, clientes: clientes2, faturamento: moedaDeCentavos(centavosDoNivel) };
   });
   const semCompras = cadastro.filter((c) => !compras.has(c.id)).length;
   segmentos.push({ nivel: "D", clientes: semCompras, faturamento: 0 });
@@ -401,7 +426,7 @@ export async function clientes(companyId: string) {
       id: c.id,
       nome: cliente?.name ?? "Cliente removido",
       pedidos: c.pedidos,
-      faturamento: c.total,
+      faturamento: moedaDeCentavos(c.centavos),
       ultimaCompra: compras.get(c.id)?._max.createdAt ?? null,
       ativo: Boolean(cliente?.active),
     };
@@ -412,8 +437,11 @@ export async function clientes(companyId: string) {
     ativos,
     inativos: total - ativos,
     novosNoMes,
-    faturamentoTotal: arredonda(faturamentoTotal),
-    ticketMedio: comValor.length ? arredonda(faturamentoTotal / porCliente.reduce((s, p) => s + p._count._all, 0)) : 0,
+    faturamentoTotal: moedaDeCentavos(faturamentoCentavos),
+    ticketMedio: mediaPorUnidade(
+      faturamentoCentavos,
+      porCliente.reduce((s, p) => s + p._count._all, 0),
+    ),
     segmentos: segmentos.map((s) => ({
       ...s,
       rotulo:
@@ -464,7 +492,7 @@ export async function produtos(companyId: string) {
         ativa: c.active,
         produtos: quantidade,
         estoque: arredonda(num(dado?._sum.stockQuantity ?? 0)),
-        valorVendaMedio: quantidade ? arredonda(num(dado?._sum.salePrice ?? 0) / quantidade) : 0,
+        valorVendaMedio: mediaPorUnidade(centavos(dado?._sum.salePrice ?? null), quantidade),
         participacao: totalAtivos ? Math.round((quantidade / totalAtivos) * 100) : 0,
       };
     }),
@@ -545,12 +573,17 @@ export async function vendas(companyId: string, de?: Date, ate?: Date) {
     }),
   ]);
 
+  // Fase 3d: cada balde acumula CENTAVOS e só vira valor de duas casas na saída.
+  // Eram `+=` de double venda após venda; o `arredonda` no fim da fila quase
+  // sempre consertava a etiqueta, mas quem recebia o número acumulado era a
+  // divisão do ticket médio e a comparação de participação — e elas não têm round
+  // próprio para se esconder.
   const porDia = new Map<string, { dia: string; receita: number; pedidos: number }>();
   for (const v of vendas) {
     if (v.status === "CANCELLED") continue;
     const chave = diaNoFuso(recorte.fuso, v.createdAt);
     const atual = porDia.get(chave) ?? { dia: chave, receita: 0, pedidos: 0 };
-    atual.receita = arredonda(atual.receita + num(v.total));
+    atual.receita += centavos(v.total);
     atual.pedidos += 1;
     porDia.set(chave, atual);
   }
@@ -559,8 +592,9 @@ export async function vendas(companyId: string, de?: Date, ate?: Date) {
   for (const i of itens) {
     const nome = i.product.name;
     const atual = porProduto.get(nome) ?? { nome, quantidade: 0, receita: 0 };
+    // A quantidade é medida (DECIMAL(12,3)), não dinheiro: fica em `arredonda`.
     atual.quantidade = arredonda(atual.quantidade + num(i.quantity));
-    atual.receita = arredonda(atual.receita + num(i.lineTotal));
+    atual.receita += centavos(i.lineTotal);
     porProduto.set(nome, atual);
   }
 
@@ -569,7 +603,7 @@ export async function vendas(companyId: string, de?: Date, ate?: Date) {
     if (v.status === "CANCELLED" || !v.client) continue;
     const atual = porCliente.get(v.client.name) ?? { nome: v.client.name, pedidos: 0, receita: 0 };
     atual.pedidos += 1;
-    atual.receita = arredonda(atual.receita + num(v.total));
+    atual.receita += centavos(v.total);
     porCliente.set(v.client.name, atual);
   }
 
@@ -579,12 +613,12 @@ export async function vendas(companyId: string, de?: Date, ate?: Date) {
     const nome = v.user?.name ?? "Sem vínculo";
     const atual = porVendedor.get(nome) ?? { nome, pedidos: 0, receita: 0 };
     atual.pedidos += 1;
-    atual.receita = arredonda(atual.receita + num(v.total));
+    atual.receita += centavos(v.total);
     porVendedor.set(nome, atual);
   }
 
   const efetivas = vendas.filter((v) => v.status !== "CANCELLED");
-  const receita = arredonda(efetivas.reduce((s, v) => s + num(v.total), 0));
+  const receitaCentavos = somarCentavos(efetivas.map((v) => v.total));
 
   const etiquetas: Record<string, string> = { PENDING: "Pendentes", CONFIRMED: "Confirmadas", CANCELLED: "Canceladas" };
 
@@ -594,20 +628,30 @@ export async function vendas(companyId: string, de?: Date, ate?: Date) {
     // dia da tela com nomes que nenhum balde da lista tem.
     de: diaNoFuso(recorte.fuso, gte),
     ate: diaNoFuso(recorte.fuso, new Date(lte.getTime() - 1)),
-    receita,
+    receita: moedaDeCentavos(receitaCentavos),
     pedidos: efetivas.length,
-    ticket: efetivas.length ? arredonda(receita / efetivas.length) : 0,
+    ticket: mediaPorUnidade(receitaCentavos, efetivas.length),
     canceladas: vendas.filter((v) => v.status === "CANCELLED").length,
     porStatus: porStatus.map((s) => ({
       status: s.status,
       rotulo: etiquetas[s.status] ?? s.status,
       quantidade: s._count._all,
-      receita: arredonda(num(s._sum.total)),
+      receita: moedaDeCentavos(centavos(s._sum.total)),
     })),
-    porDia: [...porDia.values()].sort((a, b) => a.dia.localeCompare(b.dia)),
-    topProdutos: [...porProduto.values()].sort((a, b) => b.receita - a.receita).slice(0, 8),
-    topClientes: [...porCliente.values()].sort((a, b) => b.receita - a.receita).slice(0, 8),
-    porVendedor: [...porVendedor.values()].sort((a, b) => b.receita - a.receita),
+    porDia: [...porDia.values()]
+      .sort((a, b) => a.dia.localeCompare(b.dia))
+      .map((d) => ({ ...d, receita: moedaDeCentavos(d.receita) })),
+    topProdutos: [...porProduto.values()]
+      .sort((a, b) => b.receita - a.receita)
+      .slice(0, 8)
+      .map((p) => ({ ...p, receita: moedaDeCentavos(p.receita) })),
+    topClientes: [...porCliente.values()]
+      .sort((a, b) => b.receita - a.receita)
+      .slice(0, 8)
+      .map((c) => ({ ...c, receita: moedaDeCentavos(c.receita) })),
+    porVendedor: [...porVendedor.values()]
+      .sort((a, b) => b.receita - a.receita)
+      .map((v) => ({ ...v, receita: moedaDeCentavos(v.receita) })),
   };
 }
 
@@ -635,36 +679,36 @@ export async function compras(companyId: string) {
   const nomes = new Map<string, string>();
   const fornecedores = await prisma.supplier.findMany({ where: { companyId }, select: { id: true, name: true, active: true } });
   for (const f of fornecedores) nomes.set(f.id, f.name);
-  const gasto = arredonda(num(total._sum.total));
+  const gastoCentavos = centavos(total._sum.total);
 
   const etiquetas: Record<string, string> = { DRAFT: "Em cotação", RECEIVED: "Recebidas", CANCELLED: "Canceladas" };
 
   return {
-    gasto,
+    gasto: moedaDeCentavos(gastoCentavos),
     pedidos: total._count._all,
-    ticket: total._count._all ? arredonda(gasto / total._count._all) : 0,
+    ticket: mediaPorUnidade(gastoCentavos, total._count._all),
     fornecedoresAtivos: fornecedores.filter((f) => f.active).length,
     fornecedoresCadastrados: fornecedores.length,
     porStatus: porStatus.map((s) => ({
       status: s.status,
       rotulo: etiquetas[s.status] ?? s.status,
       quantidade: s._count._all,
-      valor: arredonda(num(s._sum.total)),
+      valor: moedaDeCentavos(centavos(s._sum.total)),
     })),
     topFornecedores: porFornecedor
       .map((f) => ({
         id: f.supplierId,
         nome: nomes.get(f.supplierId) ?? "Fornecedor removido",
         pedidos: f._count._all,
-        valor: arredonda(num(f._sum.total)),
-        participacao: gasto ? Math.round((num(f._sum.total) / gasto) * 100) : 0,
+        valor: moedaDeCentavos(centavos(f._sum.total)),
+        participacao: porcentagem(centavos(f._sum.total), gastoCentavos),
       }))
       .sort((a, b) => b.valor - a.valor)
       .slice(0, 8),
     cotacoes: rascunhos.map((r) => ({
       id: r.id,
       fornecedor: r.supplier.name,
-      valor: arredonda(num(r.total)),
+      valor: moedaDeCentavos(centavos(r.total)),
       itens: r._count.items,
       createdAt: r.createdAt,
     })),
@@ -718,6 +762,12 @@ export async function financeiro(companyId: string, dias = 30) {
   const categorias = await prisma.financeCategory.findMany({ where: { companyId }, select: { id: true, name: true, type: true } });
   const nomes = new Map(categorias.map((c) => [c.id, c.name]));
 
+  // Fase 3d: durante a montagem, os três campos de cada balde são CENTAVOS e o
+  // saldo corrido é soma inteira. O código antigo somava doubles e passava por
+  // `arredonda` em CADA adição e em CADA dia: um round a mais do que a conta
+  // pedia, e com `entradas`, `saidas` e `saldo` morando na mesma estrutura —
+  // quem lesse o balde depois do round não tinha como saber que ainda era
+  // centavo exato, e era sobre esse número que a barra do gráfico se escalava.
   const fluxo: { dia: string; entradas: number; saidas: number; saldo: number }[] = [];
   const indice = new Map<string, number>();
   for (let i = 0; i < dias; i++) {
@@ -734,40 +784,45 @@ export async function financeiro(companyId: string, dias = 30) {
     const idx = indice.get(chave);
     const balde = idx === undefined ? undefined : fluxo[idx];
     if (!balde) continue;
-    if (l.type === "INCOME") balde.entradas = arredonda(balde.entradas + num(l.amount));
-    else balde.saidas = arredonda(balde.saidas + num(l.amount));
+    if (l.type === "INCOME") balde.entradas += centavos(l.amount);
+    else balde.saidas += centavos(l.amount);
   }
   let corrido = 0;
   for (const dia of fluxo) {
-    corrido = arredonda(corrido + dia.entradas - dia.saidas);
+    corrido += dia.entradas - dia.saidas;
     dia.saldo = corrido;
   }
 
-  const despesaTotal = porCategoria
+  const despesaCentavos = porCategoria
     .filter((c) => c.type === "EXPENSE")
-    .reduce((s, c) => s + num(c._sum.amount), 0);
-  const receitaTotal = porCategoria
+    .reduce((s, c) => s + centavos(c._sum.amount), 0);
+  const receitaCentavosDoPeriodo = porCategoria
     .filter((c) => c.type === "INCOME")
-    .reduce((s, c) => s + num(c._sum.amount), 0);
+    .reduce((s, c) => s + centavos(c._sum.amount), 0);
 
   return {
     janelaDias: dias,
-    fluxo,
+    fluxo: fluxo.map((d) => ({
+      dia: d.dia,
+      entradas: moedaDeCentavos(d.entradas),
+      saidas: moedaDeCentavos(d.saidas),
+      saldo: moedaDeCentavos(d.saldo),
+    })),
     resumo: {
-      entradas: arredonda(fluxo.reduce((s, d) => s + d.entradas, 0)),
-      saidas: arredonda(fluxo.reduce((s, d) => s + d.saidas, 0)),
-      saldo: corrido,
+      entradas: moedaDeCentavos(fluxo.reduce((s, d) => s + d.entradas, 0)),
+      saidas: moedaDeCentavos(fluxo.reduce((s, d) => s + d.saidas, 0)),
+      saldo: moedaDeCentavos(corrido),
     },
     aReceber: aReceber.map((e) => ({
-      id: e.id, descricao: e.description, valor: arredonda(num(e.amount)),
+      id: e.id, descricao: e.description, valor: moedaDeCentavos(centavos(e.amount)),
       vencimento: e.dueDate, cliente: e.client?.name ?? "—", atrasada: e.dueDate < hojeCalendario,
     })),
     aPagar: aPagar.map((e) => ({
-      id: e.id, descricao: e.description, valor: arredonda(num(e.amount)),
+      id: e.id, descricao: e.description, valor: moedaDeCentavos(centavos(e.amount)),
       vencimento: e.dueDate, fornecedor: e.supplier?.name ?? "—", atrasada: e.dueDate < hojeCalendario,
     })),
     vencidas: vencidas.map((v) => ({
-      tipo: v.type, quantidade: v._count._all, valor: arredonda(num(v._sum.amount)),
+      tipo: v.type, quantidade: v._count._all, valor: moedaDeCentavos(centavos(v._sum.amount)),
     })),
     centros: porCategoria
       .map((c) => ({
@@ -775,10 +830,8 @@ export async function financeiro(companyId: string, dias = 30) {
         nome: c.categoryId ? nomes.get(c.categoryId) ?? "Categoria removida" : "Sem categoria",
         tipo: c.type,
         quantidade: c._count._all,
-        valor: arredonda(num(c._sum.amount)),
-        participacao: c.type === "EXPENSE"
-          ? (despesaTotal ? Math.round((num(c._sum.amount) / despesaTotal) * 100) : 0)
-          : (receitaTotal ? Math.round((num(c._sum.amount) / receitaTotal) * 100) : 0),
+        valor: moedaDeCentavos(centavos(c._sum.amount)),
+        participacao: porcentagem(centavos(c._sum.amount), c.type === "EXPENSE" ? despesaCentavos : receitaCentavosDoPeriodo),
       }))
       .sort((a, b) => b.valor - a.valor),
   };
@@ -811,15 +864,15 @@ export async function crm(companyId: string) {
       .map((o) => ({
         origem: o.source?.trim() ? o.source : "Não informado",
         quantidade: o._count._all,
-        valor: arredonda(num(o._sum.value)),
-        participacao: totalLeads ? Math.round((o._count._all / totalLeads) * 100) : 0,
+        valor: moedaDeCentavos(centavos(o._sum.value)),
+        participacao: porcentagem(o._count._all, totalLeads),
       }))
       .sort((a, b) => b.quantidade - a.quantidade),
     status: porStatus.map((s) => ({
       status: s.status,
       quantidade: s._count._all,
-      valor: arredonda(num(s._sum.value)),
-      participacao: totalLeads ? Math.round((s._count._all / totalLeads) * 100) : 0,
+      valor: moedaDeCentavos(centavos(s._sum.value)),
+      participacao: porcentagem(s._count._all, totalLeads),
     })),
     diasMediosFechamento: diasFechamento.length
       ? Math.round(diasFechamento.reduce((a, b) => a + b, 0) / diasFechamento.length)
