@@ -16,6 +16,7 @@ import { financeRoutes } from "./modules/finance/finance.routes";
 import { crmRoutes } from "./modules/crm/crm.routes";
 import { agendaRoutes } from "./modules/agenda/agenda.routes";
 import { reportsRoutes } from "./modules/reports/reports.routes";
+import { notificationsRoutes } from "./modules/notifications/notifications.routes";
 import { healthRoutes } from "./modules/health/health.routes";
 import { isProd } from "./config/env";
 
@@ -78,6 +79,7 @@ export function buildApp(): FastifyInstance {
   void app.register(crmRoutes, { prefix: "/api" });
   void app.register(agendaRoutes, { prefix: "/api" });
   void app.register(reportsRoutes, { prefix: "/api" });
+  void app.register(notificationsRoutes, { prefix: "/api" });
 
   return app;
 }

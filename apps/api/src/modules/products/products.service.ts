@@ -3,6 +3,7 @@ import { prisma } from "../../lib/prisma";
 import { badRequest, conflict, notFound } from "../../lib/errors";
 import { paginate, skipTake, type PaginationInput } from "../../lib/pagination";
 import { audit } from "../../lib/audit";
+import { avisoEstoqueBaixo } from "../notifications/notifications.service";
 import type {
   CreateMovementInput,
   CreateProductInput,
@@ -193,6 +194,9 @@ export async function moveStock(companyId: string, productId: string, input: Cre
     userId, companyId, action: "stock.move", entity: "stock_movement", entityId: movement.id, ip,
     metadata: { productId, kind: input.kind, quantity: input.quantity, from: current, to: newStock },
   });
+  // A visao de estoque baixo do produto virou aviso persistente para a empresa
+  // (secao 44): quem esta na tela recebe o toast, quem nao esta recebe o sino.
+  await avisoEstoqueBaixo(companyId, productId, userId);
   return { stockQuantity: newStock, movementId: movement.id };
 }
 

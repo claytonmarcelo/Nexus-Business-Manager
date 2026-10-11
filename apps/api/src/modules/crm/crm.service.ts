@@ -3,6 +3,7 @@ import { prisma } from "../../lib/prisma";
 import { badRequest, notFound } from "../../lib/errors";
 import { paginate, skipTake, type PaginationInput } from "../../lib/pagination";
 import { audit } from "../../lib/audit";
+import { avisoNovoLead } from "../notifications/notifications.service";
 import { LEAD_STATUSES, type CreateLeadInput, type LeadStatusValue } from "./crm.schemas";
 
 const num = (v: Prisma.Decimal) => Number(v);
@@ -106,6 +107,13 @@ function mudancasDoLead(
 export async function createLead(companyId: string, input: CreateLeadInput, userId: string, ip: string) {
   const lead = await prisma.lead.create({ data: { companyId, userId, ...input } });
   await audit({ userId, companyId, action: "lead.create", entity: "lead", entityId: lead.id, ip, metadata: { leadName: lead.name, value: input.value } });
+  await avisoNovoLead(companyId, {
+    leadId: lead.id,
+    name: lead.name,
+    value: Number(input.value ?? 0),
+    source: input.source ?? null,
+    fromUserId: userId,
+  });
   return getLead(companyId, lead.id).then(serialize);
 }
 

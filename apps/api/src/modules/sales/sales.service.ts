@@ -4,6 +4,7 @@ import { badRequest, notFound } from "../../lib/errors";
 import { paginate, skipTake, type PaginationInput } from "../../lib/pagination";
 import { audit } from "../../lib/audit";
 import type { CreateSaleInput } from "./sales.schemas";
+import { avisoEstoqueBaixo, avisoVenda } from "../notifications/notifications.service";
 
 const num = (v: Prisma.Decimal) => Number(v);
 
@@ -118,6 +119,22 @@ export async function createSale(companyId: string, input: CreateSaleInput, user
   });
 
   await audit({ userId, companyId, action: "sale.create", entity: "sale", entityId: sale.id, ip, metadata: { total, confirm: input.confirm, items: itens.length } });
+
+  // Venda ja criada confirmada: o aviso de negocio e o de estoque baixo saem
+  // juntos, porque o estoque baixou na mesma transacao (secoes 38 e 44).
+  if (input.confirm) {
+    for (const i of itens) await avisoEstoqueBaixo(companyId, i.productId, userId);
+  }
+  // Pedido criado como rascunho (PENDING) nao dispara aviso: o que a equipe
+  // precisa saber e da venda que entrou em vigor ou foi cancelada. Anunciar um
+  // pedido pendente com o texto de "cancelada" gerava aviso duplicado na lista.
+  if (input.confirm) {
+    await avisoVenda(
+      companyId,
+      { saleId: sale.id, total, itens: itens.length, fromUserId: userId },
+      true,
+    );
+  }
   return getSale(companyId, sale.id).then(serialize);
 }
 
@@ -157,5 +174,21 @@ export async function changeStatus(companyId: string, id: string, status: "CONFI
   });
 
   await audit({ userId, companyId, action: "sale." + status.toLowerCase(), entity: "sale", entityId: id, ip });
-  return getSale(companyId, id).then(serialize);
+
+  const registrada = await getSale(companyId, id);
+  await avisoVenda(
+    companyId,
+    {
+      saleId: id,
+      total: Number(registrada.total),
+      clientName: registrada.client?.name ?? null,
+      itens: registrada.items.length,
+      fromUserId: userId,
+    },
+    status === "CONFIRMED",
+  );
+  if (status === "CONFIRMED") {
+    for (const i of registrada.items) await avisoEstoqueBaixo(companyId, i.productId, userId);
+  }
+  return serialize(registrada);
 }
