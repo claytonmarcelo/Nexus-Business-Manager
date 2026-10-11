@@ -5,6 +5,67 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/), 
 
 ## [Não lançado]
 
+### O Bloco A do prompt de mercado: quem mandou na sessão, no papel e na configuração (2026-10-11)
+
+> Onze tarefas de contrato (A0 a A11) executadas na ordem, cada uma com teste e commit próprio. A situação de
+> cada tarefa, com a prova apontada, está em `docs/STATUS-AJUSTES.md`; o que mudou neste documento de
+> auditoria está no adenda final de `docs/AUDITORIA.md`; as decisões que travam os blocos seguintes estão em
+> `docs/decisoes/`.
+
+- **A sessão agora lembra em qual empresa você está.** O refresh token passou a carregar a empresa
+  (`company_id` na migration `20261012000000_add_refresh_token_empresa`, reversível, com o `-- Reversão:`
+  escrito no próprio arquivo). Antes, quem trocava para a empresa B voltava para a A na primeira renovação
+  automática e continuava gravando dados achando que estava na outra. Se o vínculo caiu ou a empresa
+  adormeceu, a pessoa volta para a primeira empresa ainda ativa em vez de ser derrubada no meio do trabalho —
+  e só perde a sessão quando não sobrou nenhuma. Tokens antigos continuam funcionando.
+- **A tela de Sessões fala de uma empresa só.** Quem está na empresa A não vê mais as sessões abertas na B do
+  mesmo usuário, e não consegue revogá-las: responde 404, a mesma resposta de sessão inexistente, para não
+  confirmar que ela existe. O endereço de IP de origem virou dado de segurança — só dono e administrador veem;
+  gerente e atendente recebem nulo.
+- **Desativou, perdeu o acesso na hora.** Antes, desligar uma conta ou uma empresa só tinha efeito quando o
+  token de 15 minutos vencesse. Agora a checagem de contexto do pedido confere a conta e a empresa ativas e
+  responde 403 (`Conta desativada` / `Empresa inativa`) na mesma ida ao banco que já existia.
+- **O administrador não pode mais se promover, nem ser tocado por outro administrador.** A regra de papel
+  saiu de dentro de cada rota e virou uma função só (`lib/rbac.ts`): somente OWNER concede ou retira OWNER;
+  ADMIN cuida de MANAGER e STAFF e não encosta em outro ADMIN nem em OWNER; ninguém muda o próprio papel; e a
+  empresa nunca fica sem pelo menos um OWNER — rebaixar o último responde 409. O painel parou de oferecer na
+  tela aquilo que a API recusa.
+- **"Esqueci a senha" parou de deslogar a vítima.** A solicitação de recuperação revogava todas as sessões do
+  usuário: quem soubesse o e-mail derrubava a pessoa quantas vezes quisesse, sem roubar nada. A queda de
+  sessões acontece agora só quando a senha realmente muda. E o código de recuperação deixou de voltar no HTTP
+  por ser ambiente "não-produção" — precisa da flag explícita do `.env`, e produção nunca entrega código.
+- **O servidor recusa uma configuração de produção malfeita.** Segredo com menos de 32 caracteres, segredo de
+  tutorial (com `troque`, `change`, `secret` ou `exemplo`), os dois segredos iguais, CORS apontando para
+  `localhost` ou coringa, banco conectado como `root` sem senha e flag de código de recuperação acesa em
+  produção agora derrubam a inicialização com a lista inteira do problema na mensagem, antes de atender a
+  primeira requisição. `TRUST_PROXY` virou opção validada (0, 1 ou número de saltos até 31) e aplicada, para o
+  IP real continuar sendo o da auditoria, do rate-limit e do modo de manutenção atrás de proxy reverso. O
+  `.env.example` foi reescrito comentando cada uma dessas chaves.
+- **O seed não conhece mais nenhuma senha.** Ele aborta em produção sem `ALLOW_DEV_SEED`, cria a conta de
+  desenvolvimento só fora de produção com a senha vinda de `SEED_DEV_PASSWORD`, e o resumo impresso no fim diz
+  "senha definida via variável de ambiente" em vez de imprimir senha. O endereço do administrador global passou a
+  vir de `SUPER_ADMIN_EMAIL`; fora de produção o valor histórico continua valendo, e em produção, sem a
+  variável, ninguém é "o administrador" por endereço — a proteção real é a bandeira de plataforma no banco. A
+  regra de acesso definida pelo dono permanece exatamente como está, protegida e documentada em
+  `CREDENCIAIS.md`.
+- **Duas provas de estoque que faltavam.** Uma nota pode ter o mesmo produto escrito duas vezes: com saldo 10
+  e linhas de 6+6, a venda responde 400 e não acontece nada — nem saldo, nem movimentação, nem venda criada.
+  E a invariante do razão entrou na suíte: o saldo final é exatamente a soma das movimentações.
+- **Varredura de codificação.** O repositório inteiro foi penteado atrás de expressões regulares que perderam
+  a barra invertida (`/s+`, `/d+`, `/w+`, `/b`): nenhum caso novo. O achado foi outro — a classe de acentos
+  combináveis do gerador de slug estava escrita com caracteres invisíveis no fonte, trocada pela forma
+  escapada. O `.gitattributes` passou a forçar LF também em `.sql`, `.yml`, `.yaml` e `.txt`, porque o
+  checkout da máquina convertia migration para CRLF.
+- **A0 cumprido:** a cobertura deixou de ser chute. Existe `npm run test:coverage` na raiz e na API, e a linha
+  de base (84,15% instruções / 70,4% ramificações) ficou registrada em `docs/AUDITORIA.md` antes das
+  correções, com o número de depois ao fim do bloco: **85,57% / 72,96% / 83,93% / 88,29%**
+  (instruções, ramificações, funções, linhas).
+- **Já vinha corrigido e foi provado agora:** a varredura de notificação que não escolhe a empresa (A2) e o
+  tratamento de reuso de refresh token como roubo de sessão (A11), ambos com teste apontado na tabela.
+- A suíte passou de 23 arquivos / 176 testes (a última contagem publicada) para **28 arquivos / 230 testes**,
+  todos contra MySQL real, sem skip e sem mock de banco. No meio da rodada, quando a A0 mediu a linha de base,
+  eram 26 arquivos / 202 testes. Typecheck, build e o pente de BOM/CRLF limpos.
+
 ### A venda confirmada caiu no financeiro, em parcelas que fecham o centavo (Fase 3e da auditoria)
 
 > Fase 3 da auditoria comercial (`docs/AUDITORIA.md`), sub-fase 3e: fechar o [ALTO] "Venda não conversa com

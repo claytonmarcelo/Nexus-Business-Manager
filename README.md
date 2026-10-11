@@ -19,10 +19,10 @@
   <img src="https://img.shields.io/badge/Prisma-6-2D3748?logo=prisma&logoColor=white" alt="Prisma 6">
   <img src="https://img.shields.io/badge/MySQL-8-4479A1?logo=mysql&logoColor=white" alt="MySQL 8">
   <img src="https://img.shields.io/badge/React-18-61DAFB?logo=react&logoColor=black" alt="React 18">
-  <img src="https://img.shields.io/badge/Vite-5-646CFF?logo=vite&logoColor=white" alt="Vite 5">
+  <img src="https://img.shields.io/badge/Vite-7-646CFF?logo=vite&logoColor=white" alt="Vite 7">
   <img src="https://img.shields.io/badge/AdminLTE-4.10-343a40?logo=laravel&logoColor=white" alt="AdminLTE 4.10">
   <img src="https://img.shields.io/badge/Tailwind-4-06B6D4?logo=tailwindcss&logoColor=white" alt="Tailwind 4">
-  <img src="https://img.shields.io/badge/testes-176%20testes%20em%2023%20arquivos-brightgreen" alt="176 testes em 23 arquivos">
+  <img src="https://img.shields.io/badge/testes-230%20testes%20em%2028%20arquivos-brightgreen" alt="230 testes em 28 arquivos">
 </p>
 
 <p align="center">
@@ -465,7 +465,7 @@ Legenda: ✅ existe e é usado · 🚧 falta. Nenhuma linha do menu aponta para 
 
 | Ferramenta | Para quê |
 |---|---|
-| React 18 + Vite 5 + TypeScript | aplicação de painel e página pública |
+| React 18 + Vite 7 + TypeScript | aplicação de painel e página pública |
 | react-router-dom 6 | rotas públicas, `/app/*` protegida e páginas de erro |
 | AdminLTE 4.10 | casca administrativa do painel (ADR-0003) |
 | Tailwind CSS 4 (sem preflight) | utilitários pontuais, sem brigar com o Bootstrap do AdminLTE |
@@ -529,6 +529,9 @@ importa só o CSS do AdminLTE) e `sweetalert2` (substituído pelo diálogo de co
   docs/
     ANALISE.md                 matriz de análise da fase 1, com evidências
     ANALISE-LACUNAS.md         lacunas contra o PROMPT MESTRE de 67 seções
+    AUDITORIA.md               auditoria comercial: achados por severidade e o que foi feito de cada um
+    STATUS-AJUSTES.md          situação de cada tarefa do prompt de mercado, com a prova apontada
+    decisoes/                  G1 a G6 — SMTP, cobrança, fiscal, cadastro aberto, hospedagem e licença
     adr/                       0001 persistência única · 0002 multiempresa e RBAC · 0003 AdminLTE + design system
     design/palette.md          paleta oficial extraída da logo
     screenshots/               as capturas desta página
@@ -602,13 +605,17 @@ Unicidade que importa: e-mail global; `slug` de empresa; `company_users (user_id
 cliente, SKU de produto, nome de categoria, nome de fornecedor e nome+tipo de categoria financeira são únicos
 **dentro da empresa**, não no banco inteiro. `dedupe_key` segura a duplicação de aviso nas varreduras.
 
-Doze migrations, na ordem em que chegaram:
+Dezessete migrations, na ordem em que chegaram:
 
 ```text
 init_foundation → add_clients → add_auth_flows → add_products_stock → add_sales →
 add_suppliers_purchases → add_finance → add_crm → add_agenda → add_agenda_recorrencia →
-add_admin_cms_ops → add_cms_content
+add_admin_cms_ops → add_cms_content → add_platform_role → add_refresh_used_at →
+add_company_allow_negative_stock → add_documento_vinculo_financeiro → add_refresh_token_empresa
 ```
+
+As quatro migrations que chegaram na execução da auditoria trazem as linhas de reversão escritas no próprio
+SQL; nenhuma migration aplicada foi editada depois de sair — correções chegaram como migration nova.
 
 Comandos:
 
@@ -635,10 +642,11 @@ npm run prisma:generate -w @nexus/api           # regera o client depois de mexe
 ```bash
 npm install
 cp apps/api/.env.example apps/api/.env
-# edite apps/api/.env: DATABASE_URL, JWT_ACCESS_SECRET, JWT_REFRESH_SECRET
-# e SEED_ADMIN_PASSWORD com a senha do administrador definitivo (CREDENCIAIS.md)
+# edite apps/api/.env: DATABASE_URL, JWT_ACCESS_SECRET, JWT_REFRESH_SECRET,
+# SEED_ADMIN_PASSWORD com a senha do administrador definitivo (CREDENCIAIS.md)
+# e SEED_DEV_PASSWORD com a senha da conta de desenvolvimento
 
-npm run db:migrate            # aplica as 12 migrations
+npm run db:migrate            # aplica as 17 migrations
 npm run db:seed               # admin global + admin@nexus.local + empresa nexus-demo (vazia)
 ```
 
@@ -650,6 +658,7 @@ npm run db:seed               # admin global + admin@nexus.local + empresa nexus
 | `npm run dev:web` | painel em `http://localhost:5173`, com proxy para `/api` |
 | `npm run typecheck` | `tsc --noEmit` nos dois apps |
 | `npm test` | suíte de integração da API contra o MySQL real |
+| `npm run test:coverage` | a mesma suíte medindo a própria cobertura (instruções, ramificações, funções, linhas) |
 | `npm run build` | `tsc` da API + `vite build` do painel |
 | `npm run db:migrate` / `db:seed` | Prisma no workspace da API |
 
@@ -658,8 +667,18 @@ npm run db:seed               # admin global + admin@nexus.local + empresa nexus
 `npm run build` gera `apps/api/dist` (Node) e `apps/web/dist` (estáticos servíveis por qualquer servidor).
 Antes de subir: `NODE_ENV=production`, segredos de JWT novos e distintos dos de desenvolvimento,
 `CORS_ORIGIN` apontando para o endereço público, `RATE_LIMIT_MAX` ajustado ao tráfego esperado, e a senha do
-administrador **lida de variável de ambiente**, nunca de arquivo versionado. Não há `Dockerfile` nem pipeline
-de CI no repositório — estão no roadmap.
+administrador **lida de variável de ambiente**, nunca de arquivo versionado.
+
+A API não sobe com configuração de tutorial: em `NODE_ENV=production` o processo morre na inicialização, com
+a lista inteira do problema na mensagem, se um segredo tiver menos de 32 caracteres ou contiver
+`troque`/`change`/`secret`/`exemplo`, se os dois segredos forem iguais, se o CORS apontar para `localhost`,
+`127.0.0.1` ou coringa, se o banco conectar como `root` sem senha, ou se `AUTH_EXPOSE_RESET_TOKEN=1` ficar
+aceso. Atrás de proxy reverso, `TRUST_PROXY` declara quantos saltos são confiáveis (0 desliga, 1 confia no
+proxy imediato, até 31) — sem isso o IP registrado na auditoria e usado no rate-limit é o do proxy.
+
+O seed é a outra trava: em produção ele aborta antes da primeira consulta se `ALLOW_DEV_SEED` não estiver
+definido, e a conta de desenvolvimento só nasce fora de produção. Não há `Dockerfile` nem pipeline de CI no
+repositório — estão no roadmap, e as decisões de hospedagem estão em `docs/decisoes/G5-hospedagem-e-backup.md`.
 
 ### Contas e acesso
 
@@ -667,8 +686,10 @@ de CI no repositório — estão no roadmap.
   protegido contra remoção e rebaixamento no backend e no seed. A senha fica apenas no `CREDENCIAIS.md` da
   sua máquina (arquivo local, ignorado pelo git) e é lida de `SEED_ADMIN_PASSWORD` na hora do seed — nada de
   credencial no repositório ou no histórico.
-- **Conta de desenvolvimento** — `admin@nexus.local` / `Nexus@2026`, `OWNER` da empresa `nexus-demo`; é a
-  conta usada pela suíte de testes. Ela é versionada de propósito, porque é local e descartável.
+- **Conta de desenvolvimento** — `admin@nexus.local`, `OWNER` da empresa `nexus-demo`; é a conta usada pela
+  suíte de testes e pelas provas de navegador. A senha não mora no código: vem de `SEED_DEV_PASSWORD`, e o
+  seed para com aviso se a variável estiver ausente. Fora de produção ela nasce sempre; em produção só nasce
+  se `SEED_DEV_ACCOUNT=1` for declarado de propósito.
 - Cadastro self-service em `/cadastro` para criar conta e empresa própria sem tocar no seed.
 
 Regra de senha em todo o sistema: mínimo 8 caracteres, com ao menos uma letra maiúscula e um caractere
@@ -691,7 +712,20 @@ processo com a mensagem do caminho exato, em vez de deixar o serviço subir queb
 | `JWT_REFRESH_SECRET` | — (obrigatória) | segredo do refresh, distinto do de access |
 | `JWT_ACCESS_TTL` / `JWT_REFRESH_TTL` | `15m` / `7d` | validade dos tokens |
 | `RATE_LIMIT_MAX` / `RATE_LIMIT_WINDOW_MS` | `100` / `60000` | limite global por janela |
+| `CRON_ENABLED` | `1` | `0` desliga o relógio das rotinas neste processo (deixa só um servidor agendando) |
+| `TRUST_PROXY` | `0` | saltos de proxy reverso confiáveis: `0` desliga, `1` confia no imediato, até `31`; fora desse formato a API não sobe |
+| `BODY_LIMIT_BYTES` | `1048576` | tamanho máximo de corpo dito no `.env`, não no default do framework |
+| `SUPER_ADMIN_EMAIL` | vazio | endereço do administrador global; fora de produção cai no padrão de desenvolvimento, em produção é obrigatório |
+| `AUTH_EXPOSE_RESET_TOKEN` | `0` | `1` devolve o código de recuperação na resposta — só para desenvolvimento; em produção o valor `1` derruba a subida |
 | `SEED_ADMIN_PASSWORD` | — | senha do administrador global, lida só pelo `seed.ts`, que para com aviso se estiver ausente |
+| `SEED_DEV_PASSWORD` | — | senha da conta de desenvolvimento `admin@nexus.local`; também só no `seed.ts`, e o seed para se ela faltar |
+| `SEED_DEV_ACCOUNT` | `0` | `1` força a conta de desenvolvimento mesmo em produção (uso explícito de homologação) |
+| `ALLOW_DEV_SEED` | `0` | única maneira de o seed rodar em `NODE_ENV=production`; sem ele o seed aborta antes da primeira consulta |
+
+Em `NODE_ENV=production` a validação ganha uma régua extra (segredo de no mínimo 32 caracteres e sem marca
+de exemplo, CORS público, banco fora de root, `AUTH_EXPOSE_RESET_TOKEN` desligado): qualquer violação derruba
+o processo na inicialização com a lista completa na mensagem. O código dessa régua é puro e testado em
+`validador-de-producao.test.ts`.
 
 ---
 
@@ -700,8 +734,10 @@ processo com a mensagem do caminho exato, em vez de deixar o serviço subir queb
 | Área | Como está hoje |
 |---|---|
 | Senha | bcrypt 12 rounds; política de 8+/maiúscula/especial no backend e nos formulários; nenhum valor de senha registrado no git, e o histórico foi reescrito antes do primeiro push |
-| Tokens | access JWT de curta duração; refresh hasheado (HMAC-SHA256) com rotação, revogação por sessão e revogação total ao trocar a senha de recuperação |
-| Autorização | mapa central `recurso:ação` verificado no servidor em toda rota de escrita; 403 antes de qualquer botão existir na tela. Conteúdo do site público é recurso `content`, só do OWNER |
+| Tokens | access JWT de curta duração; refresh hasheado (HMAC-SHA256) com rotação, revogação por sessão e revogação total ao **concluir** a troca de senha — pedir a recuperação não derruba mais a sessão da vítima, e o código só volta na resposta com `AUTH_EXPOSE_RESET_TOKEN=1` fora de produção |
+| Sessão e empresa | o refresh grava em qual empresa foi aberto (`company_id`) e renova dentro dela, com fallback para a primeira ativa do usuário; listar e revogar sessões é filtrado por empresa (id de outra empresa devolve 404, mesma empresa sem ser dono devolve 403), e o IP de origem só aparece para OWNER/ADMIN |
+| Acesso revogado | desativar a conta ou a empresa derruba o acesso na hora: toda requisição revalida o vínculo no banco junto das duas bandeiras de ativação (conta e empresa), então um access token ainda válido emitido antes não abre a porta depois da desativação — e reativar devolve o acesso sem precisar de login novo |
+| Autorização | mapa central `recurso:ação` verificado no servidor em toda rota de escrita; 403 antes de qualquer botão existir na tela. A hierarquia de papéis decide em um lugar só — ninguém atribui papel acima do próprio, e ADMIN não toca em OWNER nem em outro ADMIN. Conteúdo do site público é recurso `content`, só do OWNER |
 | Isolamento | empresa ativa vem do token e é revalidada contra `company_users` a cada request; toda leitura filtra por `companyId`, então registro de outra empresa devolve 404; teste dedicado de vazamento entre tenants |
 | Validação | Zod em todas as entradas; categorias e tipos cruzados validados; `pageSize` acima do limite devolve 400 |
 | Tráfego | helmet, CORS restrito por env, rate-limit global 100/min e limites próprios em login (10/min), cadastro e recuperação (5/min) e bypass da manutenção (30/min) |
@@ -716,14 +752,18 @@ processo com a mensagem do caminho exato, em vez de deixar o serviço subir queb
 
 ```bash
 npm run typecheck          # api + web
-npm test                   # 23 arquivos · 176 testes de integração contra MySQL real
+npm test                   # 28 arquivos · 230 testes de integração contra MySQL real
+npm run test:coverage      # a mesma suíte com a cobertura medida
 npm run build              # produção (tsc + vite build)
 ```
 
 | Arquivo | O que prova |
 |---|---|
-| `auth.test.ts`, `auth-flows.test.ts` | login, refresh com rotação, revogação, cadastro, recuperação em duas etapas, troca de empresa |
+| `auth.test.ts`, `auth-flows.test.ts` | login, refresh com rotação, revogação, cadastro, recuperação em duas etapas, troca de empresa, e o cadastro de "Marcos Silva" que cria a empresa "Marcos (minha empresa)" sem acento nem espaço no slug |
 | `rbac.test.ts` | as quatro matrizes de papel, 403 por rota, administrador global protegido |
+| `rbac-hierarquia.test.ts` | a hierarquia decidindo em um lugar só: ADMIN não cria OWNER, não rebaixa ninguém, não mexe no próprio papel nem no de outro ADMIN; MANAGER e STAFF ficam fora de toda rota de papel; o último dono não sai do papel, e com dois donos rebaixar o outro é lícito |
+| `desativacao-acesso.test.ts` | o access token que ainda está na mão do usuário cai quando a conta é desativada, volta quando ela reativa, e uma empresa inativa fecha o módulo para todo mundo — inclusive o proprietário |
+| `sessoes-empresa.test.ts` | quem trocou para a empresa B continua na B ao renovar o token, a lista de sessões da A não mostra a sessão aberta na B, id de outra empresa devolve 404, e gerente e atendente não leem o IP de origem |
 | `multiempresa.test.ts` | nenhum dado vaza entre empresas do mesmo usuário e de usuários diferentes |
 | `pagination.test.ts` | `{data, meta}` coerente e `pageSize` acima do limite → 400 |
 | `clients.test.ts`, `products.test.ts`, `sales.test.ts`, `purchases.test.ts`, `finance.test.ts`, `crm.test.ts`, `agenda.test.ts` | regras de negócio de cada módulo, incluindo baixa e estorno de estoque, custo atualizado na compra recebida, conversão de lead em cliente e expansão de recorrência |
@@ -733,7 +773,9 @@ npm run build              # produção (tsc + vite build)
 | `cron.test.ts` | as cinco peças com lista, intervalo e passo, as formas inválidas que voltam 400, a agenda traduzida, o RBAC de `/ops/jobs`, liga e pausa, e as três rotinas executadas de verdade — vencida que grava aviso com chave de duplicação, estoque crítico e relatório diário que só chega a quem ligou a preferência |
 | `intrusao.test.ts`, `multiempresa.test.ts` | um OWNER da empresa A ataca todas as rotas com os ids da empresa B e leva 404, 403 ou 400 em cada porta — a varredura é por rota, não por módulo |
 | `seguranca.test.ts` | portas que não podem subir sem chave, reuso de refresh tratado como roubo (a família inteira de sessões cai) e os cabeçalhos de produção |
-| `oversell.test.ts` | duas confirmações simultâneas da mesma nota: o estoque decide no banco, e a segunda leva recusa em vez de baixar duas vezes |
+| `oversell.test.ts` | sete cenários que martelam a mesma linha em paralelo: duas confirmações da mesma nota, duas vendas disputando o saldo, a mesma compra recebida duas vezes, duas saídas manuais simultâneas, cancelar e receber ao mesmo tempo, o mesmo produto em duas linhas (6+6 sobre saldo 10) que devolve 400 sem escrever nada, e o saldo que é exatamente a soma do razão — o banco decide, nunca o JavaScript |
+| `validador-de-producao.test.ts` | a régua de produção como função pura: segredo abaixo de 32 caracteres, os dois iguais ou com marca de exemplo, CORS de localhost/IP local/coringa, banco `root` sem senha e `AUTH_EXPOSE_RESET_TOKEN=1` cada um recusado; `TRUST_PROXY` aceitando só 0 a 31; e o `env.ts` que derruba o processo em vez de subir quebrado |
+| `seed-seguro.test.ts` | o seed abortando em produção sem `ALLOW_DEV_SEED` sem escrever usuário nenhum, o motivo dito inteiro, a ausência de `SEED_ADMIN_PASSWORD` parando qualquer ambiente, e a prova de que nenhuma senha de conta de desenvolvimento mora no código |
 | `estoque-politica.test.ts` | a saída barrada enquanto a empresa não autorizou, o negativo visível depois de ligar a chave, e a política lida por empresa nas três portas de saída |
 | `fuso-dia.test.ts` | meia-noite de São Paulo, Tóquio e Calcutá calculadas à mão, borda de calendário contra borda de instante, série diária e contas vencidas no dia da empresa, e o fuso quebrado que não derruba painel nem sino |
 | `dinheiro-decimal.test.ts` | meio centavo que sobe na base 10, a armadilha do `round` do decimal embutido no Prisma, 2026 parcelas de R$ 0,10 fechando em 20 260 centavos, a porta nos três formatos de digitação e a invariante total = soma das linhas em nota real |
@@ -790,7 +832,10 @@ empresas), com cadastro, endereço, moeda, fuso, idioma, logo e meta de receita 
 integridade de negócio auditada e fechada (estoque decidido pelo banco, política de negativo por empresa,
 meia-noite no fuso da empresa, dinheiro em centavo do banco ao JSON e a venda confirmada caindo no financeiro
 em parcelas mensais que fecham a conta) · rotinas agendadas no relógio do
-servidor com parser de cron próprio, executor único e a tela `/app/rotinas` com liga/pausa ·
+servidor com parser de cron próprio, executor único e a tela `/app/rotinas` com liga/pausa · blindagem de
+acesso e configuração (Bloco A): hierarquia de papéis centralizada, desativação que cai na hora, sessão presa
+à empresa, recuperação de senha que não derruba a vítima, seed e produção sem senha no código, e cobertura
+medindo a si mesma ·
 sidebar em camadas com peek e gaveta · abas e paginação padronizadas em todas as telas · identidade Premium
 Gourmet nos dois temas, favicon oficial e as provas automatizadas desta página · credencial do administrador
 fora do git, com histórico reescrito antes do primeiro push.
@@ -829,6 +874,7 @@ O detalhamento está em [`CHANGELOG.md`](CHANGELOG.md) (Keep a Changelog, mais n
 | `d529919 → da9e17e` | Configurações da conta e da empresa em quatro abas: cadastro conferido no servidor, moeda/fuso/idioma regendo o painel, logo, meta de receita e troca de senha que derruba as outras sessões; prova `verify-configuracoes.cjs` com 108 checagens e a suíte em 102 testes |
 | `da9e17e → rotinas` | O relógio do servidor entrou em cena: parser de cron próprio, três varreduras que avisam pelo sino, executor único para a agenda e para o botão "Executar agora", `/app/rotinas` com liga/pausa, prova `verify-rotinas.cjs` com 37 checagens e a suíte em 113 testes |
 | `rotinas → Fase 3` | A auditoria comercial (`docs/AUDITORIA.md`) virou execução: Fase 1 blindou o isolamento (escrita com a empresa no `where` por construção, super admin separado do admin de empresa, portas fechadas sem chave, suíte de intrusão A×B) e a Fase 3 fechou a integridade de negócio — estoque decidido pelo banco, política de negativo por empresa, meia-noite no fuso da empresa, dinheiro em centavo do banco ao JSON e a venda confirmada caindo no financeiro em parcelas que fecham o centavo; suíte em 176 testes e as provas `verify-parcelamento.cjs` (55) e `verify-configuracoes.cjs` (127) |
+| `Fase 3 → Bloco A` | O prompt de mercado começou a ser cumprido: hierarquia de papéis em um lugar só, conta ou empresa desativada perdendo o acesso na hora, refresh token preso à empresa da sessão, recuperação de senha que não derruba a vítima nem entrega código em produção, seed e configuração de produção sem senha no código (a API recusa subir mal configurada), varredura de expressões regulares consertada e as duas provas que faltavam no estoque atômico. Cobertura passou a ser medida (`npm run test:coverage`), `docs/STATUS-AJUSTES.md` virou o painel do que está feito, e as seis decisões que pedem a palavra do dono (e-mail, cobrança, fiscal, cadastro aberto, hospedagem e licença) foram escritas em `docs/decisoes/` sem nenhuma integração inventada — suíte em 230 testes |
 
 ---
 

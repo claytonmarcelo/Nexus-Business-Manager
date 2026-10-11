@@ -210,11 +210,17 @@ padrão **read-modify-write fora/unlockado dentro dela**:
 
 ## F. Cobertura de testes real
 
-- A suíte é honesta e ativa: **16 arquivos, 113 casos** (contagem por `it()`; um dos agentes contou 114
-  por incluir um `test()` de alias — mesma coisa), **zero `.skip/.only/.todo`**. Roda contra MySQL real.
-- **[ALTO] Cobertura nunca foi medida**: `@vitest/coverage-v8` não está instalado, `vitest.config.ts` não
-  define thresholds, nenhum script roda coverage. A meta de 70% do brief parte do zero conhecido? Não se
-  sabe. É "cobertura real não medida".
+- A suíte é honesta e ativa. Na foto da auditoria eram **16 arquivos, 113 casos**, com **zero
+  `.skip/.only/.todo`** e escrita real no MySQL. Depois das Fases 1 a 3 e do Bloco A do prompt de mercado,
+  são **28 arquivos e 230 casos** — continua sem skip, sem mock de banco.
+- **[ALTO → RESOLVIDO na A0] Cobertura nunca foi medida**: `@vitest/coverage-v8` não estava instalado,
+  `vitest.config.ts` não definia nada e nenhum script rodava coverage. Desde 2026-10-11 existe
+  `npm run test:coverage` (raiz e API) e a linha de base ficou registrada aqui: **84,15% de instruções,
+  70,4% de ramificações, 83,03% de funções, 86,93% de linhas** antes do Bloco A; **85,57% / 72,96% /
+  83,93% / 88,29%** ao fim dele (2 301 de 2 689 instruções, 1 174 de 1 609 ramificações, 486 de 579
+  funções, 2 113 de 2 393 linhas). Onde ainda dói: `reports.service.ts` 53,77% de linhas,
+  `cron.runner.ts` 0%, `companies.service.ts` 70,37%, `finance.service.ts` 75%. O portão mínimo por
+  arquivo (threshold que quebra o build) fica na Fase 7, junto com o CI — sem CI, threshold só atrapalha.
 - **[ALTO] Buracos de integração**: `users` (criar membro, permissions, sessions/revoke — só cai de
   raspão em settings.test.ts), `reports` (7 dos 8 endpoints nunca chamados), `audit` (filtros/paginação),
   `companies` (sem arquivo próprio), `health` (uma asserção incidental). Frontend: **zero testes** — nem
@@ -263,7 +269,7 @@ O brief de auditoria descreve outro software. Conferidas uma a uma:
 | mysql2 com SQL direto; Prisma só na auth | **FALSO** — Prisma é a camada única (ADR-0001); `mysql2` não existe no repo; 2 `$queryRaw` pontuais e documentadas |
 | 24 migrations SQL em `backend/database/migrations/` | **FALSO** — 12 migrations Prisma em `apps/api/prisma/migrations/`; não existe `backend/` |
 | pasta `mobile/` citada | **FALSO** — não existe nem é mencionada |
-| demo `admin@nexusdemo.com / 123456` | **FALSO** — nenhuma dessas strings no código; as contas reais estão no item D (e sim, `admin@nexus.local/Nexus@2026` é um problema análogo, este real) |
+| demo `admin@nexusdemo.com / 123456` | **FALSO** — nenhuma dessas strings no código; as contas reais estão no item D (e sim, a conta de desenvolvimento `admin@nexus.local` com senha fixa no seed era um problema análogo, este real — resolvido na A8, onde a senha passou a vir de `SEED_DEV_PASSWORD`) |
 | `.py`/`estrutura.txt`/lockfile órfão na raiz | **FALSO** — raiz limpa (seção G) |
 | CI em `.github/workflows/` | **FALSO** — não existe CI (F) |
 | Tailwind + Recharts | **PARCIAL** — Tailwind 4 real; Recharts não existe (FullCalendar + KPIs próprios) |
@@ -479,3 +485,62 @@ Itens de R3 (seção I) — decremento atômico, revalidação de status na tran
 Pendência levada da Fase 3: a recorrência da Agenda construída com `setHours` do servidor (`agenda.service.ts:94-99`, achado da 3c) — é [BAIXO] da seção E e não estava em R3; passa para a Fase 9 (front), junto do E2E que vai exercitar a Agenda de verdade.
 
 Validação da sub-fase: typecheck da API e do painel limpos; suíte completa 23 arquivos / 176 testes verdes (eram 22 / 166); prova de Configurações re-rodada com o bloco novo — 127 checagens / 0 falhas (eram 115), capturas da aba Empresa renovadas mais `22-configuracoes-lancamento-automatico.png`; prova nova de parcelamento 55 / 0.
+
+## Adenda da execução — Bloco A do prompt de mercado (segurança e isolamento) encerrado — 2026-10-11
+
+Onze tarefas de contrato (A0 a A11) mais o fechamento da A3. A tabela com a situação de cada uma, tarefa por
+tarefa, está em `docs/STATUS-AJUSTES.md`; as decisões que travam os blocos restantes estão em `docs/decisoes/`.
+Abaixo, o que este documento de auditoria precisa registrar como mudado.
+
+- **Seção B (isolamento).** A6 mudou de forma o que "sessão da empresa" significa: `refresh_tokens` passou a
+  ter `company_id` (migration `20261012000000_add_refresh_token_empresa`, nullable, com índice e sem FK de
+  propósito — sessão curta não pode travar exclusão de empresa). `listSessions` filtra por essa empresa,
+  token legado sem empresa não aparece na lista, revogação de sessão de outra empresa responde **404** em vez
+  de 403 (não confirma existência), e o IP de origem virou dado de segurança: só OWNER e ADMIN leem. O teste
+  de intrusão foi atualizado para a nova resposta esperada, não afrouxado.
+- **Seção B (papéis).** A1 tirou a regra de papel de dentro de cada rota e criou `podeAtribuirPapel` em
+  `lib/rbac.ts`, a única que decide. ADMIN não cria, não rebaixa e não toca OWNER nem outro ADMIN; ninguém
+  muda o próprio papel; rebaixar o último OWNER responde 409. O espelho da hierarquia entrou no painel
+  (`apps/web/src/lib/papeis.ts`) para a tela parar de oferecer opção que a API recusa.
+- **Seção B (acesso vivo).** A5: `resolveCompanyContext` agora confere `user.active` e `company.active` na
+  mesma consulta. O buraco de 15 minutos (access token sobrevivendo à desativação) fechou.
+- **Seção D (valores padrão inseguros).** A9 criou `src/config/producao.ts` com a régua em função pura: em
+  `NODE_ENV=production` o processo não sobe com segredo abaixo de 32 caracteres, com `troque`/`change`/
+  `secret`/`exemplo` no valor, com os dois segredos iguais, com CORS apontando para `localhost`, `127.0.0.1`
+  ou coringa, com `DATABASE_URL` de `root` sem senha, ou com `AUTH_EXPOSE_RESET_TOKEN=1` ligado. `TRUST_PROXY`
+  passou a ser validado (0, 1 ou até 31 saltos) e aplicado no Fastify — o Fastify 5 não aceita número de
+  saltos como opção, então a tradução é a função de confiança equivalente. O `.env.example` foi reescrito com
+  cada chave comentada, porque era ele que ensinava o erro. A prova inclui um processo filho que importa o
+  `env.ts` real e derruba a subida sem escrever o segredo no stderr.
+- **Seção D (seed e credencial).** A8: `prisma/seed.ts` virou função exportável que recebe o ambiente. Em
+  produção sem `ALLOW_DEV_SEED` ele aborta antes da primeira consulta; a conta de desenvolvimento só nasce
+  fora de produção e a senha vem de `SEED_DEV_PASSWORD`; o resumo final nunca imprime senha; o e-mail do
+  administrador global passou a vir de `SUPER_ADMIN_EMAIL`, com o valor histórico valendo só fora de
+  produção. **A regra definitiva de acesso não mudou** — a conta existe, é protegida e continua descrita em
+  `CREDENCIAIS.md`, que segue fora do git e fora de qualquer hipótese de remoção. O que mudou é que o
+  repositório não guarda mais segredo nem presumi endereço em produção.
+- **Seção D (recuperação).** A7: pedir recuperação parou de revogar as sessões do usuário (era uma porta de
+  negação de serviço para quem soubesse o e-mail) e o código deixou de voltar no HTTP só por o ambiente não
+  ser produção — agora exige a flag explícita **e** ambiente não-produtivo.
+- **Seção E (integridade).** A3 recebeu as duas provas que faltavam: nota com o mesmo produto em duas linhas
+  (6+6 sobre saldo 10 → 400, saldo intocado, zero movimentação, nenhuma venda criada) e a invariante de que o
+  saldo final é exatamente `Σ IN − Σ OUT` do razão. ADJUST fica fora da soma por desenho — é declaração de
+  inventário, não movimento.
+- **Seção F (testes e codificação).** A10: varredura do repositório inteiro por regex sem a barra invertida
+  (`/s+ /d+ /w+ /b`) não achou nenhum outro caso além da linha do CHANGELOG que documenta o defeito original.
+  O mesmo pente achou a classe de acentos combináveis do `slugify` escrita com caracteres **invisíveis** no
+  fonte; agora é `/[\u0300-\u036f]/g`. `.gitattributes` da raiz ganhou `.sql`, `.yml`, `.yaml` e `.txt` com
+  `eol=lf`, porque o `core.autocrlf=true` da máquina ia converter a migration nova para CRLF no checkout.
+- **JÁ CORRIGIDO, provado agora:** A2 (varredura de notificação nunca aceitou `companyId` depois da Fase 1a —
+  `intrusao.test.ts` e `notifications.test.ts` confirmam) e A11 (reuso de refresh derruba a família de sessões
+  e audita `auth.refresh_reuse`, com o cadeado do frontend preservando o uso normal — `seguranca.test.ts`).
+
+Validação do bloco: typecheck da API e do painel limpos, build Vite OK, suíte completa **28 arquivos / 230
+testes** verdes, cobertura 85,57% / 72,96% / 83,93% / 88,29% (linha de base do bloco: 84,15% / 70,4% / 83,03% /
+86,93%), pente de BOM/CRLF/`\n` final sem nenhum arquivo fora do padrão. `npm audit` segue com 3 high no mesmo
+caminho `prisma → @prisma/config → deepmerge-ts <8.0.0` (GHSA-ggr8-5vv4-36mx), sem versão corrigida dentro do
+Prisma 6.19 em uso e sem `audit fix --force` — é o Bloco B, registrado como PENDENTE na tabela.
+
+Nada de integração externa foi escrito: SMTP, cobrança, fiscal, verificação de cadastro, hospedagem e licença
+estão como documento de decisão com opções, custo e recomendação em `docs/decisoes/`, esperando resposta do
+dono (Bloco G).
