@@ -3,7 +3,6 @@ import { addMemberSchema, listUsersQuery, updateRoleSchema } from "./users.schem
 import * as service from "./users.service";
 import { resolveCompanyContext } from "../../lib/company-context";
 import { assertPermission } from "../../lib/rbac";
-import { forbidden } from "../../lib/errors";
 import { matrizPermissoes } from "../../lib/rbac";
 
 export async function usersRoutes(app: FastifyInstance): Promise<void> {
@@ -38,7 +37,7 @@ export async function usersRoutes(app: FastifyInstance): Promise<void> {
     const ctx = await resolveCompanyContext(req);
     assertPermission(ctx.role, "user:write");
     const input = addMemberSchema.parse(req.body);
-    const member = await service.addMember(ctx.companyId, input, ctx.userId, req.ip);
+    const member = await service.addMember(ctx.companyId, input, ctx.userId, req.ip, ctx.role);
     return reply.status(201).send(member);
   });
 
@@ -46,9 +45,9 @@ export async function usersRoutes(app: FastifyInstance): Promise<void> {
     const ctx = await resolveCompanyContext(req);
     assertPermission(ctx.role, "user:write");
     const { userId } = req.params as { userId: string };
-    // Impede um não-OWNER rebaixar/promover sem autoridade; OWNER é o único que altera OWNER.
     const { role } = updateRoleSchema.parse(req.body);
-    if (role === "OWNER" && ctx.role !== "OWNER") throw forbidden("Apenas o proprietário transfere propriedade");
-    return service.updateRole(ctx.companyId, userId, role, ctx.userId, req.ip);
+    // Fase 1 da auditoria: a regra de papel mora no serviço, que conhece o papel
+    // atual do alvo — o rota só entrega o papel de quem chama.
+    return service.updateRole(ctx.companyId, userId, role, ctx.userId, req.ip, ctx.role);
   });
 }

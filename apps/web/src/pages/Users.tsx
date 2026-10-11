@@ -43,7 +43,10 @@ const ABAS: TabItem[] = [
 // Usuários em três abas: gestão do dia a dia (lista/papéis/convites), a matriz
 // de permissões lida do RBAC central e as sessões ativas por dispositivo.
 export function Users() {
-  const { can } = useAuth();
+  const { can, user } = useAuth();
+  // Fase 1 da auditoria: papel de proprietário só o OWNER vê e mexe — a
+  // mesma regra que passou a valer no servidor, espelhada na tela.
+  const souOwner = user?.role === "OWNER";
   const { active, onSelect } = useTabState(ABAS, "lista");
 
   // ---- Aba Lista ----
@@ -227,17 +230,19 @@ export function Users() {
                     <td>{m.name}</td>
                     <td className="mono">{m.email}</td>
                     <td>
-                      {can("user:write") ? (
+                      {can("user:write") && (souOwner || m.role !== "OWNER") ? (
                         <select
                           className="select"
                           value={m.role}
                           onChange={(e) => void changeRole(m, e.target.value)}
                           aria-label={"Papel de " + m.name}
                         >
-                          {ROLES.map((r) => <option key={r} value={r}>{r}</option>)}
+                          {(souOwner ? ROLES : ROLES.filter((r) => r !== "OWNER")).map((r) => (
+                            <option key={r} value={r}>{r}</option>
+                          ))}
                         </select>
                       ) : (
-                        <span className="badge">{m.role}</span>
+                        <span className="badge" title="Apenas o proprietário mexe no papel de proprietário">{m.role}</span>
                       )}
                     </td>
                     <td>
@@ -390,15 +395,24 @@ export function Users() {
                         {can("user:write") ? (
                           <td className="col-acoes">
                             <div className="row-actions">
-                              <button
-                                type="button"
-                                className="btn btn-ghost btn-sm"
-                                onClick={() => void encerrarSessao(s)}
-                                disabled={encerrandoId === s.id}
-                                aria-label={"Encerrar sessão de " + s.usuario}
-                              >
-                                {encerrandoId === s.id ? "Encerrando…" : "Encerrar sessão"}
-                              </button>
+                              {s.userId === user?.id ? (
+                                <button
+                                  type="button"
+                                  className="btn btn-ghost btn-sm"
+                                  onClick={() => void encerrarSessao(s)}
+                                  disabled={encerrandoId === s.id}
+                                  aria-label={"Encerrar sessão de " + s.usuario}
+                                >
+                                  {encerrandoId === s.id ? "Encerrando…" : "Encerrar sessão"}
+                                </button>
+                              ) : (
+                                <span
+                                  className="text-muted"
+                                  title="Sessão pertence à pessoa, não à empresa: cada uma encerra as suas; para restringir outra pessoa, altere o papel dela"
+                                >
+                                  só as próprias
+                                </span>
+                              )}
                             </div>
                           </td>
                         ) : null}
@@ -419,6 +433,7 @@ export function Users() {
 }
 
 function AddMemberModal({ onClose, onCreated }: { onClose: () => void; onCreated: () => void }) {
+  const { user } = useAuth();
   const [form, setForm] = useState({ name: "", email: "", password: "", role: "STAFF" });
   const [busy, setBusy] = useState(false);
   const dirty = useDirty(form);
@@ -462,7 +477,9 @@ function AddMemberModal({ onClose, onCreated }: { onClose: () => void; onCreated
         <div className="field">
           <span className="field-label">Papel *</span>
           <select className="select" value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value })}>
-            {ROLES.map((r) => <option key={r} value={r}>{r}</option>)}
+            {(user?.role === "OWNER" ? ROLES : ROLES.filter((r) => r !== "OWNER")).map((r) => (
+              <option key={r} value={r}>{r}</option>
+            ))}
           </select>
         </div>
     </Modal>

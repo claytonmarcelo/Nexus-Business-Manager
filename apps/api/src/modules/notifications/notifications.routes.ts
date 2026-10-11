@@ -2,7 +2,7 @@ import type { FastifyInstance } from "fastify";
 import { resolveCompanyContext } from "../../lib/company-context";
 import { assertPermission } from "../../lib/rbac";
 import { audit } from "../../lib/audit";
-import { listaNotificacoesQuery, preferenciasSchema, varreduraSchema } from "./notifications.schemas";
+import { listaNotificacoesQuery, preferenciasSchema } from "./notifications.schemas";
 import * as service from "./notifications.service";
 import { TIPOS } from "./notifications.service";
 
@@ -52,18 +52,19 @@ export async function notificationsRoutes(app: FastifyInstance): Promise<void> {
 
   // Rotina administrativa: gera os avisos que não nascem de uma ação da pessoa
   // (contas vencidas). O passo de Operações/agendador chama a mesma função.
+  // Fase 1 da auditoria: a empresa varrida é SEMPRE a do token — nada de
+  // companyId no corpo, que era porta para varrer e gravar aviso em terceiro.
   app.post("/notifications/scan", { preHandler: [app.authenticate] }, async (req) => {
     const ctx = await resolveCompanyContext(req);
     assertPermission(ctx.role, "settings:write");
-    const q = varreduraSchema.parse(req.body ?? {});
-    const criadas = await service.varreduraEmpresa(q.companyId ?? ctx.companyId);
+    const criadas = await service.varreduraEmpresa(ctx.companyId);
     await audit({
       userId: ctx.userId,
       companyId: ctx.companyId,
       action: "notification.scan",
       entity: "notification",
       ip: req.ip,
-      metadata: { criadas, escopo: q.companyId ? "empresa informada" : "empresa ativa" },
+      metadata: { criadas },
     });
     return { criadas };
   });

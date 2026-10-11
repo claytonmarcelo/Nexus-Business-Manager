@@ -21,8 +21,7 @@ export const preferenciasSchema = z.object({
   inAppChannel: z.boolean(),
 });
 
-export const varreduraSchema = z.object({
-  companyId: z.string().trim().min(1).max(36).optional(),
-});
+// varreduraSchema saiu na Fase 1: a rota de scan não aceita mais empresa
+// nenhuma pelo corpo — a empresa varrida é sempre a do token.
 
 export type PreferenciasInput = z.infer<typeof preferenciasSchema>;

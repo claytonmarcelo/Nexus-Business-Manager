@@ -1,5 +1,5 @@
 import { prisma } from "../../lib/prisma";
-import { conflict, notFound } from "../../lib/errors";
+import { conflict, forbidden, notFound } from "../../lib/errors";
 import { hashPassword } from "../../lib/password";
 import { audit } from "../../lib/audit";
 import { paginate, skipTake, type PaginationInput } from "../../lib/pagination";
@@ -33,7 +33,18 @@ export async function listMembers(companyId: string, p: PaginationInput, search?
   return paginate(data, total, p);
 }
 
-export async function addMember(companyId: string, input: AddMemberInput, actorId: string, ip?: string) {
+export async function addMember(
+  companyId: string,
+  input: AddMemberInput,
+  actorId: string,
+  ip: string | undefined,
+  actorRole: Role,
+) {
+  // Fase 1 da auditoria (CRÍTICO C1): OWNER só nasce das mãos do OWNER. Sem
+  // esta guarda, um ADMIN se criava OWNER num POST e herda o * do RBAC.
+  if (input.role === "OWNER" && actorRole !== "OWNER") {
+    throw forbidden("Apenas o proprietário cria membros como OWNER");
+  }
   const company = await prisma.company.findUnique({ where: { id: companyId } });
   if (!company) throw notFound("Empresa não encontrada");
 
@@ -58,14 +69,33 @@ export async function addMember(companyId: string, input: AddMemberInput, actorI
   });
 }
 
-export async function updateRole(companyId: string, userId: string, role: Role, actorId: string, ip?: string) {
+export async function updateRole(
+  companyId: string,
+  userId: string,
+  role: Role,
+  actorId: string,
+  ip: string | undefined,
+  actorRole: Role,
+) {
   const membership = await prisma.companyUser.findUnique({
     where: { userId_companyId: { userId, companyId } },
-    include: { user: { select: { email: true } } },
+    include: { user: { select: { email: true, platformRole: true } } },
   });
   if (!membership) throw notFound("Membro não encontrado nesta empresa");
+  // Fase 1 da auditoria (CRÍTICO C2): o papel OWNER só se mexe pelo OWNER —
+  // valendo para o papel atual e para o novo. Antes, a guarda cobria só o
+  // valor enviado, e um ADMIN rebaixava o proprietário a STAFF.
+  if ((membership.role === "OWNER" || role === "OWNER") && actorRole !== "OWNER") {
+    throw forbidden("Apenas o proprietário mexe no papel de proprietário");
+  }
   // Regra definitiva: o administrador do sistema jamais perde o papel de OWNER.
-  if (membership.user.email.toLowerCase() === SUPER_ADMIN_EMAIL && role !== "OWNER") {
+  // Fase 1b: o cadeado segue a bandeira de plataforma (platformRole) e mantém o
+  // e-mail histórico como cinto extra — enquanto for SUPER_ADMIN no banco, é
+  // intocável em qualquer empresa, não só na conta antiga do seed.
+  const ehAdminPlataforma =
+    membership.user.platformRole === "SUPER_ADMIN" ||
+    membership.user.email.toLowerCase() === SUPER_ADMIN_EMAIL;
+  if (ehAdminPlataforma && role !== "OWNER") {
     throw conflict("O administrador definitivo do sistema não pode ser rebaixado de OWNER");
   }
   const updated = await prisma.companyUser.update({
@@ -116,11 +146,21 @@ export async function listSessions(companyId: string) {
 
 // Encerra uma sessao: revoga o refresh token daquele dispositivo. O proximo
 // request daquela aba falha no refresh e derruba para o login.
-export async function revokeSession(companyId: string, sessionId: string, actorId: string, ip?: string) {
-  const registro = await prisma.refreshToken.findFirst({
-    where: { id: sessionId, user: { memberships: { some: { companyId } } } },
-  });
+// Fase 1 da auditoria: sessao pertence à pessoa, não à empresa — o refresh
+// token não tem companyId, e um ADMIN de A com um usuário em comum podia
+// derrubar a sessão de B. Agora cada pessoa encerra as próprias sessões pela
+// rota de tenant; para restringir outra pessoa, o caminho é o papel.
+export async function revokeSession(
+  companyId: string,
+  sessionId: string,
+  actorId: string,
+  ip: string | undefined,
+) {
+  const registro = await prisma.refreshToken.findFirst({ where: { id: sessionId } });
   if (!registro) throw notFound("Sessão não encontrada");
+  if (registro.userId !== actorId) {
+    throw forbidden("Você encerra apenas as suas sessões; para restringir outra pessoa, altere o papel dela");
+  }
   if (registro.revokedAt) return { ok: true, ja: true };
   await prisma.refreshToken.update({ where: { id: sessionId }, data: { revokedAt: new Date() } });
   await audit({
