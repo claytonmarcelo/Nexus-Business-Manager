@@ -335,6 +335,11 @@
 .table .col-quando { min-width: 165px; white-space: nowrap; }
 .table .col-acao { min-width: 230px; }
 
+/* Acao (singular) = o nome da acao na trilha de auditoria.
+   Acoes (plural) = a coluna de botoes do fim da linha: largura minima de
+   176px (w-44) para caber Editar + Desativar na mesma linha. */
+.table .col-acoes { min-width: 176px; white-space: nowrap; }
+
 /* Matriz de permissoes: cada check fica centralizado sob o seu papel. */
 .table.matriz-rbac thead th { text-align: center; }
 .table.matriz-rbac thead th:first-child, .table.matriz-rbac tbody th { text-align: left; }
@@ -1155,7 +1160,26 @@
   font-size: 0.76rem;
   overflow-wrap: anywhere;
 }
-.row-actions { display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap; }
+/* Coluna de Acoes das tabelas: os botoes ficam sempre lado a lado, na
+   mesma linha. O espaco que falta sai das colunas de texto (que ja quebram
+   sozinhas pelo .mono), nunca do conjunto de acoes - foi assim que Editar e
+   Desativar pararam de empilhar em telas menores. */
+.row-actions {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 0.45rem;
+  flex-wrap: nowrap;
+}
+.row-actions .btn,
+.row-actions .select-sm { flex: 0 0 auto; white-space: nowrap; }
+
+/* Ficha de estagios do lead: aqui a quebra de linha e bem-vinda (sao cinco
+   botoes de uma vez), entao usa a propria classe em vez de reaproveitar a
+   classe da tabela. */
+.stage-buttons { display: flex; align-items: center; gap: 0.45rem; flex-wrap: wrap; }
+
 .select-sm { width: auto; padding: 0.32rem 0.5rem; font-size: 0.78rem; border-radius: 8px; }
 .field-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 0.9rem; }
 .form-note { margin: 0.2rem 0 0; font-size: 0.78rem; color: var(--text-3); }
@@ -1467,4 +1491,65 @@
 }
 @media (prefers-reduced-motion: reduce) {
   .nx-tab, .nx-tabpanel { transition: none; animation: none; }
+}
+
+
+/* ============================================================
+   Dialogo central de confirmacao (components/ConfirmationModal.tsx)
+   O dialogo usa o MESMO .nx-modal-overlay / .nx-modal do sistema (Portal no fim
+   do body, scrim com blur, mesma animacao, foco preso). Estas classes completam
+   a anatomia do padrao de confirmacao: nome do registro destacado, consequencia
+   discreta, erro dentro do proprio dialogo e o botao de risco.
+   ============================================================ */
+/* Risco: Excluir / Inativar / Cancelar / Encerrar. Reativar e confirmar seguem
+   com o dourado da marca (.btn-brand) e "Voltar" fica discreto (.btn-ghost). */
+.btn-risk {
+  background: var(--risk);
+  color: #fff;
+  box-shadow: 0 8px 20px -12px var(--risk);
+}
+.btn-risk:not(:disabled):hover { background: var(--risk-strong); }
+
+.nx-confirm-texto { margin: 0; font-size: 0.95rem; line-height: 1.6; color: var(--text); }
+.nx-confirm-nome { font-weight: 800; color: var(--accent); }
+.nx-confirm-detalhe {
+  margin: 0.6rem 0 0;
+  font-size: 0.85rem;
+  line-height: 1.55;
+  color: var(--text-muted);
+}
+.nx-confirm-erro {
+  margin: 0.75rem 0 0;
+  padding: 0.55rem 0.7rem;
+  border-radius: 10px;
+  border: 1px solid color-mix(in srgb, var(--danger) 45%, transparent);
+  background: color-mix(in srgb, var(--danger) 12%, var(--surface-2));
+  color: var(--danger);
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+/* Spinner dentro do botao de confirmação: mesma animação do resto da casa. */
+.nx-confirm-spin {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  display: inline-block;
+  border: 2px solid rgba(26, 18, 8, 0.25);
+  border-top-color: #1a1208;
+  animation: nexus-spin 0.9s linear infinite;
+}
+.btn-risk .nx-confirm-spin { border-color: rgba(255, 255, 255, 0.35); border-top-color: #fff; }
+
+/* Estado "confirmando" do modal da casa: enquanto a requisicao dura nao ha mais
+   nenhum clique possivel — nem no botao (ja disabled), nem no X, nem no Esc. */
+.nx-modal.is-confirming .nx-modal-actions,
+.nx-modal.is-confirming .nx-modal-close { pointer-events: none; }
+.nx-modal.is-confirming .nx-modal-actions { opacity: 0.78; }
+
+@media (max-width: 640px) {
+  .nx-confirm-texto { font-size: 0.92rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .nx-confirm-spin { animation: none; }
 }

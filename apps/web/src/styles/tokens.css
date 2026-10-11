@@ -47,6 +47,9 @@
   --ring: rgba(200, 168, 112, 0.55);
   --success: #4fae7a;
   --danger: #d0685f;
+  /* Vermelho de risco: botao dos dialogos que destroem ou desativam. */
+  --risk: #c9372c;
+  --risk-strong: #a82a21;
   --warning: #d8a94f;
   --info: #6aa6c8;
   --shadow: 0 10px 30px -12px rgba(0, 0, 0, 0.6);
@@ -76,6 +79,9 @@
   --ring: rgba(168, 80, 72, 0.4);
   --success: #2f855a;
   --danger: #b0413a;
+  /* No tema dia o mesmo vermelho um degrau mais fundo, para o texto branco. */
+  --risk: #b3271e;
+  --risk-strong: #8f1f17;
   --warning: #b7791f;
   --info: #2c6e91;
   --shadow: 0 10px 30px -14px rgba(90, 60, 40, 0.28);

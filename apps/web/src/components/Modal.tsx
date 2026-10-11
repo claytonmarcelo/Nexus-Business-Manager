@@ -1,4 +1,5 @@
 import { useEffect, useId, useRef, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 import { confirmAction } from "../lib/confirm";
 import { ACTIONS, MODAL_COPY } from "../lib/uiCopy";
 
@@ -160,7 +161,9 @@ export function Modal(props: ModalProps) {
     </>
   );
 
-  return (
+  // Portal no fim do <body>: o modal nunca fica preso em contexto de empilhamento
+  // de um card animado da pagina e sempre cobre a barra lateral.
+  return createPortal(
     <div
       ref={overlayRef}
       className="nx-modal-overlay"
@@ -171,9 +174,10 @@ export function Modal(props: ModalProps) {
     >
       <div
         ref={panelRef}
-        className={"nx-modal nx-modal--" + size}
+        className={"nx-modal nx-modal--" + size + (busy ? " is-confirming" : "")}
         role="dialog"
         aria-modal="true"
+        aria-busy={busy}
         aria-label={label}
         aria-labelledby={label ? undefined : titleId}
         tabIndex={-1}
@@ -203,7 +207,8 @@ export function Modal(props: ModalProps) {
           </footer>
         ) : null}
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
 

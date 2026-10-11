@@ -132,19 +132,35 @@ export function Finance() {
 
   async function changeStatus(row: EntryRow, next: "PAID" | "PENDING" | "CANCELLED") {
     const textos = {
-      PAID: { title: "Registrar pagamento", text: "Marcar " + row.description + " como pago hoje?", label: "Pagar" },
-      PENDING: { title: "Reabrir lançamento", text: "Voltar para pendente?", label: "Reabrir" },
-      CANCELLED: { title: "Cancelar lançamento", text: "Este lançamento deixará de contar nos resumos.", label: "Cancelar" },
+      PAID: { title: "Registrar pagamento", text: "Marcar {nome} como pago hoje?", label: "Pagar", danger: false },
+      PENDING: { title: "Reabrir lançamento", text: "Voltar {nome} para pendente?", label: "Reabrir", danger: false },
+      CANCELLED: { title: "Cancelar lançamento", text: "Deseja realmente cancelar {nome}?", label: "Cancelar", danger: true },
     }[next];
-    const ok = await confirmAction({ title: textos.title, text: textos.text, confirmLabel: textos.label });
-    if (!ok) return;
-    try {
-      await api.patch("/finance/entries/" + row.id + "/status", { status: next });
-      notify.success("Lançamento atualizado.");
-      recarregar();
-    } catch (err) {
-      notify.error(extractErrorMessage(err));
-    }
+    await confirmAction({
+      title: textos.title,
+      text: textos.text,
+      nome: row.description,
+      detalhe:
+        (row.type === "INCOME" ? "Recebimento" : "Despesa") + " de " + formatCurrency(row.amount) +
+        ", vencimento em " + formatDate(row.dueDate) +
+        (row.categoryName ? " · " + row.categoryName : "") +
+        (next === "PAID"
+          ? ". A data de pagamento registrada é hoje."
+          : next === "PENDING"
+            ? ". Ele volta a contar nas contas em aberto e no alerta de vencidos."
+            : ". Ele deixa de contar nos resumos e no fluxo de caixa."),
+      confirmLabel: textos.label,
+      danger: textos.danger,
+      action: async () => {
+        try {
+          await api.patch("/finance/entries/" + row.id + "/status", { status: next });
+          notify.success("Lançamento atualizado.");
+          recarregar();
+        } catch (err) {
+          notify.error(extractErrorMessage(err));
+        }
+      },
+    });
   }
 
   function exportarFluxo() {
@@ -351,7 +367,7 @@ export function Finance() {
                   <th scope="col">Valor</th>
                   <th scope="col">Vencimento</th>
                   <th scope="col">Status</th>
-                  {can("finance:write") ? <th scope="col">Ações</th> : null}
+                  {can("finance:write") ? <th scope="col" className="col-acoes">Ações</th> : null}
                 </tr>
               </thead>
               <tbody>
@@ -365,7 +381,7 @@ export function Finance() {
                     <td><span className={"status-pill " + statusClass[e.status]}>{statusLabel[e.status]}</span></td>
                     {can("finance:write") ? (
                       <td>
-                        <div style={{ display: "flex", gap: "0.4rem", flexWrap: "wrap" }}>
+                        <div className="row-actions">
                           {e.status === "PENDING" ? <button type="button" className="btn btn-ghost btn-sm" onClick={() => void changeStatus(e, "PAID")}>Pagar</button> : null}
                           {e.status === "PAID" ? <button type="button" className="btn btn-ghost btn-sm" onClick={() => void changeStatus(e, "PENDING")}>Reabrir</button> : null}
                           {e.status !== "CANCELLED" ? <button type="button" className="btn btn-ghost btn-sm" onClick={() => void changeStatus(e, "CANCELLED")}>Cancelar</button> : null}
@@ -631,15 +647,23 @@ function GestaoCategorias() {
   }
 
   async function remove(c: CategoryRow) {
-    const ok = await confirmAction({ title: "Excluir categoria", text: c.name + " será removida (lançamentos existentes ficam sem categoria).", confirmLabel: "Excluir" });
-    if (!ok) return;
-    try {
-      await api.delete("/finance/categories/" + c.id);
-      notify.success(notice("category", "deleted"));
-      void load();
-    } catch (err) {
-      notify.error(extractErrorMessage(err));
-    }
+    await confirmAction({
+      title: "Excluir categoria",
+      text: "Deseja realmente excluir a categoria {nome}?",
+      nome: c.name,
+      detalhe: "Os lançamentos já feitos com ela continuam no sistema, apenas sem categoria. Não dá para desfazer.",
+      confirmLabel: "Excluir",
+      danger: true,
+      action: async () => {
+        try {
+          await api.delete("/finance/categories/" + c.id);
+          notify.success(notice("category", "deleted"));
+          void load();
+        } catch (err) {
+          notify.error(extractErrorMessage(err));
+        }
+      },
+    });
   }
 
   return (

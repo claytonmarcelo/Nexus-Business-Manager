@@ -81,21 +81,30 @@ export function Sales() {
   }, [active, load]);
 
   async function changeStatus(row: SaleRow, next: "CONFIRMED" | "CANCELLED") {
-    const ok = await confirmAction({
-      title: next === "CONFIRMED" ? "Confirmar venda" : "Cancelar venda",
-      text: next === "CONFIRMED"
-        ? "O estoque dos itens controlados será baixado."
-        : "Se a venda estava confirmada, o estoque volta automaticamente.",
-      confirmLabel: next === "CONFIRMED" ? "Confirmar" : "Cancelar venda",
+    const confirmar = next === "CONFIRMED";
+    await confirmAction({
+      title: confirmar ? "Confirmar venda" : "Cancelar venda",
+      text: confirmar
+        ? "Deseja realmente confirmar a venda de {nome}?"
+        : "Deseja realmente cancelar a venda de {nome}?",
+      nome: row.clientName ?? "Consumidor final",
+      detalhe:
+        "Código #" + row.id.slice(0, 8).toUpperCase() + " · " + formatCurrency(row.total) + " em " + formatDate(row.createdAt) +
+        (confirmar
+          ? " · o estoque dos itens controlados é baixado agora."
+          : " · as " + row.items.length + (row.items.length === 1 ? " unidade volta" : " unidades voltam") + " ao estoque se a venda já estava confirmada."),
+      confirmLabel: confirmar ? "Confirmar venda" : "Cancelar venda",
+      danger: !confirmar,
+      action: async () => {
+        try {
+          await api.patch("/sales/" + row.id + "/status", { status: next });
+          notify.success(confirmar ? "Venda confirmada." : "Venda cancelada.");
+          void load();
+        } catch (err) {
+          notify.error(extractErrorMessage(err));
+        }
+      },
     });
-    if (!ok) return;
-    try {
-      await api.patch("/sales/" + row.id + "/status", { status: next });
-      notify.success(next === "CONFIRMED" ? "Venda confirmada." : "Venda cancelada.");
-      void load();
-    } catch (err) {
-      notify.error(extractErrorMessage(err));
-    }
   }
 
   function vendaSalva() {
@@ -148,7 +157,7 @@ export function Sales() {
                   <th scope="col">Status</th>
                   <th scope="col">Data</th>
                   <th scope="col">Vendedor</th>
-                  {can("sale:write") ? <th scope="col">Ações</th> : null}
+                  {can("sale:write") ? <th scope="col" className="col-acoes">Ações</th> : null}
                 </tr>
               </thead>
               <tbody>
@@ -162,7 +171,7 @@ export function Sales() {
                     <td>{s.userName ?? "—"}</td>
                     {can("sale:write") ? (
                       <td>
-                        <div style={{ display: "flex", gap: "0.4rem", flexWrap: "wrap" }}>
+                        <div className="row-actions">
                           {s.status === "PENDING" ? (
                             <button type="button" className="btn btn-ghost btn-sm" onClick={() => void changeStatus(s, "CONFIRMED")}>Confirmar</button>
                           ) : null}

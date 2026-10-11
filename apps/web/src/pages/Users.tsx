@@ -124,40 +124,45 @@ export function Users() {
   }, [active, sessoes, sessoesLoading, loadSessoes]);
 
   async function changeRole(member: Member, role: string) {
-    const ok = await confirmAction({
+    await confirmAction({
       title: "Alterar papel",
-      text: "Definir " + member.name + " como " + role + " nesta empresa?",
-      confirmLabel: "Alterar",
+      text: "Definir {nome} como " + role + " nesta empresa?",
+      nome: member.name,
+      detalhe: "O papel é lido do banco a cada requisição: o acesso muda na hora e passa a seguir exatamente a matriz de permissões.",
+      confirmLabel: "Alterar papel",
+      action: async () => {
+        try {
+          await api.patch("/users/" + member.id + "/role", { role });
+          notify.success("Papel atualizado.");
+          void load();
+        } catch (err) {
+          notify.error(extractErrorMessage(err));
+        }
+      },
     });
-    if (!ok) return;
-    try {
-      await api.patch("/users/" + member.id + "/role", { role });
-      notify.success("Papel atualizado.");
-      void load();
-    } catch (err) {
-      notify.error(extractErrorMessage(err));
-    }
   }
 
   async function encerrarSessao(sessao: Sessao) {
-    const ok = await confirmAction({
+    await confirmAction({
       title: "Encerrar sessão",
-      text:
-        "Encerrar a sessão de " + sessao.usuario + " (" + sessao.email + ") neste dispositivo? " +
-        "A pessoa será desconectada imediatamente nesse acesso e precisará entrar de novo na próxima vez.",
+      text: "Encerrar a sessão de {nome} neste dispositivo?",
+      nome: sessao.usuario + " (" + sessao.email + ")",
+      detalhe: "A pessoa é desconectada imediatamente nesse acesso e precisa entrar de novo para voltar. Os demais dispositivos dela não são afetados.",
       confirmLabel: "Encerrar sessão",
+      danger: true,
+      action: async () => {
+        setEncerrandoId(sessao.id);
+        try {
+          await api.delete("/users/sessions/" + sessao.id);
+          notify.success("Sessão encerrada. A pessoa precisará entrar de novo nesse dispositivo.");
+          void loadSessoes();
+        } catch (err) {
+          notify.error(extractErrorMessage(err));
+        } finally {
+          setEncerrandoId(null);
+        }
+      },
     });
-    if (!ok) return;
-    setEncerrandoId(sessao.id);
-    try {
-      await api.delete("/users/sessions/" + sessao.id);
-      notify.success("Sessão encerrada. A pessoa precisará entrar de novo nesse dispositivo.");
-      void loadSessoes();
-    } catch (err) {
-      notify.error(extractErrorMessage(err));
-    } finally {
-      setEncerrandoId(null);
-    }
   }
 
   // Mapa recurso:acao -> papéis que têm a permissão, para montar a matriz.
@@ -368,7 +373,7 @@ export function Users() {
                       <th scope="col">Origem/IP</th>
                       <th scope="col">Criada em</th>
                       <th scope="col">Expira em</th>
-                      {can("user:write") ? <th scope="col">Ações</th> : null}
+                      {can("user:write") ? <th scope="col" className="col-acoes">Ações</th> : null}
                     </tr>
                   </thead>
                   <tbody>
@@ -383,16 +388,18 @@ export function Users() {
                         <td>{formatDateTime(s.criadaEm)}</td>
                         <td>{formatDateTime(s.expiraEm)}</td>
                         {can("user:write") ? (
-                          <td>
-                            <button
-                              type="button"
-                              className="btn btn-ghost btn-sm"
-                              onClick={() => void encerrarSessao(s)}
-                              disabled={encerrandoId === s.id}
-                              aria-label={"Encerrar sessão de " + s.usuario}
-                            >
-                              {encerrandoId === s.id ? "Encerrando…" : "Encerrar sessão"}
-                            </button>
+                          <td className="col-acoes">
+                            <div className="row-actions">
+                              <button
+                                type="button"
+                                className="btn btn-ghost btn-sm"
+                                onClick={() => void encerrarSessao(s)}
+                                disabled={encerrandoId === s.id}
+                                aria-label={"Encerrar sessão de " + s.usuario}
+                              >
+                                {encerrandoId === s.id ? "Encerrando…" : "Encerrar sessão"}
+                              </button>
+                            </div>
                           </td>
                         ) : null}
                       </tr>

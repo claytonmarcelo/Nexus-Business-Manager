@@ -82,21 +82,30 @@ export function Purchases() {
   }, [active, load]);
 
   async function changeStatus(row: PurchaseRow, next: "RECEIVED" | "CANCELLED") {
-    const ok = await confirmAction({
-      title: next === "RECEIVED" ? "Receber compra" : "Cancelar compra",
-      text: next === "RECEIVED"
-        ? "Os itens controlados entram no estoque e o custo do produto é atualizado."
-        : "Se a compra estava recebida, o estoque é estornado (bloqueia se as unidades já foram consumidas).",
-      confirmLabel: next === "RECEIVED" ? "Receber" : "Cancelar compra",
+    const receber = next === "RECEIVED";
+    await confirmAction({
+      title: receber ? "Receber compra" : "Cancelar compra",
+      text: receber
+        ? "Deseja realmente dar entrada nesta compra de {nome}?"
+        : "Deseja realmente cancelar a compra de {nome}?",
+      nome: row.supplierName ?? "—",
+      detalhe:
+        "Código #" + row.id.slice(0, 8).toUpperCase() + " · " + formatCurrency(row.total) + " em " + formatDateTime(row.createdAt) +
+        (receber
+          ? " · os itens controlados entram no estoque e o custo do produto é atualizado."
+          : " · se a compra estava recebida, o estoque é estornado; o sistema bloqueia se as unidades já foram consumidas."),
+      confirmLabel: receber ? "Receber" : "Cancelar compra",
+      danger: !receber,
+      action: async () => {
+        try {
+          await api.patch("/purchases/" + row.id + "/status", { status: next });
+          notify.success(receber ? "Compra recebida." : "Compra cancelada.");
+          void load();
+        } catch (err) {
+          notify.error(extractErrorMessage(err));
+        }
+      },
     });
-    if (!ok) return;
-    try {
-      await api.patch("/purchases/" + row.id + "/status", { status: next });
-      notify.success(next === "RECEIVED" ? "Compra recebida." : "Compra cancelada.");
-      void load();
-    } catch (err) {
-      notify.error(extractErrorMessage(err));
-    }
   }
 
   return (
@@ -147,7 +156,7 @@ export function Purchases() {
                   <th scope="col">Status</th>
                   <th scope="col">Data</th>
                   <th scope="col">Comprador</th>
-                  {can("purchase:write") ? <th scope="col">Ações</th> : null}
+                  {can("purchase:write") ? <th scope="col" className="col-acoes">Ações</th> : null}
                 </tr>
               </thead>
               <tbody>
@@ -161,7 +170,7 @@ export function Purchases() {
                     <td>{s.userName ?? "—"}</td>
                     {can("purchase:write") ? (
                       <td>
-                        <div style={{ display: "flex", gap: "0.4rem", flexWrap: "wrap" }}>
+                        <div className="row-actions">
                           {s.status === "DRAFT" ? (
                             <button type="button" className="btn btn-ghost btn-sm" onClick={() => void changeStatus(s, "RECEIVED")}>Receber</button>
                           ) : null}
@@ -419,15 +428,23 @@ function SuppliersPanel({ setEditing, recarga }: {
   }, [load]);
 
   async function deactivate(s: SupplierRow) {
-    const ok = await confirmAction({ title: "Desativar fornecedor", text: s.name + " deixará de aparecer nas novas compras.", confirmLabel: "Desativar" });
-    if (!ok) return;
-    try {
-      await api.delete("/suppliers/" + s.id);
-      notify.success("Fornecedor desativado.");
-      void load();
-    } catch (err) {
-      notify.error(extractErrorMessage(err));
-    }
+    await confirmAction({
+      title: "Desativar fornecedor",
+      text: "Tem certeza de que deseja desativar o fornecedor {nome}?",
+      nome: s.name,
+      detalhe: "Ele deixa de aparecer nas novas compras. Os pedidos já registrados continuam no histórico.",
+      confirmLabel: "Desativar",
+      danger: true,
+      action: async () => {
+        try {
+          await api.delete("/suppliers/" + s.id);
+          notify.success("Fornecedor desativado.");
+          void load();
+        } catch (err) {
+          notify.error(extractErrorMessage(err));
+        }
+      },
+    });
   }
 
   return (
@@ -453,7 +470,7 @@ function SuppliersPanel({ setEditing, recarga }: {
                   <span className="company-meta">{[s.email, s.phone, s.document].filter(Boolean).join(" · ") || "sem contatos"}</span>
                 </div>
                 {can("supplier:write") ? (
-                  <div style={{ display: "flex", gap: "0.4rem", flexWrap: "wrap" }}>
+                  <div className="row-actions">
                     <button type="button" className="btn btn-ghost btn-sm" onClick={() => setEditing(s)}>Editar</button>
                     {s.active ? <button type="button" className="btn btn-ghost btn-sm" onClick={() => void deactivate(s)}>Desativar</button> : null}
                   </div>

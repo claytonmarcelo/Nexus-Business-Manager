@@ -104,19 +104,23 @@ export function Clients() {
   }, [active, report, reportLoading, reportError, loadReport]);
 
   async function deactivate(row: ClientRow) {
-    const ok = await confirmAction({
+    await confirmAction({
       title: "Desativar cliente",
-      text: "O cliente " + row.name + " será desativado. O histórico é preservado.",
+      text: "Tem certeza de que deseja desativar o cliente {nome}?",
+      nome: row.name,
+      detalhe: "Ele deixa de aparecer em novas vendas, orçamentos e buscas. O histórico de compras continua guardado no sistema.",
       confirmLabel: "Desativar",
+      danger: true,
+      action: async () => {
+        try {
+          await api.delete("/clients/" + row.id);
+          notify.success("Cliente desativado.");
+          void load();
+        } catch (err) {
+          notify.error(extractErrorMessage(err));
+        }
+      },
     });
-    if (!ok) return;
-    try {
-      await api.delete("/clients/" + row.id);
-      notify.success("Cliente desativado.");
-      void load();
-    } catch (err) {
-      notify.error(extractErrorMessage(err));
-    }
   }
 
   // Envolve o conteudo dos paineis de analise com os estados da casa.
@@ -206,7 +210,7 @@ export function Clients() {
                   <th scope="col">Telefone</th>
                   <th scope="col">Documento</th>
                   <th scope="col">Situação</th>
-                  {can("client:write") ? <th scope="col">Ações</th> : null}
+                  {can("client:write") ? <th scope="col" className="col-acoes">Ações</th> : null}
                 </tr>
               </thead>
               <tbody>
@@ -223,7 +227,7 @@ export function Clients() {
                     </td>
                     {can("client:write") ? (
                       <td>
-                        <div style={{ display: "flex", gap: "0.4rem", flexWrap: "wrap" }}>
+                        <div className="row-actions">
                           <button type="button" className="btn btn-ghost btn-sm" onClick={() => setEditing(c)}>Editar</button>
                           {c.active ? (
                             <button type="button" className="btn btn-ghost btn-sm" onClick={() => void deactivate(c)}>Desativar</button>

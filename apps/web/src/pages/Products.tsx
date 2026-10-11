@@ -144,19 +144,23 @@ export function Products() {
   }, [active, loadMov]);
 
   async function deactivate(row: ProductRow) {
-    const ok = await confirmAction({
-      title: "Desativar produto",
-      text: "O produto " + row.name + " será desativado. O histórico de estoque é preservado.",
-      confirmLabel: "Desativar",
+    await confirmAction({
+      title: "Inativar produto",
+      text: "Confirma a alteração de status do produto {nome}?",
+      nome: row.name,
+      detalhe: "Ele deixará de aparecer nas novas opções de venda. O saldo atual de estoque e o histórico de movimentações continuam preservados.",
+      confirmLabel: "Inativar",
+      danger: true,
+      action: async () => {
+        try {
+          await api.delete("/products/" + row.id);
+          notify.success("Produto inativado.");
+          void load();
+        } catch (err) {
+          notify.error(extractErrorMessage(err));
+        }
+      },
     });
-    if (!ok) return;
-    try {
-      await api.delete("/products/" + row.id);
-      notify.success("Produto desativado.");
-      void load();
-    } catch (err) {
-      notify.error(extractErrorMessage(err));
-    }
   }
 
   function exportarMov() {
@@ -229,7 +233,7 @@ export function Products() {
                   <th scope="col">Preço</th>
                   <th scope="col">Estoque</th>
                   <th scope="col">Situação</th>
-                  {can("product:write") ? <th scope="col">Ações</th> : null}
+                  {can("product:write") ? <th scope="col" className="col-acoes">Ações</th> : null}
                 </tr>
               </thead>
               <tbody>
@@ -252,12 +256,12 @@ export function Products() {
                     </td>
                     {can("product:write") ? (
                       <td>
-                        <div style={{ display: "flex", gap: "0.4rem", flexWrap: "wrap" }}>
+                        <div className="row-actions">
                           <button type="button" className="btn btn-ghost btn-sm" onClick={() => setEditing(p)}>Editar</button>
                           <button type="button" className="btn btn-ghost btn-sm" onClick={() => setMoving(p)}>Estoque</button>
                           <button type="button" className="btn btn-ghost btn-sm" onClick={() => setHistory(p)}>Histórico</button>
                           {p.active ? (
-                            <button type="button" className="btn btn-ghost btn-sm" onClick={() => void deactivate(p)}>Desativar</button>
+                            <button type="button" className="btn btn-ghost btn-sm" onClick={() => void deactivate(p)}>Inativar</button>
                           ) : null}
                         </div>
                       </td>

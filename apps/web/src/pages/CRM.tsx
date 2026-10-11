@@ -177,7 +177,9 @@ export function CRM() {
     if (next === "WON") {
       const confirmado = await confirmAction({
         title: "Marcar como ganho",
-        text: lead.name + " vira cliente da empresa ativa. Confirma?",
+        text: "{nome} vira cliente da empresa ativa. Confirma?",
+        nome: lead.name,
+        detalhe: "O lead sai do funil como ganho e entra na carteira de clientes; o valor estimado fecha o negócio no pipeline.",
         confirmLabel: "Ganhou o negócio",
       });
       if (!confirmado) return;
@@ -185,7 +187,9 @@ export function CRM() {
     if (next === "LOST") {
       const confirmado = await confirmAction({
         title: "Marcar como perdido",
-        text: "O lead " + lead.name + " sai do funil. Você pode reabri-lo depois.",
+        text: "Deseja realmente marcar {nome} como perdido?",
+        nome: lead.name,
+        detalhe: "Ele sai do funil e do valor aberto. Você pode reabri-lo depois, sem perder o histórico.",
         confirmLabel: "Perdido",
         danger: true,
       });
@@ -327,7 +331,7 @@ export function CRM() {
                   <th scope="col">Estágio</th>
                   <th scope="col">Responsável</th>
                   <th scope="col">Criado</th>
-                  {can("crm:write") ? <th scope="col">Ações</th> : null}
+                  {can("crm:write") ? <th scope="col" className="col-acoes">Ações</th> : null}
                 </tr>
               </thead>
               <tbody>
@@ -687,7 +691,7 @@ function LeadDetail({ lead, canWrite, onClose, onEdit, onMove }: {
       {canWrite ? (
         <div className="pipeline-move">
           <span className="field-label">Mover para</span>
-          <div className="row-actions">
+          <div className="stage-buttons">
             {STAGES.map((s) => (
               <button
                 key={s.status}

@@ -183,44 +183,54 @@ export function Agenda() {
 
   async function mudarEstado(evento: Evento, proximo: EventoEstado) {
     const acao = proximo === "DONE" ? "concluído" : proximo === "CANCELLED" ? "cancelado" : "reaberto";
-    const confirmado = await confirmAction({
+    await confirmAction({
       title: proximo === "DONE" ? "Concluir compromisso" : proximo === "CANCELLED" ? "Cancelar compromisso" : "Reabrir compromisso",
       text:
-        (proximo === "DONE" ? "Marcar " : proximo === "CANCELLED" ? "Cancelar " : "Reabrir ") +
-        "“" + evento.title + "”" +
-        (evento.recorrente ? " na série inteira." : "."),
+        (proximo === "DONE" ? "Marcar {nome}" : proximo === "CANCELLED" ? "Cancelar {nome}" : "Reabrir {nome}") +
+        (evento.recorrente ? " na série inteira?" : "?"),
+      nome: "“" + evento.title + "”",
+      detalhe:
+        formatDateTime(evento.startAt) +
+        (evento.recorrente ? " · a mudança vale para toda a série, não só para este dia." : " · a mudança vale só para este compromisso."),
       confirmLabel: estadoInfo(proximo).label,
       danger: proximo === "CANCELLED",
+      action: async () => {
+        try {
+          await api.patch("/agenda/events/" + evento.masterId + "/status", { status: proximo });
+          notify.success("Compromisso " + acao + ".");
+          setDetalhe(null);
+          void carregar();
+        } catch (err) {
+          notify.error(extractErrorMessage(err));
+        }
+      },
     });
-    if (!confirmado) return;
-    try {
-      await api.patch("/agenda/events/" + evento.masterId + "/status", { status: proximo });
-      notify.success("Compromisso " + acao + ".");
-      setDetalhe(null);
-      void carregar();
-    } catch (err) {
-      notify.error(extractErrorMessage(err));
-    }
   }
 
   async function excluir(evento: Evento) {
-    const confirmado = await confirmAction({
+    await confirmAction({
       title: "Excluir compromisso",
       text: evento.recorrente
-        ? "Isso apaga a série inteira de “" + evento.title + "”. Não dá para desfazer."
-        : "Excluir “" + evento.title + "” de " + formatDateTime(evento.startAt) + ". Não dá para desfazer.",
+        ? "Deseja realmente excluir {nome}? Isso apaga a série inteira."
+        : "Deseja realmente excluir {nome}?",
+      nome: "“" + evento.title + "”",
+      detalhe:
+        formatDateTime(evento.startAt) +
+        (evento.recorrente ? " · saem da agenda todos os dias repetidos desta série." : "") +
+        " · não dá para desfazer.",
       confirmLabel: "Excluir",
       danger: true,
+      action: async () => {
+        try {
+          await api.delete("/agenda/events/" + evento.masterId);
+          notify.success(notice("event", "deleted"));
+          setDetalhe(null);
+          void carregar();
+        } catch (err) {
+          notify.error(extractErrorMessage(err));
+        }
+      },
     });
-    if (!confirmado) return;
-    try {
-      await api.delete("/agenda/events/" + evento.masterId);
-      notify.success(notice("event", "deleted"));
-      setDetalhe(null);
-      void carregar();
-    } catch (err) {
-      notify.error(extractErrorMessage(err));
-    }
   }
 
   const linhas = useMemo<EventInput[]>(
