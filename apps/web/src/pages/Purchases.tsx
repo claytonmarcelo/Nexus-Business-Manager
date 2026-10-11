@@ -29,8 +29,6 @@ interface PurchaseReport {
   cotacoes: { id: string; fornecedor: string; valor: number; itens: number; createdAt: string }[];
 }
 
-const brl = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
-const fmtData = (iso: string) => new Date(iso).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
 const statusLabel = { DRAFT: "Rascunho", RECEIVED: "Recebida", CANCELLED: "Cancelada" } as const;
 const statusClass = { DRAFT: "is-off", RECEIVED: "is-on", CANCELLED: "is-off" } as const;
 
@@ -164,9 +162,9 @@ export function Purchases() {
                   <tr key={s.id}>
                     <td><button type="button" className="btn btn-ghost btn-sm" style={{ padding: 0, height: "auto" }} onClick={() => setDetail(s)}>{s.supplierName ?? "—"}</button></td>
                     <td>{s.items.length}</td>
-                    <td className="mono">{brl.format(s.total)}</td>
+                    <td className="mono">{formatCurrency(s.total)}</td>
                     <td><span className={"status-pill " + statusClass[s.status]}>{statusLabel[s.status]}</span></td>
-                    <td className="mono">{fmtData(s.createdAt)}</td>
+                    <td className="mono">{formatDateTime(s.createdAt)}</td>
                     <td>{s.userName ?? "—"}</td>
                     {can("purchase:write") ? (
                       <td>
@@ -318,7 +316,7 @@ function PurchaseModal({ onClose, onSaved }: { onClose: () => void; onSaved: () 
       submitLabel="Registrar compra"
       busyLabel="Registrando…"
       size="lg"
-      hint={<span>Total: <strong className="mono">{brl.format(total)}</strong></span>}
+      hint={<span>Total: <strong className="mono">{formatCurrency(total)}</strong></span>}
     >
         {loadError ? <ErrorState message={loadError} /> : null}
 
@@ -343,7 +341,7 @@ function PurchaseModal({ onClose, onSaved }: { onClose: () => void; onSaved: () 
               </select>
               <input className="input" inputMode="decimal" value={it.quantity} onChange={(e) => patchItem(idx, { quantity: e.target.value })} aria-label="Quantidade" />
               <input className="input" inputMode="decimal" value={it.unitCost} onChange={(e) => patchItem(idx, { unitCost: e.target.value })} aria-label="Custo unitário" />
-              <span className="mono" style={{ fontSize: "0.85rem" }}>{brl.format((parseFloat(it.quantity.replace(",", ".")) || 0) * (parseFloat(it.unitCost.replace(",", ".")) || 0))}</span>
+              <span className="mono" style={{ fontSize: "0.85rem" }}>{formatCurrency((parseFloat(it.quantity.replace(",", ".")) || 0) * (parseFloat(it.unitCost.replace(",", ".")) || 0))}</span>
               {items.length > 1 ? (
                 <button type="button" className="btn btn-ghost btn-sm" aria-label="Remover item" onClick={() => setItems((prev) => prev.filter((_, i) => i !== idx))}>×</button>
               ) : <span />}
@@ -372,14 +370,14 @@ function PurchaseDetailModal({ purchase, onClose }: { purchase: PurchaseRow; onC
     <Modal
       title={<>Compra <span className={"status-pill " + statusClass[purchase.status]}>{statusLabel[purchase.status]}</span></>}
       label="Detalhe da compra"
-      subtitle={(purchase.supplierName ?? "Fornecedor removido") + " · " + fmtData(purchase.createdAt)}
+      subtitle={(purchase.supplierName ?? "Fornecedor removido") + " · " + formatDateTime(purchase.createdAt)}
       onClose={onClose}
     >
         <dl className="kv">
           <div><dt>Fornecedor</dt><dd>{purchase.supplierName ?? "—"}</dd></div>
           <div><dt>Comprador</dt><dd>{purchase.userName ?? "—"}</dd></div>
-          <div><dt>Data</dt><dd className="mono">{fmtData(purchase.createdAt)}</dd></div>
-          <div><dt>Total</dt><dd className="mono">{brl.format(purchase.total)}</dd></div>
+          <div><dt>Data</dt><dd className="mono">{formatDateTime(purchase.createdAt)}</dd></div>
+          <div><dt>Total</dt><dd className="mono">{formatCurrency(purchase.total)}</dd></div>
           {purchase.notes ? <div><dt>Observações</dt><dd>{purchase.notes}</dd></div> : null}
         </dl>
         <h3 className="panel-title" style={{ marginTop: "1rem" }}>Itens</h3>
@@ -388,7 +386,7 @@ function PurchaseDetailModal({ purchase, onClose }: { purchase: PurchaseRow; onC
             <li key={it.id} className="activity-item">
               <span className="activity-dot" />
               <span className="activity-entity">{it.productName ?? "Produto removido"}</span>
-              <span style={{ marginLeft: "auto" }} className="mono">{it.quantity} × {brl.format(it.unitCost)} = {brl.format(it.lineTotal)}</span>
+              <span style={{ marginLeft: "auto" }} className="mono">{it.quantity} × {formatCurrency(it.unitCost)} = {formatCurrency(it.lineTotal)}</span>
             </li>
           ))}
         </ul>

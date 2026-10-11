@@ -9,7 +9,7 @@ import { Tabs, TabPanel, useTabState, type TabItem } from "../components/Tabs";
 import { ACTIONS, modalTitle } from "../lib/uiCopy";
 import { EmptyState, ErrorState, LoadingInline } from "../components/StateView";
 import { baixarCsv } from "../lib/csv";
-import { formatCurrency, formatDate } from "../lib/format";
+import { formatCurrency, formatDate, formatDateTime } from "../lib/format";
 
 interface SaleItem { id: string; productId: string; productName: string | null; quantity: number; unitPrice: number; lineTotal: number }
 interface SaleRow { id: string; status: "PENDING" | "CONFIRMED" | "CANCELLED"; total: number; notes: string | null; clientName: string | null; userName: string | null; createdAt: string; items: SaleItem[] }
@@ -32,8 +32,6 @@ interface SaleReport {
   porVendedor: { nome: string; pedidos: number; receita: number }[];
 }
 
-const brl = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
-const fmtData = (iso: string) => new Date(iso).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
 const statusLabel = { PENDING: "Pendente", CONFIRMED: "Confirmada", CANCELLED: "Cancelada" } as const;
 const statusClass = { PENDING: "is-off", CONFIRMED: "is-on", CANCELLED: "is-off" } as const;
 
@@ -165,9 +163,9 @@ export function Sales() {
                   <tr key={s.id}>
                     <td><button type="button" className="btn btn-ghost btn-sm" style={{ padding: 0, height: "auto" }} onClick={() => setDetail(s)}>{s.clientName ?? "Consumidor final"}</button></td>
                     <td>{s.items.length}</td>
-                    <td className="mono">{brl.format(s.total)}</td>
+                    <td className="mono">{formatCurrency(s.total)}</td>
                     <td><span className={"status-pill " + statusClass[s.status]}>{statusLabel[s.status]}</span></td>
-                    <td className="mono">{fmtData(s.createdAt)}</td>
+                    <td className="mono">{formatDateTime(s.createdAt)}</td>
                     <td>{s.userName ?? "—"}</td>
                     {can("sale:write") ? (
                       <td>
@@ -334,7 +332,7 @@ function SaleForm({ onSaved }: { onSaved: () => void }) {
             </select>
             <input className="input" inputMode="decimal" value={it.quantity} onChange={(e) => patchItem(idx, { quantity: e.target.value })} aria-label="Quantidade" />
             <input className="input" inputMode="decimal" value={it.unitPrice} onChange={(e) => patchItem(idx, { unitPrice: e.target.value })} aria-label="Preço unitário" />
-            <span className="mono" style={{ fontSize: "0.78rem" }}>{brl.format((parseFloat(it.quantity.replace(",", ".")) || 0) * (parseFloat(it.unitPrice.replace(",", ".")) || 0))}</span>
+            <span className="mono" style={{ fontSize: "0.78rem" }}>{formatCurrency((parseFloat(it.quantity.replace(",", ".")) || 0) * (parseFloat(it.unitPrice.replace(",", ".")) || 0))}</span>
             {items.length > 1 ? (
               <button type="button" className="btn btn-ghost btn-sm" aria-label="Remover item" onClick={() => setItems((prev) => prev.filter((_, i) => i !== idx))}>×</button>
             ) : <span />}
@@ -365,7 +363,7 @@ function SaleForm({ onSaved }: { onSaved: () => void }) {
           {saving ? "Registrando…" : "Registrar venda"}
         </button>
         <button type="button" className="btn btn-ghost" onClick={limparFormulario} disabled={saving}>Limpar formulário</button>
-        <span className="toolbar-note">Total: <strong className="mono">{brl.format(total)}</strong></span>
+        <span className="toolbar-note">Total: <strong className="mono">{formatCurrency(total)}</strong></span>
       </div>
     </div>
   );
@@ -572,14 +570,14 @@ function SaleDetailModal({ sale, onClose }: { sale: SaleRow; onClose: () => void
     <Modal
       title={<>Venda <span className={"status-pill " + statusClass[sale.status]}>{statusLabel[sale.status]}</span></>}
       label="Detalhe da venda"
-      subtitle={(sale.clientName ?? "Consumidor final") + " · " + fmtData(sale.createdAt)}
+      subtitle={(sale.clientName ?? "Consumidor final") + " · " + formatDateTime(sale.createdAt)}
       onClose={onClose}
     >
         <dl className="kv">
           <div><dt>Cliente</dt><dd>{sale.clientName ?? "Consumidor final"}</dd></div>
           <div><dt>Vendedor</dt><dd>{sale.userName ?? "—"}</dd></div>
-          <div><dt>Data</dt><dd className="mono">{fmtData(sale.createdAt)}</dd></div>
-          <div><dt>Total</dt><dd className="mono">{brl.format(sale.total)}</dd></div>
+          <div><dt>Data</dt><dd className="mono">{formatDateTime(sale.createdAt)}</dd></div>
+          <div><dt>Total</dt><dd className="mono">{formatCurrency(sale.total)}</dd></div>
           {sale.notes ? <div><dt>Observações</dt><dd>{sale.notes}</dd></div> : null}
         </dl>
         <h3 className="panel-title" style={{ marginTop: "1rem" }}>Itens</h3>
@@ -588,7 +586,7 @@ function SaleDetailModal({ sale, onClose }: { sale: SaleRow; onClose: () => void
             <li key={it.id} className="activity-item">
               <span className="activity-dot" />
               <span className="activity-entity">{it.productName ?? "Produto removido"}</span>
-              <span style={{ marginLeft: "auto" }} className="mono">{it.quantity} × {brl.format(it.unitPrice)} = {brl.format(it.lineTotal)}</span>
+              <span style={{ marginLeft: "auto" }} className="mono">{it.quantity} × {formatCurrency(it.unitPrice)} = {formatCurrency(it.lineTotal)}</span>
             </li>
           ))}
         </ul>

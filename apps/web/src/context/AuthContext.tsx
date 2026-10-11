@@ -1,15 +1,20 @@
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from "react";
 import { api, refreshSession } from "../lib/api";
 import { tokenStore } from "../lib/tokenStore";
+import { configurarFormatos } from "../lib/format";
 
 export interface SessionUser {
   id: string;
   email: string;
   name: string;
+  phone: string | null;
   companyId: string;
   companyName: string;
   role: "OWNER" | "ADMIN" | "MANAGER" | "STAFF";
   permissions: string[];
+  currency: string;
+  timezone: string;
+  language: string;
 }
 
 interface AuthCtx {
@@ -19,6 +24,7 @@ interface AuthCtx {
   register: (name: string, email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   switchCompany: (companyId: string) => Promise<void>;
+  reload: () => Promise<void>;
   can: (permission: string) => boolean;
 }
 
@@ -33,6 +39,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(data);
     setStatus("authenticated");
   }, []);
+
+  // Moeda, fuso e idioma da empresa ativa governam a formatação das telas.
+  // Sem sessão, volta ao padrão brasileiro.
+  useEffect(() => {
+    configurarFormatos(
+      user ? { moeda: user.currency, fuso: user.timezone, idioma: user.language } : null,
+    );
+  }, [user]);
+
+  // A tela de configurações pede a sessão de novo depois de gravar perfil ou
+  // empresa, em vez de manter uma cópia local desses dados.
+  const reload = useCallback(async () => {
+    await loadMe();
+  }, [loadMe]);
 
   useEffect(() => {
     let cancelled = false;
@@ -128,7 +148,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 
   return (
-    <Ctx.Provider value={{ user, status, login, register, logout, switchCompany, can }}>
+    <Ctx.Provider value={{ user, status, login, register, logout, switchCompany, reload, can }}>
       {children}
     </Ctx.Provider>
   );

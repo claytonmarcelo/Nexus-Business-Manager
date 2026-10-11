@@ -8,6 +8,15 @@ import { formatCurrency, formatDateTime } from "../lib/format";
 
 // Painel do Dashboard. Todos os números vêm de /reports/overview, calculado no
 // servidor sobre a empresa do token (nada de estimativa no navegador).
+// A meta do mês vem pronta do servidor, junto do ritmo diário necessário.
+interface MetaReceita {
+  alvo: number;
+  atingido: number;
+  faltando: number;
+  diasRestantes: number;
+  ritmoDiario: number;
+}
+
 interface Alerta {
   chave: string;
   titulo: string;
@@ -47,6 +56,7 @@ interface Visao {
   };
   crm?: { abertos: number; ganhos: number; perdidos: number; valorNoFunil: number; conversao: number | null };
   agenda?: { proximos7dias: number; atrasados: number };
+  meta?: MetaReceita | null;
   alertas: Alerta[];
 }
 
@@ -266,10 +276,50 @@ export function Dashboard() {
               ) : null}
             </div>
 
-            <p className="form-note">
-              A meta nominal de receita por empresa é definida em Configurações da empresa; enquanto ela não estiver
-              cadastrada, o comparativo acima usa o mês anterior como referência.
-            </p>
+            <div className="card-surface panel">
+              <h2 className="nx-panel-title">Meta de receita do mês</h2>
+              {visao.meta ? (
+                <>
+                  <p className="nx-panel-sub">
+                    Alvo de {formatCurrency(visao.meta.alvo)} cadastrado em Configurações da empresa.
+                  </p>
+                  <ul className="nx-distrib">
+                    <li className="nx-distrib-row">
+                      <span className="nx-distrib-label">Progresso</span>
+                      <span className="nx-distrib-track">
+                        <span className="nx-distrib-fill" style={{ width: progressoDaMeta(visao.meta.atingido) }} />
+                      </span>
+                      <span className="nx-distrib-value">
+                        {formatCurrency(visao.vendas ? visao.vendas.receita : 0)} · {Math.round(visao.meta.atingido)}% da meta
+                      </span>
+                    </li>
+                  </ul>
+                  <div className="kpi-grid">
+                    <Kpi
+                      rotulo="Falta para a meta"
+                      valor={formatCurrency(visao.meta.faltando)}
+                      dica={visao.meta.faltando === 0 ? "Mês já alcançou o alvo" : "Para fechar o mês no alvo"}
+                    />
+                    <Kpi
+                      rotulo="Ritmo necessário"
+                      valor={formatCurrency(visao.meta.ritmoDiario) + " / dia"}
+                      dica={visao.meta.diasRestantes + (visao.meta.diasRestantes === 1 ? " dia restante" : " dias restantes") + " no mês"}
+                    />
+                  </div>
+                </>
+              ) : (
+                <>
+                  <p className="nx-panel-sub">
+                    Nenhuma meta cadastrada, então o comparativo acima continua usando o mês anterior como referência.
+                  </p>
+                  <p style={{ marginTop: "0.8rem" }}>
+                    <Link className="btn btn-ghost btn-sm" to="/app/configuracoes">
+                      Definir meta de receita
+                    </Link>
+                  </p>
+                </>
+              )}
+            </div>
           </TabPanel>
 
           <TabPanel id="alertas" active={active}>
@@ -333,6 +383,11 @@ function taxaDeCancelamento(canceladas: number, pedidos: number): string {
 function porcentagem(atual: number, referencia: number): string {
   const maior = Math.max(atual, referencia, 1);
   return Math.max(4, Math.round((atual / maior) * 100)) + "%";
+}
+
+// Barra da meta: o mês cheio quando o alvo é alcançado, proporcional antes disso.
+function progressoDaMeta(atingido: number): string {
+  return Math.min(100, Math.max(4, Math.round(atingido))) + "%";
 }
 
 function largura(atual: number, minimo: number): string {

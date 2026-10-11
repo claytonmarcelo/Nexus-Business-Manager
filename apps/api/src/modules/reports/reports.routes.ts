@@ -32,6 +32,8 @@ export async function reportsRoutes(app: FastifyInstance): Promise<void> {
     const bruto = await service.overview(ctx.companyId);
     const permitido: Record<string, unknown> = { periodo: bruto.periodo };
     if (can(ctx.role, "sale:read")) permitido.vendas = bruto.vendas;
+    // A meta se mede pela receita do mês: quem não pode ler vendas também não vê o alvo.
+    if (can(ctx.role, "sale:read")) permitido.meta = bruto.meta;
     if (can(ctx.role, "client:read")) permitido.clientes = bruto.clientes;
     if (can(ctx.role, "product:read")) permitido.produtos = bruto.produtos;
     if (can(ctx.role, "finance:read")) permitido.financeiro = bruto.financeiro;

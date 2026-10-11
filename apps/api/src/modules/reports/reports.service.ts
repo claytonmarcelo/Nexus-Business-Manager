@@ -37,6 +37,26 @@ function hoje(): Date {
   return d;
 }
 
+// Meta nominal do mês, cadastrada em Configurações da empresa. Sem alvo definido
+// a função devolve null: o Dashboard não inventa percentual sobre nada.
+function metaDeReceita(
+  alvo: Prisma.Decimal | null | undefined,
+  receita: number,
+  mes: Periodo,
+) {
+  const alvoNumero = arredonda(num(alvo));
+  if (alvoNumero <= 0) return null;
+  const faltando = arredonda(Math.max(0, alvoNumero - receita));
+  const diasRestantes = Math.max(1, Math.ceil((mes.ate.getTime() - hoje().getTime()) / 86_400_000));
+  return {
+    alvo: alvoNumero,
+    atingido: arredonda((receita / alvoNumero) * 100),
+    faltando,
+    diasRestantes,
+    ritmoDiario: faltando === 0 ? 0 : arredonda(faltando / diasRestantes),
+  };
+}
+
 // ---- Visão geral + alertas (Dashboard) ----
 
 export async function overview(companyId: string) {
@@ -66,6 +86,7 @@ export async function overview(companyId: string) {
     agendaProxima,
     agendaAtrasada,
     semCompra,
+    empresaMeta,
   ] = await Promise.all([
     prisma.sale.aggregate({
       where: { companyId, status: { not: "CANCELLED" }, createdAt: { gte: atual.de, lt: atual.ate } },
@@ -126,6 +147,8 @@ export async function overview(companyId: string) {
         sales: { none: {} },
       },
     }),
+    // O alvo do mês mora na empresa (Configurações > Empresa).
+    prisma.company.findUnique({ where: { id: companyId }, select: { revenueTarget: true } }),
   ]);
 
   const criticos = produtosBaixos.filter((p) => num(p.stockQuantity) <= 0);
@@ -136,6 +159,8 @@ export async function overview(companyId: string) {
   const variacao = receitaAnterior > 0
     ? arredonda(((receitaAtual - receitaAnterior) / receitaAnterior) * 100)
     : null;
+
+  const meta = metaDeReceita(empresaMeta?.revenueTarget, receitaAtual, atual);
 
   // Cada alerta declara a permissao necessaria para ele ser exibido: a rota
   // filtra a lista e um papel sem acesso a financa nunca ve valores de conta.
@@ -248,6 +273,7 @@ export async function overview(companyId: string) {
         : null,
     },
     agenda: { proximos7dias: agendaProxima, atrasados: agendaAtrasada },
+    meta,
     alertas,
   };
 }

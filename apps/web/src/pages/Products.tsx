@@ -43,9 +43,6 @@ const ABAS: TabItem[] = [
   { id: "movimentacoes", label: "Movimentações", hint: "Entradas, saídas e ajustes de estoque" },
 ];
 
-const brl = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
-const fmtData = (iso: string) => new Date(iso).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
-
 const KIND_LABEL: Record<MovRow["kind"], string> = { IN: "Entrada", OUT: "Saída", ADJUST: "Ajuste" };
 const KIND_COR: Record<MovRow["kind"], string> = { IN: "var(--success)", OUT: "var(--danger)", ADJUST: "var(--warning)" };
 
@@ -244,7 +241,7 @@ export function Products() {
                       {p.sku ? <span className="company-meta mono">SKU {p.sku}</span> : null}
                     </td>
                     <td>{p.categoryName ?? "—"}</td>
-                    <td className="mono">{brl.format(p.salePrice)}</td>
+                    <td className="mono">{formatCurrency(p.salePrice)}</td>
                     <td className="mono">
                       {p.trackStock ? p.stockQuantity + " " + p.unit : "sem controle"}
                       {p.lowStock && p.active ? <span className="badge" style={{ marginLeft: "0.4rem" }}>baixo</span> : null}
@@ -682,7 +679,7 @@ function HistoryModal({ product, onClose }: { product: ProductRow; onClose: () =
                   <span className="mono">{m.quantity}</span>
                   {m.note ? <span className="activity-entity"> · {m.note}</span> : null}
                 </span>
-                <span className="activity-time">{fmtData(m.createdAt)}</span>
+                <span className="activity-time">{formatDateTime(m.createdAt)}</span>
               </li>
             ))}
           </ul>
