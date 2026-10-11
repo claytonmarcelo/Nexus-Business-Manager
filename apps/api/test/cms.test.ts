@@ -21,7 +21,7 @@ import {
 // porque a vitrine é global), a gravação parcial faz merge sem sumir da tela,
 // item inativo some da vitrine, documento legal não publicado é 404, a trilha
 // de auditoria registra cada passo e o modo manutenção fecha a API inteira —
-// menos o caminho de volta (auth, health, público, cms) — para quem tem pulso
+// menos o caminho de volta (auth, health, público, cms e o sino) — para quem tem pulso
 // ou IP da lista.
 describe("CMS da página pública", () => {
   const created: { userIds: string[]; companyIds: string[]; itemIds: string[] } = {
@@ -324,6 +324,10 @@ describe("CMS da página pública", () => {
     expect((await app.inject({ method: "GET", url: "/api/health" })).statusCode).toBe(200);
     expect((await app.inject({ method: "GET", url: "/api/public/landing" })).statusCode).toBe(200);
     expect((await app.inject({ method: "POST", url: "/api/auth/login", payload: { email: f.email, password: SENHA } })).statusCode).toBe(200);
+    // O sino toca em toda tela do painel: manutenção não pode transformá-lo em
+    // erro na tela de quem veio desligá-la. Mas ele continua pedindo sessão.
+    expect((await app.inject({ method: "GET", url: "/api/notifications/count", headers: auth(token) })).statusCode).toBe(200);
+    expect((await app.inject({ method: "GET", url: "/api/notifications/count" })).statusCode).toBe(401);
 
     const pulso = (await app.inject({ method: "POST", url: "/api/cms/maintenance/token", headers: auth(token) })).json();
     const semPulso = await app.inject({ method: "GET", url: "/api/products", headers: auth(token) });

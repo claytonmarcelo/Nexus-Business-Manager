@@ -9,8 +9,13 @@ import { estadoManutencao, ipPermitido, pulsoValido } from "../modules/cms/cms.s
 //  - /api/auth     — sem login não há como entrar para desligar o modo;
 //  - /api/public   — a landing é quem mostra a tela de manutenção, com o
 //                    reloginho e o campo do pulso;
-//  - /api/cms      — o editor é o caminho de volta.
-const LIVRES = ["/api/health", "/api/auth", "/api/public", "/api/cms"];
+//  - /api/cms      — o editor é o caminho de volta;
+//  - /api/notifications — o sino é lido em qualquer tela do painel. Fechar
+//                    a caixa de avisos não pausa operação nenhuma: só troca
+//                    uma consulta de fundo por erro na tela de quem entrou
+//                    aqui justamente para desligar o modo. Continua pedindo
+//                    token de sessão — sem ele a resposta é 401.
+const LIVRES = ["/api/health", "/api/auth", "/api/public", "/api/cms", "/api/notifications"];
 
 export function registerMaintenance(app: FastifyInstance): void {
   app.addHook("onRequest", async (req, reply) => {
