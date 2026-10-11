@@ -112,6 +112,7 @@ export interface EmpresaConfig {
   timezone: string;
   language: string;
   revenueTarget: number | null;
+  allowNegativeStock: boolean;
 }
 
 function serializaEmpresa(c: Company): EmpresaConfig {
@@ -136,6 +137,7 @@ function serializaEmpresa(c: Company): EmpresaConfig {
     timezone: c.timezone,
     language: c.language,
     revenueTarget: c.revenueTarget === null ? null : Number(c.revenueTarget.toString()),
+    allowNegativeStock: c.allowNegativeStock,
   };
 }
 
@@ -168,7 +170,9 @@ export async function updateCompanySettings(
   if (!atual) throw notFound("Empresa não encontrada");
 
   const guardados: Record<string, unknown> = atual;
-  const mudancas: Record<string, string | number | null> = {};
+  // Booleano entrou no vocabulário da configuração com a política de estoque
+  // (Fase 3b): antes só havia texto e número parcial neste dicionário.
+  const mudancas: Record<string, string | number | boolean | null> = {};
 
   for (const [campo, valor] of Object.entries(input)) {
     if (valor === undefined) continue;

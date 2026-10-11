@@ -142,7 +142,9 @@ async function avisoDe(page, trecho) {
       .some((m) => (m.textContent || "").includes(t)), { timeout: 12000 }, trecho)
     .then(() => true)
     .catch(() => false);
-  ok("a tela avisa: " + trecho, visto);
+  const vistos = visto ? [] : await page.evaluate(() =>
+    [...document.querySelectorAll(".toast-message")].map((m) => (m.textContent || "").trim()));
+  ok("a tela avisa: " + trecho, visto, visto ? undefined : "avisos na tela: " + JSON.stringify(vistos));
   await semToast(page);
 }
 
@@ -341,11 +343,11 @@ function diferencas(antes, depois) {
     ok("esvaziar o campo limpa o telefone", vazio((await chame("GET", "/auth/me")).dados.phone));
 
     // == 3) Empresa ==
-    console.log("== 3) Aba Empresa: cadastro, endereço, formato, logo e meta ==");
+    console.log("== 3) Aba Empresa: cadastro, endereço, formato, logo, meta e política de estoque ==");
     await irParaAba(pagina, "empresa");
     const titulos = await pagina.$$eval(".nx-bloco .panel-title", (els) => els.map((e) => e.textContent.trim()));
-    ok("cinco blocos independentes", titulos.join(",") ===
-      "Identificação,Endereço,Formato de números e datas,Identidade visual,Meta de receita do mês", titulos.join(","));
+    ok("seis blocos independentes", titulos.join(",") ===
+      "Identificação,Endereço,Formato de números e datas,Identidade visual,Meta de receita do mês,Política de estoque", titulos.join(","));
 
     const listas = await pagina.evaluate(() => ({
       moedas: window.localDoCampo("Formato de números e datas", "Moeda")?.querySelector("select")?.options.length ?? 0,
@@ -415,6 +417,35 @@ function diferencas(antes, depois) {
       "Meta de receita do mês");
     ok("a dica escreve a meta no formato da empresa",
       /US\$/.test(dicaMeta || "") && /25\.000/.test(dicaMeta || ""), String(dicaMeta));
+
+    // Fase 3b: a política de estoque mora no switch do bloco novo. A prova
+    // liga, grava, confere no GET e desliga de volta — o que cada porta de
+    // saída faz com a chave ligada é o suite estoque-politica.test.ts.
+    await pagina.evaluate(() => {
+      window.localDoBloco("Política de estoque")?.querySelector("input[type=checkbox]")?.click();
+    });
+    await espera(150);
+    ok("ligar o switch acende o bloco", await pagina.evaluate(() =>
+      window.localDoBloco("Política de estoque")?.querySelector(".nx-ligado")?.classList.contains("is-on") ?? false));
+    await salvarBloco(pagina, "Política de estoque");
+    await avisoDe(pagina, "Saídas agora podem deixar o estoque negativo.");
+    atual = (await chame("GET", "/companies/current")).dados;
+    ok("a política ligada grava no servidor", atual.allowNegativeStock === true, String(atual.allowNegativeStock));
+    await pagina.evaluate(() => {
+      window.localDoBloco("Política de estoque")?.querySelector("input[type=checkbox]")?.click();
+    });
+    await espera(150);
+    const estadoSwitch = await pagina.evaluate(() => {
+      const bloco = window.localDoBloco("Política de estoque");
+      const cx = bloco?.querySelector("input[type=checkbox]");
+      const bt = bloco?.querySelector(".nx-bloco-acao button");
+      return { checked: cx?.checked ?? null, botaoDesabilitado: bt?.disabled ?? null, botao: bt?.textContent.trim() ?? null };
+    });
+    console.log("  [switch->off] " + JSON.stringify(estadoSwitch));
+    await salvarBloco(pagina, "Política de estoque");
+    await avisoDe(pagina, "Pronto: nenhuma saída passa sem saldo cobrir a quantidade.");
+    atual = (await chame("GET", "/companies/current")).dados;
+    ok("desligada volta ao padrão fechado", atual.allowNegativeStock === false, String(atual.allowNegativeStock));
     await foto(pagina, "22-configuracoes-empresa");
 
     // == 4) Aparência ==
@@ -537,10 +568,10 @@ function diferencas(antes, depois) {
       rota: window.location.pathname,
     }));
     ok("a tela avisa que é somente leitura", leitura.faixa === "Somente leitura", String(leitura.faixa));
-    ok("o STAFF lê a empresa inteira", leitura.rota === "/app/configuracoes" && leitura.blocos === 5,
+    ok("o STAFF lê a empresa inteira", leitura.rota === "/app/configuracoes" && leitura.blocos === 6,
       JSON.stringify(leitura));
     ok("nenhum botão de gravar em bloco algum", leitura.botoes === 0, String(leitura.botoes));
-    ok("cada bloco explica quem grava ali", leitura.notas === 5, String(leitura.notas));
+    ok("cada bloco explica quem grava ali", leitura.notas === 6, String(leitura.notas));
     ok("campos e listas aparecem travados",
       leitura.campoTravado === true && leitura.listaTravada === true, JSON.stringify(leitura));
     await foto(paginaStaff, "22-configuracoes-somente-leitura");

@@ -95,6 +95,10 @@ export const updateCompanySchema = z
       .max(9_999_999_999.99, "Meta de receita longa demais")
       .nullable()
       .optional(),
+    // Fase 3b: política de estoque da empresa. Booleano de verdade — nem "0"/"1",
+    // nem string — porque a tela manda o estado do switch e o .strict() não
+    // perdoa tipo inventado.
+    allowNegativeStock: z.boolean().optional(),
   })
   .strict()
   .refine((valor) => Object.keys(valor).length > 0, "Envie ao menos um campo para gravar");

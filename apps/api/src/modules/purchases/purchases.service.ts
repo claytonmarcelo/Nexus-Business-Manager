@@ -3,7 +3,7 @@ import { prisma } from "../../lib/prisma";
 import { badRequest, conflict, notFound } from "../../lib/errors";
 import { paginate, skipTake, type PaginationInput } from "../../lib/pagination";
 import { audit } from "../../lib/audit";
-import { baixarEstoque, subirEstoque } from "../../lib/stock";
+import { baixarEstoque, permiteEstoqueNegativo, subirEstoque } from "../../lib/stock";
 import { transacaoEstoque } from "../../lib/tx";
 import type { CreatePurchaseInput, CreateSupplierInput } from "./purchases.schemas";
 
@@ -179,6 +179,9 @@ export async function changeStatus(companyId: string, id: string, status: Purcha
   if (purchase.status === status) throw badRequest("A compra já está com este status");
   if (purchase.status === "CANCELLED") throw badRequest("Compra cancelada não pode mudar de status");
 
+  // Fase 3b: estornar uma compra recebida RETIRA estoque — se aquele tanto já
+  // foi vendido, a política da empresa decide se o saldo pode ficar devendo.
+  const permiteNegativo = await permiteEstoqueNegativo(companyId);
   await transacaoEstoque(async (tx) => {
     const reivindicado = await tx.purchase.updateMany({
       where: { id, companyId, status: purchase.status },
@@ -204,7 +207,7 @@ export async function changeStatus(companyId: string, id: string, status: Purcha
         if (!prod || !prod.trackStock) continue;
         await baixarEstoque({
           tx, companyId, productId: prod.id, quantity: Number(i.quantity),
-          nome: prod.name, unidade: prod.unit,
+          nome: prod.name, unidade: prod.unit, permitirNegativo: permiteNegativo,
           nota: "Estorno da compra " + purchase.id.slice(0, 8), createdBy: userId,
         });
       }

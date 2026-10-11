@@ -3,7 +3,7 @@ import { extractErrorMessage, extractFieldErrors } from "../../lib/api";
 import { notify } from "../../lib/notify";
 import { mascarar, type TipoMascara } from "../../lib/masks";
 import { formatCurrency } from "../../lib/format";
-import { Bloco, BotaoSalvar, Campo, CampoEscolha, CampoNumeroOpcional } from "../Fields";
+import { Bloco, BotaoSalvar, Campo, CampoEscolha, CampoLigado, CampoNumeroOpcional } from "../Fields";
 import {
   type CampoTextoEmpresa,
   type EmpresaConfig,
@@ -260,6 +260,71 @@ function BlocoMeta({
   );
 }
 
+// Fase 3b da auditoria: "estoque pode ficar negativo?" é decisão da empresa,
+// não do sistema. O bloco grava um booleano puro no mesmo PATCH parcial dos
+// outros — e a frase do rodape explica a consequencia das duas escolhas, para
+// o switch não ser um mistério de interface.
+function BlocoPoliticaEstoque({
+  empresa, podeEscrever, aoGravar,
+}: {
+  empresa: EmpresaConfig;
+  podeEscrever: boolean;
+  aoGravar: (mudanca: MudancaEmpresa) => Promise<ResultadoGravacao>;
+}) {
+  const [permitido, setPermitido] = useState(empresa.allowNegativeStock);
+  const [ocupado, setOcupado] = useState(false);
+
+  useEffect(() => {
+    setPermitido(empresa.allowNegativeStock);
+  }, [empresa]);
+
+  const mudou = permitido !== empresa.allowNegativeStock;
+
+  async function gravar() {
+    setOcupado(true);
+    try {
+      const { alterados } = await aoGravar({ allowNegativeStock: permitido });
+      notify.success(
+        alterados.length === 0
+          ? "Nada para gravar: a política já é essa."
+          : permitido
+            ? "Saídas agora podem deixar o estoque negativo."
+            : "Pronto: nenhuma saída passa sem saldo cobrir a quantidade.",
+      );
+    } catch (e) {
+      notify.error(extractErrorMessage(e));
+    } finally {
+      setOcupado(false);
+    }
+  }
+
+  return (
+    <Bloco
+      titulo="Política de estoque"
+      sub="Quem decide se uma saída pode empurrar o saldo para baixo de zero é a empresa — a regra vale para vendas, estornos de compra e lançamentos manuais."
+      acao={
+        podeEscrever ? (
+          <BotaoSalvar aoSalvar={gravar} ocupado={ocupado} desabilitado={!mudou} />
+        ) : (
+          <span className="nx-bloco-nota">Só quem administra a empresa grava aqui</span>
+        )
+      }
+    >
+      <CampoLigado
+        rotulo="Permitir estoque negativo"
+        valor={permitido}
+        aoMudar={setPermitido}
+        desabilitado={!podeEscrever}
+        dica={
+          permitido
+            ? "Ligado: a saída acontece mesmo sem saldo, e o negativo fica visível como dívida de estoque a acertar."
+            : "Desligado (padrão): nenhuma saída passa se o saldo não cobrir a quantidade; o erro diz quanto tem."
+        }
+      />
+    </Bloco>
+  );
+}
+
 export interface EmpresaPanelProps {
   empresa: EmpresaConfig;
   opcoes: OpcoesConfig;
@@ -350,6 +415,8 @@ export function EmpresaPanel({ empresa, opcoes, podeEscrever, aoGravar }: Empres
       />
 
       <BlocoMeta empresa={empresa} podeEscrever={podeEscrever} aoGravar={aoGravar} />
+
+      <BlocoPoliticaEstoque empresa={empresa} podeEscrever={podeEscrever} aoGravar={aoGravar} />
     </div>
   );
 }

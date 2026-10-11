@@ -1,7 +1,7 @@
 import { Prisma } from "@prisma/client";
 import { prisma } from "../../lib/prisma";
 import { badRequest, conflict, notFound } from "../../lib/errors";
-import { baixarEstoque, subirEstoque } from "../../lib/stock";
+import { baixarEstoque, permiteEstoqueNegativo, subirEstoque } from "../../lib/stock";
 import { transacaoEstoque } from "../../lib/tx";
 import { paginate, skipTake, type PaginationInput } from "../../lib/pagination";
 import { audit } from "../../lib/audit";
@@ -189,6 +189,9 @@ export async function moveStock(companyId: string, productId: string, input: Cre
   // decremento condicional com o saldo dentro do WHERE (a guarda de antes é
   // mantida só como mensagem rápida), e ADJUST continua absoluto de propósito:
   // ajuste é uma DECLARAÇÃO de inventário ("contei e tem X"), não um cálculo.
+  // Fase 3b: a política de negativo é da empresa — um lançamento OUT acima do
+  // saldo só passa se a empresa autorizou na tela de Configurações.
+  const permiteNegativo = await permiteEstoqueNegativo(companyId);
   const movement = await transacaoEstoque(async (tx) => {
     if (input.kind === "IN") {
       await subirEstoque({ tx, companyId, productId, quantity: input.quantity, nota: input.note, createdBy: userId });
@@ -196,6 +199,7 @@ export async function moveStock(companyId: string, productId: string, input: Cre
       await baixarEstoque({
         tx, companyId, productId, quantity: input.quantity,
         nome: product.name, unidade: product.unit, nota: input.note, createdBy: userId,
+        permitirNegativo: permiteNegativo,
       });
     } else {
       const mov = await tx.stockMovement.create({

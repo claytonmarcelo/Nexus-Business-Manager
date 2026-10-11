@@ -3,7 +3,7 @@ import { prisma } from "../../lib/prisma";
 import { badRequest, notFound } from "../../lib/errors";
 import { paginate, skipTake, type PaginationInput } from "../../lib/pagination";
 import { audit } from "../../lib/audit";
-import { baixarEstoque, subirEstoque } from "../../lib/stock";
+import { baixarEstoque, permiteEstoqueNegativo, subirEstoque } from "../../lib/stock";
 import { transacaoEstoque } from "../../lib/tx";
 import type { CreateSaleInput } from "./sales.schemas";
 import { avisoEstoqueBaixo, avisoVenda } from "../notifications/notifications.service";
@@ -86,7 +86,12 @@ export async function createSale(companyId: string, input: CreateSaleInput, user
     return { productId: prod.id, quantity: i.quantity, unitPrice: i.unitPrice, lineTotal };
   });
 
-  if (input.confirm) {
+  // Fase 3b: a pré-checada amigável só existe onde a política da empresa NÃO
+  // deixa o saldo passar para negativo — com a política ligada, quem decide é
+  // o banco dentro da transação, e um "insuficiente" aqui travaria na porta o
+  // que a empresa autorizou.
+  const permiteNegativo = input.confirm ? await permiteEstoqueNegativo(companyId) : false;
+  if (input.confirm && !permiteNegativo) {
     for (const i of itens) {
       const prod = byId.get(i.productId)!;
       if (prod.trackStock && i.quantity > Number(prod.stockQuantity)) {
@@ -115,7 +120,7 @@ export async function createSale(companyId: string, input: CreateSaleInput, user
         // o saldo casa no WHERE, não na comparação de uma leitura velha.
         await baixarEstoque({
           tx, companyId, productId: prod.id, quantity: i.quantity,
-          nome: prod.name, unidade: prod.unit,
+          nome: prod.name, unidade: prod.unit, permitirNegativo: permiteNegativo,
           nota: "Venda " + created.id.slice(0, 8), createdBy: userId,
         });
       }
@@ -157,6 +162,7 @@ export async function changeStatus(companyId: string, id: string, status: "CONFI
   if (sale.status === "CANCELLED") throw badRequest("Venda cancelada não pode mudar de status");
 
   const items = sale.items;
+  const permiteNegativo = await permiteEstoqueNegativo(companyId);
   await transacaoEstoque(async (tx) => {
     const reivindicado = await tx.sale.updateMany({
       where: { id, companyId, status: sale.status },
@@ -171,7 +177,7 @@ export async function changeStatus(companyId: string, id: string, status: "CONFI
         if (!prod || !prod.trackStock) continue;
         await baixarEstoque({
           tx, companyId, productId: prod.id, quantity: Number(i.quantity),
-          nome: prod.name, unidade: prod.unit,
+          nome: prod.name, unidade: prod.unit, permitirNegativo: permiteNegativo,
           nota: "Venda " + sale.id.slice(0, 8), createdBy: userId,
         });
       }

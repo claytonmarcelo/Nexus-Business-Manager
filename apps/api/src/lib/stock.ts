@@ -1,4 +1,5 @@
 import type { Prisma } from "@prisma/client";
+import { prisma } from "./prisma";
 import { badRequest } from "./errors";
 
 // Fase 3 da auditoria (seção E, o CRÍTICO de oversell): enquanto a guarda de
@@ -44,9 +45,15 @@ export async function baixarEstoque(o: Movimentacao): Promise<void> {
   if (baixou.count === 0) {
     const atual = await o.tx.product.findFirst({
       where: { id: o.productId, companyId: o.companyId },
-      select: { stockQuantity: true, name: true, unit: true },
+      select: { stockQuantity: true, name: true, unit: true, trackStock: true },
     });
     if (!atual) throw badRequest("Produto não pertence a esta empresa");
+    // Com a política de negativo ligada não existia WHERE de saldo: se mesmo
+    // assim nenhuma linha casou, o motivo é o produto (inativo ao rastreio),
+    // não a conta — mentir "estoque insuficiente" aqui seria um 400 sem futuro.
+    if (o.permitirNegativo || !atual.trackStock) {
+      throw badRequest(`Não foi possível baixar "${atual.name}": este produto não controla estoque`);
+    }
     throw badRequest(
       `Estoque insuficiente para "${o.nome ?? atual.name}": disponível ${Number(atual.stockQuantity)} ${o.unidade ?? atual.unit}, solicitado ${o.quantity}`,
     );
@@ -57,15 +64,27 @@ export async function baixarEstoque(o: Movimentacao): Promise<void> {
 }
 
 export async function subirEstoque(o: Movimentacao): Promise<void> {
-  const baixou = await o.tx.product.updateMany({
+  const subiu = await o.tx.product.updateMany({
     where: { id: o.productId, companyId: o.companyId, trackStock: true },
     data: {
       stockQuantity: { increment: o.quantity },
       ...(o.custo !== undefined ? { costPrice: o.custo } : {}),
     },
   });
-  if (baixou.count === 0) throw badRequest("Produto não pertence a esta empresa");
+  if (subiu.count === 0) throw badRequest("Produto não pertence a esta empresa ou não controla estoque");
   await o.tx.stockMovement.create({
     data: { companyId: o.companyId, productId: o.productId, kind: "IN", quantity: o.quantity, note: o.nota, createdBy: o.createdBy },
   });
+}
+
+// Fase 3b: a política de estoque é da EMPRESA, não do sistema. Os serviços
+// leem aqui em vez de repetir o findUnique — a decisão "pode ficar negativo?"
+// precisa estar na mesma fonte em venda, compra e lançamento manual, senão o
+// switch da tela valeria só em parte das saídas.
+export async function permiteEstoqueNegativo(companyId: string): Promise<boolean> {
+  const empresa = await prisma.company.findUnique({
+    where: { id: companyId },
+    select: { allowNegativeStock: true },
+  });
+  return empresa?.allowNegativeStock === true;
 }

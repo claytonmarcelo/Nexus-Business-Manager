@@ -27,6 +27,8 @@ export interface EmpresaConfig {
   timezone: string;
   language: string;
   revenueTarget: number | null;
+  /** Política de estoque da empresa (Fase 3b): saída pode deixar o saldo negativo? */
+  allowNegativeStock: boolean;
   /** Papel de quem lê, para a tela saber se mostra o botão de gravar. */
   role: string;
 }
@@ -51,6 +53,7 @@ export type MudancaEmpresa = {
   [chave in CampoTextoEmpresa | CampoEscolhaEmpresa]?: string;
 } & {
   revenueTarget?: number | null;
+  allowNegativeStock?: boolean;
 };
 
 export interface ListaOpcao {

@@ -74,6 +74,11 @@ model Company {
   timezone          String            @default("America/Sao_Paulo") @db.VarChar(64)
   language          String            @default("pt-BR") @db.VarChar(8)
   revenueTarget     Decimal?          @map("revenue_target") @db.Decimal(14, 2)
+  // Fase 3b da auditoria: política de estoque é decisão da empresa, não do
+  // sistema. Falso (padrão) = nenhuma saída empurra o saldo para negativo;
+  // verdadeiro = a baixa acontece mesmo sem saldo e o negativo fica visível
+  // como dívida de estoque a acertar.
+  allowNegativeStock Boolean          @default(false) @map("allow_negative_stock")
   createdAt         DateTime          @default(now()) @map("created_at")
   updatedAt         DateTime          @updatedAt @map("updated_at")
   members           CompanyUser[]
