@@ -460,7 +460,57 @@
   color: var(--text);
 }
 .admin-brand-text { letter-spacing: 0.005em; font-size: 0.86rem; line-height: 1.1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.admin-nav { display: flex; flex-direction: column; gap: 0.25rem; }
+/* Camadas do menu lateral (group headers): um titulo discreto em caixa
+   alta abre cada grupo, os itens vem apertados embaixo e uma camada respira da
+   outra. O titulo usa o mesmo cinz do rodape (--text-3) para nao disputar
+   atencao com os itens. */
+.admin-nav { display: flex; flex-direction: column; gap: 0.95rem; }
+.admin-nav-group { display: flex; flex-direction: column; gap: 0.25rem; min-width: 0; }
+.admin-nav-items { display: flex; flex-direction: column; gap: 0.25rem; min-width: 0; }
+.admin-nav-group-title {
+  margin: 0;
+  padding: 0 0.72rem;
+  font-size: 0.68rem;
+  font-weight: 700;
+  line-height: 1.25;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-3);
+  user-select: none;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+/* Modulo anunciado na camada, mas ainda sem pagina: fica apagado, nao e
+   clicavel e avisa que esta em obra de tres formas — o ponto no canto do
+   icone, a dica do mouse e o texto "em breve" no fluxo acessivel. */
+.admin-nav-item.is-soon { color: var(--text-3); cursor: default; }
+.admin-nav-item.is-soon:hover { background: transparent; }
+.admin-nav-item.is-soon .admin-nav-icon { position: relative; color: var(--text-3); }
+.admin-nav-item.is-soon .admin-nav-icon::after {
+  content: "";
+  position: absolute;
+  top: 0.1rem;
+  right: -0.2rem;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--text-3);
+}
+/* A etiqueta escrita nao cabe na barra de 264px sem cortar o nome do modulo
+   ("Gateways & Cobranças" virava "Gateways & Cobr..."). Ela sai da tela, mas
+   continua la para quem navega por leitor de tela. */
+.admin-nav-soon {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
 .admin-nav-item {
   display: flex;
   align-items: center;
@@ -989,7 +1039,7 @@
 .admin-shell.is-sidebar-open .admin-toggle svg { transform: scaleX(-1); }
 
 .admin-sidebar {
-  transition: width 220ms ease, padding 220ms ease, transform 220ms ease, visibility 220ms ease;
+  transition: width 240ms ease-in-out, margin-right 240ms ease-in-out, padding 240ms ease-in-out, transform 240ms ease-in-out, visibility 240ms ease-in-out;
   /* A barra e uma lista vertical: o eixo horizontal nao tem o que rolar.
      Sem isto, qualquer filho mais largo que a trilha abre uma barra de
      rolagem horizontal no pe do menu. */
@@ -1008,30 +1058,53 @@
   .admin-shell.is-collapsed .admin-brand-link { justify-content: center; gap: 0; }
   .admin-shell.is-collapsed .admin-nav-item { justify-content: center; padding: 0.6rem 0; }
   .admin-shell.is-collapsed .admin-nav-icon { width: auto; }
+  /* Na trilha nao cabe texto nenhum: os titulos somem e o lugar de cada camada
+     vira um filete fino, assim a agrupacao continua perceptivel so com icones. */
+  .admin-shell.is-collapsed .admin-nav { gap: 0.6rem; }
+  .admin-shell.is-collapsed .admin-nav-group-title,
+  .admin-shell.is-collapsed .admin-nav-soon { display: none; }
+  .admin-shell.is-collapsed .admin-nav-group + .admin-nav-group::before {
+    content: "";
+    display: block;
+    height: 1px;
+    background: var(--border);
+    margin: 0 10px 0.3rem;
+  }
+
+  /* Hover peek: o ponteiro (ou o foco do teclado) revela a barra larga sobre o
+     conteudo. Saiu do mouse, volta sozinha. Quem fixa a barra pelo botao nao
+     passa por aqui: sem is-collapsed nao existe peek. */
+  .admin-shell.is-collapsed.is-peek .admin-sidebar {
+    width: 264px;
+    margin-right: -186px;
+    padding: 1rem 0.85rem;
+    z-index: 45;
+    box-shadow: var(--shadow);
+  }
+  .admin-shell.is-collapsed.is-peek .admin-brand-text,
+  .admin-shell.is-collapsed.is-peek .admin-nav-label { display: block; }
+  .admin-shell.is-collapsed.is-peek .admin-brand-link { justify-content: flex-start; gap: 0.6rem; }
+  .admin-shell.is-collapsed.is-peek .admin-nav-item { justify-content: flex-start; padding: 0.6rem 0.7rem; }
+  .admin-shell.is-collapsed.is-peek .admin-nav-icon { width: 18px; }
+  .admin-shell.is-collapsed.is-peek .admin-nav { gap: 0.95rem; }
+  .admin-shell.is-collapsed.is-peek .admin-nav-group-title,
+  .admin-shell.is-collapsed.is-peek .admin-nav-soon { display: block; }
+  .admin-shell.is-collapsed.is-peek .admin-nav-group + .admin-nav-group::before { display: none; }
+  .admin-shell.is-collapsed.is-peek .admin-nav-label,
+  .admin-shell.is-collapsed.is-peek .admin-nav-group-title,
+  .admin-shell.is-collapsed.is-peek .admin-brand-text {
+    animation: nx-peek-in 200ms ease-in-out both;
+  }
 }
-.admin-rail-tip {
-  position: fixed;
-  transform: translateY(-50%);
-  padding: 0.3rem 0.6rem;
-  border-radius: 8px;
-  border: 1px solid var(--border-strong);
-  background: var(--surface-2);
-  color: var(--text);
-  font-size: 0.76rem;
-  font-weight: 700;
-  white-space: nowrap;
-  box-shadow: var(--shadow);
-  pointer-events: none;
-  z-index: 70;
-  animation: nx-dica 140ms ease-out;
-}
-@keyframes nx-dica {
-  from { opacity: 0; transform: translateY(-50%) scale(0.94); }
-  to { opacity: 1; transform: translateY(-50%) scale(1); }
+@keyframes nx-peek-in {
+  from { opacity: 0; transform: translateX(-6px); }
+  to { opacity: 1; transform: translateX(0); }
 }
 @media (prefers-reduced-motion: reduce) {
   .admin-toggle svg, .admin-sidebar, .admin-toggle { transition: none; }
-  .admin-rail-tip { animation: none; }
+  .admin-shell.is-collapsed.is-peek .admin-nav-label,
+  .admin-shell.is-collapsed.is-peek .admin-nav-group-title,
+  .admin-shell.is-collapsed.is-peek .admin-brand-text { animation: none; }
 }
 
 /* Gaveta no tablet/celular: botao explicito de fechar dentro da propria barra,

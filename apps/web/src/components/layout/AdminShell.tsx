@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, NavLink, Outlet, useNavigate } from "react-router-dom";
 import { Logo } from "../Logo";
 import { ThemeToggle } from "../ThemeToggle";
@@ -6,30 +6,77 @@ import { useAuth } from "../../context/AuthContext";
 import { currentYear } from "../../lib/format";
 
 interface NavItem {
-  to: string;
   label: string;
   icon: string;
   permission?: string;
+  /** Rota do modulo. Item de camada ainda em obra nao tem rota nenhuma. */
+  to?: string;
+  /** Justifica o item sem rota: vira dica no icone e rotulo "em breve". */
+  emBreve?: string;
 }
 
-const NAV: NavItem[] = [
-  { to: "/app", label: "Dashboard", icon: "▦" },
-  { to: "/app/clientes", label: "Clientes", icon: "◈", permission: "client:read" },
-  { to: "/app/produtos", label: "Produtos", icon: "▣", permission: "product:read" },
-  { to: "/app/vendas", label: "Vendas", icon: "＄", permission: "sale:read" },
-  { to: "/app/compras", label: "Compras", icon: "⛁", permission: "purchase:read" },
-  { to: "/app/financeiro", label: "Financeiro", icon: "◈", permission: "finance:read" },
-  { to: "/app/crm", label: "CRM", icon: "⬡", permission: "crm:read" },
-  { to: "/app/agenda", label: "Agenda", icon: "▤", permission: "agenda:read" },
-  { to: "/app/usuarios", label: "Usuários", icon: "◉", permission: "user:read" },
-  { to: "/app/auditoria", label: "Auditoria", icon: "❐", permission: "audit:read" },
-  { to: "/app/configuracoes", label: "Configurações", icon: "⚙" },
+// Camadas do menu lateral (group headers). A ordem daqui e a ordem da barra.
+// Cada camada so aparece se houver pelo menos um item liberado para o papel da
+// pessoa: titulo sem item embaixo e lixo na tela de quem nao tem acesso.
+interface NavGroup {
+  title: string;
+  items: NavItem[];
+}
+
+const NAV_GROUPS: NavGroup[] = [
+  {
+    title: "Visão Geral",
+    items: [{ to: "/app", label: "Dashboard", icon: "▦" }],
+  },
+  {
+    title: "Comercial & CRM",
+    items: [
+      { to: "/app/crm", label: "CRM", icon: "⬡", permission: "crm:read" },
+      { to: "/app/clientes", label: "Clientes", icon: "◈", permission: "client:read" },
+      { to: "/app/vendas", label: "Vendas", icon: "＄", permission: "sale:read" },
+    ],
+  },
+  {
+    title: "Estoque & Suprimentos",
+    items: [
+      { to: "/app/produtos", label: "Produtos", icon: "▣", permission: "product:read" },
+      { to: "/app/compras", label: "Compras", icon: "⛁", permission: "purchase:read" },
+    ],
+  },
+  {
+    title: "Serviços & Atendimentos",
+    items: [
+      { label: "Ordens de Serviço", icon: "✦", emBreve: "Ordens de serviço: módulo ainda em construção." },
+      { to: "/app/agenda", label: "Agenda", icon: "▤", permission: "agenda:read" },
+    ],
+  },
+  {
+    title: "Financeiro",
+    items: [
+      { to: "/app/financeiro", label: "Financeiro", icon: "◫", permission: "finance:read" },
+      { label: "Gateways & Cobranças", icon: "▭", permission: "settings:read", emBreve: "Gateways e cobranças: área ainda em construção." },
+    ],
+  },
+  {
+    title: "Administração & Sistema",
+    items: [
+      { to: "/app/usuarios", label: "Usuários", icon: "◉", permission: "user:read" },
+      { to: "/app/auditoria", label: "Auditoria", icon: "❐", permission: "audit:read" },
+      { label: "CMS & Site Público", icon: "▩", permission: "settings:read", emBreve: "Editor do site público: ainda em construção." },
+      { to: "/app/configuracoes", label: "Configurações", icon: "⚙" },
+    ],
+  },
 ];
 
 // Abaixo disto a sidebar vira gaveta lateral (off-canvas); acima ela fica
 // fixa e o mesmo botao apenas recolhe os rotulos (modo trilha).
 const DESKTOP_QUERY = "(min-width: 821px)";
 const COLLAPSE_KEY = "nexus.sidebar.collapsed";
+// Tempos do hover peek: uma espera curta para abrir (o ponteiro atravessa a
+// trilha a caminho de outro lugar o tempo todo) e uma um pouco maior para
+// fechar (dar chance de pular do rotulo para o item sem o menu sumir no meio).
+const PEEK_ABRE_MS = 70;
+const PEEK_FECHA_MS = 140;
 
 // Icone "painel a esquerda" (familia Lucide/Heroicons): contorno do painel
 // com a divisoria marcando a area da sidebar. A divisoria troca de lado quando
@@ -52,11 +99,8 @@ export function AdminShell() {
 
   // Estado da gaveta (mobile/tablet).
   const [drawerOpen, setDrawerOpen] = useState(false);
-  // Dica de nome no modo trilha. Vive fora da <aside> porque a barra rola
-  // internamente: um tooltip absoluto dentro dela alargaria o conteudo e
-  // abriria uma barra de rolagem horizontal no rodape do menu.
-  const [dica, setDica] = useState<{ texto: string; top: number; left: number } | null>(null);
-  // Estado do modo trilha (desktop), persistido entre visitas.
+  // Estado do modo trilha (desktop), persistido entre visitas. So o clique no
+  // botao altera isto: o ponteiro nunca fixa nem solta a barra.
   const [collapsed, setCollapsed] = useState(() => {
     try {
       return localStorage.getItem(COLLAPSE_KEY) === "true";
@@ -64,6 +108,9 @@ export function AdminShell() {
       return false;
     }
   });
+  // Hover peek: revelo temporario dos rotulos quando a barra esta na trilha.
+  const [peek, setPeek] = useState(false);
+  const peekTimer = useRef<number | null>(null);
 
   useEffect(() => {
     try {
@@ -72,6 +119,59 @@ export function AdminShell() {
       /* modo privado do navegador: segue sem persistir */
     }
   }, [collapsed]);
+
+  // Timer unico: abrir cancela o fechamento pendurado e vice-versa, entao o
+  // menu nunca fica piscando quando o mouse passa raspando na volta.
+  const agendarPeek = useCallback((ligar: boolean) => {
+    if (peekTimer.current) window.clearTimeout(peekTimer.current);
+    peekTimer.current = window.setTimeout(
+      () => setPeek(ligar),
+      ligar ? PEEK_ABRE_MS : PEEK_FECHA_MS,
+    );
+  }, []);
+
+  // Com qualquer dialogo aberto (modal de formulario ou de confirmacao) a barra
+  // lateral fica congelada: ela nao expande nem se recolhe enquanto a pessoa esta
+  // lendo e confirmando. A deteccao usa o proprio DOM do modal, sem estado
+  // compartilhado entre componentes.
+  const ponteiroNaBarra = useRef(false);
+  const haDialogoAberto = () => document.querySelector(".nx-modal-overlay") !== null;
+
+  const abrirPeek = useCallback(() => {
+    ponteiroNaBarra.current = true;
+    if (!collapsed || drawerOpen || haDialogoAberto()) return;
+    agendarPeek(true);
+  }, [collapsed, drawerOpen, agendarPeek]);
+
+  const fecharPeek = useCallback(() => {
+    ponteiroNaBarra.current = false;
+    if (haDialogoAberto()) return;
+    agendarPeek(false);
+  }, [agendarPeek]);
+
+  // Ao fechar o dialogo, se o ponteiro ja foi embora da barra, o peek se desfaz
+  // sozinho: a interface volta ao estado estavel sem piscar.
+  useEffect(() => {
+    if (!peek) return undefined;
+    const observer = new MutationObserver(() => {
+      if (!haDialogoAberto() && !ponteiroNaBarra.current) fecharPeek();
+    });
+    observer.observe(document.body, { childList: true });
+    return () => observer.disconnect();
+  }, [peek, fecharPeek]);
+
+  // Fora do modo trilha (barra fixa por clique, ou gaveta no celular) o peek
+  // nao tem o que revelar: desliga na hora, sem esperar o timer.
+  useEffect(() => {
+    if (!collapsed || drawerOpen) {
+      if (peekTimer.current) window.clearTimeout(peekTimer.current);
+      setPeek(false);
+    }
+  }, [collapsed, drawerOpen]);
+
+  useEffect(() => () => {
+    if (peekTimer.current) window.clearTimeout(peekTimer.current);
+  }, []);
 
   // Ao girar o tablet / redimensionar a janela, os dois modos nao podem
   // ficar abertos ao mesmo tempo.
@@ -87,18 +187,16 @@ export function AdminShell() {
   }, []);
 
   const isDesktop = () => window.matchMedia(DESKTOP_QUERY).matches;
-  const visible = isDesktop() ? !collapsed : drawerOpen;
+  const visivel = isDesktop() ? !collapsed : drawerOpen;
+  // A trilha com o ponteiro por cima vale como barra larga para a dica visual
+  // do estado, mas NAO altera o aria-expanded do botao: o botão controla a
+  // fixacao, e fixado ou nao e o que a pessoa precisa saber pelo leitor de tela.
+  const peekAtivo = collapsed && peek && !drawerOpen;
 
   const toggleSidebar = useCallback(() => {
     if (isDesktop()) setCollapsed((v) => !v);
     else setDrawerOpen((v) => !v);
   }, []);
-
-  function mostrarDica(el: HTMLElement, texto: string) {
-    if (!collapsed || !window.matchMedia(DESKTOP_QUERY).matches) return;
-    const r = el.getBoundingClientRect();
-    setDica({ texto, top: r.top + r.height / 2, left: r.right + 10 });
-  }
 
   // Esc fecha a gaveta no celular (no desktop nao ha o que fechar: a barra
   // fixa continua visivel, apenas sem rotulos).
@@ -119,18 +217,45 @@ export function AdminShell() {
     navigate("/", { replace: true });
   }
 
-  const items = NAV.filter((n) => !n.permission || can(n.permission));
+  // Camadas visiveis: primeiro corta os itens sem permissao, depois descarta a
+  // camada inteira que ficou vazia.
+  const grupos = NAV_GROUPS
+    .map((grupo) => ({
+      title: grupo.title,
+      items: grupo.items.filter((n) => !n.permission || can(n.permission)),
+    }))
+    .filter((grupo) => grupo.items.length > 0);
+
   const rotuloBotao = isDesktop()
     ? (collapsed ? "Expandir menu lateral" : "Recolher menu lateral")
     : (drawerOpen ? "Fechar menu" : "Abrir menu");
 
   return (
-    <div className={"admin-shell" + (collapsed ? " is-collapsed" : "") + (drawerOpen ? " is-sidebar-open" : "")}>
+    <div
+      className={
+        "admin-shell" +
+        (collapsed ? " is-collapsed" : "") +
+        (peekAtivo ? " is-peek" : "") +
+        (drawerOpen ? " is-sidebar-open" : "")
+      }
+    >
       {drawerOpen && (
         <div className="admin-scrim" onClick={() => setDrawerOpen(false)} aria-hidden="true" />
       )}
 
-      <aside id="admin-sidebar" className="admin-sidebar" aria-label="Navegação principal">
+      <aside
+        id="admin-sidebar"
+        className="admin-sidebar"
+        aria-label="Navegação principal"
+        onMouseEnter={abrirPeek}
+        onMouseLeave={fecharPeek}
+        onFocus={abrirPeek}
+        onBlur={(e) => {
+          // So recolhe quando o foco realmente saiu da barra (mudar de item
+          // para item nao pode fechar o menu no meio da navegacao por teclado).
+          if (!e.currentTarget.contains(e.relatedTarget as Node | null)) fecharPeek();
+        }}
+      >
         <div className="admin-brand">
           <Link to="/app" className="admin-brand-link" title="Nexus Business Manager" onClick={() => setDrawerOpen(false)}>
             <Logo size={30} />
@@ -147,40 +272,50 @@ export function AdminShell() {
           </button>
         </div>
         <nav className="admin-nav">
-          {items.map((item) => (
-            <NavLink
-              key={item.to}
-              to={item.to}
-              end={item.to === "/app"}
-              onClick={() => { setDrawerOpen(false); setDica(null); }}
-              onMouseEnter={(e) => mostrarDica(e.currentTarget, item.label)}
-              onMouseLeave={() => setDica(null)}
-              onFocus={(e) => mostrarDica(e.currentTarget, item.label)}
-              onBlur={() => setDica(null)}
-              aria-label={item.label}
-              className={({ isActive }) => `admin-nav-item ${isActive ? "is-active" : ""}`}
-            >
-              <span className="admin-nav-icon" aria-hidden="true">{item.icon}</span>
-              <span className="admin-nav-label">{item.label}</span>
-            </NavLink>
+          {grupos.map((grupo) => (
+            <div className="admin-nav-group" key={grupo.title}>
+              <p className="admin-nav-group-title">{grupo.title}</p>
+              <div className="admin-nav-items">
+                {grupo.items.map((item) => (item.to ? (
+                  <NavLink
+                    key={item.to}
+                    to={item.to}
+                    end={item.to === "/app"}
+                    onClick={() => setDrawerOpen(false)}
+                    aria-label={item.label}
+                    className={({ isActive }) => `admin-nav-item ${isActive ? "is-active" : ""}`}
+                  >
+                    <span className="admin-nav-icon" aria-hidden="true">{item.icon}</span>
+                    <span className="admin-nav-label">{item.label}</span>
+                  </NavLink>
+                ) : (
+                  // Modulo anunciado na camada, mas ainda sem pagina: nao vira
+                  // link (link quebrado seria pior) e diz o porquê na dica.
+                  <span
+                    key={item.label}
+                    className="admin-nav-item is-soon"
+                    aria-disabled="true"
+                    title={item.emBreve}
+                  >
+                    <span className="admin-nav-icon" aria-hidden="true">{item.icon}</span>
+                    <span className="admin-nav-label">{item.label}</span>
+                    <span className="admin-nav-soon">em breve</span>
+                  </span>
+                )))}
+              </div>
+            </div>
           ))}
         </nav>
       </aside>
-
-      {dica && (
-        <span className="admin-rail-tip" role="tooltip" style={{ top: dica.top, left: dica.left }}>
-          {dica.texto}
-        </span>
-      )}
 
       <div className="admin-main">
         <header className="admin-header">
           <button
             type="button"
-            className={"admin-toggle" + (visible ? " is-on" : "")}
+            className={"admin-toggle" + (visivel ? " is-on" : "")}
             aria-label={rotuloBotao}
             title={rotuloBotao}
-            aria-expanded={visible}
+            aria-expanded={visivel}
             aria-controls="admin-sidebar"
             aria-pressed={!collapsed}
             onClick={toggleSidebar}
