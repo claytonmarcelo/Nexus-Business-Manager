@@ -422,3 +422,21 @@ A sub-fase 3b transforma o `permitirNegativo` que a 3a deixou como parâmetro mo
 Pendências declaradas da Fase 3: 3c meia-noite no fuso da empresa, 3d dinheiro em Decimal/centavos nos relatórios, 3e vínculo venda↔financeiro com parcelamento.
 
 Validação da sub-fase: typecheck da API limpo; typecheck e build do painel limpos; suíte 20 arquivos / 145 testes verdes (novos `test/estoque-politica.test.ts` com 5); prova de navegador de Configurações 115 checagens / 0 falhas, com o switch provado nos dois sentidos e as capturas da aba Empresa renovadas.
+
+## Adenda da execução — Fase 3 em andamento — sub-fase 3c (meia-noite no fuso da empresa) encerrada — 2026-10-11
+
+A sub-fase 3c fecha o achado de que `Company.timezone` era escrito na tela de Configurações e lido em nenhum lugar: todas as bordas de dia do sistema de leitura passaram a ser o dia da empresa, não o do datacenter.
+- `apps/api/src/lib/time.ts` (novo) é a única casa da regra: `meiaNoiteNoFuso`, `ontemNoFuso`, `calendarioDaEmpresa`, `diaNoFuso`, `mesNoFuso`, `fusoDaEmpresa`. Nenhum módulo de leitura soma `setHours`/`setUTCHours` no relógio do processo.
+- A regra tem duas bordas porque há duas espécies de coluna. Instante da meia-noite local para `createdAt`/`startAt`/`paidAt`; dia de calendário ancorado à meia-noite UTC para as `@db.Date` (`dueDate`), que guardam o dia que a pessoa digitou. Trocar uma pela outra é o regressivo que o teste cobre: com a meia-noite de Brasília como borda de `dueDate`, todo lançamento do dia nascia vencido.
+- O deslocamento é lido pelo `Intl.DateTimeFormat` com o `timeZone` duas vezes (a segunda confere o instante que a primeira devolveu), então horário de verão e fuso de meia hora são respeitados; o dia de transição tem a largura que ele tem. Fuso inválido no cadastro cai em UTC de propósito — escrita já é barrada em `fusoValido`, e uma coluna envelhecida não derruba painel nem sino.
+- `recortesDaEmpresa(companyId)` em `reports.service.ts` virou a origem de mês corrente, mês anterior e dia corrente para `overview`, `clientes`, `vendas` e `financeiro`. Encerrados os três pontos da seção E que liam o UTC do processo (`mesCorrente()`, `hoje()`, `slice(0,10)` de `new Date()`).
+- Série diária de vendas: baldes e etiquetas `de`/`ate` no fuso da empresa. Fluxo de caixa: numerado em calendário, janela de `dias` dias terminando no hoje da empresa, chave `diaDeCalendario` — um dia de transição não se repete nem falta.
+- `finance.summary` (vencido e rótulo do mês) e a varredura de avisos de vencidos usam a borda de calendário; o "venceu em dd/mm/aaaa" do corpo saiu do dia gravado no banco, e a contagem de dias de atraso voltou a ser inteira.
+- Rotinas: `estoque-baixo` deduplica pelo dia da empresa e `relatorio-diario` fecha a janela entre as duas viradas dela (`ontemNoFuso`), por empresa, no fuso de cada uma.
+- Decisão declarada: a *agenda* do cron (`cron.parse.ts`, "rodar às 07:00") continuou no relógio do servidor — é o horário do operador da máquina, e cada empresa recebe o conteúdo do próprio dia. Levar a agenda para o fuso da empresa exigiria coluna de fuso por job e reescrita do executor; fica para quando houver mais de um fuso de operação real no deploy.
+- Achado fora do escopo, não corrigido aqui: `agenda.service.ts:94-99` monta recorrência com `setHours` do servidor, então um "todo dia às 09:00" de uma empresa em Asia/Tokyo hoje é calculado no fuso da máquina. É a mesma família da decisão acima, mas envolve reescrever a expansão de recorrência de eventos já gravados — levado para a lista de pendências da Fase 3.
+- `test/fuso-dia.test.ts` (11): meia-noite de São Paulo/Tóquio/Calcutá calculadas à mão, ontem de cada fuso, borda de calendário contra borda de instante, série de vendas em duas empresas de fusos opostos, mês do painel, vencidas do resumo, varredura com antiduplicação e a rotina de relatório diário — mais o fuso quebrado que não pode derrubar nada.
+
+Pendências declaradas da Fase 3: 3d dinheiro em Decimal/centavos nos relatórios, 3e vínculo venda↔financeiro com parcelamento, e a recorrência da Agenda no fuso da empresa (achado acima).
+
+Validação da sub-fase: typecheck da API e do painel limpos, build Vite OK; suíte completa 21 arquivos / 156 testes verdes (eram 20 / 145). Backend-only — nenhuma tela alterada, provas de navegador das sub-fases anteriores não afetadas.

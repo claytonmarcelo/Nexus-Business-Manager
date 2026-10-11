@@ -5,6 +5,49 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/), 
 
 ## [Não lançado]
 
+### A meia-noite passou a ser da empresa (Fase 3c da auditoria)
+
+> Fase 3 da auditoria comercial (`docs/AUDITORIA.md`), sub-fase 3c: o fuso horário mora no cadastro da
+> empresa desde o primeiro dia, e a tela de Configurações sempre deixou escolhê-lo — só que nenhuma
+> leitura do sistema o consultava. "Hoje" e "deste mês" eram o hoje e o mês do datacenter: às 21h de
+> Brasília a venda do dia já tinha caído fora do mês do relatório, e para uma empresa à frente de
+> Greenwich o dia entrava na conta antes de lá começar.
+- Novo `apps/api/src/lib/time.ts`, a única casa da regra: `meiaNoiteNoFuso`, `ontemNoFuso`,
+  `calendarioDaEmpresa`, `diaNoFuso`, `mesNoFuso` e `fusoDaEmpresa`. Quem precisa da borda do dia
+  pergunta ao fuso da empresa; nenhum módulo de leitura volta a usar `setHours`/`setUTCHours` do processo.
+- Duas bordas, porque são duas espécies de coluna. Meia-noite DO FUSO para as colunas de instante
+  (`createdAt`, `startAt`, `paidAt`); dia de CALENDÁRIO para as `@db.Date` (`dueDate`), que o banco
+  guarda à meia-noite UTC porque o que a pessoa escreveu foi um dia, não uma hora. Aplicar a borda de
+  instante às colunas de dia deslocaria a fronteira em três horas e toda conta que vence hoje nasceria
+  vencida.
+- O deslocamento é lido duas vezes pelo `Intl.DateTimeFormat` com o `timeZone`, nunca somado como offset
+  fixo: o `Date` que sai é a meia-noite exata daquele dia NAQUELE fuso, com horário de verão (o dia da
+  transição tem 23 ou 25 horas porque é isso que o dia tem) e com fuso de meia hora — Asia/Kolkata cai
+  em 18:30UTC, provado no teste. Fuso quebrado no cadastro cai em UTC de propósito: uma coluna
+  envelhecida não derruba o painel nem o sino de avisos.
+- `recortesDaEmpresa(companyId)` em `reports.service.ts` calcula mês corrente, mês anterior e dia
+  corrente uma vez só por painel; `overview`, `clientes`, `vendas` e `financeiro` cortam por ele. As
+  queries continuam `BETWEEN` em `createdAt` — índice e histórico intactos, quem se move é a fronteira.
+- A série diária de vendas agrupa e rotula no fuso da empresa, e os extremos da tela (`de`/`ate`)
+  passaram a ser o primeiro e o último dia do mês dela, não o de Greenwich.
+- O fluxo de caixa numerou os baldes em calendário puro (`diaDeCalendario`): a janela abre `dias - 1`
+  dias antes do hoje da empresa e fecha nele, e um dia de transição de horário de verão não pode
+  aparecer duas vezes nem faltar.
+- `GET /finance/summary`: vencido passou a ser a conta cujo dia da empresa passou, e o rótulo do mês
+  passou a ser `mesNoFuso` — o resumo não mostra mais o mês novo antes da virada da empresa.
+- Varredura de avisos de conta vencida: mesma borda de calendário, contagem de atraso em dias inteiros
+  e "venceu em dd/mm/aaaa" lida do dia gravado no banco, não do relógio de dentro do processo.
+- Rotinas agendadas: estoque-baixo e relatório-diário deduplicam e fecham pelo dia da empresa
+  (`ontemNoFuso`), cada empresa com a sua virada. A agenda do cron em si continuou no relógio do
+  servidor — decisão declarada na auditoria, porque "rodar às 07:00" é do operador da máquina.
+- Novo `test/fuso-dia.test.ts` (11 testes): os instantes esperados são calculados à mão (-3 São Paulo,
+  +9 Tóquio, +5:30 Calcutá) em vez de chamados no próprio helper. Passam por ele as três regressões que
+  a regra antiga deixava passar — a venda das 22h fora do mês, a conta de hoje nascendo vencida e o
+  "ontem" de Greenwich na rotina de relatório.
+- Validação: typecheck da API e do painel limpos, build Vite OK; suíte completa 21 arquivos / 156 testes
+  verdes (eram 20 / 145). Nenhuma tela alterada — as provas de navegador das sub-fases anteriores não
+  são afetadas por esta mudança de leitura.
+
 ### Política de estoque por empresa (Fase 3b da auditoria)
 
 > Fase 3 da auditoria comercial (`docs/AUDITORIA.md`), sub-fase 3b: a regra de saldo é decisão da
