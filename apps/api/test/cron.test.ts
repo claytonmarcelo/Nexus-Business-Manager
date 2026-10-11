@@ -72,7 +72,9 @@ describe("Cron: rotas /ops/jobs e executor", () => {
 
   beforeAll(async () => {
     await registrarJobsPadrao();
-    const fa = await makeAccount("ADMIN");
+    // Desde a Fase 1b a área é da plataforma: a conta que gerir precisa do
+    // papel de plataforma no banco, não só do papel dentro da empresa.
+    const fa = await makeAccount("ADMIN", { plataforma: true });
     created.userIds.push(fa.userId);
     created.companyIds.push(fa.companyId);
     admin = { f: fa, token: await login(fa.email, fa.password) };
@@ -87,7 +89,7 @@ describe("Cron: rotas /ops/jobs e executor", () => {
     await app.close();
   });
 
-  it("RBAC: só quem configura vê a lista; gerente e atendente ficam de fora", async () => {
+  it("RBAC: só o administrador da plataforma vê a lista; papel de empresa não abre", async () => {
     const ok = await app.inject({ method: "GET", url: "/api/ops/jobs", headers: auth(admin.token) });
     expect(ok.statusCode).toBe(200);
     const corpo = ok.json();
@@ -101,6 +103,13 @@ describe("Cron: rotas /ops/jobs e executor", () => {
     expect(staff.statusCode).toBe(403);
     const anonimo = await app.inject({ method: "GET", url: "/api/ops/jobs" });
     expect(anonimo.statusCode).toBe(401);
+    // Fase 1b: até o OWNER de empresa fica de fora — rotina varre todas, é da plataforma.
+    const dono = await makeAccount("OWNER");
+    created.userIds.push(dono.userId);
+    created.companyIds.push(dono.companyId);
+    const donoToken = await login(dono.email, dono.password);
+    const fora = await app.inject({ method: "GET", url: "/api/ops/jobs", headers: auth(donoToken) });
+    expect(fora.statusCode).toBe(403);
   });
 
   it("cada job vem com agenda traduzida, próxima execução e estado da última corrida", async () => {

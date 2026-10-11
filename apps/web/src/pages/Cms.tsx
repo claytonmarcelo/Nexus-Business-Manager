@@ -20,12 +20,14 @@ const ABAS: TabItem[] = [
 ];
 
 // Editor do site público (/app/cms). O conteúdo é global — a vitrine é uma só
-// para toda a plataforma — então as permissões content:read/content:write
-// ficam com quem responde pela plataforma inteira, não por uma empresa.
+// para toda a plataforma — então desde a Fase 1b a tela é área reservada do
+// administrador da plataforma (user.platform). A API confere no banco a cada
+// request; esta guarda só evita mostrar um editor que responderia 403.
 export function Cms() {
-  const { can } = useAuth();
+  const { user, can } = useAuth();
   const { active, onSelect } = useTabState(ABAS, "conteudo");
-  const podeEscrever = can("content:write");
+  const ehPlataforma = user?.platform === true;
+  const podeEscrever = ehPlataforma && can("content:write");
 
   const [config, setConfig] = useState<ConfiguracaoEditor | null>(null);
   const [erro, setErro] = useState<string | null>(null);
@@ -40,8 +42,8 @@ export function Cms() {
   }, []);
 
   useEffect(() => {
-    if (can("content:read")) void carregar();
-  }, [can, carregar]);
+    if (ehPlataforma) void carregar();
+  }, [ehPlataforma, carregar]);
 
   // Grava um bloco e troca o estado da tela pela resposta do servidor: o merge
   // é feito lá, e mostrar o rascunho local deixaria a tela prometendo o que o
@@ -51,7 +53,7 @@ export function Cms() {
     setConfig(nova);
   }, []);
 
-  if (!can("content:read")) {
+  if (!ehPlataforma) {
     return (
       <div className="page">
         <div className="page-head">

@@ -14,6 +14,8 @@ interface NavItem {
   to?: string;
   /** Justifica o item sem rota: vira dica no icone e rotulo "em breve". */
   emBreve?: string;
+  /** Área da plataforma (Fase 1b): só o administrador da plataforma vê e abre. */
+  plataforma?: boolean;
 }
 
 // Camadas do menu lateral (group headers). A ordem daqui e a ordem da barra.
@@ -68,8 +70,8 @@ const NAV_GROUPS: NavGroup[] = [
     items: [
       { to: "/app/usuarios", label: "Usuários", icon: "◉", permission: "user:read" },
       { to: "/app/auditoria", label: "Auditoria", icon: "❐", permission: "audit:read" },
-      { to: "/app/cms", label: "CMS & Site Público", icon: "▩", permission: "content:read" },
-      { to: "/app/rotinas", label: "Rotinas agendadas", icon: "◷", permission: "settings:write" },
+      { to: "/app/cms", label: "CMS & Site Público", icon: "▩", plataforma: true },
+      { to: "/app/rotinas", label: "Rotinas agendadas", icon: "◷", plataforma: true },
       { to: "/app/configuracoes", label: "Configurações", icon: "⚙" },
     ],
   },
@@ -224,12 +226,15 @@ export function AdminShell() {
     navigate("/", { replace: true });
   }
 
-  // Camadas visiveis: primeiro corta os itens sem permissao, depois descarta a
-  // camada inteira que ficou vazia.
+  // Camadas visiveis: primeiro corta os itens sem permissao (e as áreas da
+  // plataforma, que pedem o administrador da plataforma — Fase 1b), depois
+  // descarta a camada inteira que ficou vazia.
   const grupos = NAV_GROUPS
     .map((grupo) => ({
       title: grupo.title,
-      items: grupo.items.filter((n) => !n.permission || can(n.permission)),
+      items: grupo.items.filter(
+        (n) => (!n.plataforma || user?.platform) && (!n.permission || can(n.permission)),
+      ),
     }))
     .filter((grupo) => grupo.items.length > 0);
 
@@ -331,9 +336,9 @@ export function AdminShell() {
           </button>
           <div className="admin-header-title">Business Manager</div>
           <div className="admin-header-actions">
-            {/* Atalho para a vitrine: quem edita o conteúdo precisa ver o
-                resultado real, e abrir em outra aba preserva o formulário. */}
-            {can("content:read") ? (
+            {/* Atalho para a vitrine: desde a Fase 1b a vitrine é área da
+                plataforma, e só quem responde por ela abre o editor. */}
+            {user?.platform ? (
               <a
                 className="btn btn-ghost btn-sm admin-open-site"
                 href="/"

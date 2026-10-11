@@ -29,6 +29,8 @@ export interface SessionUser {
   currency: string;
   timezone: string;
   language: string;
+  // Administrador da plataforma (Fase 1b): true quando platformRole = SUPER_ADMIN.
+  platform: boolean;
 }
 
 async function issueTokens(
@@ -163,7 +165,10 @@ export async function switchCompany(
 }
 
 function toSessionUser(
-  user: { id: string; email: string; name: string; phone: string | null },
+  user: {
+    id: string; email: string; name: string; phone: string | null;
+    platformRole?: string | null;
+  },
   membership: {
     companyId: string;
     role: string;
@@ -182,6 +187,9 @@ function toSessionUser(
     currency: membership.company.currency,
     timezone: membership.company.timezone,
     language: membership.company.language,
+    // O papel de plataforma nunca sai do banco: a sessão apenas informa o que
+    // já foi conferido por assertPlatformAdmin em cada requisição reservada.
+    platform: user.platformRole === "SUPER_ADMIN",
   };
 }
 
@@ -209,7 +217,7 @@ export async function register(
   if (exists) throw conflict("Este e-mail já está cadastrado");
 
   const passwordHash = await hashPassword(input.password);
-  const firstName = input.name.trim().split(/s+/)[0] ?? "Empresa";
+  const firstName = input.name.trim().split(/\s+/)[0] ?? "Empresa";
   const baseSlug = slugify(firstName);
 
   const { user, membership } = await prisma.$transaction(async (tx) => {
@@ -227,6 +235,21 @@ export async function register(
       data: { userId: novo.id, companyId: empresa.id, role: "OWNER" },
       include: { company: true },
     });
+    // Fase 1b: o administrador da plataforma entra em toda empresa nova como
+    // OWNER (regra definitiva de acesso), agora identificado pelo platformRole
+    // no banco — não mais pelo e-mail fixo no código.
+    const admins = await tx.user.findMany({
+      where: { platformRole: "SUPER_ADMIN", active: true },
+      select: { id: true },
+    });
+    for (const admin of admins) {
+      if (admin.id === novo.id) continue;
+      await tx.companyUser.upsert({
+        where: { userId_companyId: { userId: admin.id, companyId: empresa.id } },
+        update: { role: "OWNER" },
+        create: { userId: admin.id, companyId: empresa.id, role: "OWNER" },
+      });
+    }
     return { user: novo, membership: vinculo };
   });
 
@@ -234,7 +257,7 @@ export async function register(
   await audit({ userId: user.id, companyId: membership.companyId, action: "auth.register", entity: "user", entityId: user.id, ip });
   return {
     tokens,
-    user: toSessionUser({ id: user.id, email: user.email, name: user.name, phone: user.phone }, membership),
+    user: toSessionUser(user, membership),
   };
 }
 

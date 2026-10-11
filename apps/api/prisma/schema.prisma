@@ -19,6 +19,13 @@ enum Role {
   STAFF
 }
 
+// Papel de PLATAFORMA, separado do papel dentro da empresa (enum Role).
+// Só existe o administrador da plataforma: ele responde pela vitrine (CMS),
+// pelas rotinas agendadas e entra em toda empresa como OWNER (Fase 1b).
+enum PlatformRole {
+  SUPER_ADMIN
+}
+
 model User {
   id             String               @id @default(uuid()) @db.VarChar(36)
   email          String               @unique
@@ -27,6 +34,7 @@ model User {
   avatarUrl      String?              @map("avatar_url") @db.VarChar(255)
   passwordHash   String               @map("password_hash")
   active         Boolean              @default(true)
+  platformRole   PlatformRole?        @map("platform_role")
   createdAt      DateTime             @default(now()) @map("created_at")
   updatedAt      DateTime             @updatedAt @map("updated_at")
   memberships    CompanyUser[]

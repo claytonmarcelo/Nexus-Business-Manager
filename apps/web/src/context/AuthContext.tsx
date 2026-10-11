@@ -15,6 +15,10 @@ export interface SessionUser {
   currency: string;
   timezone: string;
   language: string;
+  // Administrador da plataforma (Fase 1b): governa CMS e Rotinas, áreas que
+  // não pertencem a nenhuma empresa. A API confere no banco a cada request;
+  // aqui serve só para esconder o que a pessoa não pode abrir.
+  platform: boolean;
 }
 
 interface AuthCtx {

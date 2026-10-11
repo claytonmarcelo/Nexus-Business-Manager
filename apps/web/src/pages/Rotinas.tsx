@@ -12,8 +12,9 @@ import { alternarRotina, executarRotina, listarRotinas, type Rotina } from "../l
 // e o relatório diário. O agendador bate no processo da API e grava na própria
 // tabela o estado da última corrida — esta tela é o painel desse estado, e o
 // botão "Executar agora" chama exatamente o mesmo executor do relógio (nada de
-// versão de demonstração). Rota e menu só aparecem para quem configura
-// (settings:write): rotina é coisa da plataforma, não do atendimento.
+// versão de demonstração). Desde a Fase 1b a tela é área reservada do
+// administrador da plataforma (user.platform): rotina é coisa da plataforma,
+// não de uma empresa.
 
 function duracao(ms: number | null): string {
   if (ms === null) return "";
@@ -35,8 +36,8 @@ function PillUltima({ job }: { job: Rotina }) {
 }
 
 export function Rotinas() {
-  const { can } = useAuth();
-  const podeGerir = can("settings:write");
+  const { user } = useAuth();
+  const podeGerir = user?.platform === true;
   const [rotinas, setRotinas] = useState<Rotina[] | null>(null);
   const [erro, setErro] = useState<string | null>(null);
   const [ocupada, setOcupada] = useState<string | null>(null);
@@ -64,8 +65,8 @@ export function Rotinas() {
           </div>
         </div>
         <EmptyState
-          title="Sem permissão por aqui"
-          description="Rotinas agendadas só aparecem para quem configura a empresa (proprietário ou administrador)."
+          title="Área reservada da plataforma"
+          description="Rotinas agendadas varrem todas as empresas, por isso só o administrador da plataforma mexe aqui."
         />
       </div>
     );

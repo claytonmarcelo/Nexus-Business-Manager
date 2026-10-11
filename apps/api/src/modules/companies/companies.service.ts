@@ -7,7 +7,6 @@ import {
   FUSOS_BRASIL, IDIOMAS, MOEDAS, UFS, somenteDigitos,
 } from "../../lib/brFields";
 import type { CreateCompanyInput, UpdateCompanyInput } from "./companies.schemas";
-import { SUPER_ADMIN_EMAIL } from "../../lib/passwordPolicy";
 
 export interface CreatedCompany {
   id: string;
@@ -32,13 +31,18 @@ export async function createCompany(
     await tx.companyUser.create({
       data: { userId: ownerId, companyId: company.id, role: "OWNER" },
     });
-    // Regra definitiva: o administrador global é OWNER de toda empresa criada.
-    const superAdmin = await tx.user.findUnique({ where: { email: SUPER_ADMIN_EMAIL } });
-    if (superAdmin && superAdmin.id !== ownerId) {
+    // Regra definitiva (fase 1b): todo administrador de plataforma é OWNER de
+    // toda empresa criada — a fonte da regra é a coluna platform_role.
+    const platformAdmins = await tx.user.findMany({
+      where: { platformRole: "SUPER_ADMIN", active: true },
+      select: { id: true },
+    });
+    for (const pa of platformAdmins) {
+      if (pa.id === ownerId) continue;
       await tx.companyUser.upsert({
-        where: { userId_companyId: { userId: superAdmin.id, companyId: company.id } },
+        where: { userId_companyId: { userId: pa.id, companyId: company.id } },
         update: { role: "OWNER" },
-        create: { userId: superAdmin.id, companyId: company.id, role: "OWNER" },
+        create: { userId: pa.id, companyId: company.id, role: "OWNER" },
       });
     }
     await audit({

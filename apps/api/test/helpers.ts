@@ -18,11 +18,24 @@ export interface Fixture {
 }
 
 // Cria usuário + empresa + vínculo com papel direto no banco (setup de teste).
-export async function makeAccount(role: "OWNER" | "ADMIN" | "MANAGER" | "STAFF", opts?: { email?: string }): Promise<Fixture> {
+// opts.plataforma = true marca o usuário como administrador da plataforma
+// (Fase 1b): necessário para as áreas globais (CMS, rotinas), que não são de
+// nenhuma empresa.
+export async function makeAccount(
+  role: "OWNER" | "ADMIN" | "MANAGER" | "STAFF",
+  opts?: { email?: string; plataforma?: boolean },
+): Promise<Fixture> {
   const email = opts?.email ?? `${uid("user")}@nexus.test`;
   const password = "SenhaForte123!";
   const passwordHash = await hashPassword(password);
-  const user = await prisma.user.create({ data: { email, name: "Teste", passwordHash } });
+  const user = await prisma.user.create({
+    data: {
+      email,
+      name: "Teste",
+      passwordHash,
+      ...(opts?.plataforma ? { platformRole: "SUPER_ADMIN" as const } : {}),
+    },
+  });
   const company = await prisma.company.create({ data: { name: uid("Empresa"), slug: uid("slug") } });
   await prisma.companyUser.create({ data: { userId: user.id, companyId: company.id, role } });
   return { userId: user.id, companyId: company.id, email, password };
@@ -38,7 +51,33 @@ export async function login(email: string, password: string, companyId?: string)
   return (res.json() as { accessToken: string }).accessToken;
 }
 
+// Apaga o fixture na ordem filho -> pai. Com o banco finalmente em InnoDB
+// (reparo da Fase 1, tools/para-innodb.cjs) as chaves estrangeiras valem de
+// verdade, e os RESTRICT de negócio — item de venda/compra aponta produto,
+// compra aponta fornecedor — barram o deleteMany direto da empresa se a
+// limpeza tentar contar só com as cascatas. ids vêm dos próprios testes (uuid),
+// nunca de usuário, então a interpolação na lista IN é segura aqui.
 export async function cleanup(ids: { userIds?: string[]; companyIds?: string[] }): Promise<void> {
+  const empresaIds = (ids.companyIds ?? []).map((i) => `'${i.replace(/'/g, "")}'`).join(",");
+  if (empresaIds) {
+    const viaPai: Array<[child: string, parent: string]> = [
+      ["sale_items", "sales"],
+      ["purchase_items", "purchases"],
+    ];
+    for (const [child, parent] of viaPai) {
+      await prisma.$executeRawUnsafe(
+        `DELETE c FROM \`${child}\` c JOIN \`${parent}\` p ON p.id = c.${child === "sale_items" ? "sale_id" : "purchase_id"} WHERE p.company_id IN (${empresaIds})`,
+      );
+    }
+    const proprias = [
+      "stock_movements", "finance_entries", "agenda_events", "leads", "sales", "purchases",
+      "clients", "products", "product_categories", "suppliers", "finance_categories",
+      "notifications", "notification_preferences", "payment_gateways", "company_users",
+    ];
+    for (const tabela of proprias) {
+      await prisma.$executeRawUnsafe(`DELETE FROM \`${tabela}\` WHERE company_id IN (${empresaIds})`);
+    }
+    await prisma.company.deleteMany({ where: { id: { in: ids.companyIds } } });
+  }
   if (ids.userIds?.length) await prisma.user.deleteMany({ where: { id: { in: ids.userIds } } });
-  if (ids.companyIds?.length) await prisma.company.deleteMany({ where: { id: { in: ids.companyIds } } });
 }

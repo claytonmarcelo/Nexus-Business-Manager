@@ -17,8 +17,9 @@ import {
 
 // CMS da página pública + modo manutenção. Estes testes provam o combinado do
 // módulo: a leitura pública é anônima e nunca entrega o segredo do pulso, a
-// escrita é de quem responde pela plataforma (content:read/write só OWNER,
-// porque a vitrine é global), a gravação parcial faz merge sem sumir da tela,
+// escrita é área reservada da plataforma (Fase 1b — só platformRole
+// SUPER_ADMIN, conferido no banco a cada request; papel de empresa não abre,
+// nem OWNER), a gravação parcial faz merge sem sumir da tela,
 // item inativo some da vitrine, documento legal não publicado é 404, a trilha
 // de auditoria registra cada passo e o modo manutenção fecha a API inteira —
 // menos o caminho de volta (auth, health, público, cms e o sino) — para quem tem pulso
@@ -33,7 +34,9 @@ describe("CMS da página pública", () => {
   const SENHA = "SenhaForte123!";
 
   async function dono() {
-    const f = await makeAccount("OWNER");
+    // A vitrine é área da plataforma (Fase 1b): a conta que edita precisa do
+    // papel de plataforma no banco, não só do OWNER da empresa ativa.
+    const f = await makeAccount("OWNER", { plataforma: true });
     created.userIds.push(f.userId);
     created.companyIds.push(f.companyId);
     return { f, token: await login(f.email, SENHA) };
@@ -84,8 +87,8 @@ describe("CMS da página pública", () => {
     expect(JSON.stringify(corpo)).not.toMatch(/pulso|token/i);
   });
 
-  it("escrita exige content:write — ADMIN, MANAGER e STAFF recebem 403", async () => {
-    for (const role of ["ADMIN", "MANAGER", "STAFF"] as const) {
+  it("escrita é área da plataforma — papéis de empresa (até OWNER) recebem 403", async () => {
+    for (const role of ["OWNER", "ADMIN", "MANAGER", "STAFF"] as const) {
       const f = await makeAccount(role);
       created.userIds.push(f.userId);
       created.companyIds.push(f.companyId);

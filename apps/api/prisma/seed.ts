@@ -26,8 +26,11 @@ async function ensureUser(email: string, name: string, password: string) {
   const passwordHash = await bcrypt.hash(password, 12);
   return prisma.user.upsert({
     where: { email },
-    update: {},
-    create: { email, name, passwordHash },
+    // O update também confirma o papel de plataforma: empresas criadas antes da
+    // Fase 1b ganham o vínculo na volta do administrador, e a bandeira nunca
+    // fica desatualizada em quem já existe.
+    update: { platformRole: "SUPER_ADMIN" },
+    create: { email, name, passwordHash, platformRole: "SUPER_ADMIN" },
   });
 }
 
