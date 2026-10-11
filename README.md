@@ -29,9 +29,9 @@
   <sub>Estágio atual: a fundação e os módulos do dia a dia estão no ar — autenticação, papéis,
   multiempresa, clientes, produtos e estoque, vendas, compras, financeiro, CRM, agenda, auditoria e
   equipe. A página pública já é montada a partir do conteúdo do banco — cores, herói, capacidades,
-  depoimentos, métricas, dúvidas, contato, textos legais e a tela de modo manutenção; o que falta ali é a
-  tela do editor <code>/app/cms</code>. Nas notificações a API entrega tudo e falta o sino na tela. O que
-  existe como tabela pronta mas sem módulo (modelos de
+  depoimentos, métricas, dúvidas, contato, textos legais e a tela de modo manutenção; o editor
+  <code>/app/cms</code> cadastra tudo isso, e nas notificações o sino do cabeçalho e a tela
+  <code>/app/notificacoes</code> estão no ar. O que existe como tabela pronta mas sem módulo (modelos de
   e-mail, rotinas agendadas e gateways de pagamento) e o que ainda nem tem tabela está marcado um por um em
   <a href="#m%C3%B3dulos">Módulos</a> e no <a href="#roadmap">Roadmap</a>. Nada no menu aponta para uma
   rota que não existe: módulo em construção aparece apagado, com "em breve".</sub>
@@ -44,8 +44,9 @@
 Capturas do sistema rodando (Fastify + Prisma sobre MySQL no backend, React + AdminLTE 4 no frontend),
 todas no quadro de **1440×900**, duas por linha e na mesma escala de exibição. Cada imagem é um link: o
 clique abre o arquivo no tamanho capturado. As seis primeiras são a série da fundação, nos dois temas; as
-seis seguintes mostram os módulos operacionais do mesmo jeito que a pessoa os vê depois de entrar; as duas
-linhas finais são a vitrine montada a partir do conteúdo do banco, o modo manutenção e os textos legais.
+seis seguintes mostram os módulos operacionais do mesmo jeito que a pessoa os vê depois de entrar; as linhas
+finais são a vitrine montada a partir do conteúdo do banco com o editor do CMS, e os avisos do painel — o sino
+no cabeçalho, a lista paginada e as preferências por tipo.
 
 Os números que aparecem nas telas saíram do banco local de desenvolvimento no dia das capturas. O `seed`
 cria a empresa `nexus-demo` **vazia** — não há dados de fachada no código; os registros que os indicadores
@@ -97,6 +98,14 @@ contam vieram das provas automatizadas e dos testes de integração, que escreve
 | :--: | :--: |
 | <a href="docs/screenshots/20-cms-seo.png"><img src="docs/screenshots/20-cms-seo.png" alt="Aba SEO com a nota da página, o nível colorido e as 12 checagens da API com o peso de cada uma" width="360"></a> | <a href="docs/screenshots/20-cms-manutencao.png"><img src="docs/screenshots/20-cms-manutencao.png" alt="Aba Manutenção com o interruptor, a mensagem, a previsão de volta, os IPs permitidos e o código de pulso gerado na tela" width="360"></a> |
 
+| Sino no cabeçalho | Tela de avisos |
+| :--: | :--: |
+| <a href="docs/screenshots/21-notificacoes-sino.png"><img src="docs/screenshots/21-notificacoes-sino.png" alt="Cabeçalho do painel com o sino e o contador de não lidos, o painel aberto ao lado com os últimos seis avisos e o atalho para a conta completa" width="360"></a> | <a href="docs/screenshots/21-notificacoes-tela.png"><img src="docs/screenshots/21-notificacoes-tela.png" alt="Tela /app/notificacoes na aba Todos os avisos: pílulas de não lidos e urgentes, chips de filtro por tipo com contagem e a lista paginada no servidor" width="360"></a> |
+
+| Só os não lidos | Preferências por tipo |
+| :--: | :--: |
+| <a href="docs/screenshots/21-notificacoes-naolidos.png"><img src="docs/screenshots/21-notificacoes-naolidos.png" alt="Aba Não lidos com o filtro Financeiro aplicado, o badge de contagem na aba e as ações Abrir e Marcar lida na linha" width="360"></a> | <a href="docs/screenshots/21-notificacoes-preferencias.png"><img src="docs/screenshots/21-notificacoes-preferencias.png" alt="Aba Preferências com os cinco tipos de aviso, o canal in-app de cada um e o canal de e-mail desligado com o motivo" width="360"></a> |
+
 </div>
 
 Duas séries fora do quadro de 1440×900 existem no repositório e são honestas sobre o próprio tamanho: as
@@ -115,6 +124,13 @@ As capturas do editor (`20-*.png`) saíram de `tools/verify-cms.cjs`, em 1440×9
 `20-cms-celular.png` (390×844). Nelas está o conteúdo que a própria prova cadastrou pela tela — a headline
 "Gestão empresarial com precisão e elegância" é o padrão da casa porque a prova devolve a vitrine ao padrão
 no último passo, e confere isso recarregando o editor.
+
+As capturas dos avisos (`21-notificacoes-*.png`) saíram de `tools/verify-notificacoes.cjs`, em 1440×900, menos
+`21-notificacoes-celular.png` (390×844). Os doze lançamentos vencidos que enchem o sino vieram da própria prova:
+ela cadastra contas a pagar vencidas pela API, dispara a varredura administrativa, confere número, painel,
+paginação e preferências na tela, e no fim apaga os avisos e os lançamentos que fabricou pelo Prisma — o produto
+não tem rota para excluir aviso, então limpar dado de teste é responsabilidade de quem o criou. As capturas da
+sidebar (`16-*.png`) e do editor (`20-*.png`) foram recapturadas na mesma rodada e mostram o sino no cabeçalho.
 
 ---
 
@@ -262,17 +278,34 @@ São as telas e regras que existem hoje no repositório. O que ainda não está 
 
 ### Notificações
 
-A parte que grava e calcula está no ar; a parte que toca a pessoa (o sino no cabeçalho e a tela
-`/app/notificacoes`) ainda não — enquanto isso o aviso fica nas listas e alertas das próprias telas.
+O aviso nasce no servidor quando alguém faz algo que a equipe precisa saber, e chega ao sino do cabeçalho em
+qualquer tela do painel — sem recarregar a página, sem biblioteca de ícones nova e sem batida em aba escondida.
 
+- **Sino no cabeçalho** (`components/layout/NotificationBell.tsx`): o número de não lidos, em tom de urgente
+  quando há urgente, e os últimos seis avisos no painel que abre ao lado do botão. A batida pergunta só
+  contagens (`GET /api/notifications/count`) a cada 45 segundos; a lista chega quando a pessoa abre o painel.
+  Cada linha marca como lida na API e leva à tela do aviso, e o rodapé tem "Marcar todas como lidas" e "Ver
+  todos os avisos". Fecha em Esc e no clique fora, com `aria-expanded`/`aria-controls`
+- **Tela `/app/notificacoes`** (`pages/Notifications.tsx`): três abas sobre o padrão do sistema (Todos os
+  avisos / Não lidos, com o badge da contagem / Preferências, todas alcançáveis por `?aba=`), pílulas de não
+  lidos e urgentes, chip por tipo com o número de cada um, filtro combinado com lidas/não lidas, paginação
+  feita no servidor e as ações Abrir e Marcar lida na linha. O botão "Marcar todos" passa pelo diálogo de
+  confirmação da casa, e "Ver contas vencidas agora" só aparece para quem tem `settings:write`
+- **Preferências na tela**: os cinco tipos com rótulo do negócio, canal in-app por tipo, canal de e-mail
+  desligado com o motivo declarado (sem SMTP não há envio), gravar travado até algo mudar de fato e "Voltar ao
+  padrão". A empresa e o dono vêm sempre do token — não há seletor de empresa aqui
+- Sino e tela conversam pelo evento `nexus:avisos` (`lib/notificationsApi.ts`), então marcar lida num lugar
+  atualiza o número do outro sem recarregar página nenhuma
 - Cinco tipos com prioridade (Baixa/Média/Alta), link para a tela certa e chave antiduplicação: venda,
   estoque, lead, financeiro e relatório diário
 - Quem praticou a ação nunca recebe o próprio aviso; uma falha ao gravar aviso fica no log e **não** quebra
   a venda, a compra ou o estoque
 - Preferências por usuário e empresa com canal in-app e de e-mail separados. O canal de e-mail é guardado,
   mas nada é enviado enquanto não houver SMTP configurado — o sistema não finge que envia
-- `GET /api/notifications/count` é a rota barata do sino (número, quebra por tipo e urgentes); a varredura
-  de contas vencidas é rota administrativa só para `OWNER`/`ADMIN` e não repete o mesmo aviso dentro do mês
+- `GET /api/notifications/count` é a rota barata do sino (número, quebra por tipo e urgentes): com a aba
+  escondida a batida para, e voltar para a aba puxa a contagem na hora. `POST /api/notifications/scan`, a
+  varredura de contas vencidas, é administrativa — só `OWNER`/`ADMIN` — e não repete o mesmo aviso dentro do
+  mês
 
 ### Auditoria, equipe e sessões
 
@@ -354,9 +387,10 @@ inventado. A vitrine é uma só para toda a plataforma, então o conteúdo não 
 - **SEO medido (`GET /api/cms/seo/score`)** — nota e nível a partir de 12 checagens do que está de fato
   publicado, incluindo contato visível e textos legais
 - **Modo manutenção** — gancho antes das rotas fecha a API de negócio com 503, mensagem e previsão, mas
-  `/api/health`, `/api/auth`, `/api/public` e `/api/cms` ficam abertos porque é por ali que se desliga o
-  modo. Passam o token de pulso (18 hex, comparado em tempo constante) e os IPs permitidos; o bypass público
-  devolve só `{liberado}`
+  `/api/health`, `/api/auth`, `/api/public`, `/api/cms` e `/api/notifications` ficam abertos porque é por ali
+  que se desliga o modo — o sino toca em toda tela do painel e não há motivo para ele virar erro na tela de
+  quem entrou para reabrir o site; continua pedindo token de sessão. Passam o token de pulso (18 hex,
+  comparado em tempo constante) e os IPs permitidos; o bypass público devolve só `{liberado}`
 
 ### Editor do site público (`/app/cms`)
 
@@ -402,7 +436,7 @@ se o site está aberto ou em manutenção. A vitrine é única para toda a plata
 | Painel e relatórios agregados | ✅ | ✅ 8 rotas | ✅ | no ar |
 | Auditoria | ✅ | ✅ | ✅ | no ar |
 | Usuários e membros de empresa | ✅ | ✅ 6 rotas | ✅ | no ar |
-| Notificações e preferências | ✅ | ✅ 7 rotas | 🚧 | backend no ar, sino e tela por fazer |
+| Notificações e preferências | ✅ | ✅ 7 rotas | ✅ | no ar: sino no cabeçalho em toda tela do painel e `/app/notificacoes` com abas, filtros por tipo, paginação no servidor e preferências |
 | Configurações da conta e aparência | ✅ | ✅ | 🚧 | tema, conta e troca de empresa no ar; endereço, logo, moeda, fuso e meta têm coluna e não têm tela |
 | CMS da página pública (cores, herói, capacidades, banners, depoimentos, métricas, FAQ) | ✅ | ✅ 14 rotas | ✅ | no ar: a vitrine `/` é montada pelo conteúdo do banco e o editor `/app/cms` cadastra esse conteúdo nas cinco abas |
 | Documentos legais (Termos, Privacidade, LGPD) | ✅ | ✅ | ✅ | `/legal/:kind` mostra só o que está publicado; rascunho e publicação na aba Textos legais do editor |
@@ -487,15 +521,17 @@ importa só o CSS do AdminLTE) e `sweetalert2` (substituído pelo diálogo de co
     web/
       src/
         App.tsx                rotas públicas, /app/* protegida e as páginas de erro
-        styles/                tokens.css, tailwind.css, global.css, components.css, landing.css, cms.css
+        styles/                tokens.css, tailwind.css, global.css, components.css, landing.css,
+                               cms.css, notificacoes.css
         lib/                   api, confirm, notify, csv, format, auditLabels, uiCopy, validators,
-                               tokenStore, landingApi, landingTypes, landingEstilo, cmsApi
+                               tokenStore, landingApi, landingTypes, landingEstilo, cmsApi, notificationsApi
         context/               AuthContext, ThemeContext
-        components/            AdminShell, Tabs, Pagination, Modal, ConfirmationModal, StateView,
-                               PasswordInput, ProtectedRoute, ThemeToggle, landing/, layout/, cms/
+        components/            Tabs, Pagination, Modal, ConfirmationModal, StateView,
+                               PasswordInput, ProtectedRoute, ThemeToggle, landing/, cms/,
+                               layout/ (AdminShell, NotificationBell)
         pages/                 Landing, Legal, Login, Register, ForgotPassword, Dashboard, Clients,
                                Products, Sales, Purchases, Finance, CRM, Agenda, Users, Audit, Settings,
-                               Cms, erros
+                               Cms, Notifications, erros
   assets/brand/logo/           logo oficial e os recortes usados pelo favicon
   docs/
     ANALISE.md                 matriz de análise da fase 1, com evidências
@@ -676,7 +712,7 @@ processo com a mensagem do caminho exato, em vez de deixar o serviço subir queb
 | Isolamento | empresa ativa vem do token e é revalidada contra `company_users` a cada request; toda leitura filtra por `companyId`, então registro de outra empresa devolve 404; teste dedicado de vazamento entre tenants |
 | Validação | Zod em todas as entradas; categorias e tipos cruzados validados; `pageSize` acima do limite devolve 400 |
 | Tráfego | helmet, CORS restrito por env, rate-limit global 100/min e limites próprios em login (10/min), cadastro e recuperação (5/min) e bypass da manutenção (30/min) |
-| Disponibilidade | modo manutenção fecha a API de negócio com 503 e deixa `/api/health`, `/api/auth`, `/api/public` e `/api/cms` abertos; quem entra com o token de pulso (comparação em tempo constante) ou o IP permitido |
+| Disponibilidade | modo manutenção fecha a API de negócio com 503 e deixa `/api/health`, `/api/auth`, `/api/public`, `/api/cms` e `/api/notifications` abertos (o sino continua pedindo sessão); quem entra com o token de pulso (comparação em tempo constante) ou o IP permitido |
 | Auditoria | toda escrita relevante grava autor, empresa, ação, entidade, metadados e IP; tela somente leitura; marcação de alteração sensível feita no servidor |
 | Respostas de erro | handler central com códigos coerentes (400/401/403/404/409/429/500) e sem stack em produção |
 | Terceiros | **nenhuma integração inventada**: gateways de pagamento e SMTP têm tabela mas não têm chamada; o canal de e-mail fica guardado e desligado enquanto não houver credencial real |
@@ -706,6 +742,7 @@ capturas desta página como subproduto:
 
 | Prova | Checagens |
 |---|---|
+| `tools/verify-notificacoes.cjs` | 85 — o sino e a tela de avisos sobre dado fabricado pela própria prova: número conferido com a API, painel com os seis recentes, marcar lida no banco seguindo para o Financeiro, as três abas com badge, paginação medida contra `meta.total` do servidor, filtro por tipo, CRM sem aviso do tipo, marcar todos até o vazio, preferências gravadas, lidas de novo após reload e devolvidas ao padrão, tema claro e os 390px |
 | `tools/verify-cms.cjs` | 115 — o editor `/app/cms` aba por aba: cada gravação conferida no payload público e na vitrine renderizada, item criado/escondido/editado/excluído pelo modal, texto legal saindo do 404 para a página, nota de SEO igual na tela e na API, o site fechado em 503 com mensagem e relógio, o código de pulso gerado e usado, tudo devolvido ao padrão, os dois temas e os 390px |
 | `tools/verify-landing-cms.cjs` | 105 — a vitrine montada pelo banco: texto, paleta nos dois temas, âncoras, itens, contato, WhatsApp, cookies, SEO, páginas legais, três larguras sem arrasto e a manutenção de ponta a ponta (contagem, pulso, IP e o código na sessão) |
 | `tools/verify-sidebar.cjs` | 87 — ordem e tipografia das seis camadas, itens por permissão, modo trilha, peek, linhas "em breve" e o tema claro |
@@ -739,7 +776,8 @@ Fundação (auth, RBAC, multiempresa, auditoria, tema, estados globais, Toastr, 
 paginação, páginas de erro) · cadastros operacionais (clientes, produtos e estoque) · operação (vendas com
 baixa e estorno, compras e fornecedores, financeiro, CRM com conversão, agenda com recorrência e FullCalendar
 6) · painel com relatórios agregados e CSV · equipe, matriz RBAC e sessões com revogação · notificações no
-servidor com preferências e varredura · CMS da vitrine no servidor e na tela (configuração bloco a bloco,
+servidor com preferências e varredura, sino no cabeçalho e a tela `/app/notificacoes` com abas, filtros e
+paginação no servidor · CMS da vitrine no servidor e na tela (configuração bloco a bloco,
 itens por tipo com `meta`, a página pública montada a partir do banco, textos legais publicados, nota de SEO
 medida e modo manutenção com contagem regressiva, pulso e IP) · editor `/app/cms` com as cinco abas de
 conteúdo, itens, textos legais, SEO e manutenção, cada bloco gravando sozinho ·
@@ -749,15 +787,14 @@ fora do git, com histórico reescrito antes do primeiro push.
 
 ### A seguir
 
-1. **Sino e tela de notificações** — o backend já entrega `/count`, lista e preferências; falta a interface
-2. **Configurações completas** — endereço, logo, moeda, fuso, idioma e meta de receita têm coluna e não têm
+1. **Configurações completas** — endereço, logo, moeda, fuso, idioma e meta de receita têm coluna e não têm
    tela; falta o formulário com as regras de cada campo
-3. **Modelos de e-mail** — a tela de Termos, Privacidade e LGPD depende da mesma rota de edição do CMS;
+2. **Modelos de e-mail** — a tela de Termos, Privacidade e LGPD depende da mesma rota de edição do CMS;
    SMTP só depois de haver credencial real
-4. **Rotinas agendadas** — executor das varreduras hoje manuais (contas vencidas, relatório diário)
-5. **Gateways e cobranças** — só com credencial de ambiente; nada de integração de fachada
-6. **Ordens de serviço / atendimento** — módulo novo com o mesmo padrão de estado vigiado e auditoria
-7. **SaaS: planos, assinaturas e faturas** · **backup e restauração** · **CI** com suíte automatizada na
+3. **Rotinas agendadas** — executor das varreduras hoje manuais (contas vencidas, relatório diário)
+4. **Gateways e cobranças** — só com credencial de ambiente; nada de integração de fachada
+5. **Ordens de serviço / atendimento** — módulo novo com o mesmo padrão de estado vigiado e auditoria
+6. **SaaS: planos, assinaturas e faturas** · **backup e restauração** · **CI** com suíte automatizada na
    cada push
 
 ---
@@ -780,6 +817,7 @@ O detalhamento está em [`CHANGELOG.md`](CHANGELOG.md) (Keep a Changelog, mais n
 | `7e507d8` | Provas da sidebar e do diálogo recapturadas |
 | `60941a3 → 02971b4` | README como ficha do produto e CMS da vitrine no servidor: conteúdo bloco a bloco, itens com `meta`, textos legais publicados, SEO medido e modo manutenção com pulso e IP |
 | `2c50ea4 → 5e44160` | A página pública passou a ser montada a partir do banco — paleta, herói, capacidades, depoimentos, métricas, dúvidas, contato, WhatsApp, cookies, `/legal/:kind` e a tela de manutenção com contagem e pulso; POST sem corpo voltou a ser ação e a suíte fechou em 81 testes |
+| `4793f16 → sino` | O sino entrou em cena: contador no cabeçalho em toda tela do painel, painel dos seis avisos recentes, `/app/notificacoes` com três abas, filtro por tipo, paginação no servidor e preferências, o sino liberado no portão de manutenção e a prova `verify-notificacoes.cjs` com 85 checagens e seis capturas |
 | `5dce492 → editor` | O editor do CMS chegou: `/app/cms` com as cinco abas, o botão de manutenção que acompanha o rascunho, rascunho e publicação em cores diferentes, a nota de SEO com as 12 checagens na tela, o atalho único para a vitrine e a prova `verify-cms.cjs` com 115 checagens e dez capturas |
 
 ---
