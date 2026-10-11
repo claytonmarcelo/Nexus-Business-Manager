@@ -6,6 +6,7 @@
 // que vai aparecer na coluna "última execução" da tela de Rotinas.
 import { NotificationPriority } from "@prisma/client";
 import { prisma } from "../../lib/prisma";
+import { diaNoFuso, meiaNoiteNoFuso, ontemNoFuso } from "../../lib/time";
 import { moeda, notificar, varreduraGlobal } from "../notifications/notifications.service";
 
 export interface ResultadoExecucao {
@@ -22,10 +23,11 @@ export interface JobDefinicao {
   handler: (agora: Date) => Promise<ResultadoExecucao>;
 }
 
-// "2026-10-11" no fuso do servidor — mesma base do antiduplicação das varreduras.
-function chaveDia(agora: Date): string {
-  return `${agora.getFullYear()}-${String(agora.getMonth() + 1).padStart(2, "0")}-${String(agora.getDate()).padStart(2, "0")}`;
-}
+// A agenda do cron ("0 7 * * *") é lida no relógio do servidor — decisão
+// declarada na Fase 0, seção E. O que a empresa manda é o CONTEÚDO da varredura:
+// as chaves de antiduplicação e as janelas de dia abaixo são a data vista de
+// dentro do fuso dela (Fase 3c), porque "o mesmo aviso só uma vez por dia" só
+// faz sentido se o "dia" for o da empresa que recebe o aviso.
 
 // ---- 1. Contas vencidas ----
 // A varredura global já era a perna administrativa do sino; aqui ela ganha
@@ -43,11 +45,14 @@ async function rotinaContasVencidas(agora: Date): Promise<ResultadoExecucao> {
 // Um resumo por empresa (não um aviso por produto): 40 itens baixos virariam
 // 40 notificações idênticas. Prioridade alta quando algum produto já zerou.
 async function rotinaEstoqueBaixo(agora: Date): Promise<ResultadoExecucao> {
-  const dia = chaveDia(agora);
-  const empresas = await prisma.company.findMany({ where: { active: true }, select: { id: true } });
+  const empresas = await prisma.company.findMany({
+    where: { active: true },
+    select: { id: true, timezone: true },
+  });
   let avisadas = 0;
   let criadas = 0;
   for (const c of empresas) {
+    const dia = diaNoFuso(c.timezone, agora);
     const monitoradas = await prisma.product.findMany({
       where: { companyId: c.id, active: true, trackStock: true, minStock: { gt: 0 } },
       select: { stockQuantity: true, minStock: true },
@@ -89,13 +94,19 @@ async function rotinaEstoqueBaixo(agora: Date): Promise<ResultadoExecucao> {
 // (o padrão é desligado — só recebe quem pediu). Sem SMTP não há e-mail: o
 // relatório chega pelo sino, como o resto.
 async function rotinaRelatorioDiario(agora: Date): Promise<ResultadoExecucao> {
-  const hoje = new Date(agora);
-  hoje.setHours(0, 0, 0, 0);
-  const ontem = new Date(hoje.getTime() - 86_400_000);
-  const dia = chaveDia(agora);
-  const empresas = await prisma.company.findMany({ where: { active: true }, select: { id: true } });
+  const empresas = await prisma.company.findMany({
+    where: { active: true },
+    select: { id: true, timezone: true },
+  });
   let criadas = 0;
   for (const c of empresas) {
+    // "Ontem" é a janela entre as duas viradas de dia da empresa. Subtrair
+    // 24h da meia-noite de hoje dá o instante certo mesmo no dia em que o
+    // fuso atrasa ou adianta uma hora — é o dia que tem 23 ou 25 horas, e a
+    // conta segue a meia-noite, não o relógio do servidor.
+    const hoje = meiaNoiteNoFuso(c.timezone, agora);
+    const ontem = ontemNoFuso(c.timezone, agora);
+    const dia = diaNoFuso(c.timezone, agora);
     const [vendas, clientesNovos] = await Promise.all([
       prisma.sale.aggregate({
         where: { companyId: c.id, status: "CONFIRMED", createdAt: { gte: ontem, lt: hoje } },
@@ -105,7 +116,7 @@ async function rotinaRelatorioDiario(agora: Date): Promise<ResultadoExecucao> {
       prisma.client.count({ where: { companyId: c.id, createdAt: { gte: ontem, lt: hoje } } }),
     ]);
     const totalVendas = Number(vendas._sum.total ?? 0);
-    const dataBr = `${String(ontem.getDate()).padStart(2, "0")}/${String(ontem.getMonth() + 1).padStart(2, "0")}/${ontem.getFullYear()}`;
+    const dataBr = diaNoFuso(c.timezone, ontem).split("-").reverse().join("/");
     criadas += await notificar(c.id, {
       kind: "report",
       title: `Relatório de ${dataBr}`,

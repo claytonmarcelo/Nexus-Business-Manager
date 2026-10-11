@@ -3,6 +3,7 @@ import { prisma } from "../../lib/prisma";
 import { badRequest, conflict, notFound } from "../../lib/errors";
 import { paginate, skipTake, type PaginationInput } from "../../lib/pagination";
 import { audit } from "../../lib/audit";
+import { calendarioDaEmpresa, fusoDaEmpresa, mesNoFuso } from "../../lib/time";
 import type { FinanceCategoryInput, FinanceEntryInput } from "./finance.schemas";
 
 const num = (v: Prisma.Decimal) => Number(v);
@@ -186,20 +187,27 @@ export async function changeStatus(companyId: string, id: string, status: EntryS
 // Resumo do mes: o que entrou, o que saiu, saldo e pendencias (com atraso).
 export async function summary(companyId: string, month?: string) {
   const range = monthRange(month);
-  const today = new Date();
-  today.setUTCHours(0, 0, 0, 0);
+  // Fase 3c: "vencida" é a conta cujo dia da empresa já passou. Com o dia lido
+  // no UTC do servidor, em America/Sao_Paulo toda conta do dia acordava vencida
+  // às 21h, e o resumo mostrava o mês novo antes da virada da empresa.
+  const fuso = await fusoDaEmpresa(companyId);
+  // A borda é o calendário da empresa, não a meia-noite local dela: `dueDate` é
+  // coluna `@db.Date` e guarda o dia que a pessoa escreveu, ancorado à meia-
+  // noite UTC. Compará-lo com a meia-noite de Brasília deslocaria a fronteira
+  // três horas e toda conta do dia nasceria vencida.
+  const hoje = calendarioDaEmpresa(fuso);
   const base: Prisma.FinanceEntryWhereInput = { companyId, ...range };
   const [income, expense, pendingIncome, pendingExpense, overdue] = await Promise.all([
     prisma.financeEntry.aggregate({ where: { ...base, type: "INCOME", status: "PAID" }, _sum: { amount: true } }),
     prisma.financeEntry.aggregate({ where: { ...base, type: "EXPENSE", status: "PAID" }, _sum: { amount: true } }),
     prisma.financeEntry.aggregate({ where: { ...base, type: "INCOME", status: "PENDING" }, _sum: { amount: true } }),
     prisma.financeEntry.aggregate({ where: { ...base, type: "EXPENSE", status: "PENDING" }, _sum: { amount: true } }),
-    prisma.financeEntry.aggregate({ where: { companyId, status: "PENDING", dueDate: { lt: today } }, _sum: { amount: true }, _count: { _all: true } }),
+    prisma.financeEntry.aggregate({ where: { companyId, status: "PENDING", dueDate: { lt: hoje } }, _sum: { amount: true }, _count: { _all: true } }),
   ]);
   const incomeTotal = num(income._sum.amount ?? new Prisma.Decimal(0));
   const expenseTotal = num(expense._sum.amount ?? new Prisma.Decimal(0));
   return {
-    month: month ?? new Date().toISOString().slice(0, 7),
+    month: month ?? mesNoFuso(fuso),
     income: incomeTotal,
     expense: expenseTotal,
     balance: Math.round((incomeTotal - expenseTotal) * 100) / 100,

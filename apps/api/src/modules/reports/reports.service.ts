@@ -1,5 +1,15 @@
 import { Prisma } from "@prisma/client";
 import { prisma } from "../../lib/prisma";
+import {
+  calendarioDaEmpresa,
+  diasAtrasNoCalendario,
+  diaDeCalendario,
+  diaNoFuso,
+  isValidoFuso,
+  meiaNoiteDoDia,
+  meiaNoiteNoFuso,
+  mesNoFuso,
+} from "../../lib/time";
 
 // Camada de leitura dos painéis (abas Análises / Indicadores / Relatórios).
 // Tudo é calculado no servidor sobre a empresa do token: as telas nunca
@@ -19,22 +29,51 @@ function arredonda(v: number): number {
   return Math.round(v * 100) / 100;
 }
 
-export function mesCorrente(base = new Date()): Periodo {
-  const de = new Date(Date.UTC(base.getUTCFullYear(), base.getUTCMonth(), 1));
-  const ate = new Date(Date.UTC(base.getUTCFullYear(), base.getUTCMonth() + 1, 1));
-  return { de, ate };
+// Fase 3c da auditoria: os recortes de tempo vivem no fuso da empresa, não no
+// relógio do servidor. Antes, `mesCorrente()` era mês no UTC e `hoje()` era dia
+// no UTC — para America/Sao_Paulo, depois das 21h a venda do dia corrente já
+// caía fora do "mês" agregado, e o dia de "vencidas"/"próximos 7 dias" virava
+// outro. As bordas abaixo são instantes UTC exatos da meia-noite local, então
+// a query continua sendo BETWEEN em createdAt (índice e histórico intactos) e
+// quem se move é só a fronteira do dia.
+
+export interface RecortesDaEmpresa {
+  /** IANA do cadastro; fuso quebrado vira UTC em vez de derrubar o painel. */
+  fuso: string;
+  atual: Periodo;
+  anterior: Periodo;
+  /** Meia-noite de hoje na empresa — o "dia corrente" das colunas DATETIME. */
+  hojeDia: Date;
+  /** Hoje da empresa como dia de calendário — a borda das colunas `@db.Date`. */
+  hojeCalendario: Date;
 }
 
-export function mesAnterior(base = new Date()): Periodo {
-  const de = new Date(Date.UTC(base.getUTCFullYear(), base.getUTCMonth() - 1, 1));
-  const ate = new Date(Date.UTC(base.getUTCFullYear(), base.getUTCMonth(), 1));
-  return { de, ate };
-}
-
-function hoje(): Date {
-  const d = new Date();
-  d.setUTCHours(0, 0, 0, 0);
-  return d;
+export async function recortesDaEmpresa(companyId: string, base?: Date): Promise<RecortesDaEmpresa> {
+  const empresa = await prisma.company.findUnique({
+    where: { id: companyId },
+    select: { timezone: true },
+  });
+  const fuso = isValidoFuso(empresa?.timezone ?? "") ? (empresa?.timezone as string) : "UTC";
+  const agora = base ?? new Date();
+  const hojeDia = meiaNoiteNoFuso(fuso, agora);
+  const hojeCalendario = calendarioDaEmpresa(fuso, agora);
+  const rotuloHoje = diaNoFuso(fuso, agora);
+  // As bordas do mês saem do calendário da empresa (mês 1-based, com virada
+  // natural em janeiro e dezembro) e cada uma é convertida para o instante da
+  // sua própria meia-noite local: `de`/`ate` continuam BETWEEN em createdAt,
+  // só que agora cortam o dia onde a empresa o corta.
+  const [an, me] = [Number(rotuloHoje.slice(0, 4)), Number(rotuloHoje.slice(5, 7))];
+  const primeiroDia = (meses: number) => meiaNoiteDoDia(fuso, an, me + meses, 1);
+  const de = primeiroDia(0);
+  const virada = primeiroDia(1);
+  const anteriorDe = primeiroDia(-1);
+  return {
+    fuso,
+    atual: { de, ate: virada },
+    anterior: { de: anteriorDe, ate: de },
+    hojeDia,
+    hojeCalendario,
+  };
 }
 
 // Meta nominal do mês, cadastrada em Configurações da empresa. Sem alvo definido
@@ -43,11 +82,12 @@ function metaDeReceita(
   alvo: Prisma.Decimal | null | undefined,
   receita: number,
   mes: Periodo,
+  hojeDia: Date,
 ) {
   const alvoNumero = arredonda(num(alvo));
   if (alvoNumero <= 0) return null;
   const faltando = arredonda(Math.max(0, alvoNumero - receita));
-  const diasRestantes = Math.max(1, Math.ceil((mes.ate.getTime() - hoje().getTime()) / 86_400_000));
+  const diasRestantes = Math.max(1, Math.ceil((mes.ate.getTime() - hojeDia.getTime()) / 86_400_000));
   return {
     alvo: alvoNumero,
     atingido: arredonda((receita / alvoNumero) * 100),
@@ -60,11 +100,16 @@ function metaDeReceita(
 // ---- Visão geral + alertas (Dashboard) ----
 
 export async function overview(companyId: string) {
-  const atual = mesCorrente();
-  const anterior = mesAnterior();
-  const hojeDia = hoje();
+  const recorte = await recortesDaEmpresa(companyId);
+  const { atual, anterior, fuso, hojeDia, hojeCalendario } = recorte;
+  // A janela "próximos 7 dias" é a mesma de antes em dias, mas medida da meia-
+  // noite da empresa até a virada depois de amanhã dela — 7 * 86.400.000 ms é
+  // o que o dia tem quando não há transição; no dia do horário de verão o
+  // recorte no instante da meia-noite é o que mantém a conta honesta.
   const emSeteDias = new Date(hojeDia.getTime() + 7 * 24 * 60 * 60 * 1000);
-  const emTrintaDias = new Date(hojeDia.getTime() + 30 * 24 * 60 * 60 * 1000);
+  // "Há mais de 30 dias" é medido da meia-noite de hoje para trás: um cliente
+  // cadastrado ontem à noite não pode contar como inativo de 31 dias.
+  const aTrintaDias = new Date(hojeDia.getTime() - 30 * 24 * 60 * 60 * 1000);
 
   const [
     vendasAtual,
@@ -121,7 +166,10 @@ export async function overview(companyId: string) {
       _count: { _all: true },
     }),
     prisma.financeEntry.aggregate({
-      where: { companyId, status: "PENDING", dueDate: { lt: hojeDia } },
+      // Vencida é conta cujo DIA passou: a coluna é `@db.Date`, então a borda é
+      // o calendário da empresa, não a meia-noite local — com esta última uma
+      // conta de hoje gravada à meia-noite UTC contaria como atrasada.
+      where: { companyId, status: "PENDING", dueDate: { lt: hojeCalendario } },
       _sum: { amount: true },
       _count: { _all: true },
     }),
@@ -143,11 +191,12 @@ export async function overview(companyId: string) {
       where: {
         companyId,
         active: true,
-        createdAt: { lt: new Date(emTrintaDias.getTime()) },
+        createdAt: { lt: aTrintaDias },
         sales: { none: {} },
       },
     }),
-    // O alvo do mês mora na empresa (Configurações > Empresa).
+    // O alvo do mês mora na empresa (Configurações > Empresa); o fuso ela já
+    // veio em recortesDaEmpresa, então aqui só se pede a meta.
     prisma.company.findUnique({ where: { id: companyId }, select: { revenueTarget: true } }),
   ]);
 
@@ -160,7 +209,7 @@ export async function overview(companyId: string) {
     ? arredonda(((receitaAtual - receitaAnterior) / receitaAnterior) * 100)
     : null;
 
-  const meta = metaDeReceita(empresaMeta?.revenueTarget, receitaAtual, atual);
+  const meta = metaDeReceita(empresaMeta?.revenueTarget, receitaAtual, atual, hojeDia);
 
   // Cada alerta declara a permissao necessaria para ele ser exibido: a rota
   // filtra a lista e um papel sem acesso a financa nunca ve valores de conta.
@@ -227,7 +276,9 @@ export async function overview(companyId: string) {
   }
 
   return {
-    periodo: new Date().toISOString().slice(0, 7),
+    // A etiqueta do período é o mês da empresa: no UTC ele vira antes da virada
+    // local, e o painel mostraria "11" com o mês de dentro ainda em "10".
+    periodo: mesNoFuso(fuso),
     vendas: {
       receita: receitaAtual,
       pedidos: vendasAtual._count._all,
@@ -281,7 +332,8 @@ export async function overview(companyId: string) {
 // ---- Clientes: segmentos, recência e análises ----
 
 export async function clientes(companyId: string) {
-  const mes = mesCorrente();
+  const recorte = await recortesDaEmpresa(companyId);
+  const mes = recorte.atual;
   const [total, ativos, novosNoMes, porCliente, cadastro] = await Promise.all([
     prisma.client.count({ where: { companyId } }),
     prisma.client.count({ where: { companyId, active: true } }),
@@ -313,7 +365,7 @@ export async function clientes(companyId: string) {
     curva.set(c.id, participacao <= 0.8 ? "A" : participacao <= 0.95 ? "B" : "C");
   }
 
-  const hojeDia = hoje();
+  const hojeDia = recorte.hojeDia;
   const recenciaBuckets = [
     { rotulo: "Até 30 dias", de: 0, ate: 30 },
     { rotulo: "31 a 60 dias", de: 31, ate: 60 },
@@ -470,7 +522,8 @@ export async function movimentos(companyId: string, f: MovimentosFiltro) {
 // ---- Vendas: série diária, status, destaques ----
 
 export async function vendas(companyId: string, de?: Date, ate?: Date) {
-  const padrao = mesCorrente();
+  const recorte = await recortesDaEmpresa(companyId);
+  const padrao = recorte.atual;
   const gte = de ?? padrao.de;
   const lte = ate ?? padrao.ate;
   const base: Prisma.SaleWhereInput = { companyId, createdAt: { gte, lte } };
@@ -495,7 +548,7 @@ export async function vendas(companyId: string, de?: Date, ate?: Date) {
   const porDia = new Map<string, { dia: string; receita: number; pedidos: number }>();
   for (const v of vendas) {
     if (v.status === "CANCELLED") continue;
-    const chave = v.createdAt.toISOString().slice(0, 10);
+    const chave = diaNoFuso(recorte.fuso, v.createdAt);
     const atual = porDia.get(chave) ?? { dia: chave, receita: 0, pedidos: 0 };
     atual.receita = arredonda(atual.receita + num(v.total));
     atual.pedidos += 1;
@@ -536,8 +589,11 @@ export async function vendas(companyId: string, de?: Date, ate?: Date) {
   const etiquetas: Record<string, string> = { PENDING: "Pendentes", CONFIRMED: "Confirmadas", CANCELLED: "Canceladas" };
 
   return {
-    de: gte.toISOString().slice(0, 10),
-    ate: lte.toISOString().slice(0, 10),
+    // As etiquetas dos extremos são lidas no fuso da empresa — a série de cima
+    // é agrupada lá, e uma capa UTC nas pontas deixaria o primeiro e o último
+    // dia da tela com nomes que nenhum balde da lista tem.
+    de: diaNoFuso(recorte.fuso, gte),
+    ate: diaNoFuso(recorte.fuso, new Date(lte.getTime() - 1)),
     receita,
     pedidos: efetivas.length,
     ticket: efetivas.length ? arredonda(receita / efetivas.length) : 0,
@@ -618,10 +674,18 @@ export async function compras(companyId: string) {
 // ---- Financeiro: fluxo de caixa, contas e centros de custo ----
 
 export async function financeiro(companyId: string, dias = 30) {
-  const desde = new Date(hoje().getTime() - (dias - 1) * 24 * 60 * 60 * 1000);
+  const recorte = await recortesDaEmpresa(companyId);
+  // Fluxo de caixa é série de DIAS, e a coluna do banco é `@db.Date`: aqui
+  // tudo andou no calendário da empresa — a janela abre `dias - 1` dias antes
+  // do hoje dela, fecha no hoje dela, e os baldes se numeram somando dias ao
+  // calendário. Nem a meia-noite local nem `diaNoFuso` entram numa conta de
+  // data pura: um dos dois deslocaria a etiqueta de todo lançamento e o outro
+  // duplicaria um dia nas transições de horário de verão.
+  const hojeCalendario = recorte.hojeCalendario;
+  const desde = diasAtrasNoCalendario(recorte.fuso, dias - 1);
   const [lancamentos, aReceber, aPagar, vencidas, porCategoria] = await Promise.all([
     prisma.financeEntry.findMany({
-      where: { companyId, status: "PAID", dueDate: { gte: desde, lte: new Date() } },
+      where: { companyId, status: "PAID", dueDate: { gte: desde, lte: hojeCalendario } },
       orderBy: { dueDate: "asc" },
       select: { dueDate: true, type: true, amount: true },
     }),
@@ -639,7 +703,7 @@ export async function financeiro(companyId: string, dias = 30) {
     }),
     prisma.financeEntry.groupBy({
       by: ["status", "type"],
-      where: { companyId, status: "PENDING", dueDate: { lt: hoje() } },
+      where: { companyId, status: "PENDING", dueDate: { lt: hojeCalendario } },
       _count: { _all: true },
       _sum: { amount: true },
     }),
@@ -657,12 +721,16 @@ export async function financeiro(companyId: string, dias = 30) {
   const fluxo: { dia: string; entradas: number; saidas: number; saldo: number }[] = [];
   const indice = new Map<string, number>();
   for (let i = 0; i < dias; i++) {
-    const dia = new Date(desde.getTime() + i * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+    // Do último dia para cá, e cada balde é numerado pelo próprio calendário:
+    // somar 24h a um instante de meia-noite local repetiria um dia e pularia
+    // outro no dia de transição de horário de verão, porque aquele dia tem 23
+    // ou 25 horas — o calendário não tem.
+    const dia = diaDeCalendario(new Date(hojeCalendario.getTime() - (dias - 1 - i) * 24 * 60 * 60 * 1000));
     indice.set(dia, fluxo.length);
     fluxo.push({ dia, entradas: 0, saidas: 0, saldo: 0 });
   }
   for (const l of lancamentos) {
-    const chave = l.dueDate.toISOString().slice(0, 10);
+    const chave = diaDeCalendario(l.dueDate);
     const idx = indice.get(chave);
     const balde = idx === undefined ? undefined : fluxo[idx];
     if (!balde) continue;
@@ -692,11 +760,11 @@ export async function financeiro(companyId: string, dias = 30) {
     },
     aReceber: aReceber.map((e) => ({
       id: e.id, descricao: e.description, valor: arredonda(num(e.amount)),
-      vencimento: e.dueDate, cliente: e.client?.name ?? "—", atrasada: e.dueDate < hoje(),
+      vencimento: e.dueDate, cliente: e.client?.name ?? "—", atrasada: e.dueDate < hojeCalendario,
     })),
     aPagar: aPagar.map((e) => ({
       id: e.id, descricao: e.description, valor: arredonda(num(e.amount)),
-      vencimento: e.dueDate, fornecedor: e.supplier?.name ?? "—", atrasada: e.dueDate < hoje(),
+      vencimento: e.dueDate, fornecedor: e.supplier?.name ?? "—", atrasada: e.dueDate < hojeCalendario,
     })),
     vencidas: vencidas.map((v) => ({
       tipo: v.type, quantidade: v._count._all, valor: arredonda(num(v._sum.amount)),

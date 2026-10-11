@@ -2,6 +2,7 @@ import { NotificationPriority, Prisma } from "@prisma/client";
 import { prisma } from "../../lib/prisma";
 import { paginate, skipTake, type PaginationInput } from "../../lib/pagination";
 import { notFound } from "../../lib/errors";
+import { calendarioDaEmpresa, diaDeCalendario, fusoDaEmpresa, mesNoFuso } from "../../lib/time";
 import type { TipoNotificacao, PreferenciasInput } from "./notifications.schemas";
 
 // ===== Notificações persistentes (seção 44) =====
@@ -202,14 +203,33 @@ function diasDeAtraso(dueDate: Date, hoje: Date): number {
 }
 
 /**
+ * Vencimento em dd/mm/aaaa. A coluna é DATE (`@db.Date`): o valor vem do banco
+ * à meia-noite UTC, e é esse dia de calendário que a pessoa escreveu na tela —
+ * traduzi-lo para o fuso da empresa é que criaria a conta vencendo um dia antes.
+ */
+function dataBR(d: Date): string {
+  const iso = diaDeCalendario(d);
+  return `${iso.slice(8, 10)}/${iso.slice(5, 7)}/${iso.slice(0, 4)}`;
+}
+
+/**
  * Avisos que não nascem de uma ação da pessoa: contas vencidas. Retorna a
  * quantidade criada. A chave antifduplication usa o mês da varredura, então a
  * mesma conta vencida avisa uma vez por mês e não vira spam diário.
+ *
+ * Fase 3c: o "hoje" da varredura é o de dentro da empresa, não o do servidor.
+ * Uma conta que vence hoje só é vencida quando o dia dela vira; com o relógio
+ * do datacenter, em America/Sao_Paulo ela acordava avisada três horas adiantada.
+ * A comparação é dia com dia porque a coluna é `@db.Date`.
  */
-export async function varreduraEmpresa(companyId: string, agora = new Date()): Promise<number> {
-  const hoje = new Date(agora);
-  hoje.setHours(0, 0, 0, 0);
-  const mes = `${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, "0")}`;
+export async function varreduraEmpresa(
+  companyId: string,
+  agora = new Date(),
+  fuso?: string,
+): Promise<number> {
+  const tz = fuso ?? (await fusoDaEmpresa(companyId));
+  const hoje = calendarioDaEmpresa(tz, agora);
+  const mes = mesNoFuso(tz, agora);
 
   const vencidas = await prisma.financeEntry.findMany({
     where: { companyId, status: "PENDING", dueDate: { lt: hoje } },
@@ -229,7 +249,7 @@ export async function varreduraEmpresa(companyId: string, agora = new Date()): P
       body:
         `${e.description} · ${moeda(Number(e.amount))}` +
         (responsavel ? ` · ${responsavel}` : "") +
-        ` · venceu em ${e.dueDate.toISOString().slice(8, 10)}/${e.dueDate.toISOString().slice(5, 7)}/${e.dueDate.toISOString().slice(0, 4)}`,
+        ` · venceu em ${dataBR(e.dueDate)}`,
       link: "/app/financeiro",
       priority: atraso > 7 ? NotificationPriority.HIGH : NotificationPriority.MEDIUM,
       dedupeBase: `vencida:${e.id}:${mes}`,
@@ -240,9 +260,12 @@ export async function varreduraEmpresa(companyId: string, agora = new Date()): P
 
 /** Varredura de todas as empresas ativas (usada pela rotina agendada). */
 export async function varreduraGlobal(agora = new Date()): Promise<{ empresas: number; criadas: number }> {
-  const empresas = await prisma.company.findMany({ where: { active: true }, select: { id: true } });
+  const empresas = await prisma.company.findMany({
+    where: { active: true },
+    select: { id: true, timezone: true },
+  });
   let criadas = 0;
-  for (const c of empresas) criadas += await varreduraEmpresa(c.id, agora);
+  for (const c of empresas) criadas += await varreduraEmpresa(c.id, agora, c.timezone);
   return { empresas: empresas.length, criadas };
 }
 
