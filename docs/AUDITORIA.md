@@ -313,7 +313,19 @@ deste repo — os `arquivo:linha` deste relatório são o ponto de partida, não
 
 ---
 
-*Relatório produzido na Fase 0 sem alterar código. Aguardando aprovação para iniciar a Fase 1
-(isolamento multiempresa — R1 fecha os três CRÍTICOS da seção B: ADMIN criar OWNER, ADMIN rebaixa
-OWNER e varredura cross-tenant. O quarto CRÍTICO — corrida de oversell em estoque — pertence à
-Fase 3 e está coberto por R3).*
+*Relatório produzido na Fase 0 sem alterar código. Aprovado pelo dono com instrução de executar
+todas as fases sem nova escolha de opções.*
+
+## Adenda da execução — Fase 1 (isolamento) encerrada
+
+- Os três CRÍTICOS da seção B estão fechados: ADMIN criar OWNER, ADMIN rebaixar OWNER e varredura
+  cross-tenant do sino. Somou-se ainda o encerramento de sessão de terceiro pela rota de tenant.
+- O administrador da plataforma passou a ser uma coluna (`users.platform_role`), não um e-mail no
+  código; CMS e `/ops/jobs` exigem esse alcance, conferido no banco a cada request (R1 completo).
+- **Achado ao vivo, não previsto no relatório**: o banco de desenvolvimento inteiro era **MyISAM**
+  (padrão do WAMP no `my.ini`), com os 41 foreign keys do schema existindo no papel e valendo zero,
+  ~22 mil linhas órfãs e transações sem atomicidade. Reparado por `tools/para-innodb.cjs`
+  (InnoDB + FKs + limpeza conforme a semântica de cada constraint) e pelo `my.ini` com InnoDB. A
+  corrida de oversell da Fase 3 agora tem onde existir — sem InnoDB não havia transação de fato.
+- Suíte verde com FKs valendo (16 arquivos, 113 testes), typecheck e build limpos, provas de
+  navegador rerodadas (CMS 115, rotinas 37, notificações 85, configurações 108).

@@ -293,7 +293,7 @@ async function criarStaff(companyId) {
       cabecaCelular.t === "Rotinas agendadas" && cabecaCelular.temTabela);
     await foto(pagina, "23-rotinas-celular");
 
-    // ---- 6. quem não configura não vê nem por URL direta ----
+    // ---- 6. quem não é o administrador da plataforma não vê nem por URL direta ----
     console.log("\n-- papel que não gerir --");
     const outro = await (browser.createBrowserContext
       ? browser.createBrowserContext()
@@ -307,8 +307,9 @@ async function criarStaff(companyId) {
     await paginaStaff.goto(BASE + "/app/rotinas", { waitUntil: "networkidle0" });
     await semToast(paginaStaff);
     const semPermissao = await paginaStaff.evaluate(() => document.body.innerText);
-    ok("na URL direta, a tela diz \"Sem permissão por aqui\" em vez de tabela",
-      semPermissao.includes("Sem permissão por aqui") && !semPermissao.includes("Executar agora"));
+    // Fase 1b: a área é da plataforma; o STAFF vê o aviso de área reservada.
+    ok("na URL direta, a tela diz \"Área reservada da plataforma\" em vez de tabela",
+      semPermissao.includes("Área reservada da plataforma") && !semPermissao.includes("Executar agora"));
     await foto(paginaStaff, "23-rotinas-sem-permissao");
     await paginaStaff.close();
     await outro.close();
