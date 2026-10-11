@@ -85,6 +85,18 @@ contam vieram das provas automatizadas e dos testes de integração, que escreve
 | :--: | :--: |
 | <a href="docs/screenshots/19-manutencao.png"><img src="docs/screenshots/19-manutencao.png" alt="Tela de manutenção com a mensagem cadastrada, a contagem regressiva até a previsão de volta e o campo do código de pulso" width="360"></a> | <a href="docs/screenshots/19-legal-termos.png"><img src="docs/screenshots/19-legal-termos.png" alt="Página /legal/termos renderizando o documento publicado no banco, parágrafo por parágrafo" width="360"></a> |
 
+| Editor `/app/cms` · Conteúdo (tema noite) | Editor · Conteúdo (tema dia) |
+| :--: | :--: |
+| <a href="docs/screenshots/20-cms-conteudo-dark.png"><img src="docs/screenshots/20-cms-conteudo-dark.png" alt="Editor do site público na aba Conteúdo, tema escuro: textos do topo, as sete cores da vitrine com quadrado e hexadecimal, herói, WhatsApp, contato e redes, cada bloco com o seu botão de gravar" width="360"></a> | <a href="docs/screenshots/20-cms-conteudo-claro.png"><img src="docs/screenshots/20-cms-conteudo-claro.png" alt="A mesma aba Conteúdo no tema dia, com o painel claro e a paleta cadastrada continuando legível" width="360"></a> |
+
+| Itens da vitrine | Textos legais |
+| :--: | :--: |
+| <a href="docs/screenshots/20-cms-itens.png"><img src="docs/screenshots/20-cms-itens.png" alt="Aba Itens com o seletor de tipo, a lista dos cadastros e as ações de editar, esconder e excluir" width="360"></a> | <a href="docs/screenshots/20-cms-legais.png"><img src="docs/screenshots/20-cms-legais.png" alt="Aba Textos legais com Termos publicado, o botão discreto de rascunho e o dourado de publicar, e o endereço público do documento" width="360"></a> |
+
+| Nota de SEO | Modo manutenção |
+| :--: | :--: |
+| <a href="docs/screenshots/20-cms-seo.png"><img src="docs/screenshots/20-cms-seo.png" alt="Aba SEO com a nota da página, o nível colorido e as 12 checagens da API com o peso de cada uma" width="360"></a> | <a href="docs/screenshots/20-cms-manutencao.png"><img src="docs/screenshots/20-cms-manutencao.png" alt="Aba Manutenção com o interruptor, a mensagem, a previsão de volta, os IPs permitidos e o código de pulso gerado na tela" width="360"></a> |
+
 </div>
 
 Duas séries fora do quadro de 1440×900 existem no repositório e são honestas sobre o próprio tamanho: as
@@ -98,6 +110,11 @@ menos `19-landing-cms-celular.png`, que é 390×844 porque mostra a barra de nav
 conteúdo nelas — "Gestão empresarial com a cara do seu negócio", as capacidades e o depoimento de exemplo — foi
 cadastrado pela própria prova, pela API, conferido na tela e apagado no fim, para a vitrine voltar ao padrão
 da casa. `01-landing.png` é a mesma página com o banco do jeito que ele está hoje.
+
+As capturas do editor (`20-*.png`) saíram de `tools/verify-cms.cjs`, em 1440×900, menos
+`20-cms-celular.png` (390×844). Nelas está o conteúdo que a própria prova cadastrou pela tela — a headline
+"Gestão empresarial com precisão e elegância" é o padrão da casa porque a prova devolve a vitrine ao padrão
+no último passo, e confere isso recarregando o editor.
 
 ---
 
@@ -341,7 +358,29 @@ inventado. A vitrine é uma só para toda a plataforma, então o conteúdo não 
   modo. Passam o token de pulso (18 hex, comparado em tempo constante) e os IPs permitidos; o bypass público
   devolve só `{liberado}`
 
-Falta ainda a tela do editor (`/app/cms`): hoje o conteúdo se cadastra pela API.
+### Editor do site público (`/app/cms`)
+
+O conteúdo da vitrine se cadastra numa tela, sem tocar na API. `pages/Cms.tsx` abre cinco abas sobre
+`components/cms/`, e cada bloco de campos tem o próprio botão de gravar — salvar uma cor não reescreve o
+WhatsApp, porque a chamada manda só o bloco que mudou:
+
+- **Conteúdo** — textos do topo, as sete cores da vitrine (o quadrado de cor e o hexadecimal disputam o
+  mesmo valor: o texto manda, o quadrado espelha cor válida), o herói com os dois botões e suas rotas,
+  overlay e desfoque da imagem, o canal do WhatsApp com a posição do botão, o contato e as redes
+- **Itens** — capacidades, banners, depoimentos, métricas e FAQs listados por tipo, com os campos extras de
+  cada um (estrelas e empresa no depoimento, valor e formato na métrica), esconder e mostrar, e exclusão
+  no diálogo de confirmação do sistema
+- **Textos legais** — Termos, Privacidade e LGPD, cada um com a pílula do próprio estado; "Salvar
+  rascunho" é botão discreto e "Publicar no site" é a cor de ação, porque as duas coisas não têm a mesma
+  importância; o endereço público do documento aparece na tela
+- **SEO** — os metadados e, ao lado, a nota que a API calcula sobre as 12 checagens do que está publicado,
+  com o peso de cada uma e o que falta
+- **Manutenção** — o interruptor que fecha a plataforma, com a confirmação que diz que as rotas de negócio
+  caem em 503, a mensagem e a previsão de volta, a allowlist de IPs e o código de pulso gerado na tela
+
+O cabeçalho do painel tem o atalho "Visualizar landing page", que abre `/` em outra aba, e o selo que diz
+se o site está aberto ou em manutenção. A vitrine é única para toda a plataforma, então as permissões
+`content:read`/`content:write` ficaram com o OWNER e os demais papéis recebem 403 no editor.
 
 ---
 
@@ -365,8 +404,8 @@ Falta ainda a tela do editor (`/app/cms`): hoje o conteúdo se cadastra pela API
 | Usuários e membros de empresa | ✅ | ✅ 6 rotas | ✅ | no ar |
 | Notificações e preferências | ✅ | ✅ 7 rotas | 🚧 | backend no ar, sino e tela por fazer |
 | Configurações da conta e aparência | ✅ | ✅ | 🚧 | tema, conta e troca de empresa no ar; endereço, logo, moeda, fuso e meta têm coluna e não têm tela |
-| CMS da página pública (cores, herói, capacidades, banners, depoimentos, métricas, FAQ) | ✅ | ✅ 14 rotas | ✅ | no ar: a vitrine `/` é montada pelo conteúdo do banco; falta o editor `/app/cms` |
-| Documentos legais (Termos, Privacidade, LGPD) | ✅ | ✅ | ✅ | `/legal/:kind` mostra só o que está publicado; a edição ainda é pela API |
+| CMS da página pública (cores, herói, capacidades, banners, depoimentos, métricas, FAQ) | ✅ | ✅ 14 rotas | ✅ | no ar: a vitrine `/` é montada pelo conteúdo do banco e o editor `/app/cms` cadastra esse conteúdo nas cinco abas |
+| Documentos legais (Termos, Privacidade, LGPD) | ✅ | ✅ | ✅ | `/legal/:kind` mostra só o que está publicado; rascunho e publicação na aba Textos legais do editor |
 | Modo manutenção da plataforma | ✅ (mesma tabela) | ✅ | ✅ | 503 com mensagem e previsão na API e na tela, contagem regressiva, pulso em tempo constante, IP permitido e o código guardado na aba |
 | Modelos de e-mail | ✅ | 🚧 | 🚧 | tabela `email_templates` criada; SMTP ainda não existe |
 | Rotinas agendadas (cron) | ✅ | 🚧 | 🚧 | tabela `cron_jobs` criada, sem executor |
@@ -418,8 +457,8 @@ importa só o CSS do AdminLTE) e `sweetalert2` (substituído pelo diálogo de co
 |---|---|
 | `apps/api/src/lib/` | erros centralizados, RBAC, contexto de empresa, auditoria, paginação, política de senha, tokens, bcrypt |
 | `apps/api/src/plugins/` | segurança (helmet/CORS/rate-limit) e o decorator `authenticate` |
-| `apps/web/src/lib/` | `api` (axios + renovação), `notify`, `confirm`, `csv`, `format`, `auditLabels`, `uiCopy`, `validators`, `tokenStore` |
-| `apps/web/src/components/` | `AdminShell`, `Logo`, `Tabs`, `Pagination`, `Modal`, `ConfirmationModal`, `StateView`, `PageLoader`, `ErrorPage`, `PasswordInput`, `ProtectedRoute`, `ThemeToggle` e a suíte `landing/` |
+| `apps/web/src/lib/` | `api` (axios + renovação), `notify`, `confirm`, `csv`, `format`, `auditLabels`, `uiCopy`, `validators`, `tokenStore`, `cmsApi` |
+| `apps/web/src/components/` | `AdminShell`, `Logo`, `Tabs`, `Pagination`, `Modal`, `ConfirmationModal`, `StateView`, `PageLoader`, `ErrorPage`, `PasswordInput`, `ProtectedRoute`, `ThemeToggle`, a suíte `landing/` e o editor `cms/` (`Campos` + os cinco painéis de aba) |
 | `tools/*.cjs` | provas automatizadas no navegador (Puppeteer) e recaptura das telas deste README |
 
 ---
@@ -448,14 +487,15 @@ importa só o CSS do AdminLTE) e `sweetalert2` (substituído pelo diálogo de co
     web/
       src/
         App.tsx                rotas públicas, /app/* protegida e as páginas de erro
-        styles/                tokens.css, tailwind.css, global.css, components.css, landing.css
+        styles/                tokens.css, tailwind.css, global.css, components.css, landing.css, cms.css
         lib/                   api, confirm, notify, csv, format, auditLabels, uiCopy, validators,
-                               tokenStore, landingApi, landingTypes, landingEstilo
+                               tokenStore, landingApi, landingTypes, landingEstilo, cmsApi
         context/               AuthContext, ThemeContext
         components/            AdminShell, Tabs, Pagination, Modal, ConfirmationModal, StateView,
-                               PasswordInput, ProtectedRoute, ThemeToggle, landing/, layout/
+                               PasswordInput, ProtectedRoute, ThemeToggle, landing/, layout/, cms/
         pages/                 Landing, Legal, Login, Register, ForgotPassword, Dashboard, Clients,
-                               Products, Sales, Purchases, Finance, CRM, Agenda, Users, Audit, Settings, erros
+                               Products, Sales, Purchases, Finance, CRM, Agenda, Users, Audit, Settings,
+                               Cms, erros
   assets/brand/logo/           logo oficial e os recortes usados pelo favicon
   docs/
     ANALISE.md                 matriz de análise da fase 1, com evidências
@@ -666,6 +706,7 @@ capturas desta página como subproduto:
 
 | Prova | Checagens |
 |---|---|
+| `tools/verify-cms.cjs` | 115 — o editor `/app/cms` aba por aba: cada gravação conferida no payload público e na vitrine renderizada, item criado/escondido/editado/excluído pelo modal, texto legal saindo do 404 para a página, nota de SEO igual na tela e na API, o site fechado em 503 com mensagem e relógio, o código de pulso gerado e usado, tudo devolvido ao padrão, os dois temas e os 390px |
 | `tools/verify-landing-cms.cjs` | 105 — a vitrine montada pelo banco: texto, paleta nos dois temas, âncoras, itens, contato, WhatsApp, cookies, SEO, páginas legais, três larguras sem arrasto e a manutenção de ponta a ponta (contagem, pulso, IP e o código na sessão) |
 | `tools/verify-sidebar.cjs` | 87 — ordem e tipografia das seis camadas, itens por permissão, modo trilha, peek, linhas "em breve" e o tema claro |
 | `tools/verify-acoes-confirm.cjs` | 88 — coluna de ações de nove tabelas, anatomia do diálogo, trava de duplo clique, Esc durante a requisição, tema claro e celular |
@@ -700,7 +741,8 @@ baixa e estorno, compras e fornecedores, financeiro, CRM com conversão, agenda 
 6) · painel com relatórios agregados e CSV · equipe, matriz RBAC e sessões com revogação · notificações no
 servidor com preferências e varredura · CMS da vitrine no servidor e na tela (configuração bloco a bloco,
 itens por tipo com `meta`, a página pública montada a partir do banco, textos legais publicados, nota de SEO
-medida e modo manutenção com contagem regressiva, pulso e IP) ·
+medida e modo manutenção com contagem regressiva, pulso e IP) · editor `/app/cms` com as cinco abas de
+conteúdo, itens, textos legais, SEO e manutenção, cada bloco gravando sozinho ·
 sidebar em camadas com peek e gaveta · abas e paginação padronizadas em todas as telas · identidade Premium
 Gourmet nos dois temas, favicon oficial e as provas automatizadas desta página · credencial do administrador
 fora do git, com histórico reescrito antes do primeiro push.
@@ -710,14 +752,12 @@ fora do git, com histórico reescrito antes do primeiro push.
 1. **Sino e tela de notificações** — o backend já entrega `/count`, lista e preferências; falta a interface
 2. **Configurações completas** — endereço, logo, moeda, fuso, idioma e meta de receita têm coluna e não têm
    tela; falta o formulário com as regras de cada campo
-3. **Editor do CMS** — `/app/cms` com as abas de conteúdo, itens, textos legais, SEO e manutenção; a
-   vitrine já é montada a partir do banco, falta a tela de quem cadastra
-4. **Modelos de e-mail** — a tela de Termos, Privacidade e LGPD depende da mesma rota de edição do CMS;
+3. **Modelos de e-mail** — a tela de Termos, Privacidade e LGPD depende da mesma rota de edição do CMS;
    SMTP só depois de haver credencial real
-5. **Rotinas agendadas** — executor das varreduras hoje manuais (contas vencidas, relatório diário)
-6. **Gateways e cobranças** — só com credencial de ambiente; nada de integração de fachada
-7. **Ordens de serviço / atendimento** — módulo novo com o mesmo padrão de estado vigiado e auditoria
-8. **SaaS: planos, assinaturas e faturas** · **backup e restauração** · **CI** com suíte automatizada na
+4. **Rotinas agendadas** — executor das varreduras hoje manuais (contas vencidas, relatório diário)
+5. **Gateways e cobranças** — só com credencial de ambiente; nada de integração de fachada
+6. **Ordens de serviço / atendimento** — módulo novo com o mesmo padrão de estado vigiado e auditoria
+7. **SaaS: planos, assinaturas e faturas** · **backup e restauração** · **CI** com suíte automatizada na
    cada push
 
 ---
@@ -740,6 +780,7 @@ O detalhamento está em [`CHANGELOG.md`](CHANGELOG.md) (Keep a Changelog, mais n
 | `7e507d8` | Provas da sidebar e do diálogo recapturadas |
 | `60941a3 → 02971b4` | README como ficha do produto e CMS da vitrine no servidor: conteúdo bloco a bloco, itens com `meta`, textos legais publicados, SEO medido e modo manutenção com pulso e IP |
 | `2c50ea4 → 5e44160` | A página pública passou a ser montada a partir do banco — paleta, herói, capacidades, depoimentos, métricas, dúvidas, contato, WhatsApp, cookies, `/legal/:kind` e a tela de manutenção com contagem e pulso; POST sem corpo voltou a ser ação e a suíte fechou em 81 testes |
+| `5dce492 → editor` | O editor do CMS chegou: `/app/cms` com as cinco abas, o botão de manutenção que acompanha o rascunho, rascunho e publicação em cores diferentes, a nota de SEO com as 12 checagens na tela, o atalho único para a vitrine e a prova `verify-cms.cjs` com 115 checagens e dez capturas |
 
 ---
 
