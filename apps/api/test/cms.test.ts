@@ -1,7 +1,19 @@
 import { describe, it, expect, afterAll, beforeEach } from "vitest";
 import { app, makeAccount, login, cleanup } from "./helpers";
 import { prisma } from "../src/lib/prisma";
-import { recarregarEstado } from "../src/modules/cms/cms.service";
+import {
+  CONFIG_ID,
+  CONTATO_PADRAO,
+  CORES_PADRAO,
+  HEADLINE_PADRAO,
+  HERO_PADRAO,
+  MANUTENCAO_PADRAO,
+  SEO_PADRAO,
+  SOCIAL_PADRAO,
+  SUBHEADLINE_PADRAO,
+  WHATSAPP_PADRAO,
+  recarregarEstado,
+} from "../src/modules/cms/cms.service";
 
 // CMS da página pública + modo manutenção. Estes testes provam o combinado do
 // módulo: a leitura pública é anônima e nunca entrega o segredo do pulso, a
@@ -32,10 +44,23 @@ describe("CMS da página pública", () => {
   });
 
   afterAll(async () => {
-    // Estado global de vitrine: desliga manutenção e limpa o que foi gravado.
+    // Estado global de vitrine: desliga manutenção, limpa o que foi gravado e
+    // devolve a configuração ao padrão do produto. Sem essa última parte, quem
+    // abre a página pública depois da suíte lê "Headline auditado para o teste"
+    // no herói da empresa real, e um print da vitrine sairia com texto de teste.
     await prisma.landingConfig.updateMany({
-      where: { id: "default" },
-      data: { maintenance: { ativa: false, mensagem: "", previsao: "", ipsPermitidos: [] } },
+      where: { id: CONFIG_ID },
+      data: {
+        headline: HEADLINE_PADRAO,
+        subheadline: SUBHEADLINE_PADRAO,
+        colors: { ...CORES_PADRAO },
+        whatsapp: { ...WHATSAPP_PADRAO },
+        seo: { ...SEO_PADRAO },
+        maintenance: { ...MANUTENCAO_PADRAO },
+        hero: { ...HERO_PADRAO },
+        social: { ...SOCIAL_PADRAO },
+        contact: { ...CONTATO_PADRAO },
+      },
     });
     recarregarEstado();
     await prisma.landingItem.deleteMany({ where: { id: { in: created.itemIds } } });
@@ -362,5 +387,29 @@ describe("CMS da página pública", () => {
     expect(logs.some((l) => l.action === "cms.config.updated")).toBe(true);
     expect(logs.some((l) => l.action === "cms.item.created" && l.entityId === item.json().id)).toBe(true);
     expect(logs.every((l) => l.companyId === f.companyId)).toBe(true);
+  });
+
+  it("POST sem corpo, como o axios envia, é aceito: JSON malformado continua 400", async () => {
+    const { token } = await dono();
+    // O botão "gerar pulso" do editor chama POST sem payload. O axios manda
+    // content-type application/json mesmo sem corpo, e o parser padrão do
+    // Fastify recusaria com 400 "Body cannot be empty" — a ação do botão não é
+    // um formulário, então corpo vazio vale {}.
+    const semCorpo = await app.inject({
+      method: "POST",
+      url: "/api/cms/maintenance/token",
+      headers: { ...auth(token), "content-type": "application/json" },
+    });
+    expect(semCorpo.statusCode).toBe(200);
+    expect(semCorpo.json().token).toMatch(/^[0-9a-f]{18}$/);
+
+    const jsonRuim = await app.inject({
+      method: "POST",
+      url: "/api/cms/items",
+      headers: { ...auth(token), "content-type": "application/json" },
+      payload: "{kind:",
+    });
+    expect(jsonRuim.statusCode).toBe(400);
+    expect(jsonRuim.json().message).toBe("JSON inválido no corpo da requisição");
   });
 });

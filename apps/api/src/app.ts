@@ -1,7 +1,7 @@
 import Fastify, { type FastifyInstance, type FastifyError } from "fastify";
 import { ZodError } from "zod";
 import { Prisma } from "@prisma/client";
-import { AppError } from "./lib/errors";
+import { AppError, badRequest } from "./lib/errors";
 import { registerSecurity } from "./plugins/security";
 import { registerMaintenance } from "./plugins/maintenance";
 import authPlugin from "./plugins/auth";
@@ -27,6 +27,21 @@ export function buildApp(): FastifyInstance {
     logger: isProd
       ? { level: "info" }
       : { level: "info" },
+  });
+
+  // POST sem corpo (deslogar, marcar tudo lido, gerar o pulso da manutenção) é
+  // uma ação, não um formulário: o axios manda content-type application/json
+  // com payload vazio, e o parser padrão recusaria com 400 "Body cannot be
+  // empty". Aqui corpo vazio vale {} — JSON escrito errado continua 400, mas
+  // com a nossa mensagem.
+  app.addContentTypeParser("application/json", { parseAs: "string" }, (req, body, done) => {
+    const texto = String(body).trim();
+    if (texto === "") return done(null, {});
+    try {
+      done(null, JSON.parse(texto));
+    } catch {
+      done(badRequest("JSON inválido no corpo da requisição"), undefined);
+    }
   });
 
   void registerSecurity(app);
