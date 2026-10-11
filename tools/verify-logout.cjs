@@ -1,5 +1,6 @@
 // Prova: ao deslogar, o usuario volta SEMPRE para a pagina de boas-vindas ("/").
 const puppeteer = require("puppeteer-core");
+const { SENHA_ADMIN } = require("./senha-admin.cjs");
 const BASE = "http://localhost:5173";
 
 (async () => {
@@ -16,7 +17,7 @@ const BASE = "http://localhost:5173";
   await page.reload({ waitUntil: "networkidle0" });
   await page.waitForSelector("input[type=email]");
   await page.type("input[type=email]", "nexusbussiness.admin@gmail.com", { delay: 3 });
-  await page.type("input[type=password]", "senha-removida-do-git", { delay: 3 });
+  await page.type("input[type=password]", SENHA_ADMIN, { delay: 3 });
   await page.click(".neu-btn");
   await page.waitForFunction(() => location.pathname.startsWith("/app"), { timeout: 15000 });
   ok(true, "login levou ao painel /app");

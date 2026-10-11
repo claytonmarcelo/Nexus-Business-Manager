@@ -1,5 +1,6 @@
 // Captura as telas reais do Nexus Business Manager (Chrome headless) para o README.
 const puppeteer = require("puppeteer-core");
+const { SENHA_ADMIN } = require("./senha-admin.cjs");
 const fs = require("fs");
 const path = require("path");
 
@@ -8,7 +9,7 @@ fs.mkdirSync(OUT, { recursive: true });
 
 const BASE = "http://localhost:5173";
 const EMAIL = "nexusbussiness.admin@gmail.com"; // administrador definitivo (CREDENCIAIS.md)
-const SENHA = "senha-removida-do-git";
+const SENHA = SENHA_ADMIN;
 
 async function shot(page, nome) {
   await new Promise((r) => setTimeout(r, 600));

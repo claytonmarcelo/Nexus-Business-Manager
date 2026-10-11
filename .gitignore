@@ -34,3 +34,7 @@ apps/api/prisma/*.db
 
 # Artefatos temporários
 tools/wf.cjs.bak
+
+# Credenciais que ficam no disco e nunca vao para o git (regra de acesso)
+CREDENCIAIS.md
+tools/senha-admin.local.cjs

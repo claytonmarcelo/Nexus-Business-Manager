@@ -1,6 +1,7 @@
 // Auditoria de overflow horizontal: percorre telas publicas e administrativas
 // em larguras moveis e aponta elementos que ultrapassam a viewport.
 const puppeteer = require("puppeteer-core");
+const { SENHA_ADMIN } = require("./senha-admin.cjs");
 const BASE = "http://localhost:5173";
 
 const WIDTHS = [360, 414, 768];
@@ -10,7 +11,7 @@ async function login(page) {
   await page.goto(BASE + "/login", { waitUntil: "networkidle0" });
   await page.waitForSelector("input[type=email]");
   await page.type("input[type=email]", "nexusbussiness.admin@gmail.com", { delay: 2 });
-  await page.type("input[type=password]", "senha-removida-do-git", { delay: 2 });
+  await page.type("input[type=password]", SENHA_ADMIN, { delay: 2 });
   await page.click(".neu-btn");
   await page.waitForFunction(() => location.pathname.startsWith("/app"), { timeout: 15000 });
 }

@@ -6,6 +6,7 @@
 //      dourado para reativar, spinner + trava de duplo clique durante a API e
 //      barra lateral congelada enquanto a pessoa confirma.
 const puppeteer = require("puppeteer-core");
+const { SENHA_ADMIN } = require("./senha-admin.cjs");
 
 const CHROME = "C:/Program Files/Google/Chrome/Application/chrome.exe";
 const BASE = "http://localhost:5173";
@@ -16,7 +17,7 @@ const SHOTS = "docs/screenshots";
 // anterior, sem depender de um botao "Ativar" que a tela de Clientes nao tem.
 const API = process.env.NEXUS_API || "http://localhost:3001";
 const ADMIN_EMAIL = "nexusbussiness.admin@gmail.com";
-const ADMIN_SENHA = "senha-removida-do-git";
+const ADMIN_SENHA = SENHA_ADMIN;
 
 let checks = 0;
 const falhas = [];

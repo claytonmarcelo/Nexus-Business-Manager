@@ -11,6 +11,7 @@
 //    seletor de 10/25/50/100, « ‹ páginas › » com desabilitados corretos e
 //    avanco de pagina sem recarregar a tela.
 const puppeteer = require("puppeteer-core");
+const { SENHA_ADMIN } = require("./senha-admin.cjs");
 const path = require("path");
 
 const CHROME = "C:/Program Files/Google/Chrome/Application/chrome.exe";
@@ -512,7 +513,7 @@ async function checarPainel(page, okFn, aba) {
   const login = await fetch(BASE.replace(":5173", ":3001") + "/api/auth/login", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email: "nexusbussiness.admin@gmail.com", password: "senha-removida-do-git" }),
+    body: JSON.stringify({ email: "nexusbussiness.admin@gmail.com", password: SENHA_ADMIN }),
   });
   const sessao = await login.json();
   if (!sessao.accessToken) throw new Error("login da prova falhou: " + JSON.stringify(sessao).slice(0, 160));

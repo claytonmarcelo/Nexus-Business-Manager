@@ -56,6 +56,12 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/), 
 - Botão **olho para mostrar/ocultar senha** (`PasswordInput`) reutilizado no login, cadastro, recuperação e modal de novo membro.
 - Página de Clientes no frontend (tabela paginada, busca, modal criar/editar, desativar com confirmação, botões por permissão) — prova de uso real capturada em `docs/screenshots/07-clientes.png`.
 - Refatoração UX/UI da tela de boas-vindas: componentes de responsabilidade única (`components/landing/*`), textos isolados em `copy.ts`, animação de entrada escalonada (stagger) com respeito a `prefers-reduced-motion` e tipografia fluida.
+### Segurança
+
+- **A senha do administrador saiu do repositório**: ela estava escrita em 22 arquivos versionados — `CREDENCIAIS.md`, `README.md`, `apps/api/prisma/seed.ts` e os 19 scripts de prova em `tools/`. O valor real agora mora só no disco, em `tools/senha-admin.local.cjs` e no `apps/api/.env` (chave `SEED_ADMIN_PASSWORD`), ambos ignorados pelo git. As provas passaram a importar `tools/senha-admin.cjs`, que lê do ambiente ou do arquivo local e para com aviso claro quando nenhum dos dois existe, em vez de mandar credencial errada para a API no meio de uma verificação.
+- **`CREDENCIAIS.md` continua no projeto, fora do versionamento**: a regra de acesso permanece no arquivo da raiz, no mesmo lugar e com o mesmo conteúdo; ele apenas deixou de ser rastreado pelo git para que o repositório possa ser público. O `README.md` diz onde procurar.
+- **Seed sem senha no código**: `prisma/seed.ts` lê `SEED_ADMIN_PASSWORD` e falha cedo, com instrução legível, quando a chave não está definida; o `.env.example` documenta a chave.
+- **Histórico reescrito antes do primeiro push**: os commits do projeto foram reescritos para que a senha não apareça em nenhum deles (backup do histórico original guardado fora do repositório). A conta de desenvolvimento `admin@nexus.local`, de senha fraca e uso exclusivamente local, continua documentada no seed e no README.
 - Testes de integração dos fluxos (cadastro, duplicidade, senha fraca, recuperação, reuso de código, revogação de sessões): suíte agora com 23 testes.
 
 ### Alterado

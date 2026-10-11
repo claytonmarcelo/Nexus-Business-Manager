@@ -1,6 +1,7 @@
 // Prova de uso real do modulo CRM: cadastra lead pelo modal, filtra por estagio,
 // move pelo funil, fecha negocio (virando cliente) e confere o celular.
 const puppeteer = require("puppeteer-core");
+const { SENHA_ADMIN } = require("./senha-admin.cjs");
 const path = require("path");
 
 const BASE = "http://localhost:5173";
@@ -82,7 +83,7 @@ const estagioDaLinha = (page, nome) => page.$$eval(".table tbody tr", (rows, n) 
   await page.goto(BASE + "/login", { waitUntil: "networkidle0" });
   await page.waitForSelector("input[type=email]");
   await page.type("input[type=email]", "nexusbussiness.admin@gmail.com", { delay: 3 });
-  await page.type("input[type=password]", "senha-removida-do-git", { delay: 3 });
+  await page.type("input[type=password]", SENHA_ADMIN, { delay: 3 });
   await Promise.all([
     page.waitForFunction(() => location.pathname.startsWith("/app"), { timeout: 15000 }),
     page.click(".neu-btn"),

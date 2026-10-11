@@ -2,6 +2,7 @@
 // modal, confere o calendario em mes/semana/lista, muda estado, filtra, edita,
 // exclui e fecha no celular. Nenhuma caixa de dialogo nativa e usada.
 const puppeteer = require("puppeteer-core");
+const { SENHA_ADMIN } = require("./senha-admin.cjs");
 const path = require("path");
 
 const BASE = "http://localhost:5173";
@@ -94,7 +95,7 @@ async function limparSobras() {
   const login = await fetch("http://localhost:3001/api/auth/login", {
     method: "POST",
     headers: { "content-type": "application/json" },
-    body: JSON.stringify({ email: "nexusbussiness.admin@gmail.com", password: "senha-removida-do-git" }),
+    body: JSON.stringify({ email: "nexusbussiness.admin@gmail.com", password: SENHA_ADMIN }),
   }).then((r) => r.json());
   const token = login.accessToken;
   if (!token) throw new Error("login da limpeza falhou");
@@ -125,7 +126,7 @@ async function limparSobras() {
 
   await page.goto(BASE + "/login", { waitUntil: "networkidle0" });
   await page.type("input[type=email]", "nexusbussiness.admin@gmail.com", { delay: 3 });
-  await page.type("input[type=password]", "senha-removida-do-git", { delay: 3 });
+  await page.type("input[type=password]", SENHA_ADMIN, { delay: 3 });
   await page.click("button[type=submit]");
   await page.waitForSelector(".admin-sidebar", { timeout: 12000 });
   await semToast(page);

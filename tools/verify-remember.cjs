@@ -1,6 +1,7 @@
 // Prova da regra: "Lembrar de mim" grava o e-mail no navegador, mas ele NUNCA
 // aparece visível no campo; entrar só com a senha usa o e-mail lembrado em silêncio.
 const puppeteer = require("puppeteer-core");
+const { SENHA_ADMIN } = require("./senha-admin.cjs");
 const BASE = "http://localhost:5173";
 
 (async () => {
@@ -18,7 +19,7 @@ const BASE = "http://localhost:5173";
   await page.reload({ waitUntil: "networkidle0" });
   await page.waitForSelector("input[type=email]");
   await page.type("input[type=email]", "nexusbussiness.admin@gmail.com", { delay: 4 });
-  await page.type("input[type=password]", "senha-removida-do-git", { delay: 4 });
+  await page.type("input[type=password]", SENHA_ADMIN, { delay: 4 });
   await page.click(".neu-check");
   await page.click(".neu-btn");
   await page.waitForFunction(() => location.pathname.startsWith("/app"), { timeout: 15000 });
@@ -37,7 +38,7 @@ const BASE = "http://localhost:5173";
   ok(stored === "nexusbussiness.admin@gmail.com", "e-mail gravado no navegador (invisivel)");
 
   // Passo 3: digitar SÓ a senha e entrar — usa o e-mail lembrado em silêncio.
-  await page.type("input[type=password]", "senha-removida-do-git", { delay: 4 });
+  await page.type("input[type=password]", SENHA_ADMIN, { delay: 4 });
   await page.click(".neu-btn");
   await page.waitForFunction(() => location.pathname.startsWith("/app"), { timeout: 15000 });
   ok(true, "login apenas com senha usando o e-mail lembrado");

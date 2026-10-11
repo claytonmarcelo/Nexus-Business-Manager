@@ -1,6 +1,7 @@
 // Prova de uso real do modulo Compras + Fornecedores:
 // cadastra fornecedor, cria compra em rascunho, recebe com entrada de estoque e captura as telas.
 const puppeteer = require("puppeteer-core");
+const { SENHA_ADMIN } = require("./senha-admin.cjs");
 const path = require("path");
 const BASE = "http://localhost:5173";
 const OUT = path.join(__dirname, "..", "docs", "screenshots");
@@ -23,7 +24,7 @@ const sufixo = Date.now().toString().slice(-6);
   await page.reload({ waitUntil: "networkidle0" });
   await page.waitForSelector("input[type=email]");
   await page.type("input[type=email]", "nexusbussiness.admin@gmail.com", { delay: 3 });
-  await page.type("input[type=password]", "senha-removida-do-git", { delay: 3 });
+  await page.type("input[type=password]", SENHA_ADMIN, { delay: 3 });
   await page.click(".neu-btn");
   await page.waitForFunction(() => location.pathname.startsWith("/app"), { timeout: 15000 });
 

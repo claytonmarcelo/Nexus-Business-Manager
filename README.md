@@ -72,7 +72,7 @@ npm run dev:api                           # http://localhost:3001
 npm run dev:web                           # http://localhost:5173 (proxy /api)
 ```
 
-**Administrador definitivo do projeto** (regra de acesso — ver `CREDENCIAIS.md`): `nexusbussiness.admin@gmail.com` / `senha-removida-do-git`, com papel OWNER em todas as empresas e proteção contra remoção/rebaixamento. O seed também cria a conta de desenvolvimento `admin@nexus.local` / `Nexus@2026` usada pela suíte de testes.
+**Administrador definitivo do projeto** (regra de acesso — ver `CREDENCIAIS.md`): `nexusbussiness.admin@gmail.com`, com papel OWNER em todas as empresas e proteção contra remoção/rebaixamento. A senha fica apenas no `CREDENCIAIS.md` da sua máquina (arquivo local, ignorado pelo git) e é lida de `SEED_ADMIN_PASSWORD` no `apps/api/.env` na hora do seed — nada de credencial no repositório. O seed também cria a conta de desenvolvimento `admin@nexus.local` / `Nexus@2026` usada pela suíte de testes.
 
 Regra de senha em todo o sistema: mínimo 8 caracteres, com ao menos uma letra maiúscula e um caractere especial (validado no backend por `passwordPolicy.ts` e nos formulários).
 

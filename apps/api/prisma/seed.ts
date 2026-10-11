@@ -1,12 +1,21 @@
 import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcryptjs";
+import "dotenv/config";
 
 const prisma = new PrismaClient();
 
 // Regra definitiva de acesso do projeto (ver CREDENCIAIS.md na raiz):
 // este administrador global é OWNER de todas as empresas e não pode ser removido.
 const SUPER_EMAIL = "nexusbussiness.admin@gmail.com";
-const SUPER_PASSWORD = "senha-removida-do-git";
+// A senha nao vai para o repositorio: vem de SEED_ADMIN_PASSWORD no .env local
+// (apps/api/.env, ignorado pelo git). Sem ela o seed para com aviso, em vez de
+// criar o administrador com uma senha que ninguem anotou.
+const SUPER_PASSWORD = process.env.SEED_ADMIN_PASSWORD ?? "";
+if (!SUPER_PASSWORD) {
+  // eslint-disable-next-line no-console
+  console.error("[seed] defina SEED_ADMIN_PASSWORD em apps/api/.env com a senha do administrador global (CREDENCIAIS.md).");
+  process.exit(1);
+}
 
 // Conta de desenvolvimento usada pela suíte de testes automatizados.
 const DEV_EMAIL = "admin@nexus.local";

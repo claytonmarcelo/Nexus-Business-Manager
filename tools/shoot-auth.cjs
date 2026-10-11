@@ -1,4 +1,5 @@
 const puppeteer = require("puppeteer-core");
+const { SENHA_ADMIN } = require("./senha-admin.cjs");
 const path = require("path");
 const BASE = "http://localhost:5173";
 const OUT = path.join(__dirname, "..", "docs", "screenshots");
@@ -17,7 +18,7 @@ const OUT = path.join(__dirname, "..", "docs", "screenshots");
   await page.evaluate(() => localStorage.setItem("nexus.remember.email", "nexusbussiness.admin@gmail.com"));
   await page.goto(BASE + "/login", { waitUntil: "networkidle0" });
   await page.waitForSelector("input[type=password]");
-  await page.type("input[type=password]", "senha-removida-do-git", { delay: 4 });
+  await page.type("input[type=password]", SENHA_ADMIN, { delay: 4 });
   await page.click(".eye-toggle");
   await shot("02-login");
 
