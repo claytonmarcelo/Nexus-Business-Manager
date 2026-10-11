@@ -5,6 +5,56 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/), 
 
 ## [Não lançado]
 
+### Dinheiro em centavo (Fase 3d da auditoria)
+
+> Fase 3 da auditoria comercial (`docs/AUDITORIA.md`), sub-fase 3d: as colunas do banco sempre foram
+> `DECIMAL` — o que não era exato era a conta feita em cima delas. `Number(decimal)` virava double na
+> primeira linha de cada serviço, a aritmética seguia em base 2 e um `Math.round(x * 100) / 100` no fim
+> da fila consertava a etiqueta. Na venda e na compra esse mesmo round montava a linha do item ANTES de
+> ela virar nota: 3 × R$ 1,005 dava R$ 3,01 — meio centavo para BAIXO, cobrado do cliente e escrito no
+> histórico — porque `1.005 * 100` em double é 100,49999999999999 e o arredondamento nativo não sabe que
+> aquilo era meia casa.
+- Novo `apps/api/src/lib/money.ts`, a única casa da regra: `centavos`, `somarCentavos`, `moedaDeCentavos`,
+  `decimalDeCentavos`, `linhaDecimal`, `porcentagem`, `variacaoPercentual`, `mediaPorUnidade` e a porta
+  `moeda()`. Entre a leitura do banco e a escrita no banco, dinheiro anda em centavo inteiro ou em
+  `Prisma.Decimal`; o `Number` só aparece na última linha antes do JSON, uma vez, sem nada para acumular.
+- A porta `moeda()` substituiu o `z.coerce.number()` nos seis campos de valor da API (preço de produto,
+  preço unitário de venda, custo unitário de compra, valor de lançamento, valor de lead e meta de
+  receita): aceita `1290.5`, `"1290,50"` e `"1.290,50"` e devolve texto de duas casas — exatamente o que
+  a coluna `DECIMAL(x,2)` vai guardar. Antes, `Number("1.290,50")` é NaN e o teclado brasileiro era
+  recusado no cadastro; `""` virava lançamento de valor zero silencioso; `12,3456` passava cru e o MySQL
+  arredondava por conta própria, escondendo qual regra tinha sido usada.
+- Arredondamento é `ROUND_HALF_UP` na base 10, nunca o nativo do JS. E é `toDecimalPlaces`, não `round`:
+  no decimal.js-light que o Prisma embute, `round(casas, modo)` IGNORA as casas pedidas — `(0,07 × 3)`
+  com `round(2, HALF_UP)` devolve `"0"`. A armadilha está gravada em teste para não voltar pela mão de
+  ninguém.
+- Venda e compra: linha é `quantidade × preço` com UMA rodada, calculada sobre o preço já normalizado
+  pela porta, e o total da nota é a soma dos centavos dessas linhas, escrito como `Decimal`. A nota agora
+  bate com o próprio preço unitário: 1,01 × 3 = 3,03, não 3,01.
+- `GET /finance/summary`: entradas, saídas, saldo, a receber, a pagar e vencido saem do centavo, e o
+  `Math.round((income − expense) * 100) / 100` — a cola do erro, não a conta — deixou de ser chamado.
+- Os painéis de `reports.service.ts` (visão geral, clientes, produtos, vendas, compras, financeiro e
+  CRM) acumulam cada balde em centavo e convertem uma única vez no `return`. O `arredonda` ficou só com
+  medidas (estoque `DECIMAL(12,3)`, quantidade movimentada) e razões de contagem (conversão do funil).
+  Curva ABC, ticket médio, participação por categoria, variação percentual e ritmo diário da meta passam
+  a receber inteiros.
+- CRM: a pergunta "mudou o valor?" compara centavos, então o registro de alteração do lead não pode
+  nascer de poeira de double, e o aviso de negócio do lead novo traz o valor convertido uma vez.
+- `lib/stock.ts`: o `custo` da movimentação passou a aceitar o texto de duas casas que sai da porta,
+  porque o Prisma escreve `DECIMAL` a partir de string sem passar por vírgula flutuante.
+- Quantidades continuaram números de propósito: a coluna é `DECIMAL(12,3)` de MEDIDA, não de valor, e o
+  serviço de produtos não foi tocado porque já espalha o objeto validado para o Prisma — o que mudou foi
+  a porta, não a escrita.
+- Novo `test/dinheiro-decimal.test.ts` (10 casos): meio centavo que sobe, a armadilha do `round`, 2026
+  parcelas de R$ 0,10 fechando em 20 260 centavos, percentual/variação/média, a porta nos três formatos,
+  e as portas de HTTP de produto, venda, compra, fluxo de caixa e meta do Dashboard. Onde o double antigo
+  acertava — a subtração 4,00 − 3,52, o `_sum` do resumo — está dito no teste com todas as letras: o que
+  ele amarra é a invariante (total = soma das linhas, linha = preço × quantidade), não uma falha
+  inventada.
+- Validação: typecheck da API e do painel limpos, build Vite OK; suíte completa 22 arquivos / 166 testes
+  verdes (eram 21 / 156). A prova de navegador de Configurações re-rodou com a porta nova no campo de
+  meta: 115 checagens / 0 falhas, capturas renovadas. Nenhuma tela alterada.
+
 ### A meia-noite passou a ser da empresa (Fase 3c da auditoria)
 
 > Fase 3 da auditoria comercial (`docs/AUDITORIA.md`), sub-fase 3c: o fuso horário mora no cadastro da
