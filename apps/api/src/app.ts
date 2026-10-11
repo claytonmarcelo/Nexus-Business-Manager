@@ -1,4 +1,4 @@
-import Fastify, { type FastifyInstance, type FastifyError } from "fastify";
+import Fastify, { type FastifyInstance, type FastifyError, type FastifyServerOptions } from "fastify";
 import { ZodError } from "zod";
 import { Prisma } from "@prisma/client";
 import { AppError, badRequest } from "./lib/errors";
@@ -23,19 +23,27 @@ import { cmsRoutes } from "./modules/cms/cms.routes";
 import { cronRoutes } from "./modules/cron/cron.routes";
 import { healthRoutes } from "./modules/health/health.routes";
 import { env, isProd } from "./config/env";
+import { interpretarTrustProxy } from "./config/producao";
 
 export function buildApp(): FastifyInstance {
-  const app = Fastify({
+  // A9: `trustProxy` passou a ser uma união (ligado/desligado ou número de
+  // saltos). Declarar o objeto com o tipo público do Fastify mantém o servidor
+  // HTTP padrão — sem a anotação, a inferência dos genéricos escapa para
+  // Http2SecureServer e o tipo de `app` muda em todo o arquivo.
+  const opcoes: FastifyServerOptions = {
     logger: isProd
       ? { level: "info" }
       : { level: "info" },
-    // Fase 2 da auditoria: o IP real atrás de proxy só vale com TRUST_PROXY=1
+    // Fase 2 da auditoria: o IP real atrás de proxy só vale com TRUST_PROXY
     // explícito — sem proxy na frente, o header é forjável e rate-limit,
-    // auditoria e bypass de manutenção mentiriam juntos. Body limit dito por
-    // nós, não herdado em silêncio do default do framework.
-    trustProxy: env.TRUST_PROXY === "1",
+    // auditoria e bypass de manutenção mentiriam juntos. A9 deu número à chave:
+    // 0 desliga e 1..31 confiam nos N saltos de proxy mais próximos (a função
+    // que o Fastify repassa ao proxy-addr). Body limit dito por nós, não
+    // herdado em silêncio do default do framework.
+    trustProxy: interpretarTrustProxy(env.TRUST_PROXY),
     bodyLimit: env.BODY_LIMIT_BYTES,
-  });
+  };
+  const app = Fastify(opcoes);
 
   // POST sem corpo (deslogar, marcar tudo lido, gerar o pulso da manutenção) é
   // uma ação, não um formulário: o axios manda content-type application/json
