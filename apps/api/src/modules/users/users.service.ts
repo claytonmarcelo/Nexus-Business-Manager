@@ -6,6 +6,14 @@ import { paginate, skipTake, type PaginationInput } from "../../lib/pagination";
 import type { AddMemberInput } from "./users.schemas";
 import type { Role } from "@prisma/client";
 import { SUPER_ADMIN_EMAIL } from "../../lib/passwordPolicy";
+import { podeAtribuirPapel, type DecisaoPapel } from "../../lib/rbac";
+
+// Traduz o veredito da regra central (`podeAtribuirPapel`) para o erro HTTP
+// correspondente: 409 quando o que está em jogo é a empresa ficar sem dono,
+// 403 quando é hierarquia. Nenhuma rota de papel decide sozinha.
+function erroDePapel(decisao: Extract<DecisaoPapel, { ok: false }>) {
+  return decisao.status === 409 ? conflict(decisao.mensagem) : forbidden(decisao.mensagem);
+}
 
 // Listagem SEMPRE filtrada por companyId (isolamento multiempresa, seção 35).
 export async function listMembers(companyId: string, p: PaginationInput, search?: string) {
@@ -40,11 +48,11 @@ export async function addMember(
   ip: string | undefined,
   actorRole: Role,
 ) {
-  // Fase 1 da auditoria (CRÍTICO C1): OWNER só nasce das mãos do OWNER. Sem
-  // esta guarda, um ADMIN se criava OWNER num POST e herda o * do RBAC.
-  if (input.role === "OWNER" && actorRole !== "OWNER") {
-    throw forbidden("Apenas o proprietário cria membros como OWNER");
-  }
+  // A1 do prompt de mercado: o convite passa pela mesma função que a troca de
+  // papel. Antes havia só "OWNER não nasce de ADMIN", e o ADMIN continuava
+  // podendo criar outro ADMIN, se promover e montar a própria equipe.
+  const convite = podeAtribuirPapel({ ator: actorRole, novoPapel: input.role });
+  if (!convite.ok) throw erroDePapel(convite);
   const company = await prisma.company.findUnique({ where: { id: companyId } });
   if (!company) throw notFound("Empresa não encontrada");
 
@@ -82,12 +90,28 @@ export async function updateRole(
     include: { user: { select: { email: true, platformRole: true } } },
   });
   if (!membership) throw notFound("Membro não encontrado nesta empresa");
-  // Fase 1 da auditoria (CRÍTICO C2): o papel OWNER só se mexe pelo OWNER —
-  // valendo para o papel atual e para o novo. Antes, a guarda cobria só o
-  // valor enviado, e um ADMIN rebaixava o proprietário a STAFF.
-  if ((membership.role === "OWNER" || role === "OWNER") && actorRole !== "OWNER") {
-    throw forbidden("Apenas o proprietário mexe no papel de proprietário");
-  }
+
+  // A1: o veredito vem todo da regra central. O serviço só entrega os fatos que
+  // o banco conhece — o papel atual do alvo, se é a própria pessoa e quantos
+  // proprietários continuariam na empresa depois do movimento. Contar só quando
+  // o alvo é OWNER e está saindo do papel: é a única forma de a empresa ficar
+  // sem dono, e é por isso que essa recusa vem em 409.
+  const saindoDeOwner = membership.role === "OWNER" && role !== "OWNER";
+  const donosRestantes = saindoDeOwner
+    ? await prisma.companyUser.count({
+        where: { companyId, role: "OWNER", userId: { not: userId } },
+      })
+    : undefined;
+
+  const decisao = podeAtribuirPapel({
+    ator: actorRole,
+    alvoAtual: membership.role,
+    novoPapel: role,
+    alvoEhOProprioAtor: userId === actorId,
+    donosRestantes,
+  });
+  if (!decisao.ok) throw erroDePapel(decisao);
+
   // Regra definitiva: o administrador do sistema jamais perde o papel de OWNER.
   // Fase 1b: o cadeado segue a bandeira de plataforma (platformRole) e mantém o
   // e-mail histórico como cinto extra — enquanto for SUPER_ADMIN no banco, é

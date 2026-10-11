@@ -43,6 +43,109 @@ export function assertPermission(role: Role, permission: Permission): void {
   }
 }
 
+// ---- Hierarquia de papéis (A1 do prompt de mercado) ----
+//
+// Toda escrita de papel — convidar um membro (POST /users) ou trocar o papel de
+// quem já é membro (PATCH /users/:id/role) — passa por esta função. Ela existe
+// porque a regra estava espalhada: o convite olhava só o papel NOVO e a troca
+// olhava só o papel NOVO também, de modo que um ADMIN rebaixava o OWNER que já
+// era OWNER e assumia a empresa. Um lugar só, seis regras, na ordem em que fazem
+// sentido para quem lê a resposta:
+//
+//  1. quem cuida da equipe é OWNER e ADMIN; MANAGER e STAFF não gerenciam ninguém;
+//  2. ninguém mexe no próprio papel (e se esse papel for o último OWNER da
+//     empresa, o motivo honesto é a empresa ficar sem dono: 409);
+//  3. papel de OWNER só existe e só sai das mãos de um OWNER;
+//  4. ADMIN cria e altera somente MANAGER e STAFF — outro ADMIN e o OWNER estão
+//     fora do alcance dele;
+//  5. a empresa nunca pode ficar sem pelo menos um OWNER (409);
+//  6. o administrador da plataforma (trava própria, no serviço) continua
+//     intocável: nada aqui o rebaixa.
+export interface JulgamentoPapel {
+  // Papel de quem está pedindo a mudança.
+  ator: Role;
+  // Papel atual do alvo; ausente quando o alvo está sendo criado (convite).
+  alvoAtual?: Role;
+  // Papel que se quer entregar ao alvo.
+  novoPapel: Role;
+  // O alvo é a própria pessoa que pede? (só o PATCH pode dizer sim)
+  alvoEhOProprioAtor?: boolean;
+  // Quantos OWNERs continuariam na empresa depois da mudança. Só importa quando
+  // o alvo é OWNER e está saindo do papel; quem cria membro não precisa passar.
+  donosRestantes?: number;
+}
+
+export type DecisaoPapel = { ok: true } | { ok: false; status: 403 | 409; mensagem: string };
+
+const PAPEIS_DE_LIDERANCA: Role[] = ["OWNER", "ADMIN"];
+const PAPEIS_DO_ADMIN: Role[] = ["MANAGER", "STAFF"];
+
+export function podeAtribuirPapel(args: JulgamentoPapel): DecisaoPapel {
+  const { ator, alvoAtual, novoPapel, alvoEhOProprioAtor, donosRestantes } = args;
+
+  if (!PAPEIS_DE_LIDERANCA.includes(ator)) {
+    return {
+      ok: false,
+      status: 403,
+      mensagem: "Quem cuida da equipe é o administrador ou o proprietário.",
+    };
+  }
+
+  const alvoSaindoDeOwner = alvoAtual === "OWNER" && novoPapel !== "OWNER";
+  const deixariaSemDono = alvoSaindoDeOwner && donosRestantes !== undefined && donosRestantes <= 0;
+
+  if (alvoEhOProprioAtor) {
+    if (deixariaSemDono) {
+      return {
+        ok: false,
+        status: 409,
+        mensagem: "A empresa precisa continuar com pelo menos um proprietário.",
+      };
+    }
+    return {
+      ok: false,
+      status: 403,
+      mensagem: "Você não pode alterar o seu próprio papel.",
+    };
+  }
+
+  if (ator !== "OWNER" && (alvoAtual === "OWNER" || novoPapel === "OWNER")) {
+    return {
+      ok: false,
+      status: 403,
+      mensagem:
+        alvoAtual === undefined
+          ? "Só o proprietário pode criar um proprietário."
+          : "Só o proprietário pode criar ou rebaixar um proprietário.",
+    };
+  }
+
+  if (
+    ator === "ADMIN" &&
+    (!PAPEIS_DO_ADMIN.includes(novoPapel) ||
+      (alvoAtual !== undefined && !PAPEIS_DO_ADMIN.includes(alvoAtual)))
+  ) {
+    // ADMIN criando ADMIN, ADMIN tocando em outro ADMIN — o alcance dele são os
+    // dois papéis de execução, tanto no que entrega quanto em quem recebe.
+    return {
+      ok: false,
+      status: 403,
+      mensagem: "O administrador cuida só de gerentes e atendentes.",
+    };
+  }
+
+  if (deixariaSemDono) {
+    return {
+      ok: false,
+      status: 409,
+      mensagem: "A empresa precisa continuar com pelo menos um proprietário.",
+    };
+  }
+
+  return { ok: true };
+}
+
+
 // ---- Leitura da matriz para a aba Permissoes (RBAC) da tela de Usuarios ----
 const PAPEIS = Object.keys(ROLE_PERMISSIONS) as Role[];
 

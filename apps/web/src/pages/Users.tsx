@@ -10,10 +10,10 @@ import { ACTIONS, MODAL_COPY, modalTitle } from "../lib/uiCopy";
 import { EmptyState, ErrorState, LoadingInline } from "../components/StateView";
 import { PasswordInput } from "../components/PasswordInput";
 import { formatDateTime } from "../lib/format";
+import { motivoDoCadeado, papeisQuePossoDar, podeMexerNoPapelDe } from "../lib/papeis";
 
 interface Member { id: string; name: string; email: string; active: boolean; role: string; membershipId: string }
 interface Paged<T> { data: T[]; meta: { page: number; pageSize: number; total: number; totalPages: number } }
-const ROLES = ["OWNER", "ADMIN", "MANAGER", "STAFF"];
 
 // GET /users/permissions -> { papeis, celulas, recursos } (RBAC central do servidor).
 interface PapelRbac { role: string; rotulo: string; descricao: string; total: number }
@@ -44,9 +44,9 @@ const ABAS: TabItem[] = [
 // de permissões lida do RBAC central e as sessões ativas por dispositivo.
 export function Users() {
   const { can, user } = useAuth();
-  // Fase 1 da auditoria: papel de proprietário só o OWNER vê e mexe — a
-  // mesma regra que passou a valer no servidor, espelhada na tela.
-  const souOwner = user?.role === "OWNER";
+  // A1 do prompt de mercado: a tela não inventa regra de papel. O que o OWNER e
+  // o ADMIN podem entregar vem de `lib/papeis.ts`, o espelho honesto da função
+  // central do servidor (`podeAtribuirPapel`), e é ela que decide cada select.
   const { active, onSelect } = useTabState(ABAS, "lista");
 
   // ---- Aba Lista ----
@@ -230,19 +230,25 @@ export function Users() {
                     <td>{m.name}</td>
                     <td className="mono">{m.email}</td>
                     <td>
-                      {can("user:write") && (souOwner || m.role !== "OWNER") ? (
+                      {can("user:write") &&
+                      podeMexerNoPapelDe({ ator: user?.role, alvo: m.role, ehProprio: m.id === user?.id }) ? (
                         <select
                           className="select"
                           value={m.role}
                           onChange={(e) => void changeRole(m, e.target.value)}
                           aria-label={"Papel de " + m.name}
                         >
-                          {(souOwner ? ROLES : ROLES.filter((r) => r !== "OWNER")).map((r) => (
+                          {papeisQuePossoDar(user?.role).map((r) => (
                             <option key={r} value={r}>{r}</option>
                           ))}
                         </select>
                       ) : (
-                        <span className="badge" title="Apenas o proprietário mexe no papel de proprietário">{m.role}</span>
+                        <span
+                          className="badge"
+                          title={motivoDoCadeado({ ator: user?.role, alvo: m.role, ehProprio: m.id === user?.id })}
+                        >
+                          {m.role}
+                        </span>
                       )}
                     </td>
                     <td>
@@ -477,10 +483,15 @@ function AddMemberModal({ onClose, onCreated }: { onClose: () => void; onCreated
         <div className="field">
           <span className="field-label">Papel *</span>
           <select className="select" value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value })}>
-            {(user?.role === "OWNER" ? ROLES : ROLES.filter((r) => r !== "OWNER")).map((r) => (
+            {papeisQuePossoDar(user?.role).map((r) => (
               <option key={r} value={r}>{r}</option>
             ))}
           </select>
+          <span className="toolbar-note">
+            {user?.role === "OWNER"
+              ? "O proprietário entrega qualquer papel, inclusive outro OWNER. A empresa nunca fica sem pelo menos um."
+              : "O administrador cria só gerentes e atendentes. Proprietário e outro administrador são papel do proprietário."}
+          </span>
         </div>
     </Modal>
   );
