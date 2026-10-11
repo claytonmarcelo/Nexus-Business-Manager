@@ -19,6 +19,7 @@ import { agendaRoutes } from "./modules/agenda/agenda.routes";
 import { reportsRoutes } from "./modules/reports/reports.routes";
 import { notificationsRoutes } from "./modules/notifications/notifications.routes";
 import { cmsRoutes } from "./modules/cms/cms.routes";
+import { cronRoutes } from "./modules/cron/cron.routes";
 import { healthRoutes } from "./modules/health/health.routes";
 import { isProd } from "./config/env";
 
@@ -101,6 +102,7 @@ export function buildApp(): FastifyInstance {
   void app.register(reportsRoutes, { prefix: "/api" });
   void app.register(notificationsRoutes, { prefix: "/api" });
   void app.register(cmsRoutes, { prefix: "/api" });
+  void app.register(cronRoutes, { prefix: "/api" });
 
   return app;
 }

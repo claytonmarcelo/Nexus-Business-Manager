@@ -1,6 +1,7 @@
 import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcryptjs";
 import "dotenv/config";
+import { JOBS } from "../src/modules/cron/cron.handlers";
 
 const prisma = new PrismaClient();
 
@@ -55,6 +56,16 @@ async function main(): Promise<void> {
     update: { role: "OWNER" },
     create: { userId: devAdmin.id, companyId: company.id, role: "OWNER" },
   });
+
+  // Rotinas-padrão do passo de Operações: o seed garante que a tela existe com
+  // as rotinas do código. Enabled e histórico do operador são preservados.
+  for (const j of JOBS) {
+    await prisma.cronJob.upsert({
+      where: { slug: j.slug },
+      update: { name: j.nome, description: j.descricao, schedule: j.agenda },
+      create: { slug: j.slug, name: j.nome, description: j.descricao, schedule: j.agenda, enabled: true },
+    });
+  }
 
   // eslint-disable-next-line no-console
   console.log("Seed concluído:", {

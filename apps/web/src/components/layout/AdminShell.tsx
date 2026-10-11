@@ -69,6 +69,7 @@ const NAV_GROUPS: NavGroup[] = [
       { to: "/app/usuarios", label: "Usuários", icon: "◉", permission: "user:read" },
       { to: "/app/auditoria", label: "Auditoria", icon: "❐", permission: "audit:read" },
       { to: "/app/cms", label: "CMS & Site Público", icon: "▩", permission: "content:read" },
+      { to: "/app/rotinas", label: "Rotinas agendadas", icon: "◷", permission: "settings:write" },
       { to: "/app/configuracoes", label: "Configurações", icon: "⚙" },
     ],
   },

@@ -44,6 +44,10 @@
 /* Badge solto num .field (papel na empresa): flex-column esticaria a pílula na largura toda. */
 .field .badge { align-self: flex-start; }
 
+/* Rotinas (/app/rotinas): celula 'ultima execucao' empilha pilhula, mensagem
+   e duracao sem esticar a linha da tabela. */
+.rotina-ultima { display: flex; flex-direction: column; gap: 2px; }
+
 .input, .select {
   width: 100%;
   background: var(--surface-2);

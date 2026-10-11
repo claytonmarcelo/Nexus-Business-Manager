@@ -13,6 +13,9 @@ const schema = z.object({
   JWT_REFRESH_TTL: z.string().default("7d"),
   RATE_LIMIT_MAX: z.coerce.number().int().positive().default(100),
   RATE_LIMIT_WINDOW_MS: z.coerce.number().int().positive().default(60000),
+  // "0" desliga o agendador das rotinas neste processo (ambiente multi-processo:
+  // um único servidor agenda, os demais só atendem requisições).
+  CRON_ENABLED: z.string().default("1"),
 });
 
 const parsed = schema.safeParse(process.env);
