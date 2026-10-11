@@ -1,6 +1,8 @@
 import { Prisma } from "@prisma/client";
 import { prisma } from "../../lib/prisma";
 import { badRequest, conflict, notFound } from "../../lib/errors";
+import { baixarEstoque, subirEstoque } from "../../lib/stock";
+import { transacaoEstoque } from "../../lib/tx";
 import { paginate, skipTake, type PaginationInput } from "../../lib/pagination";
 import { audit } from "../../lib/audit";
 import { avisoEstoqueBaixo } from "../notifications/notifications.service";
@@ -126,12 +128,17 @@ export async function listProducts(
 export async function createProduct(companyId: string, input: CreateProductInput, userId: string, ip: string) {
   await assertCategory(companyId, input.categoryId);
   try {
-    const product = await prisma.product.create({ data: { ...input, companyId } });
-    if (Number(input.stockQuantity) > 0) {
-      await prisma.stockMovement.create({
-        data: { companyId, productId: product.id, kind: "IN", quantity: input.stockQuantity, note: "Estoque inicial", createdBy: userId },
-      });
-    }
+    // Fase 3: produto e movimento de abertura nascem na MESMA transação —
+    // um crash entre os dois não deixa mais estoque sem movimento registrado.
+    const product = await transacaoEstoque(async (tx) => {
+      const criado = await tx.product.create({ data: { ...input, companyId } });
+      if (Number(input.stockQuantity) > 0) {
+        await tx.stockMovement.create({
+          data: { companyId, productId: criado.id, kind: "IN", quantity: input.stockQuantity, note: "Estoque inicial", createdBy: userId },
+        });
+      }
+      return criado;
+    });
     await audit({ userId, companyId, action: "product.create", entity: "product", entityId: product.id, ip });
     return serialize(product);
   } catch (e) {
@@ -176,30 +183,41 @@ export async function moveStock(companyId: string, productId: string, input: Cre
   const product = await getProduct(companyId, productId);
   const current = Number(product.stockQuantity);
 
-  let newStock = current;
-  if (input.kind === "IN") newStock = current + input.quantity;
-  if (input.kind === "OUT") {
-    if (input.quantity > current) {
-      throw badRequest(`Estoque insuficiente: disponível ${current} ${product.unit}, solicitado ${input.quantity} ${product.unit}`);
+  // Fase 3 da auditoria: IN/OUT eram lidos em JS e gravados como valor
+  // ABSOLUTO — duas movimentações simultâneas escreviam uma por cima da outra
+  // e o saldo nascia de leitura velha. Agora IN é `increment`, OUT é o
+  // decremento condicional com o saldo dentro do WHERE (a guarda de antes é
+  // mantida só como mensagem rápida), e ADJUST continua absoluto de propósito:
+  // ajuste é uma DECLARAÇÃO de inventário ("contei e tem X"), não um cálculo.
+  const movement = await transacaoEstoque(async (tx) => {
+    if (input.kind === "IN") {
+      await subirEstoque({ tx, companyId, productId, quantity: input.quantity, nota: input.note, createdBy: userId });
+    } else if (input.kind === "OUT") {
+      await baixarEstoque({
+        tx, companyId, productId, quantity: input.quantity,
+        nome: product.name, unidade: product.unit, nota: input.note, createdBy: userId,
+      });
+    } else {
+      const mov = await tx.stockMovement.create({
+        data: { companyId, productId, kind: "ADJUST", quantity: input.quantity, note: input.note, createdBy: userId },
+      });
+      await tx.product.update({ where: { id: productId, companyId }, data: { stockQuantity: input.quantity } });
+      return mov;
     }
-    newStock = current - input.quantity;
-  }
-  if (input.kind === "ADJUST") newStock = input.quantity;
-
-  const [movement] = await prisma.$transaction([
-    prisma.stockMovement.create({
-      data: { companyId, productId, kind: input.kind, quantity: input.quantity, note: input.note, createdBy: userId },
-    }),
-    prisma.product.update({ where: { id: productId, companyId }, data: { stockQuantity: newStock } }),
-  ]);
+    return tx.stockMovement.findFirstOrThrow({ where: { productId, companyId }, orderBy: { createdAt: "desc" } });
+  });
+  // O "para onde" da auditoria é o saldo REAL depois da operação atômica, não
+  // a conta feita em cima da leitura de antes.
+  const depois = await prisma.product.findFirst({ where: { id: productId, companyId }, select: { stockQuantity: true } });
+  const novoEstoque = Number(depois?.stockQuantity ?? current);
   await audit({
     userId, companyId, action: "stock.move", entity: "stock_movement", entityId: movement.id, ip,
-    metadata: { productId, kind: input.kind, quantity: input.quantity, from: current, to: newStock },
+    metadata: { productId, kind: input.kind, quantity: input.quantity, from: current, to: novoEstoque },
   });
   // A visao de estoque baixo do produto virou aviso persistente para a empresa
   // (secao 44): quem esta na tela recebe o toast, quem nao esta recebe o sino.
   await avisoEstoqueBaixo(companyId, productId, userId);
-  return { stockQuantity: newStock, movementId: movement.id };
+  return { stockQuantity: novoEstoque, movementId: movement.id };
 }
 
 export async function listMovements(companyId: string, productId: string, p: PaginationInput, kind?: "IN" | "OUT" | "ADJUST") {

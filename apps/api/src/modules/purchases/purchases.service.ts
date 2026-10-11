@@ -3,6 +3,8 @@ import { prisma } from "../../lib/prisma";
 import { badRequest, conflict, notFound } from "../../lib/errors";
 import { paginate, skipTake, type PaginationInput } from "../../lib/pagination";
 import { audit } from "../../lib/audit";
+import { baixarEstoque, subirEstoque } from "../../lib/stock";
+import { transacaoEstoque } from "../../lib/tx";
 import type { CreatePurchaseInput, CreateSupplierInput } from "./purchases.schemas";
 
 const num = (v: Prisma.Decimal) => Number(v);
@@ -133,7 +135,7 @@ export async function createPurchase(companyId: string, input: CreatePurchaseInp
     return { productId: prod.id, quantity: i.quantity, unitCost: i.unitCost, lineTotal };
   });
 
-  const purchase = await prisma.$transaction(async (tx) => {
+  const purchase = await transacaoEstoque(async (tx) => {
     const created = await tx.purchase.create({
       data: {
         companyId,
@@ -149,12 +151,12 @@ export async function createPurchase(companyId: string, input: CreatePurchaseInp
       for (const i of itens) {
         const prod = byId.get(i.productId)!;
         if (!prod.trackStock) continue;
-        await tx.stockMovement.create({
-          data: { companyId, productId: prod.id, kind: "IN", quantity: i.quantity, note: "Compra " + created.id.slice(0, 8), createdBy: userId },
-        });
-        await tx.product.update({
-          where: { id: prod.id, companyId },
-          data: { stockQuantity: Number(prod.stockQuantity) + i.quantity, costPrice: i.unitCost },
+        // Fase 3: entrada com increment atômico e custo corrente na MESMA
+        // unidade atômica — nada de absoluto derivado de leitura de fora.
+        await subirEstoque({
+          tx, companyId, productId: prod.id, quantity: i.quantity,
+          custo: i.unitCost,
+          nota: "Compra " + created.id.slice(0, 8), createdBy: userId,
         });
       }
     }
@@ -166,23 +168,33 @@ export async function createPurchase(companyId: string, input: CreatePurchaseInp
 }
 
 // Receber: entrada de estoque + custo atualizado. Cancelar recebida: estorno com saida vigiada.
+// Fase 3 da auditoria: o status é reivindicado dentro da transação (dois
+// "receber" simultâneos não dão entrada duas vezes) e o saldo se move pelos
+// decremento/increment atômicos de lib/stock.ts — o custo corrente acompanha
+// o increment na mesma UPDATE, que é a semântica de "última compra define o
+// custo", agora escrita na unidade atômica em vez de um update absoluto.
 export async function changeStatus(companyId: string, id: string, status: PurchaseStatus, userId: string, ip: string) {
   const purchase = await prisma.purchase.findFirst({ where: { id, companyId }, include: { items: true } });
   if (!purchase) throw notFound("Compra não encontrada");
   if (purchase.status === status) throw badRequest("A compra já está com este status");
   if (purchase.status === "CANCELLED") throw badRequest("Compra cancelada não pode mudar de status");
 
-  await prisma.$transaction(async (tx) => {
+  await transacaoEstoque(async (tx) => {
+    const reivindicado = await tx.purchase.updateMany({
+      where: { id, companyId, status: purchase.status },
+      data: { status },
+    });
+    if (reivindicado.count === 0) {
+      throw badRequest("A compra mudou de status em outra requisição — recarregue e tente de novo");
+    }
     if (status === "RECEIVED") {
       for (const i of purchase.items) {
         const prod = await tx.product.findFirst({ where: { id: i.productId, companyId } });
         if (!prod || !prod.trackStock) continue;
-        await tx.stockMovement.create({
-          data: { companyId, productId: prod.id, kind: "IN", quantity: i.quantity, note: "Compra " + purchase.id.slice(0, 8), createdBy: userId },
-        });
-        await tx.product.update({
-          where: { id: prod.id, companyId },
-          data: { stockQuantity: Number(prod.stockQuantity) + Number(i.quantity), costPrice: Number(i.unitCost) },
+        await subirEstoque({
+          tx, companyId, productId: prod.id, quantity: Number(i.quantity),
+          custo: i.unitCost,
+          nota: "Compra " + purchase.id.slice(0, 8), createdBy: userId,
         });
       }
     }
@@ -190,16 +202,13 @@ export async function changeStatus(companyId: string, id: string, status: Purcha
       for (const i of purchase.items) {
         const prod = await tx.product.findFirst({ where: { id: i.productId, companyId } });
         if (!prod || !prod.trackStock) continue;
-        if (Number(i.quantity) > Number(prod.stockQuantity)) {
-          throw badRequest("Não é possível estornar: estoque insuficiente para \"" + prod.name + "\" (disponível " + Number(prod.stockQuantity) + " " + prod.unit + ")");
-        }
-        await tx.stockMovement.create({
-          data: { companyId, productId: prod.id, kind: "OUT", quantity: i.quantity, note: "Estorno da compra " + purchase.id.slice(0, 8), createdBy: userId },
+        await baixarEstoque({
+          tx, companyId, productId: prod.id, quantity: Number(i.quantity),
+          nome: prod.name, unidade: prod.unit,
+          nota: "Estorno da compra " + purchase.id.slice(0, 8), createdBy: userId,
         });
-        await tx.product.update({ where: { id: prod.id, companyId }, data: { stockQuantity: Number(prod.stockQuantity) - Number(i.quantity) } });
       }
     }
-    await tx.purchase.update({ where: { id, companyId }, data: { status } });
   });
 
   await audit({ userId, companyId, action: "purchase." + status.toLowerCase(), entity: "purchase", entityId: id, ip });

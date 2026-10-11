@@ -3,6 +3,8 @@ import { prisma } from "../../lib/prisma";
 import { badRequest, notFound } from "../../lib/errors";
 import { paginate, skipTake, type PaginationInput } from "../../lib/pagination";
 import { audit } from "../../lib/audit";
+import { baixarEstoque, subirEstoque } from "../../lib/stock";
+import { transacaoEstoque } from "../../lib/tx";
 import type { CreateSaleInput } from "./sales.schemas";
 import { avisoEstoqueBaixo, avisoVenda } from "../notifications/notifications.service";
 
@@ -93,7 +95,7 @@ export async function createSale(companyId: string, input: CreateSaleInput, user
     }
   }
 
-  const sale = await prisma.$transaction(async (tx) => {
+  const sale = await transacaoEstoque(async (tx) => {
     const created = await tx.sale.create({
       data: {
         companyId,
@@ -109,10 +111,13 @@ export async function createSale(companyId: string, input: CreateSaleInput, user
       for (const i of itens) {
         const prod = byId.get(i.productId)!;
         if (!prod.trackStock) continue;
-        await tx.stockMovement.create({
-          data: { companyId, productId: prod.id, kind: "OUT", quantity: i.quantity, note: "Venda " + created.id.slice(0, 8), createdBy: userId },
+        // Fase 3 (oversell): a baixa é decremento condicional dentro da tx —
+        // o saldo casa no WHERE, não na comparação de uma leitura velha.
+        await baixarEstoque({
+          tx, companyId, productId: prod.id, quantity: i.quantity,
+          nome: prod.name, unidade: prod.unit,
+          nota: "Venda " + created.id.slice(0, 8), createdBy: userId,
         });
-        await tx.product.update({ where: { id: prod.id, companyId }, data: { stockQuantity: Number(prod.stockQuantity) - i.quantity } });
       }
     }
     return created;
@@ -139,9 +144,12 @@ export async function createSale(companyId: string, input: CreateSaleInput, user
 }
 
 // Confirmar: baixa estoque. Cancelar: devolve estoque se estava confirmada.
-// Baixar/estornar estoque e trocar status: Fase 1c da auditoria — toda escrita
-// dentro da transação carrega o companyId no where, então nenhuma linha de outra
-// empresa muda mesmo que a checagem de cima um dia deixe de ser chamada.
+// Fase 3 da auditoria: o status é reivindicado DENTRO da transação com um
+// update condicional no status antigo — dois "confirmar" simultâneos não
+// baixam mais o estoque duas vezes, porque o segundo perde a reivindicação e
+// a transação inteira dele volta. A baixa/devolução em si é o decremento/
+// increment atômico de lib/stock.ts, e cada escrita continua carregando o
+// companyId no where (camada da Fase 1c).
 export async function changeStatus(companyId: string, id: string, status: "CONFIRMED" | "CANCELLED", userId: string, ip: string) {
   const sale = await prisma.sale.findFirst({ where: { id, companyId }, include: { items: true } });
   if (!sale) throw notFound("Venda não encontrada");
@@ -149,31 +157,35 @@ export async function changeStatus(companyId: string, id: string, status: "CONFI
   if (sale.status === "CANCELLED") throw badRequest("Venda cancelada não pode mudar de status");
 
   const items = sale.items;
-  await prisma.$transaction(async (tx) => {
+  await transacaoEstoque(async (tx) => {
+    const reivindicado = await tx.sale.updateMany({
+      where: { id, companyId, status: sale.status },
+      data: { status },
+    });
+    if (reivindicado.count === 0) {
+      throw badRequest("A venda mudou de status em outra requisição — recarregue e tente de novo");
+    }
     if (status === "CONFIRMED") {
       for (const i of items) {
         const prod = await tx.product.findFirst({ where: { id: i.productId, companyId } });
         if (!prod || !prod.trackStock) continue;
-        if (Number(i.quantity) > Number(prod.stockQuantity)) {
-          throw badRequest(`Estoque insuficiente para "${prod.name}": disponível ${Number(prod.stockQuantity)} ${prod.unit}`);
-        }
-        await tx.stockMovement.create({
-          data: { companyId, productId: prod.id, kind: "OUT", quantity: i.quantity, note: "Venda " + sale.id.slice(0, 8), createdBy: userId },
+        await baixarEstoque({
+          tx, companyId, productId: prod.id, quantity: Number(i.quantity),
+          nome: prod.name, unidade: prod.unit,
+          nota: "Venda " + sale.id.slice(0, 8), createdBy: userId,
         });
-        await tx.product.update({ where: { id: prod.id, companyId }, data: { stockQuantity: Number(prod.stockQuantity) - Number(i.quantity) } });
       }
     }
     if (status === "CANCELLED" && sale.status === "CONFIRMED") {
       for (const i of items) {
         const prod = await tx.product.findFirst({ where: { id: i.productId, companyId } });
         if (!prod || !prod.trackStock) continue;
-        await tx.stockMovement.create({
-          data: { companyId, productId: prod.id, kind: "IN", quantity: i.quantity, note: "Estorno da venda " + sale.id.slice(0, 8), createdBy: userId },
+        await subirEstoque({
+          tx, companyId, productId: prod.id, quantity: Number(i.quantity),
+          nota: "Estorno da venda " + sale.id.slice(0, 8), createdBy: userId,
         });
-        await tx.product.update({ where: { id: prod.id, companyId }, data: { stockQuantity: Number(prod.stockQuantity) + Number(i.quantity) } });
       }
     }
-    await tx.sale.update({ where: { id, companyId }, data: { status } });
   });
 
   await audit({ userId, companyId, action: "sale." + status.toLowerCase(), entity: "sale", entityId: id, ip });

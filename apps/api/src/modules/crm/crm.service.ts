@@ -142,15 +142,23 @@ export async function changeStatus(companyId: string, id: string, status: LeadSt
   if (!found) throw notFound("Lead não encontrado");
   if (found.status === status) throw badRequest("O lead já está neste estágio");
 
+  // Fase 3a da auditoria: cliente criado e lead marcado como convertido vivem
+  // na MESMA transação. Antes, um crash entre os dois writes deixava cliente
+  // órfão no banco com o lead ainda no estágio antigo — e um segundo clique em
+  // "ganhou" criava outro cliente duplicado.
   let clientId = found.clientId;
   if (status === "WON" && !clientId) {
-    const client = await prisma.client.create({
-      data: { companyId, name: found.name, email: found.email, phone: found.phone, notes: "Convertido do lead " + found.name },
+    clientId = await prisma.$transaction(async (tx) => {
+      const client = await tx.client.create({
+        data: { companyId, name: found.name, email: found.email, phone: found.phone, notes: "Convertido do lead " + found.name },
+      });
+      await tx.lead.update({ where: { id, companyId }, data: { status, clientId: client.id } });
+      return client.id;
     });
-    clientId = client.id;
-    await audit({ userId, companyId, action: "client.create", entity: "client", entityId: client.id, ip, metadata: { origem: "lead " + id } });
+    await audit({ userId, companyId, action: "client.create", entity: "client", entityId: clientId, ip, metadata: { origem: "lead " + id } });
+  } else {
+    await prisma.lead.update({ where: { id, companyId }, data: { status, clientId } });
   }
-  await prisma.lead.update({ where: { id, companyId }, data: { status, clientId } });
   await audit({
     userId,
     companyId,
