@@ -29,6 +29,10 @@ export interface EmpresaConfig {
   revenueTarget: number | null;
   /** Política de estoque da empresa (Fase 3b): saída pode deixar o saldo negativo? */
   allowNegativeStock: boolean;
+  /** Venda confirmada gera lançamento no financeiro? (Fase 3e) */
+  autoFinanceSales: boolean;
+  /** Compra recebida gera lançamento no financeiro? (Fase 3e) */
+  autoFinancePurchases: boolean;
   /** Papel de quem lê, para a tela saber se mostra o botão de gravar. */
   role: string;
 }
@@ -54,6 +58,8 @@ export type MudancaEmpresa = {
 } & {
   revenueTarget?: number | null;
   allowNegativeStock?: boolean;
+  autoFinanceSales?: boolean;
+  autoFinancePurchases?: boolean;
 };
 
 export interface ListaOpcao {

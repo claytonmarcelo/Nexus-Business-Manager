@@ -10,6 +10,7 @@ import { ACTIONS, MODAL_COPY, modalTitle, notice } from "../lib/uiCopy";
 import { EmptyState, ErrorState, LoadingInline } from "../components/StateView";
 import { baixarCsv } from "../lib/csv";
 import { formatCurrency, formatDate } from "../lib/format";
+import { valorNumerico } from "../lib/money";
 
 interface CategoryRow { id: string; name: string; type: "INCOME" | "EXPENSE" }
 interface EntryRow {
@@ -510,7 +511,7 @@ function EntryModal({ entry, onClose, onSaved }: { entry: EntryRow | "new"; onCl
   }, [isNew]);
 
   async function submit() {
-    const valor = parseFloat(form.amount.replace(",", ".")) || 0;
+    const valor = valorNumerico(form.amount);
     if (form.description.trim().length < 3) { notify.error("Descreva o lançamento."); return; }
     if (valor <= 0) { notify.error("Informe um valor maior que zero."); return; }
     setBusy(true);

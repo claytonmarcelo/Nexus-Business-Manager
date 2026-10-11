@@ -325,6 +325,91 @@ function BlocoPoliticaEstoque({
   );
 }
 
+// Fase 3e da auditoria: venda confirmada e compra recebida baixavam estoque e
+// apareciam no relatório, mas o financeiro nunca ficava sabendo daquele dinheiro.
+// O sistema agora sabe gerar o lançamento (com parcelas), e a empresa decide se
+// ele entra sozinha. São duas chaves porque há quem confira a receita que entra
+// e lance a despesa à mão — e o contrário também existe. Desligado é o padrão:
+// quem já lança por conta receberia o dobro no dia em que ligasse a opção sem
+// querer, por isso a escolha é sempre dela e nunca consequência de atualização.
+function BlocoLancamentoAutomatico({
+  empresa, podeEscrever, aoGravar,
+}: {
+  empresa: EmpresaConfig;
+  podeEscrever: boolean;
+  aoGravar: (mudanca: MudancaEmpresa) => Promise<ResultadoGravacao>;
+}) {
+  const [vendas, setVendas] = useState(empresa.autoFinanceSales);
+  const [compras, setCompras] = useState(empresa.autoFinancePurchases);
+  const [ocupado, setOcupado] = useState(false);
+
+  useEffect(() => {
+    setVendas(empresa.autoFinanceSales);
+    setCompras(empresa.autoFinancePurchases);
+  }, [empresa]);
+
+  const mudou = vendas !== empresa.autoFinanceSales || compras !== empresa.autoFinancePurchases;
+
+  async function gravar() {
+    const mudanca: MudancaEmpresa = {};
+    if (vendas !== empresa.autoFinanceSales) mudanca.autoFinanceSales = vendas;
+    if (compras !== empresa.autoFinancePurchases) mudanca.autoFinancePurchases = compras;
+    setOcupado(true);
+    try {
+      const { alterados } = await aoGravar(mudanca);
+      notify.success(
+        alterados.length === 0
+          ? "Nada para gravar: o lançamento automático já está assim."
+          : "Política de lançamento automático atualizada.",
+      );
+    } catch (e) {
+      notify.error(extractErrorMessage(e));
+    } finally {
+      setOcupado(false);
+    }
+  }
+
+  return (
+    <Bloco
+      titulo="Lançamento automático no financeiro"
+      sub="Quem decide se a venda e a compra escrevem lançamentos no financeiro é a empresa. A geração acontece na confirmação da venda e no recebimento da compra; o que a empresa já lançou à mão não é tocado."
+      acao={
+        podeEscrever ? (
+          <BotaoSalvar aoSalvar={gravar} ocupado={ocupado} desabilitado={!mudou} />
+        ) : (
+          <span className="nx-bloco-nota">Só quem administra a empresa grava aqui</span>
+        )
+      }
+    >
+      <CampoLigado
+        rotulo="Gerar lançamento das vendas"
+        valor={vendas}
+        aoMudar={setVendas}
+        desabilitado={!podeEscrever}
+        dica={
+          vendas
+            ? "Ligado: ao confirmar a venda, o total vira lançamento de receita no dia — com parcelas, uma por mês e a última fechando a conta."
+            : "Desligado (padrão): confirmar venda mexe só no estoque; a receita continua sendo lançada à mão, como era antes desta opção existir."
+        }
+      />
+      <CampoLigado
+        rotulo="Gerar lançamento das compras"
+        valor={compras}
+        aoMudar={setCompras}
+        desabilitado={!podeEscrever}
+        dica={
+          compras
+            ? "Ligado: ao receber a compra, o total vira lançamento de despesa no dia, no mesmo esquema de parcelas."
+            : "Desligado (padrão): receber compra dá entrada no estoque e não escreve nada no financeiro."
+        }
+      />
+      <p className="nx-bloco-sub">
+        Cancelar o documento tira do financeiro só o que o sistema gerou e ainda está pendente — o que já foi pago fica escriturado.
+      </p>
+    </Bloco>
+  );
+}
+
 export interface EmpresaPanelProps {
   empresa: EmpresaConfig;
   opcoes: OpcoesConfig;
@@ -417,6 +502,8 @@ export function EmpresaPanel({ empresa, opcoes, podeEscrever, aoGravar }: Empres
       <BlocoMeta empresa={empresa} podeEscrever={podeEscrever} aoGravar={aoGravar} />
 
       <BlocoPoliticaEstoque empresa={empresa} podeEscrever={podeEscrever} aoGravar={aoGravar} />
+
+      <BlocoLancamentoAutomatico empresa={empresa} podeEscrever={podeEscrever} aoGravar={aoGravar} />
     </div>
   );
 }

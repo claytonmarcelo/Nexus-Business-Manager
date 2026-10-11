@@ -9,6 +9,7 @@ import { Tabs, TabPanel, useTabState, type TabItem } from "../components/Tabs";
 import { MODAL_COPY, modalTitle, notice } from "../lib/uiCopy";
 import { EmptyState, ErrorState, LoadingInline } from "../components/StateView";
 import { formatCurrency, formatDate, formatDateTime } from "../lib/format";
+import { lerNumero } from "../lib/money";
 import { descricaoDaAcao } from "../lib/auditLabels";
 
 type LeadStatus = "NEW" | "CONTACTED" | "PROPOSAL" | "WON" | "LOST";
@@ -568,7 +569,14 @@ function LeadModal({ lead, onClose, onSaved }: { lead: LeadRow | "new"; onClose:
       const limpo = String(valor).trim();
       if (limpo !== "") payload[campo] = limpo;
     }
-    if (typeof payload.value === "string") payload.value = Number(payload.value.replace(",", "."));
+    // O valor do lead sai como número quando o texto é número — inclusive no
+    // formato com ponto de milhar. Quando não é, fica o texto digitado e a porta
+    // da API devolve a mensagem do próprio campo; trocar lixo por zero gravaria
+    // um lead "sem valor" que ninguém pediu.
+    if (typeof payload.value === "string") {
+      const lido = lerNumero(payload.value);
+      if (lido !== null) payload.value = lido;
+    }
     try {
       if (atual === null) {
         await api.post("/leads", payload);

@@ -212,10 +212,14 @@ async function criarStaff(companyId) {
 }
 
 // --------------------------------------------------------------- valores da casa
+// Os três booleanos de política (estoque negativo, lançamento de venda e de
+// compra) entram aqui: a prova os liga e desliga no fluxo, mas a conferência
+// final é a mesma dos outros campos — se algo sobrar ligado, o script avisa.
 const CAMPOS_EMPRESA = [
   "name", "legalName", "tradeName", "cnpj", "phone", "email", "zipCode", "street",
   "number", "district", "city", "stateUf", "logoUrl", "currency", "timezone",
-  "language", "revenueTarget",
+  "language", "revenueTarget", "allowNegativeStock",
+  "autoFinanceSales", "autoFinancePurchases",
 ];
 
 const CNPJ_INVALIDO = "11.222.333/0001-99";
@@ -343,11 +347,11 @@ function diferencas(antes, depois) {
     ok("esvaziar o campo limpa o telefone", vazio((await chame("GET", "/auth/me")).dados.phone));
 
     // == 3) Empresa ==
-    console.log("== 3) Aba Empresa: cadastro, endereço, formato, logo, meta e política de estoque ==");
+    console.log("== 3) Aba Empresa: cadastro, endereço, formato, logo, meta e as duas políticas ==");
     await irParaAba(pagina, "empresa");
     const titulos = await pagina.$$eval(".nx-bloco .panel-title", (els) => els.map((e) => e.textContent.trim()));
-    ok("seis blocos independentes", titulos.join(",") ===
-      "Identificação,Endereço,Formato de números e datas,Identidade visual,Meta de receita do mês,Política de estoque", titulos.join(","));
+    ok("sete blocos independentes", titulos.join(",") ===
+      "Identificação,Endereço,Formato de números e datas,Identidade visual,Meta de receita do mês,Política de estoque,Lançamento automático no financeiro", titulos.join(","));
 
     const listas = await pagina.evaluate(() => ({
       moedas: window.localDoCampo("Formato de números e datas", "Moeda")?.querySelector("select")?.options.length ?? 0,
@@ -446,6 +450,60 @@ function diferencas(antes, depois) {
     await avisoDe(pagina, "Pronto: nenhuma saída passa sem saldo cobrir a quantidade.");
     atual = (await chame("GET", "/companies/current")).dados;
     ok("desligada volta ao padrão fechado", atual.allowNegativeStock === false, String(atual.allowNegativeStock));
+
+    // Fase 3e: o bloco de lançamento automático tem duas chaves e um botão. A
+    // prova inverte a primeira e confere no GET que a segunda não foi tocada —
+    // escrita parcial é a regra de todos os blocos desta tela, agora com dois
+    // booleanos no mesmo payload. O que a geração faz com a chave ligada é o
+    // suite parcelamento.test.ts; aqui se prova a porta e a tela.
+    const BLOCO_LANC = "Lançamento automático no financeiro";
+    const chavesDoBloco = () => pagina.evaluate((t) =>
+      [...(window.localDoBloco(t)?.querySelectorAll("input[type=checkbox]") || [])].map((c) => c.checked), BLOCO_LANC);
+    const estadoAntesDeLancar = await chavesDoBloco();
+    ok("o bloco traz uma chave por política", estadoAntesDeLancar.length === 2, JSON.stringify(estadoAntesDeLancar));
+    ok("a tela mostra o que está salvo",
+      estadoAntesDeLancar[0] === empresaAntes.autoFinanceSales && estadoAntesDeLancar[1] === empresaAntes.autoFinancePurchases,
+      JSON.stringify(estadoAntesDeLancar));
+
+    await pagina.evaluate((t) => { window.localDoBloco(t)?.querySelectorAll("input[type=checkbox]")?.[0]?.click(); }, BLOCO_LANC);
+    await espera(150);
+    await salvarBloco(pagina, BLOCO_LANC);
+    await avisoDe(pagina, "Política de lançamento automático atualizada.");
+    atual = (await chame("GET", "/companies/current")).dados;
+    ok("inverter só a venda grava só a venda",
+      atual.autoFinanceSales === !empresaAntes.autoFinanceSales
+        && atual.autoFinancePurchases === empresaAntes.autoFinancePurchases,
+      String(atual.autoFinanceSales) + " / " + String(atual.autoFinancePurchases));
+    const dicaDaVenda = await pagina.evaluate((t) =>
+      window.localDoBloco(t)?.querySelectorAll(".field-hint")?.[0]?.textContent.trim() ?? null, BLOCO_LANC);
+    ok("a dica da venda explica as parcelas", /parcela/.test(dicaDaVenda || ""), String(dicaDaVenda));
+
+    await pagina.evaluate((t) => { window.localDoBloco(t)?.querySelectorAll("input[type=checkbox]")?.[1]?.click(); }, BLOCO_LANC);
+    await espera(150);
+    await salvarBloco(pagina, BLOCO_LANC);
+    await avisoDe(pagina, "Política de lançamento automático atualizada.");
+    atual = (await chame("GET", "/companies/current")).dados;
+    ok("a segunda chave grava sem desfazer a primeira",
+      atual.autoFinanceSales === !empresaAntes.autoFinanceSales
+        && atual.autoFinancePurchases === !empresaAntes.autoFinancePurchases,
+      String(atual.autoFinanceSales) + " / " + String(atual.autoFinancePurchases));
+    await foto(pagina, "22-configuracoes-lancamento-automatico");
+
+    // Devolve as duas ao que a casa tinha: o botão fica ativo só com as duas
+    // invertidas, e o mesmo clique nas duas cai de volta no estado original.
+    await pagina.evaluate((t) => {
+      const caixas = window.localDoBloco(t)?.querySelectorAll("input[type=checkbox]");
+      caixas?.[0]?.click();
+      caixas?.[1]?.click();
+    }, BLOCO_LANC);
+    await espera(150);
+    await salvarBloco(pagina, BLOCO_LANC);
+    await avisoDe(pagina, "Política de lançamento automático atualizada.");
+    atual = (await chame("GET", "/companies/current")).dados;
+    ok("as duas voltam ao estado da casa",
+      atual.autoFinanceSales === empresaAntes.autoFinanceSales
+        && atual.autoFinancePurchases === empresaAntes.autoFinancePurchases,
+      String(atual.autoFinanceSales) + " / " + String(atual.autoFinancePurchases));
     await foto(pagina, "22-configuracoes-empresa");
 
     // == 4) Aparência ==
@@ -568,10 +626,10 @@ function diferencas(antes, depois) {
       rota: window.location.pathname,
     }));
     ok("a tela avisa que é somente leitura", leitura.faixa === "Somente leitura", String(leitura.faixa));
-    ok("o STAFF lê a empresa inteira", leitura.rota === "/app/configuracoes" && leitura.blocos === 6,
+    ok("o STAFF lê a empresa inteira", leitura.rota === "/app/configuracoes" && leitura.blocos === 7,
       JSON.stringify(leitura));
     ok("nenhum botão de gravar em bloco algum", leitura.botoes === 0, String(leitura.botoes));
-    ok("cada bloco explica quem grava ali", leitura.notas === 6, String(leitura.notas));
+    ok("cada bloco explica quem grava ali", leitura.notas === 7, String(leitura.notas));
     ok("campos e listas aparecem travados",
       leitura.campoTravado === true && leitura.listaTravada === true, JSON.stringify(leitura));
     await foto(paginaStaff, "22-configuracoes-somente-leitura");

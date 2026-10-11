@@ -10,9 +10,10 @@ import { ACTIONS, modalTitle } from "../lib/uiCopy";
 import { EmptyState, ErrorState, LoadingInline } from "../components/StateView";
 import { baixarCsv } from "../lib/csv";
 import { formatCurrency, formatDate, formatDateTime } from "../lib/format";
+import { valorNumerico } from "../lib/money";
 
 interface SaleItem { id: string; productId: string; productName: string | null; quantity: number; unitPrice: number; lineTotal: number }
-interface SaleRow { id: string; status: "PENDING" | "CONFIRMED" | "CANCELLED"; total: number; notes: string | null; clientName: string | null; userName: string | null; createdAt: string; items: SaleItem[] }
+interface SaleRow { id: string; status: "PENDING" | "CONFIRMED" | "CANCELLED"; total: number; installments: number; notes: string | null; clientName: string | null; userName: string | null; createdAt: string; items: SaleItem[] }
 interface ClientOpt { id: string; name: string }
 interface ProductOpt { id: string; name: string; salePrice: number; unit: string; stockQuantity: number; trackStock: boolean; active: boolean }
 interface Paged<T> { data: T[]; meta: { page: number; pageSize: number; total: number; totalPages: number } }
@@ -229,11 +230,17 @@ interface ItemDraft { productId: string; quantity: string; unitPrice: string }
 
 const ITENS_INICIAIS: ItemDraft[] = [{ productId: "", quantity: "1", unitPrice: "" }];
 
+// Opções de parcelamento da tela. A porta da API aceita 1 a 120; daqui saem as
+// doze de um pedido de balcão, e o valor vem de uma lista fechada em vez de um
+// campo de texto porque "três" no lugar do número daria erro na gravação.
+const PARCELAS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
+
 function SaleForm({ onSaved }: { onSaved: () => void }) {
   const [clients, setClients] = useState<ClientOpt[]>([]);
   const [products, setProducts] = useState<ProductOpt[]>([]);
   const [clientId, setClientId] = useState("");
   const [notes, setNotes] = useState("");
+  const [parcelas, setParcelas] = useState("1");
   const [confirmNow, setConfirmNow] = useState(false);
   const [items, setItems] = useState<ItemDraft[]>(ITENS_INICIAIS);
   const [saving, setSaving] = useState(false);
@@ -266,14 +273,13 @@ function SaleForm({ onSaved }: { onSaved: () => void }) {
   }
 
   const total = items.reduce((acc, it) => {
-    const q = parseFloat(it.quantity.replace(",", ".")) || 0;
-    const v = parseFloat(it.unitPrice.replace(",", ".")) || 0;
-    return acc + q * v;
+    return acc + valorNumerico(it.quantity) * valorNumerico(it.unitPrice);
   }, 0);
 
   function limparFormulario() {
     setClientId("");
     setNotes("");
+    setParcelas("1");
     setConfirmNow(false);
     setItems(ITENS_INICIAIS.map((it) => ({ ...it })));
   }
@@ -282,8 +288,7 @@ function SaleForm({ onSaved }: { onSaved: () => void }) {
     const clean = items.filter((it) => it.productId);
     if (clean.length === 0) { notify.error("Adicione ao menos um produto."); return; }
     for (const it of clean) {
-      const q = parseFloat(it.quantity.replace(",", ".")) || 0;
-      if (q <= 0) { notify.error("Quantidade deve ser maior que zero."); return; }
+      if (valorNumerico(it.quantity) <= 0) { notify.error("Quantidade deve ser maior que zero."); return; }
     }
     setSaving(true);
     try {
@@ -291,10 +296,11 @@ function SaleForm({ onSaved }: { onSaved: () => void }) {
         clientId: clientId || undefined,
         notes: notes.trim() || undefined,
         confirm: confirmNow,
+        installments: Number(parcelas),
         items: clean.map((it) => ({
           productId: it.productId,
-          quantity: parseFloat(it.quantity.replace(",", ".")),
-          unitPrice: parseFloat(it.unitPrice.replace(",", ".")) || 0,
+          quantity: valorNumerico(it.quantity),
+          unitPrice: valorNumerico(it.unitPrice),
         })),
       });
       notify.success(confirmNow ? "Venda registrada e confirmada." : "Venda registrada como pendente.");
@@ -332,7 +338,7 @@ function SaleForm({ onSaved }: { onSaved: () => void }) {
             </select>
             <input className="input" inputMode="decimal" value={it.quantity} onChange={(e) => patchItem(idx, { quantity: e.target.value })} aria-label="Quantidade" />
             <input className="input" inputMode="decimal" value={it.unitPrice} onChange={(e) => patchItem(idx, { unitPrice: e.target.value })} aria-label="Preço unitário" />
-            <span className="mono" style={{ fontSize: "0.78rem" }}>{formatCurrency((parseFloat(it.quantity.replace(",", ".")) || 0) * (parseFloat(it.unitPrice.replace(",", ".")) || 0))}</span>
+            <span className="mono" style={{ fontSize: "0.78rem" }}>{formatCurrency(valorNumerico(it.quantity) * valorNumerico(it.unitPrice))}</span>
             {items.length > 1 ? (
               <button type="button" className="btn btn-ghost btn-sm" aria-label="Remover item" onClick={() => setItems((prev) => prev.filter((_, i) => i !== idx))}>×</button>
             ) : <span />}
@@ -346,6 +352,18 @@ function SaleForm({ onSaved }: { onSaved: () => void }) {
           </p>
         ) : null}
         <button type="button" className="btn btn-ghost btn-sm" onClick={() => setItems((prev) => [...prev, { productId: "", quantity: "1", unitPrice: "" }])}>{ACTIONS.addItem}</button>
+      </div>
+
+      <div className="field">
+        <label className="field-label" htmlFor="sale-parcelas">Parcelas</label>
+        <select id="sale-parcelas" className="select" style={{ maxWidth: 220 }} value={parcelas} onChange={(e) => setParcelas(e.target.value)}>
+          {PARCELAS.map((n) => <option key={n} value={n}>{n === 1 ? "À vista" : n + "×"}</option>)}
+        </select>
+        <p className="form-note">
+          {parcelas === "1"
+            ? "À vista: um lançamento único no dia, no financeiro, se a empresa ligou o lançamento automático de vendas."
+            : "O total divide em " + parcelas + " parcelas mensais com a última fechando a conta. Elas entram no financeiro no dia em que a venda é confirmada, se a empresa ligou o lançamento automático de vendas."}
+        </p>
       </div>
 
       <div className="field">
@@ -578,6 +596,7 @@ function SaleDetailModal({ sale, onClose }: { sale: SaleRow; onClose: () => void
           <div><dt>Vendedor</dt><dd>{sale.userName ?? "—"}</dd></div>
           <div><dt>Data</dt><dd className="mono">{formatDateTime(sale.createdAt)}</dd></div>
           <div><dt>Total</dt><dd className="mono">{formatCurrency(sale.total)}</dd></div>
+          <div><dt>Parcelas</dt><dd>{sale.installments > 1 ? sale.installments + " parcelas mensais" : "À vista"}</dd></div>
           {sale.notes ? <div><dt>Observações</dt><dd>{sale.notes}</dd></div> : null}
         </dl>
         <h3 className="panel-title" style={{ marginTop: "1rem" }}>Itens</h3>

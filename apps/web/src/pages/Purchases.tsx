@@ -10,9 +10,10 @@ import { ACTIONS, MODAL_COPY, modalTitle } from "../lib/uiCopy";
 import { EmptyState, ErrorState, LoadingInline } from "../components/StateView";
 import { baixarCsv } from "../lib/csv";
 import { formatCurrency, formatDateTime } from "../lib/format";
+import { valorNumerico } from "../lib/money";
 
 interface PurchaseItem { id: string; productId: string; productName: string | null; quantity: number; unitCost: number; lineTotal: number }
-interface PurchaseRow { id: string; status: "DRAFT" | "RECEIVED" | "CANCELLED"; total: number; notes: string | null; supplierName: string | null; userName: string | null; createdAt: string; items: PurchaseItem[] }
+interface PurchaseRow { id: string; status: "DRAFT" | "RECEIVED" | "CANCELLED"; total: number; installments: number; notes: string | null; supplierName: string | null; userName: string | null; createdAt: string; items: PurchaseItem[] }
 interface SupplierRow { id: string; name: string; email: string | null; phone: string | null; document: string | null; notes: string | null; active: boolean }
 interface ProductOpt { id: string; name: string; unit: string; costPrice: number | null; salePrice: number; active: boolean }
 interface Paged<T> { data: T[]; meta: { page: number; pageSize: number; total: number; totalPages: number } }
@@ -232,15 +233,20 @@ export function Purchases() {
 // Modal de criacao: itens dinamicos, custo sugerido do produto, total ao vivo e opcao de receber ja.
 interface ItemDraft { productId: string; quantity: string; unitCost: string }
 
+// Mesma lista fechada da tela de vendas: a porta da API aceita 1 a 120, o modal
+// oferece as doze de um pedido de fornecedor usual.
+const PARCELAS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
+
 function PurchaseModal({ onClose, onSaved }: { onClose: () => void; onSaved: () => void }) {
   const [suppliers, setSuppliers] = useState<SupplierRow[]>([]);
   const [products, setProducts] = useState<ProductOpt[]>([]);
   const [supplierId, setSupplierId] = useState("");
   const [notes, setNotes] = useState("");
+  const [parcelas, setParcelas] = useState("1");
   const [receiveNow, setReceiveNow] = useState(false);
   const [items, setItems] = useState<ItemDraft[]>([{ productId: "", quantity: "1", unitCost: "" }]);
   const [saving, setSaving] = useState(false);
-  const dirty = useDirty({ supplierId, notes, receiveNow, items });
+  const dirty = useDirty({ supplierId, notes, parcelas, receiveNow, items });
   const [loadError, setLoadError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -270,9 +276,7 @@ function PurchaseModal({ onClose, onSaved }: { onClose: () => void; onSaved: () 
   }
 
   const total = items.reduce((acc, it) => {
-    const q = parseFloat(it.quantity.replace(",", ".")) || 0;
-    const c = parseFloat(it.unitCost.replace(",", ".")) || 0;
-    return acc + q * c;
+    return acc + valorNumerico(it.quantity) * valorNumerico(it.unitCost);
   }, 0);
 
   async function save() {
@@ -280,8 +284,7 @@ function PurchaseModal({ onClose, onSaved }: { onClose: () => void; onSaved: () 
     const clean = items.filter((it) => it.productId);
     if (clean.length === 0) { notify.error("Adicione ao menos um produto."); return; }
     for (const it of clean) {
-      const q = parseFloat(it.quantity.replace(",", ".")) || 0;
-      if (q <= 0) { notify.error("Quantidade deve ser maior que zero."); return; }
+      if (valorNumerico(it.quantity) <= 0) { notify.error("Quantidade deve ser maior que zero."); return; }
     }
     setSaving(true);
     try {
@@ -289,10 +292,11 @@ function PurchaseModal({ onClose, onSaved }: { onClose: () => void; onSaved: () 
         supplierId,
         notes: notes.trim() || undefined,
         receive: receiveNow,
+        installments: Number(parcelas),
         items: clean.map((it) => ({
           productId: it.productId,
-          quantity: parseFloat(it.quantity.replace(",", ".")),
-          unitCost: parseFloat(it.unitCost.replace(",", ".")) || 0,
+          quantity: valorNumerico(it.quantity),
+          unitCost: valorNumerico(it.unitCost),
         })),
       });
       notify.success(receiveNow ? "Compra registrada e recebida." : "Compra criada como rascunho.");
@@ -341,13 +345,25 @@ function PurchaseModal({ onClose, onSaved }: { onClose: () => void; onSaved: () 
               </select>
               <input className="input" inputMode="decimal" value={it.quantity} onChange={(e) => patchItem(idx, { quantity: e.target.value })} aria-label="Quantidade" />
               <input className="input" inputMode="decimal" value={it.unitCost} onChange={(e) => patchItem(idx, { unitCost: e.target.value })} aria-label="Custo unitário" />
-              <span className="mono" style={{ fontSize: "0.85rem" }}>{formatCurrency((parseFloat(it.quantity.replace(",", ".")) || 0) * (parseFloat(it.unitCost.replace(",", ".")) || 0))}</span>
+              <span className="mono" style={{ fontSize: "0.85rem" }}>{formatCurrency(valorNumerico(it.quantity) * valorNumerico(it.unitCost))}</span>
               {items.length > 1 ? (
                 <button type="button" className="btn btn-ghost btn-sm" aria-label="Remover item" onClick={() => setItems((prev) => prev.filter((_, i) => i !== idx))}>×</button>
               ) : <span />}
             </div>
           ))}
           <button type="button" className="btn btn-ghost btn-sm" onClick={() => setItems((prev) => [...prev, { productId: "", quantity: "1", unitCost: "" }])}>{ACTIONS.addItem}</button>
+        </div>
+
+        <div className="field">
+          <label className="field-label" htmlFor="purchase-parcelas">Parcelas</label>
+          <select id="purchase-parcelas" className="select" style={{ maxWidth: 220 }} value={parcelas} onChange={(e) => setParcelas(e.target.value)}>
+            {PARCELAS.map((n) => <option key={n} value={n}>{n === 1 ? "À vista" : n + "×"}</option>)}
+          </select>
+          <p className="form-note">
+            {parcelas === "1"
+              ? "À vista: um lançamento único no dia, no financeiro, se a empresa ligou o lançamento automático de compras."
+              : "O total divide em " + parcelas + " parcelas mensais com a última fechando a conta. Elas entram no financeiro no dia em que a compra é recebida, se a empresa ligou o lançamento automático de compras."}
+          </p>
         </div>
 
         <div className="field">
@@ -378,6 +394,7 @@ function PurchaseDetailModal({ purchase, onClose }: { purchase: PurchaseRow; onC
           <div><dt>Comprador</dt><dd>{purchase.userName ?? "—"}</dd></div>
           <div><dt>Data</dt><dd className="mono">{formatDateTime(purchase.createdAt)}</dd></div>
           <div><dt>Total</dt><dd className="mono">{formatCurrency(purchase.total)}</dd></div>
+          <div><dt>Parcelas</dt><dd>{purchase.installments > 1 ? purchase.installments + " parcelas mensais" : "À vista"}</dd></div>
           {purchase.notes ? <div><dt>Observações</dt><dd>{purchase.notes}</dd></div> : null}
         </dl>
         <h3 className="panel-title" style={{ marginTop: "1rem" }}>Itens</h3>
