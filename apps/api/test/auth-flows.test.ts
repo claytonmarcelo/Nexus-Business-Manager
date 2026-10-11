@@ -47,6 +47,28 @@ describe("Cadastro e recuperação de senha", () => {
     expect(body.issues.some((i) => i.path === "password" && /maiúscula/.test(i.message))).toBe(true);
   });
 
+  // A10 da auditoria: o nome era partido com /s+/ (sem a barra invertida), que
+  // só casa com a letra "s" — "Marcos Silva" viraria empresa com o nome todo.
+  // Com /\s+/ a empresa fica no primeiro nome, e o slug junto.
+  it('cadastro de "Marcos Silva" cria a empresa "Marcos (minha empresa)"', async () => {
+    const email = `${uid("marcos")}@nexus.test`;
+    const res = await app.inject({
+      method: "POST", url: "/api/auth/register",
+      payload: { name: "  Marcos Silva  ", email, password: "Forte@2026x" },
+    });
+    expect(res.statusCode).toBe(201);
+    const body = res.json();
+    created.userIds.push(body.user.id);
+    created.companyIds.push(body.user.companyId);
+
+    const empresa = await prisma.company.findUnique({ where: { id: body.user.companyId } });
+    expect(empresa?.name).toBe("Marcos (minha empresa)");
+    expect(empresa?.slug).toBe("marcos");
+
+    const usuario = await prisma.user.findUnique({ where: { id: body.user.id } });
+    expect(usuario?.name).toBe("Marcos Silva");
+  });
+
   it("esqueci a senha: 200 genérico e o código não vaza na resposta", async () => {
     const f = await makeAccount("ADMIN");
     created.userIds.push(f.userId);
