@@ -21,5 +21,21 @@ export default defineConfig({
     env: { RATE_LIMIT_MAX: "100000" },
     testTimeout: 20000,
     hookTimeout: 20000,
+    // Medidor de cobertura do prompt de auditoria (A0/C1). O `npm test` comum
+    // continua igual; a medição só acontece em `npm run test:coverage`, porque
+    // instrumentar cada arquivo deixa a suíte mais lenta e ninguém precisa
+    // disso a cada correção.
+    coverage: {
+      provider: "v8",
+      reportsDirectory: "./coverage",
+      // Só o código de produção da API entra na conta. Os testes ficam de fora,
+      // senão a cobertura subiria medindo a si mesma.
+      include: ["src/**/*.ts"],
+      exclude: ["src/server.ts", "src/**/*.d.ts"],
+      reporter: ["text", "text-summary", "html", "lcov"],
+      // Os portões mínimos por arquivo entram na Fase 7 (CI), quando a suíte
+      // estiver completa. Antes disso um threshold alto quebraria o build sem
+      // que houvesse nada a corrigir.
+    },
   },
 });
