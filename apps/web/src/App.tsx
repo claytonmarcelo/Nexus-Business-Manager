@@ -17,6 +17,7 @@ import { Agenda } from "./pages/Agenda";
 import { Audit } from "./pages/Audit";
 import { Settings } from "./pages/Settings";
 import { Cms } from "./pages/Cms";
+import { Notifications } from "./pages/Notifications";
 import { Legal } from "./pages/Legal";
 import { Forbidden, NotFound, Unauthorized } from "./pages/errors";
 
@@ -51,6 +52,7 @@ export function App() {
           <Route path="auditoria" element={<Audit />} />
           <Route path="configuracoes" element={<Settings />} />
           <Route path="cms" element={<Cms />} />
+          <Route path="notificacoes" element={<Notifications />} />
         </Route>
         <Route path="*" element={<NotFound />} />
       </Routes>

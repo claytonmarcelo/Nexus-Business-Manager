@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, NavLink, Outlet, useNavigate } from "react-router-dom";
 import { Logo } from "../Logo";
 import { ThemeToggle } from "../ThemeToggle";
+import { NotificationBell } from "./NotificationBell";
 import { useAuth } from "../../context/AuthContext";
 import { currentYear } from "../../lib/format";
 
@@ -26,7 +27,12 @@ interface NavGroup {
 const NAV_GROUPS: NavGroup[] = [
   {
     title: "Visão Geral",
-    items: [{ to: "/app", label: "Dashboard", icon: "▦" }],
+    items: [
+      { to: "/app", label: "Dashboard", icon: "▦" },
+      // Avisos não têm permissão própria: cada pessoa vê só os seus, na empresa
+      // ativa, então a linha aparece para qualquer papel que entre no painel.
+      { to: "/app/notificacoes", label: "Notificações", icon: "❖" },
+    ],
   },
   {
     title: "Comercial & CRM",
@@ -338,6 +344,7 @@ export function AdminShell() {
                 <span className="admin-open-site-rotulo">Visualizar landing page</span>
               </a>
             ) : null}
+            <NotificationBell />
             <ThemeToggle />
             <div className="admin-user" title={user?.email}>
               <span className="admin-user-name">{user?.name}</span>

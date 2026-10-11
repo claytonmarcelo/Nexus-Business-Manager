@@ -1,0 +1,241 @@
+/* ===== Sino de avisos e tela /app/notificacoes =====
+   Veste só duas peças: o sino do cabeçalho (AdminShell) e a lista de avisos.
+   Nada aqui alcança a vitrine nem o editor do site. */
+
+/* --- sino no cabeçalho --- */
+.nx-sino {
+  position: relative;
+  display: inline-flex;
+}
+
+.nx-sino-botao {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  color: var(--text-2);
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: color 160ms ease, background 160ms ease, border-color 160ms ease;
+}
+.nx-sino-botao:hover {
+  color: var(--text);
+  border-color: color-mix(in srgb, var(--accent) 55%, var(--border));
+  background: color-mix(in srgb, var(--accent) 10%, var(--surface-2));
+}
+.nx-sino-botao:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.nx-sino-botao.is-on {
+  color: var(--accent);
+  border-color: color-mix(in srgb, var(--accent) 45%, transparent);
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+}
+
+.nx-sino-contagem {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  min-width: 17px;
+  padding: 0 4px;
+  font-size: 0.62rem;
+  font-weight: 800;
+  line-height: 17px;
+  text-align: center;
+  color: #10131a;
+  background: var(--accent);
+  border: 1px solid var(--surface);
+  border-radius: 999px;
+}
+/* Urgente é vermelho de risco, o mesmo tom do diálogo de confirmação: um aviso
+   que exige ação não se anuncia na cor da marca, que é decorativa aqui. */
+.nx-sino-contagem.is-urgente { background: var(--danger); color: #fff; }
+
+.nx-sino-painel {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  z-index: 60;
+  inline-size: min(360px, calc(100vw - 2rem));
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow);
+}
+
+.nx-sino-topo {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.6rem;
+  padding: 0.85rem 1rem 0.7rem;
+  border-bottom: 1px solid var(--border);
+}
+.nx-sino-titulo { font-weight: 800; font-size: 0.95rem; color: var(--text); }
+.nx-sino-resumo { font-size: 0.74rem; color: var(--text-3); }
+
+.nx-sino-lista {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-block-size: 340px;
+  overflow-y: auto;
+}
+.nx-sino-item + .nx-sino-item { border-top: 1px solid var(--border); }
+
+/* O item inteiro é botão: tocar no texto abre o registro, que é o que a pessoa
+   quer. O ponteiro em cima de uma linha que não responde seria a mentira. */
+.nx-sino-item-botao {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  inline-size: 100%;
+  padding: 0.75rem 1rem;
+  text-align: left;
+  color: inherit;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+}
+.nx-sino-item-botao:hover { background: color-mix(in srgb, var(--accent) 7%, transparent); }
+.nx-sino-item-botao:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+
+.nx-sino-item-corpo { display: flex; flex-direction: column; gap: 0.15rem; min-width: 0; }
+.nx-sino-item-titulo {
+  font-size: 0.84rem;
+  font-weight: 700;
+  color: var(--text);
+  overflow-wrap: anywhere;
+}
+.nx-sino-item.is-novo .nx-sino-item-titulo { color: var(--accent); }
+.nx-sino-item-texto {
+  font-size: 0.78rem;
+  color: var(--text-2);
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+.nx-sino-item-meta { font-size: 0.7rem; color: var(--text-3); }
+
+.nx-sino-vazio,
+.nx-sino-erro {
+  margin: 0;
+  padding: 1.1rem 1rem;
+  font-size: 0.8rem;
+  color: var(--text-3);
+}
+.nx-sino-erro { color: var(--danger); }
+
+.nx-sino-rodape {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-end;
+  padding: 0.7rem 1rem;
+  border-top: 1px solid var(--border);
+  background: var(--surface-2);
+}
+
+/* --- prioridade: o mesmo marcador no sino e na tela --- */
+.nx-aviso-prioridade {
+  flex-shrink: 0;
+  inline-size: 9px;
+  block-size: 9px;
+  margin-top: 0.42rem;
+  border-radius: 999px;
+  background: var(--text-3);
+}
+.nx-aviso-prioridade.is-medium { background: var(--warning); }
+.nx-aviso-prioridade.is-high { background: var(--danger); }
+
+/* --- lista da tela --- */
+.nx-avisos-head-acoes { display: flex; gap: 0.5rem; align-items: center; }
+
+.nx-avisos-filtros { justify-content: space-between; margin-bottom: 1.1rem; }
+.nx-avisos-marcar { margin-left: auto; }
+
+.nx-avisos-chip-num {
+  margin-left: 0.4rem;
+  padding: 0 0.35rem;
+  font-size: 0.68rem;
+  font-weight: 800;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--danger) 22%, transparent);
+  color: var(--text);
+}
+
+.nx-avisos {
+  list-style: none;
+  margin: 0 0 1.1rem;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+.nx-aviso {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.8rem;
+  padding: 0.95rem 1.1rem;
+  border-bottom: 1px solid var(--border);
+}
+.nx-aviso:last-child { border-bottom: none; }
+.nx-aviso.is-novo { background: color-mix(in srgb, var(--accent) 5%, transparent); }
+
+.nx-aviso-corpo { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 0.2rem; }
+.nx-aviso-titulo { margin: 0; font-size: 0.9rem; font-weight: 700; color: var(--text); overflow-wrap: anywhere; }
+.nx-aviso-texto { margin: 0; font-size: 0.82rem; color: var(--text-2); overflow-wrap: anywhere; }
+.nx-aviso-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  margin: 0;
+  font-size: 0.72rem;
+  color: var(--text-3);
+}
+/* O ponto vai no conteúdo gerado: sem ele o leitor de tela emenda os
+   trechos do flex ("agora mesmoMédia") e a linha perde o sentido falado. */
+.nx-aviso-meta > span + span::before {
+  content: "\00B7 ";
+  opacity: 0.6;
+}
+
+.nx-aviso-tipo {
+  padding: 0.05rem 0.45rem;
+  font-weight: 700;
+  color: var(--text-2);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+}
+
+/* --- preferências --- */
+.nx-avisos-tipos {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  margin-bottom: 1.1rem;
+}
+/* O .check-line é da casa; aqui o rótulo tem duas linhas (nome + dica), então
+   a linha do checkbox alinha no topo em vez de centralizar. */
+.nx-avisos-tipos .check-line { align-items: flex-start; min-height: 0; padding: 0.4rem 0; }
+.nx-avisos-tipos .check-line input { margin-top: 0.15rem; }
+.nx-avisos-preferencia { display: flex; flex-direction: column; gap: 0.1rem; min-width: 0; }
+.nx-avisos-preferencia strong { font-size: 0.86rem; color: var(--text); }
+.nx-avisos-dica { font-size: 0.75rem; font-weight: 400; color: var(--text-3); }
+
+@media (max-width: 760px) {
+  .nx-aviso { flex-wrap: wrap; }
+  .nx-aviso .row-actions { margin-left: 1.4rem; }
+  .nx-avisos-filtros { justify-content: flex-start; }
+  .nx-avisos-marcar { margin-left: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nx-sino-botao { transition: none; }
+}
