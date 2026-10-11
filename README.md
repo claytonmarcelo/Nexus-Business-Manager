@@ -64,7 +64,7 @@ contam vieram das provas automatizadas e dos testes de integração, que escreve
 
 | Auditoria corporativa | Configurações · tema claro |
 | :--: | :--: |
-| <a href="docs/screenshots/05-auditoria.png"><img src="docs/screenshots/05-auditoria.png" alt="Tela de Auditoria em tema escuro com a trilha de logs da empresa, filtros e marcação das alterações sensíveis" width="360"></a> | <a href="docs/screenshots/06-configuracoes-claro.png"><img src="docs/screenshots/06-configuracoes-claro.png" alt="Tela de Configurações no tema dia: escolha de aparência, dados da conta e troca de empresa ativa" width="360"></a> |
+| <a href="docs/screenshots/05-auditoria.png"><img src="docs/screenshots/05-auditoria.png" alt="Tela de Auditoria em tema escuro com a trilha de logs da empresa, filtros e marcação das alterações sensíveis" width="360"></a> | <a href="docs/screenshots/06-configuracoes-claro.png"><img src="docs/screenshots/06-configuracoes-claro.png" alt="Tela de Configurações no tema dia, aba Minha conta: os dados da pessoa, o papel na empresa ativa e a troca de senha, cada bloco gravando sozinho" width="360"></a> |
 
 | Clientes | Produtos e estoque |
 | :--: | :--: |
@@ -307,6 +307,23 @@ qualquer tela do painel — sem recarregar a página, sem biblioteca de ícones 
   varredura de contas vencidas, é administrativa — só `OWNER`/`ADMIN` — e não repete o mesmo aviso dentro do
   mês
 
+### Configurações da conta e da empresa
+
+- Quatro abas num endereço só (`?aba=`) — Minha conta, Empresa, Aparência e Empresas — com cada bloco
+  gravando sozinho, mandando só o que mudou e mostrando o erro da API embaixo do campo correspondente
+- Conta: nome e telefone da própria pessoa (todo papel pode), e-mail de acesso visível mas não editável, e
+  troca de senha autenticada que encerra as outras sessões mantendo esta aba conectada
+- Empresa: cadastro (nome, razão social, nome fantasia, CNPJ com dígito verificador conferido, e-mail,
+  telefone), endereço com as 27 UFs, moeda, fuso e idioma, logo por endereço público com prévia e meta de
+  receita do mês, que vira a régua do painel
+- Máscara não é validação: CNPJ, telefone e CEP se organizam durante a digitação, mas quem confere os
+  algarismos e decide se o valor existe é a API (`apps/api/src/lib/brFields.ts`) — a tela não guarda uma
+  segunda cópia da regra para discordar da primeira
+- Aparência: o tema é escolha deste navegador, e o formato de números e datas é dado da empresa — a aba
+  mostra o mesmo valor e a mesma data escritos com a configuração atual e diz onde cada um se ajusta
+- Quem não tem `settings:write` lê tudo e não grava nada: no lugar do botão, o bloco explica que só quem
+  administra a empresa grava ali
+
 ### Auditoria, equipe e sessões
 
 - Trilha de auditoria por empresa com autor, ação, entidade, `entity_id`, metadados, IP e hora; escrita é
@@ -437,7 +454,7 @@ se o site está aberto ou em manutenção. A vitrine é única para toda a plata
 | Auditoria | ✅ | ✅ | ✅ | no ar |
 | Usuários e membros de empresa | ✅ | ✅ 6 rotas | ✅ | no ar |
 | Notificações e preferências | ✅ | ✅ 7 rotas | ✅ | no ar: sino no cabeçalho em toda tela do painel e `/app/notificacoes` com abas, filtros por tipo, paginação no servidor e preferências |
-| Configurações da conta e aparência | ✅ | ✅ | 🚧 | tema, conta e troca de empresa no ar; endereço, logo, moeda, fuso e meta têm coluna e não têm tela |
+| Configurações da conta e da empresa | ✅ | ✅ 5 rotas | ✅ | no ar: `/app/configuracoes` em quatro abas — conta, cadastro e endereço da empresa, moeda/fuso/idioma, logo, meta de receita e troca de empresa |
 | CMS da página pública (cores, herói, capacidades, banners, depoimentos, métricas, FAQ) | ✅ | ✅ 14 rotas | ✅ | no ar: a vitrine `/` é montada pelo conteúdo do banco e o editor `/app/cms` cadastra esse conteúdo nas cinco abas |
 | Documentos legais (Termos, Privacidade, LGPD) | ✅ | ✅ | ✅ | `/legal/:kind` mostra só o que está publicado; rascunho e publicação na aba Textos legais do editor |
 | Modo manutenção da plataforma | ✅ (mesma tabela) | ✅ | ✅ | 503 com mensagem e previsão na API e na tela, contagem regressiva, pulso em tempo constante, IP permitido e o código guardado na aba |
@@ -780,21 +797,20 @@ servidor com preferências e varredura, sino no cabeçalho e a tela `/app/notifi
 paginação no servidor · CMS da vitrine no servidor e na tela (configuração bloco a bloco,
 itens por tipo com `meta`, a página pública montada a partir do banco, textos legais publicados, nota de SEO
 medida e modo manutenção com contagem regressiva, pulso e IP) · editor `/app/cms` com as cinco abas de
-conteúdo, itens, textos legais, SEO e manutenção, cada bloco gravando sozinho ·
+conteúdo, itens, textos legais, SEO e manutenção, cada bloco gravando sozinho · tela de Configurações em quatro abas (conta, empresa, aparência e
+empresas), com cadastro, endereço, moeda, fuso, idioma, logo e meta de receita gravando bloco a bloco ·
 sidebar em camadas com peek e gaveta · abas e paginação padronizadas em todas as telas · identidade Premium
 Gourmet nos dois temas, favicon oficial e as provas automatizadas desta página · credencial do administrador
 fora do git, com histórico reescrito antes do primeiro push.
 
 ### A seguir
 
-1. **Configurações completas** — endereço, logo, moeda, fuso, idioma e meta de receita têm coluna e não têm
-   tela; falta o formulário com as regras de cada campo
-2. **Modelos de e-mail** — a tela de Termos, Privacidade e LGPD depende da mesma rota de edição do CMS;
+1. **Modelos de e-mail** — a tela de Termos, Privacidade e LGPD depende da mesma rota de edição do CMS;
    SMTP só depois de haver credencial real
-3. **Rotinas agendadas** — executor das varreduras hoje manuais (contas vencidas, relatório diário)
-4. **Gateways e cobranças** — só com credencial de ambiente; nada de integração de fachada
-5. **Ordens de serviço / atendimento** — módulo novo com o mesmo padrão de estado vigiado e auditoria
-6. **SaaS: planos, assinaturas e faturas** · **backup e restauração** · **CI** com suíte automatizada na
+2. **Rotinas agendadas** — executor das varreduras hoje manuais (contas vencidas, relatório diário)
+3. **Gateways e cobranças** — só com credencial de ambiente; nada de integração de fachada
+4. **Ordens de serviço / atendimento** — módulo novo com o mesmo padrão de estado vigiado e auditoria
+5. **SaaS: planos, assinaturas e faturas** · **backup e restauração** · **CI** com suíte automatizada na
    cada push
 
 ---
