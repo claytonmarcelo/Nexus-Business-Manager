@@ -337,3 +337,12 @@ todas as fases sem nova escolha de opções.*
   própria pessoa) e CMS/Rotinas (plataforma, `assertPlatformAdmin`) ficaram fora por desenho.
   Suíte 16/113 verde com a camada ativa; prova de notificações 85/85 rerodada. Falta agora a
   varredura sistemática de intrusão A×B por endpoint (sub-fase 1d).
+- **Intrusão A×B automatizada (sub-fase 1d)**: `apps/api/test/intrusao.test.ts` — duas empresas
+  reais, um OWNER cria a documentação viva pela API e o OWNER da outra empresa ataca todas as
+  rotas de escrita/leitura por id com payloads válidos. Resultados esperados e provados: 404 em
+  toda linha de terceiro, 403 ao tentar derrubar sessão alheia pela rota da própria empresa, 400
+  em referências cruzadas (categoria/produto/fornecedor de A num cadastro de B) e o scan de
+  avisos de B não gera nada na empresa de A mesmo pedindo o `companyId` dela no corpo. A última
+  checagem confere linha por linha no banco que nenhuma linha de A foi tocada. Com a Fase 1,
+  todos os CRÍTICOS e ALTOS de isolamento da seção B estão fechados e blindados por teste.
+  Suíte agora em 17 arquivos e 127 testes verdes.
