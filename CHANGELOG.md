@@ -5,6 +5,31 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/), 
 
 ## [Não lançado]
 
+### Integridade de negócio (Fase 3a da auditoria — estoque atômico)
+
+> Fase 3 da auditoria comercial (`docs/AUDITORIA.md`), sub-fase 3a: o CRÍTICO de oversell. Enquanto a
+> guarda de saldo morava em JavaScript — ler o estoque, comparar, gravar o valor absoluto — dois cliques
+> no mesmo minuto vendiam a mesma unidade duas vezes. A partir de agora é o banco quem decide.
+- Novo `apps/api/src/lib/stock.ts`: baixa de estoque virou `UPDATE ... SET estoque = estoque - q WHERE estoque >= q`
+  dentro da transação; se nenhuma linha casou, o saldo não aguentava e a operação responde 400 com o número
+  real re-lido. Subida é `increment` — nunca mais soma feita em JS escrita por cima de outra.
+- Custo do produto na compra (a "última compra define o custo") agora grava no MESMO update atômico da subida,
+  sem escrita absoluta separada que o último gravador ganhava de qualquer jeito.
+- Status de venda e de compra passou a ser *reivindicado* dentro da transação (`WHERE status = <status lido>`):
+  dois "confirmar" na mesma venda resultam em um 200 e um 400 honesto — antes as duas requisições baixavam
+  estoque e o cancelamento podia estornar duas vezes.
+- `moveStock` e o estoque inicial do cadastro de produto usam o helper atômico; o ajuste (ADJUST) continua
+  absoluto de propósito, porque ajuste de inventário é uma declaração ("contei e tem X"), não um cálculo.
+- Conversão de lead em cliente (CRM) passou a viver numa única transação: não existe mais cliente criado
+  com o lead ainda no estágio antigo no meio do caminho.
+- Deadlock InnoDB em corrida real (o insert do item pega lock compartilhado no produto pela FK e o
+  decremento pede o exclusivo) deixou de virar 500: `lib/tx.ts` re-tenta a transação até 3 vezes com recuo
+  progressivo, e a vencida recebe o 400 de estoque que é a resposta certa.
+- Novo `test/oversell.test.ts` (5 testes de concorrência): mesma venda confirmada duas vezes em paralelo,
+  duas vendas disputando o mesmo saldo, compra recebida duas vezes, dois lançamentos OUT simultâneos e
+  receber-vs-cancelar em corrida — em todos, o saldo final conta a mesma história que o status e nunca fica negativo.
+- Validação: typecheck da API limpo; suíte completa 19 arquivos / 140 testes verdes.
+
 ### Segurança de produção (Fase 2 da auditoria)
 
 > Fase 2 da auditoria comercial (`docs/AUDITORIA.md`): as janelas que o ambiente de desenvolvimento

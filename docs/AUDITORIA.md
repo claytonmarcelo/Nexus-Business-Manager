@@ -391,3 +391,18 @@ Validação da fase: typecheck da API limpo; suíte 18 arquivos / 135 testes ver
 seguidas (novo `test/seguranca.test.ts` com 8; `auth-flows` reescrito sem o devToken); typecheck
 e build do web OK contra Vite 7 + RR 7; provas de navegador rerodadas contra o servidor com gate:
 configurações 108/108, CMS 115/115, notificações 85/85, rotinas 37/37.
+
+## Adenda da execução — Fase 3 em andamento — sub-fase 3a (estoque atômico) encerrada — 2026-10-11
+
+A sub-fase 3a fecha o CRÍTICO de oversell e os ALTO de escrita absoluta de estoque/custo da seção E.
+- `lib/stock.ts` (novo): baixarEstoque é `UPDATE ... WHERE stock >= q` na transação, count 0 → 400 com saldo re-lido; subirEstoque é `increment`, com custo da última compra no mesmo update; `trackStock` no where mantém o combinado de produto sem rastreamento.
+- `permitirNegativo` já existe como parâmetro do helper — a política por empresa (Company) chega na sub-fase 3b e só liga esse fio.
+- Vendas e compras: status reivindicado dentro da transação (`updateMany where status = lido`); confirmação, cancelamento e estorno não correm mais dois vezes no mesmo documento.
+- `moveStock`/estoque inicial em transação; ADJUST continua absoluto por decisão declarada (inventário é declaração, não cálculo).
+- CRM: lead→cliente (WON) agora numa `$transaction` única — dupla sem tx da seção E encerrada.
+- Achado novo durante os testes de corrida: deadlock InnoDB P2034 (FK do item segura lock S no produto; decremento pede X) virava 500 em clique duplo. `lib/tx.ts` re-tenta até 3× com recuo progressivo; a vencida recebe o 400 honesto.
+- `test/oversell.test.ts`: 5 cenários de concorrência real (mesma venda 2×, duas vendas pelo mesmo saldo, compra recebida 2×, OUT manual duplo, receber×cancelar) — saldo final sempre coerente com o status, nunca negativo.
+
+Pendências declaradas da Fase 3: 3b política de estoque por empresa (UI + campo), 3c meia-noite no fuso da empresa, 3d dinheiro em Decimal/centavos nos relatórios, 3e vínculo venda↔financeiro com parcelamento.
+
+Validação da sub-fase: typecheck da API limpo; suíte 19 arquivos / 140 testes verdes (5 novos). Backend-only — nenhuma tela alterada, provas de navegador não afetadas.
