@@ -346,3 +346,48 @@ todas as fases sem nova escolha de opções.*
   checagem confere linha por linha no banco que nenhuma linha de A foi tocada. Com a Fase 1,
   todos os CRÍTICOS e ALTOS de isolamento da seção B estão fechados e blindados por teste.
   Suíte agora em 17 arquivos e 127 testes verdes.
+
+## Adenda da execução — Fase 2 (segurança de produção) encerrada — 2026-10-11
+
+- **devToken (ALTO)**: o código de recuperação só sai pela resposta com
+  `AUTH_EXPOSE_RESET_TOKEN=1` escrito no `.env` — o `NODE_ENV` perdeu o poder de abrir a porta.
+  A suíte prova a ausência do campo e a existência do token no banco (hash).
+- **Seed (ALTO + BAIXO)**: a conta `admin@nexus.local` não nasce mais em produção sem
+  `SEED_DEV_ACCOUNT=1`, e o log final parou de imprimir a senha do administrador — hoje ele
+  nomeia as contas e diz se a dev foi criada, sem valor secreto.
+- **Recuperação × administrador da plataforma (MÉDIO)**: `forgotPassword` para um
+  `SUPER_ADMIN` não gera token nem revoga sessões — devolve o mesmo 200 genérico e grava
+  `auth.forgot_password_bloqueado` na auditoria. `resetPassword` recusa token de SUPER_ADMIN
+  mesmo forjado direto no banco (cinto extra para código antigo).
+- **Reuso de refresh (MÉDIO)**: nova coluna `refresh_tokens.used_at` (migration
+  `20261011200000_add_refresh_used_at`, reversível). Reapresentar um token já rotacionado
+  derruba **todas** as sessões vivas daquela pessoa e grava `auth.refresh_reuse`; revogação
+  por decisão (logout, admin, troca/recuperação de senha) marca só `revokedAt` e continua
+  sem reação em cadeia — logout de uma aba não derruba a outra.
+- **trustProxy e body limit (MÉDIO)**: `TRUST_PROXY` (default 0) e `BODY_LIMIT_BYTES`
+  (default 1 MiB) declarados no `env.ts` e aplicados na subida do Fastify. Sem proxy
+  declarado, header forjado não engana rate-limit, auditoria nem o pulso da manutenção.
+- **Gate estrutural**: `plugins/gate.ts` — gancho `onRoute` que derruba a subida se qualquer
+  rota nascer sem `app.authenticate` no preHandler e sem o carimbo `config.public = true`.
+  A superfície aberta do projeto passou a ser exatamente 10 rotas carimbadas (6 de auth,
+  3 da vitrine, 1 health); o preflight `OPTIONS` do CORS é rota de framework e não pede
+  carimbo. Testado nos dois sentidos, incluindo o boot real.
+- **Dependências (ALTO, 13 vulnerabilidades)**: `@fastify/jwt` 9→10.2.4 (crítica),
+  `vitest` 2→5 (crítica do tinypool; configurada `fileParallelism: false` + folga do
+  rate-limit global no ambiente de teste — o limitador por rota continua nos valores reais),
+  `vite` 5.4→7.3 com `@vitejs/plugin-react` 5 (alta; escolhido 7 em vez do 8.3.4 mais novo
+  porque o range vulnerável vai até 6.4.2 e o peer do `@tailwindcss/vite` pede casamento
+  conservador), `react-router-dom` 6→7.18.4 (moderada) e `npm audit fix` no resto.
+  **Restam 3 ALTAS**: a cadeia `prisma`/`@prisma/config` → `deepmerge-ts`, que só tem correção
+  no Prisma 8 (ainda RC) e vive no CLI de desenvolvimento — nada dela entra no runtime da API.
+
+**Pendências declaradas desta fase:**
+- Store compartilhado de rate-limit em Redis (parte do R2): levado de propósito para a
+  Fase 8, é onde o Docker/compose apresenta o Redis ao stack; em instância única — como o
+  projeto roda hoje — o contador em memória é exato. Comentado em `plugins/security.ts`.
+- Migração para Prisma 8 estável fecha os 3 altos restantes (revalidar schema + suíte na volta).
+
+Validação da fase: typecheck da API limpo; suíte 18 arquivos / 135 testes verdes duas rodadas
+seguidas (novo `test/seguranca.test.ts` com 8; `auth-flows` reescrito sem o devToken); typecheck
+e build do web OK contra Vite 7 + RR 7; provas de navegador rerodadas contra o servidor com gate:
+configurações 108/108, CMS 115/115, notificações 85/85, rotinas 37/37.

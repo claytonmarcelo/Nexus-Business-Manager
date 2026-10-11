@@ -5,6 +5,22 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/), 
 
 ## [Não lançado]
 
+### Segurança de produção (Fase 2 da auditoria)
+
+> Fase 2 da auditoria comercial (`docs/AUDITORIA.md`): as janelas que o ambiente de desenvolvimento
+> deixava aberta viraram porta com chave, a sessão roubada passou a ser tratada como roubo, e nenhuma
+> rota nova consegue nascer sem tranca. As dependências criticamente vulneráveis foram atualizadas.
+
+- **Nenhuma rota nasce aberta** (`apps/api/src/plugins/gate.ts`, `plugins/auth.ts`, `app.ts`): um gancho `onRoute` conferido a cada registro derruba a subida do servidor se uma rota aparecer sem `app.authenticate` e sem o carimbo explícito `config.public = true`. O `authenticate` virou função nomeada exportada — é a mesma referência em toda comparação. A superfície pública do projeto é agora exatamente dez rotas carimbadas: as seis de autenticação, as três da vitrine e o health. O preflight `OPTIONS *` que o `@fastify/cors` registra por conta própria é rota de framework e não pede carimbo — descoberto na primeira subida, quando o gate derrubou o servidor dele.
+- **Reuso de refresh token é tratado como roubo** (`schema.prisma`, migration `20261011200000_add_refresh_used_at`, `auth.service.ts`): o token rotacionado ganha `used_at`, e reapresentá-lo — o que o dono legítimo nunca faz — derruba todas as sessões vivas da pessoa e fica na auditoria como `auth.refresh_reuse`. Revogação por decisão (logout, admin, troca e recuperação de senha) continua marcando só `revoked_at`: deslogar de uma aba não derruba a outra.
+- **A porta de desenvolvimento da recuperação agora tem chave** (`config/env.ts`, `auth.service.ts`, `.env.example`): o código de recuperação só aparece na resposta com `AUTH_EXPOSE_RESET_TOKEN=1` escrito no `.env` — o `NODE_ENV` perdeu esse poder, e o padrão é fechado. A suíte prova a ausência do campo no HTTP e a existência do token no banco, e o teste de redefinição passou a criar o código exatamente como o serviço faz, sem depender da porta.
+- **O administrador da plataforma não passa pela recuperação** (`auth.service.ts`): pedir "esqueci a senha" de um `SUPER_ADMIN` devolve o mesmo 200 genérico de qualquer e-mail, sem gerar token e sem derrubar sessão nenhuma — um link de recuperação jamais pode ser porta para a conta que protege a plataforma inteira. E se um código antigo ou forjado no banco aparecer na redefinição, ela recusa do mesmo jeito.
+- **Seed sem senha no log e sem conta dev em produção** (`prisma/seed.ts`): `admin@nexus.local` só nasce fora de produção (ou com `SEED_DEV_ACCOUNT=1` explícito), e o resumo final nomeia as contas em vez de imprimir a senha do administrador definitivo.
+- **Proxy e corpo agora ditos por nós** (`app.ts`, `env.ts`): `TRUST_PROXY=0` por default — sem proxy declarado, header forjado não engana rate-limit, auditoria nem o pulso da manutenção — e `BODY_LIMIT_BYTES` com 1 MiB explícito em vez do default herdado do framework.
+- **Rate-limit em Redis fica para a Fase 8, de propósito** (`plugins/security.ts`): sem Redis no stack hoje, apontar para ele seria inventar infraestrutura; em instância única o contador em memória é exato, e a pendência está registrada na auditoria junto com o Docker/compose que o apresenta.
+- **Dependências criticamente vulneráveis atualizadas** (workspace raiz): `@fastify/jwt` 9→10.2.4 (crítica), `vitest` 2→5 (crítica do tinypool; suíte ganhou `fileParallelism: false` porque o banco compartilhado não aceita paralelismo), `vite` 5.4→7.3 com `@vitejs/plugin-react` 5 e `react-router-dom` 6→7.18.4. De `npm audit` com 13 vulnerabilidades (4 críticas) sobram 3 altas — todas na cadeia do CLI do Prisma (`deepmerge-ts`), sem correção antes do Prisma 8, que ainda é RC e não entra em runtime.
+- **Testes e provas acompanham** (`apps/api/test/seguranca.test.ts`): oito testes novos — o gate recusando a rota aberta e aceitando as declaradas (inclusive no boot real com health/landing/vitrine), a queda da família no reuso com logout continuando inocente, a imunidade do admin da plataforma com o token forjado no banco, e o devToken que não vaza. Suíte em 18 arquivos e 135 testes, verdes duas rodadas seguidas; typecheck e build do painel limpos no Vite 7 + Router 7; provas de navegador rerodadas contra o servidor com gate: configurações 108/108, CMS 115/115, notificações 85/85 e rotinas 37/37.
+
 ### Segurança e isolamento (Fase 1 da auditoria)
 
 > Fase 1 da auditoria comercial (`docs/AUDITORIA.md`): os três achados CRÍTICOS de
