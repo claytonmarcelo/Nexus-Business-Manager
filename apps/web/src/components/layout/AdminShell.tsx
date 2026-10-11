@@ -62,7 +62,7 @@ const NAV_GROUPS: NavGroup[] = [
     items: [
       { to: "/app/usuarios", label: "Usuários", icon: "◉", permission: "user:read" },
       { to: "/app/auditoria", label: "Auditoria", icon: "❐", permission: "audit:read" },
-      { label: "CMS & Site Público", icon: "▩", permission: "settings:read", emBreve: "Editor do site público: ainda em construção." },
+      { to: "/app/cms", label: "CMS & Site Público", icon: "▩", permission: "content:read" },
       { to: "/app/configuracoes", label: "Configurações", icon: "⚙" },
     ],
   },
@@ -324,6 +324,20 @@ export function AdminShell() {
           </button>
           <div className="admin-header-title">Business Manager</div>
           <div className="admin-header-actions">
+            {/* Atalho para a vitrine: quem edita o conteúdo precisa ver o
+                resultado real, e abrir em outra aba preserva o formulário. */}
+            {can("content:read") ? (
+              <a
+                className="btn btn-ghost btn-sm admin-open-site"
+                href="/"
+                target="_blank"
+                rel="noopener noreferrer"
+                title="Visualizar a landing page em outra aba"
+              >
+                <span className="admin-open-site-icone" aria-hidden="true">{"↗"}</span>
+                <span className="admin-open-site-rotulo">Visualizar landing page</span>
+              </a>
+            ) : null}
             <ThemeToggle />
             <div className="admin-user" title={user?.email}>
               <span className="admin-user-name">{user?.name}</span>

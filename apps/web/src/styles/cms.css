@@ -1,0 +1,364 @@
+/* ===== Editor do site público (/app/cms) =====
+   As cinco abas compartilham a mesma anatomia: um cartão por bloco, o título e
+   a explicação do lado esquerdo e o botão de gravar daquele bloco à direita.
+   Nada aqui cria cor nova: são os tokens da casa. */
+
+.cms-painel {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.cms-bloco-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.1rem;
+}
+
+.cms-bloco-sub {
+  margin: 0.3rem 0 0;
+  color: var(--text-2);
+  font-size: 0.86rem;
+  max-width: 62ch;
+}
+
+.cms-bloco-acao {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex: 0 0 auto;
+}
+
+/* Dois campos por linha no desktop, um só quando aperta. */
+.cms-grade {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.1rem 1.25rem;
+}
+
+.cms-grade .field-full,
+.cms-grade > .field.field-full {
+  grid-column: 1 / -1;
+}
+
+@media (max-width: 820px) {
+  .cms-grade {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .cms-bloco-head {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+
+.field-hint {
+  display: block;
+  margin-top: 0.35rem;
+  color: var(--text-3);
+  font-size: 0.78rem;
+}
+
+/* --- cor --- */
+.cms-cor-controle {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.cms-cor-swatch {
+  inline-size: 42px;
+  block-size: 38px;
+  padding: 2px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+  cursor: pointer;
+}
+
+.cms-cor-swatch:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.cms-campo-cor .input.mono {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+/* --- ligado/desligado --- */
+.cms-ligado {
+  display: flex;
+  /* A dica é flex-basis: 100%: sem permissão de quebra
+     ela espreme o rótulo e a palavra divide no meio. */
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 0.6rem;
+  padding: 0.55rem 0;
+  cursor: pointer;
+}
+
+.cms-ligado input[type="checkbox"] {
+  inline-size: 1.05rem;
+  block-size: 1.05rem;
+  margin-top: 0.12rem;
+  /* O mesmo tom dos checkboxes do resto do sistema (.check-line). */
+  accent-color: var(--accent);
+}
+
+.cms-ligado-rotulo {
+  font-weight: 600;
+  color: var(--text);
+}
+
+.cms-ligado .field-hint {
+  flex-basis: 100%;
+}
+
+/* --- seletor de tipo (itens e textos legais) --- */
+.cms-tipos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.cms-mini-estado {
+  margin-left: 0.45rem;
+  color: var(--text-3);
+  font-size: 0.72rem;
+  text-transform: lowercase;
+}
+
+.cms-acima-da-lista {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.cms-dica {
+  margin: 0;
+  color: var(--text-2);
+  font-size: 0.84rem;
+}
+
+.cms-celula-suave {
+  color: var(--text-2);
+  font-size: 0.84rem;
+}
+
+/* --- redes sociais --- */
+.cms-redes {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+  margin-bottom: 1rem;
+}
+
+.cms-rede {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) auto;
+  align-items: end;
+  gap: 0.9rem;
+  padding: 0.9rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface-2);
+}
+
+@media (max-width: 820px) {
+  .cms-rede {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* --- nota de SEO --- */
+.cms-nota {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.25rem;
+  flex-wrap: wrap;
+}
+
+.cms-nota-corpo {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.cms-nota-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: 74px;
+  block-size: 74px;
+  border-radius: 50%;
+  border: 2px solid var(--border-strong);
+  font-size: 1.6rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.cms-nota-num.is-excelente {
+  color: var(--success);
+  border-color: var(--success);
+}
+.cms-nota-num.is-bom {
+  color: var(--info);
+  border-color: var(--info);
+}
+.cms-nota-num.is-atencao {
+  color: var(--warning);
+  border-color: var(--warning);
+}
+.cms-nota-num.is-critico {
+  color: var(--danger);
+  border-color: var(--danger);
+}
+
+.cms-nota-nivel {
+  margin: 0;
+  font-weight: 700;
+  text-transform: capitalize;
+}
+
+.cms-checagens {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.cms-checagem {
+  display: grid;
+  grid-template-columns: 1.4rem minmax(8rem, 1fr) auto;
+  gap: 0.25rem 0.7rem;
+  align-items: baseline;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+}
+
+.cms-checagem-marca {
+  font-weight: 800;
+}
+
+.cms-checagem.is-ok .cms-checagem-marca {
+  color: var(--success);
+}
+
+.cms-checagem.is-falta .cms-checagem-marca {
+  color: var(--warning);
+}
+
+.cms-checagem-item {
+  font-weight: 600;
+}
+
+.cms-checagem-peso {
+  color: var(--text-3);
+  font-size: 0.76rem;
+}
+
+.cms-checagem-dica {
+  grid-column: 2 / -1;
+  color: var(--text-2);
+  font-size: 0.82rem;
+}
+
+/* --- manutenção --- */
+.cms-alerta-manutencao {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.9rem;
+  padding: 1rem 1.15rem;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+}
+
+.cms-alerta-manutencao.is-ativa {
+  border-color: var(--danger);
+}
+
+.cms-alerta-manutencao.is-aberta {
+  border-color: color-mix(in srgb, var(--success) 55%, var(--border));
+}
+
+.cms-alerta-marca {
+  font-size: 1.2rem;
+  line-height: 1.2;
+}
+
+.cms-alerta-manutencao.is-ativa .cms-alerta-marca {
+  color: var(--danger);
+}
+
+.cms-alerta-manutencao.is-aberta .cms-alerta-marca {
+  color: var(--success);
+}
+
+.cms-alerta-titulo {
+  margin: 0;
+  font-weight: 700;
+}
+
+.cms-pulso {
+  padding: 0.9rem 1rem;
+  border-radius: var(--radius-md);
+  border: 1px dashed var(--border-strong);
+  background: var(--surface-2);
+}
+
+.cms-pulso.is-novo {
+  border-style: solid;
+  border-color: var(--accent);
+}
+
+.cms-pulso-aviso {
+  margin: 0 0 0.6rem;
+  color: var(--text-2);
+  font-size: 0.84rem;
+}
+
+.cms-pulso-codigo {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 1.15rem;
+  letter-spacing: 0.12em;
+  color: var(--accent);
+  user-select: all;
+}
+
+.cms-legal-texto {
+  font-family: var(--font-mono);
+  font-size: 0.86rem;
+  line-height: 1.6;
+}
+
+/* --- cabeçalho da página --- */
+.cms-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.cms-head-acoes {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .cms-cor-swatch {
+    transition: border-color 0.15s ease;
+  }
+}
