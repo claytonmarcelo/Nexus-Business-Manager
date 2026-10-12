@@ -1,6 +1,6 @@
 // Auditoria profunda: 320px, sidebar aberta, modal de cliente aberto.
 const puppeteer = require("puppeteer-core");
-const { SENHA_ADMIN } = require("./senha-admin.cjs");
+const { EMAIL_ADMIN, SENHA_ADMIN } = require("./senha-admin.cjs");
 const BASE = "http://localhost:5173";
 (async () => {
   const browser = await puppeteer.launch({
@@ -31,7 +31,7 @@ const BASE = "http://localhost:5173";
   await page.goto(BASE + "/cadastro", { waitUntil: "networkidle0" }); await probe("320 /cadastro");
 
   await page.goto(BASE + "/login", { waitUntil: "networkidle0" });
-  await page.type("input[type=email]", "nexusbussiness.admin@gmail.com", { delay: 2 });
+  await page.type("input[type=email]", EMAIL_ADMIN, { delay: 2 });
   await page.type("input[type=password]", SENHA_ADMIN, { delay: 2 });
   await page.click(".neu-btn");
   await page.waitForFunction(() => location.pathname.startsWith("/app"), { timeout: 15000 });

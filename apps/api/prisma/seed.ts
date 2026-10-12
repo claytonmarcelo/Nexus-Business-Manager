@@ -15,17 +15,18 @@ const prisma = new PrismaClient();
 
 export type FonteDeSemente = Record<string, string | undefined>;
 
-// Regra definitiva de acesso do projeto (ver CREDENCIAIS.md na raiz): este
+// Regra definitiva de acesso do projeto (ver CREDENCIAIS.md na raiz): o
 // administrador global é OWNER de todas as empresas e não pode ser removido.
-// O endereço histórico continua sendo o padrão FORA de produção — é a conta que
-// o README, o seed local e as ferramentas de print usam. Em produção ele vira
-// obrigação de ambiente: valor fixo no código é uma porta conhecida.
-const ADMINISTRADOR_GLOBAL_PADRAO = "nexusbussiness.admin@gmail.com";
+// Desde a R2 o endereço real mora só no `.env` da máquina, em SUPER_ADMIN_EMAIL;
+// o padrão fora de produção é a conta fictícia abaixo, que não casa com ninguém.
+// Em produção a ausência da variável derruba o seed — e a API, no validador de
+// produção — porque valor fixo no código é uma porta conhecida.
+const ADMINISTRADOR_GLOBAL_FICTICIO = "admin@exemplo.test";
 
 export function emailDoAdministradorGlobal(ambiente: FonteDeSemente): string {
   const declarado = (ambiente.SUPER_ADMIN_EMAIL ?? "").trim();
   if (declarado) return declarado.toLowerCase();
-  return ambiente.NODE_ENV === "production" ? "" : ADMINISTRADOR_GLOBAL_PADRAO;
+  return ambiente.NODE_ENV === "production" ? "" : ADMINISTRADOR_GLOBAL_FICTICIO;
 }
 
 // A conta de desenvolvimento não nasce em produção (Fase 2). `SEED_DEV_ACCOUNT=1`

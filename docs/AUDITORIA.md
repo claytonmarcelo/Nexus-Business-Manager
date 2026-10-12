@@ -588,14 +588,22 @@ então o valor prático para um atacante é baixo — mas a forma é de segredo,
 mesma galeria que expõe o `02-login.png` ao lado prova que essas capturas não foram escolhidas com esse cuidado. Sai
 limpa a `08-cadastro.png` (nome e e-mail fictícios, senhas vazias).
 
-### N3 — BAIXO, identificador real espalhado por arquivos rastreados
+### N3 — BAIXO, resolvido na R2: identificador real espalhado por arquivos rastreados
 
-O e-mail do administrador global (`nexusbussiness.admin@gmail.com`) aparece em **26 arquivos rastreados**:
-`README.md`, `CHANGELOG.md`, `apps/api/.env.example`, `apps/api/prisma/seed.ts`, `apps/api/src/lib/passwordPolicy.ts`,
-`apps/api/test/seed-seguro.test.ts` e os 20 scripts de `tools/`. Sozinho é um identificador, não uma credencial,
-e ele é necessário no `.env.example`/na documentação da regra de acesso. O que muda o peso dele é o N1: com a
-senha na imagem ao lado, o par fecha. Se o dono autorizar, os scripts de prova podem ler o e-mail de
-`tools/senha-admin.local.cjs` junto com a senha, em vez de repetir a string.
+Medido na abertura da R2: **32 ocorrências em 25 arquivos rastreados** — `README.md`, `CHANGELOG.md`,
+`apps/api/.env.example`, `apps/api/prisma/seed.ts`, `apps/api/src/lib/passwordPolicy.ts`,
+`apps/api/test/seed-seguro.test.ts` e 16 ferramentas de `tools/`. Sozinho é um identificador, não uma
+credencial; o que fechava o par era o N1 — a senha ao lado do endereço, na mesma galeria.
+
+**Fechado na R2 (2026-10-12).** O endereço não está mais em arquivo rastreado nenhum: o padrão fora de
+produção passou a ser a conta fictícia `admin@exemplo.test` (`passwordPolicy.ts` e `seed.ts`), o
+`.env.example` traz a mesma fictícia com o aviso de que em produção a variável é obrigatória, as 16
+ferramentas que repetiam a string passaram a usar `EMAIL_ADMIN` de `tools/senha-admin.cjs` (que lê
+`NEXUS_ADMIN_EMAIL`, depois o arquivo local ignorado, depois o `SUPER_ADMIN_EMAIL` do `.env` da API),
+e a documentação descreve a conta como "a definida em `SUPER_ADMIN_EMAIL`". O comportamento é o mesmo —
+a conta continua protegida contra rebaixamento e exclusão; mudou só de onde o endereço chega. A porta que
+impede a string de voltar é `apps/api/test/identificadores-fora-do-codigo.test.ts`, que varre todos os
+arquivos rastreados.
 
 ### N4 — BAIXO, prova de navegador desatualizada falhando antes da mudança
 
@@ -760,7 +768,7 @@ problema.
 | --- | --- | --- |
 | `02-login.png` | a senha definitiva do administrador global em texto legível, com o botão do olho clicado (N1) | formulário vazio, `localStorage` limpo antes do clique, olho nunca tocado |
 | `09-recuperar-senha.png` | o código de recuperação de 64 caracteres preenchido no campo (N2) | etapa 2 com o campo de código vazio; o e-mail fotografado (`solicitante@exemplo.test`) não existe no banco, então a API não devolve `devToken` nenhum |
-| `04-usuarios.png` | `nexusbussiness.admin@gmail.com` e `admin@nexus.local` na lista de membros | a conta fictícia `demo@exemplo.test`, com a busca da própria tela filtrada em `exemplo.test` |
+| `04-usuarios.png` | o e-mail pessoal do dono e a conta de desenvolvimento, na lista de membros | a conta fictícia `demo@exemplo.test`, com a busca da própria tela filtrada em `exemplo.test` |
 | `18-tabs-usuarios.png` | os mesmos dois e-mails reais | idem acima |
 | `18-tabs-usuarios-celular.png` | os mesmos dois e-mails reais | idem acima |
 | `06-configuracoes-claro.png` | o gmail real no campo "E-mail de acesso" | "Demonstracao Ficticia" / `demo@exemplo.test` |
@@ -809,7 +817,7 @@ Não é falha de isolamento — é a regra de administração da plataforma escr
 `apps/api/src/modules/auth/auth.service.ts`, no `register`: ao criar a conta, todo usuário com
 `platformRole: "SUPER_ADMIN"` é adicionado como `OWNER` da empresa recém-criada. O efeito prático apareceu
 durante a R1: a primeira versão da `04-usuarios.png` recapturada continuou mostrando
-`nexusbussiness.admin@gmail.com` e `admin@nexus.local` na lista de membros da conta fictícia, porque a conta
+o e-mail pessoal do dono e a conta de desenvolvimento na lista de membros da conta fictícia, porque a conta
 fictícia acabou de nascer com o administrador dentro.
 
 **Como a R1 contornou sem tocar na autorização:** as telas de usuários passaram a ser fotografadas com o
@@ -841,3 +849,117 @@ fotografado em `20-cms-seo.png`, `127.0.0.1` repetido na tela de Auditoria e a f
 imagem classificada `contém`. **A limpeza desses dados é trabalho de banco, não de pixel** — enquanto o
 ambiente de desenvolvimento tiver essas linhas, qualquer recaptura futura vai trazê-las de volta. Fica
 registrado para a rodada que decidir o seed de demonstração.
+
+## Adenda da execução — Rodada R (segurança antes do push) — Bloco 1, tarefa R2 encerrada — 2026-10-12
+
+### R2 — O endereço pessoal do dono e a senha de desenvolvimento saíram do repositório
+
+**R2.1 — onde cada coisa estava escrita (medição antes de mexer).** A varredura dos 391 arquivos
+rastreados por `git ls-files`, no commit `bedf661`, deu **32 ocorrências do endereço do administrador
+global em 25 arquivos** e **3 ocorrências da senha de desenvolvimento do seed em 3 arquivos**. O
+endereço é o único domínio de e-mail pessoal do repositório: as duas listas batem linha a linha.
+Nunca se
+imprimiu valor — só arquivo e linha:
+
+| Onde | Arquivo:linha |
+| --- | --- |
+| documentação | `README.md:696` · `CHANGELOG.md:575` · `CHANGELOG.md:693` · `docs/AUDITORIA.md:593` · `:763` · `:812` |
+| modelo de ambiente | `apps/api/.env.example:29` (endereço) e `:37` (senha de desenvolvimento) |
+| código | `apps/api/prisma/seed.ts:23` · `apps/api/src/lib/passwordPolicy.ts:16` |
+| testes | `apps/api/test/seed-seguro.test.ts:26` · `:72` · `:77` · `apps/api/test/capturas-sem-credencial.test.ts:19` · `:55` (senha) |
+| ferramentas de prova | `tools/senha-admin.cjs:31` · `audit-responsive.cjs:13` · `audit-responsive2.cjs:34` · `audit-sweep.cjs:12` · `shoot-agenda.cjs:98` e `:128` · `shoot-compras.cjs:26` · `shoot-crm.cjs:85` · `shoot-financeiro.cjs:26` · `shoot-modal.cjs:31` · `shoot-products.cjs:23` · `shoot-sales.cjs:27` · `shoot-sidebar.cjs:12` · `verify-acoes-confirm.cjs:19` · `verify-logout.cjs:19` · `verify-remember.cjs:21` e `:38` · `verify-responsive.cjs:19` · `verify-sidebar.cjs:33` |
+
+A senha de desenvolvimento estava só em `.env.example:37`, `capturas-sem-credencial.test.ts:55` e
+`seed-seguro.test.ts:56`. Diferente do que o prompt supunha, `tools/shoot-clients.cjs` **já não** a
+carregava: a R1 tinha reescrito aquele script, e a varredura de agora confirma (nenhum `tools/*.cjs`
+cita a senha). O que as ferramentas ainda carregavam era o endereço — **19 ocorrências em 17 arquivos
+de `tools/`**, todas removidas e sem nenhuma de volta: as 16 ferramentas que faziam login com a string
+passaram a usar o `EMAIL_ADMIN` importado de `tools/senha-admin.cjs`, e o próprio `senha-admin.cjs`
+deixou de conhecê-la.
+
+**R2.2 — de onde o endereço chega agora.** `passwordPolicy.ts` e `prisma/seed.ts` perderam o literal e
+ganharam o padrão fictício `admin@exemplo.test`, que não casa com usuário nenhum. Em produção a
+ausência de `SUPER_ADMIN_EMAIL` derruba a API na inicialização (regra nova em
+`apps/api/src/config/producao.ts:91-95`) e derruba o seed (`errosDoSeed`, que já a exigia). Fora de
+produção o valor vem do `.env` da máquina; sem ele, fica a fictícia. O ponto de comparação
+(`users.service.ts:121`, que confere `membership.user.email === SUPER_ADMIN_EMAIL`) não mudou de
+lógica nenhuma: continua lendo a mesma constante exportada.
+
+**Prova de que o comportamento é o mesmo.** Rodada real de navegador com a conta do administrador:
+`NEXUS_PROVA_FOTOS=05-auditoria node tools/shoot.cjs` devolveu `sessao aberta com a conta administrador`
+e `capturado 05-auditoria`, com o endereço resolvido por `tools/senha-admin.cjs` (30 caracteres, lido de
+`SUPER_ADMIN_EMAIL` no `.env` da API — a ordem é `NEXUS_ADMIN_EMAIL` → `tools/senha-admin.local.cjs` →
+`.env` da API, e sem os três o ferramenta para com aviso em vez de mandar credencial errada). O print
+saiu diferente do commitado por um motivo que não é a R2 — ver N13 — e foi **descartado**: a imagem está
+byte a byte como no `bedf661`.
+
+**R2.3 — a credencial de desenvolvimento.** `apps/api/.env.example` passou a trazer
+`SEED_DEV_PASSWORD=defina-uma-senha-forte` e `SUPER_ADMIN_EMAIL=admin@exemplo.test`, cada um com o
+comentário que diz onde o valor real mora. `seed-seguro.test.ts` não conhece mais senha nenhuma: sorteia
+`SEGREDO` com `randomBytes(9)` a cada corrida e confere que o texto do seed lê `ambiente.SEED_*_PASSWORD`
+sem valor escrito ao lado.
+
+**R2.4 — o `.env` do dono.** `SUPER_ADMIN_EMAIL` foi acrescentado ao `apps/api/.env` local (arquivo
+ignorado pelo git), lendo o endereço da linha 9 do `CREDENCIAIS.md`. Nada foi impresso: a gravação registrou
+só o comprimento do valor (30) e o arquivo de origem, e a conferência final do `.env` é 855 bytes, sem BOM,
+sem CRLF.
+
+> **Aviso ao dono — trocar a senha de desenvolvimento.** A senha da conta `admin@nexus.local`
+> (`SEED_DEV_PASSWORD`) esteve escrita em arquivo rastreado e portanto está no histórico público do
+> `origin/main`. Ela não é a senha do administrador global e não é a de nenhuma empresa real, mas é uma
+> credencial que qualquer pessoa que clone o repositório consegue ler no histórico. Antes de qualquer
+> uso público do ambiente de desenvolvimento, defina uma senha nova só para a conta dev no `.env` local e
+> rode o seed de novo; a R2 não trocou essa senha porque ela é do dono, e troca de senha sem pedido é
+> mudança que ele não autorizou.
+
+**R2.5 — a porta que impede o literal de voltar.** `apps/api/test/identificadores-fora-do-codigo.test.ts`
+(6 casos) varre todo arquivo rastreado e falha se reaparecer o endereço, qualquer domínio de e-mail
+pessoal ou a senha
+de desenvolvimento; os valores procurados são montados por fragmentos, porque um teste que caça um literal
+não pode escrevê-lo. O validador de produção ganhou 2 casos (21 no arquivo): produção sem `SUPER_ADMIN_EMAIL`
+recusa a subida, e com ele definido sobe — o caso negativo passa a variável vazia de propósito, senão o
+`dotenv` da máquina contaminaria a prova.
+
+**O vermelho, medido antes do ajuste.** Com as ferramentas e os documentos ainda no estado da R1 e só os
+testes novos em pé, a suíte da API devolveu **10 arquivos falhando em 33** (`10 failed | 23 passed`), e o
+arquivo de varredura caiu nos 6 casos, com a primeira lista saindo como `expected [ 'CHANGELOG.md:575', …(28) ] to
+deeply equal []`. Depois do patch: os quatro arquivos da R2 passam juntos (**41 casos**, `4 passed (4)`).
+
+**Um ajuste honesto dentro do próprio teste.** A primeira versão da afirmação anti-literal do seed —
+"qualquer aspas a menos de uma linha do nome da chave" — pegava também a mensagem de erro
+"`SEED_ADMIN_PASSWORD não está definida`", que não escreve senha nenhuma. Em vez de afrouxar o teste, o
+recorte foi apertado para o que é violação de verdade: uma senha valendo o padrão depois de `??` ou `||`
+na leitura da chave, e um valor escrito depois de `SEED_*_PASSWORD:` num mapa. A mordida foi conferida à
+parte, com quatro frases sintéticas: as duas primeiras são pegas, a mensagem de erro e a leitura correta
+`?? ""` não.
+
+**Portões da tarefa.** `npm run typecheck` limpo nos dois workspaces (o caçador de literais precisou de uma
+linha para passar no `noUncheckedIndexedAccess`); `npm run build` ok (API + web, com o aviso de chunk único
+que é da R9); suíte completa **API 30 arquivos / 246 casos** e **web 5 arquivos / 27 casos**, todos
+passando; codificação **281 arquivos de texto rastreados, 0 com BOM e 0 com CRLF**; varredura de segredos
+local — **0** para o endereço pessoal, **0** para o domínio de e-mail pessoal e **0** para a senha de
+ desenvolvimento, e as
+28 atribuições de senha que os demais padrões acharam foram conferidas uma a uma: **24** estão em arquivos
+de `apps/api/test/` e são fixtures de teste (`SenhaForte2026`, `abcdef12`, `Trocada@2026`), **3** são a senha
+de contas sintéticas que a própria prova cria e apaga (`tools/verify-configuracoes.cjs:217`,
+`verify-parcelamento.cjs:177`, `verify-rotinas.cjs:133`), e **1** (`ContaPanel.tsx:123`) não é senha nenhuma
+é o texto "Informe a senha atual." de validação. Nenhum valor foi impresso nesta conferência — só arquivo,
+linha e comprimento.
+
+### N3 — encerrada
+
+O item aberto da Fase 0 ("identificador real espalhado por arquivos rastreados") está fechado acima, com a
+medição de antes (32/25) e a de depois (0/0).
+
+### N13 — MÉDIO (achado fora do escopo, nada foi corrigido), a galeria do repositório tem imagem mais antiga que a interface
+
+Ao rodar a prova de administrador da R2, a `05-auditoria.png` commitada se revelou de outra época: sem os
+group headers da sidebar, sem a coluna "Quem", sem as abas "Logs do Sistema / Alterações Sensíveis /
+Exportação", e com o nome da empresa `Nexus Demo` onde hoje aparece o identificador interno. A tela atual,
+fotografada agora, tem todas essas peças. A R1 não viu isso porque a pergunta dela era "esta imagem expõe
+dado sensível?" — e não expõe, nem antes nem agora; a imagem nova foi descartada justamente para não misturar
+recaptura de vitrine com tarefa de segurança.
+
+O que fica registrado: **a galeria precisa de uma passada de atualização antes do push** (é trabalho da R11,
+de documentação), e só esta imagem foi medida — as outras 100 não foram reabertas para comparar com a
+interface de hoje, então não se sabe quantas estão no mesmo estado. **NÃO VERIFICADO** fora deste arquivo.

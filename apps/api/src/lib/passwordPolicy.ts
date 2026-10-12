@@ -7,16 +7,17 @@ import { env } from "../config/env";
 export const PASSWORD_MIN_LENGTH = 8;
 export const PASSWORD_MAX_LENGTH = 128;
 
-// A8: o endereço do administrador global saiu do código. Vem de
-// SUPER_ADMIN_EMAIL no ambiente, e o valor histórico só vale fora de produção
-// (é a conta que README, seed local e ferramentas de print conhecem). Em
-// produção, sem a variável, a string fica vazia: ninguém é "o administrador"
-// por endereço, e a proteção real continua sendo a bandeira `platformRole` no
-// banco. Comparar com "" nunca casa com um usuário de verdade.
-const ADMINISTRADOR_GLOBAL_PADRAO = "nexusbussiness.admin@gmail.com";
+// A8 tirou o endereço do código; a R2 tirou também o valor histórico que fazia
+// de padrão fora de produção. O administrador real desta instalação vem de
+// SUPER_ADMIN_EMAIL, declarado no `.env` da máquina — nunca no repositório.
+// Sem a variável, dev e teste usam a conta fictícia abaixo, que não casa com
+// ninguém de verdade. Em produção a ausência derruba a inicialização (o
+// validador de `config/producao.ts`), então ninguém herda padrão nenhum: a
+// proteção continua sendo a bandeira `platformRole` no banco.
+const ADMINISTRADOR_GLOBAL_FICTICIO = "admin@exemplo.test";
 
 export const SUPER_ADMIN_EMAIL = (
-  env.SUPER_ADMIN_EMAIL || (env.NODE_ENV === "production" ? "" : ADMINISTRADOR_GLOBAL_PADRAO)
+  env.SUPER_ADMIN_EMAIL || (env.NODE_ENV === "production" ? "" : ADMINISTRADOR_GLOBAL_FICTICIO)
 ).toLowerCase();
 
 export function isStrongPassword(pw: string): boolean {

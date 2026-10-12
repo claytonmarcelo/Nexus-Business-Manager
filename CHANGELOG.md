@@ -5,6 +5,37 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/), 
 
 ## [Não lançado]
 
+### O endereço do dono e a senha de desenvolvimento saíram do repositório (2026-10-12)
+
+- **Onde estava, medido antes de mexer**: o endereço pessoal do administrador global tinha **32 ocorrências em
+  25 arquivos rastreados** (README, CHANGELOG, `docs/AUDITORIA.md`, `.env.example`, `seed.ts`,
+  `passwordPolicy.ts`, dois testes e 17 ferramentas de `tools/`), e era o único endereço de domínio
+  pessoal do repositório. A
+  senha de desenvolvimento do seed estava em três linhas.
+- **De onde chega agora**: `SUPER_ADMIN_EMAIL` no ambiente, sempre. Fora de produção o padrão é a conta
+  fictícia `admin@exemplo.test`, que não casa com usuário nenhum; em produção a falta da variável derruba a API
+  no validador de `config/producao.ts` e derruba o seed. A lógica de proteção não mudou — continua sendo a
+  bandeira `platformRole` no banco, e o comparador de `users.service.ts` lê a mesma constante de antes.
+- **As 16 ferramentas que repetiam a string** passaram a usar o `EMAIL_ADMIN` de `tools/senha-admin.cjs`, que
+  agora resolve o endereço na mesma ordem da senha: `NEXUS_ADMIN_EMAIL` → `tools/senha-admin.local.cjs` →
+  `SUPER_ADMIN_EMAIL` do `.env` da API → para com aviso claro. Prova de que continua funcionando:
+  `NEXUS_PROVA_FOTOS=05-auditoria node tools/shoot.cjs` abriu sessão com a conta do administrador.
+- **`.env.example` não carrega valor de senha nenhum**: `SEED_DEV_PASSWORD=defina-uma-senha-forte` e
+  `SUPER_ADMIN_EMAIL=admin@exemplo.test`, e `seed-seguro.test.ts` sorteia a própria senha de teste a cada
+  corrida com `randomBytes(9)`.
+- **A porta que impede o volta**: `apps/api/test/identificadores-fora-do-codigo.test.ts` (**6 casos**) varre
+  todos os arquivos rastreados e falha se o endereço, qualquer domínio de e-mail pessoal ou a senha de
+  desenvolvimento
+  reaparecer; o validador de produção ganhou **2 casos** (21 no arquivo). Antes do ajuste, os testes novos
+  derrubaram 10 dos 33 arquivos da suíte.
+- **Aviso ao dono**: a senha da conta de desenvolvimento `admin@nexus.local` esteve em arquivo rastreado e está
+  no histórico público — ela deve ser trocada no `.env` local e regravada pelo seed. Não é a senha do
+  administrador global nem a de empresa real, mas é credencial legível por quem clonar o repositório.
+- **Achado registrado, nada corrigido**: a `05-auditoria.png` commitada é de antes dos group headers da sidebar
+  e da coluna "Quem". A recaptura da prova foi descartada (o arquivo voltou aos bytes do `HEAD`) porque
+  atualização de vitrine é trabalho de documentação, não de segurança — está na N13, e só essa imagem foi
+  conferida.
+
 ### As capturas do repositório passaram a provar sem credencial de ninguém (2026-10-12)
 
 - **109 imagens conferidas uma a uma**: 101 PNGs em `docs/screenshots/` e 8 arquivos de marca. Nove delas
@@ -572,7 +603,7 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/), 
 > um e-mail fixo no código, e o banco de desenvolvimento acordou em InnoDB — as
 > chaves estrangeiras que sempre estiveram no schema passaram a valer de verdade.
 
-- **Só o proprietário cria ou mexe em proprietário** (`apps/api/src/modules/users/users.service.ts`, `users.routes.ts`): o `POST /api/users` e o `PATCH /api/users/:id/role` passaram a receber o papel de quem assina o pedido, e a regra vale nos dois sentidos — um ADMIN não se auto-promove a OWNER criando um membro, e não rebaixa o OWNER da empresa. O cadeado definitivo (a conta `nexusbussiness.admin@gmail.com` nunca perde OWNER) agora segue a bandeira `platformRole` no banco e mantém o e-mail como cinto extra. Na tela (`pages/Users.tsx`), quem não é proprietário nem vê a opção OWNER no cadastro, e o papel de um proprietário aparece como selo com a explicação em vez de select.
+- **Só o proprietário cria ou mexe em proprietário** (`apps/api/src/modules/users/users.service.ts`, `users.routes.ts`): o `POST /api/users` e o `PATCH /api/users/:id/role` passaram a receber o papel de quem assina o pedido, e a regra vale nos dois sentidos — um ADMIN não se auto-promove a OWNER criando um membro, e não rebaixa o OWNER da empresa. O cadeado definitivo (a conta do administrador global nunca perde OWNER) agora segue a bandeira `platformRole` no banco e mantém o e-mail configurado como cinto extra. Na tela (`pages/Users.tsx`), quem não é proprietário nem vê a opção OWNER no cadastro, e o papel de um proprietário aparece como selo com a explicação em vez de select.
 - **Encerrar sessão virou ato da pessoa, não da empresa** (`users.service.ts`): o refresh token não pertence a tenant nenhum, e antes um ADMIN de A com usuário em comum derrubava a sessão de quem é de B. Agora cada rota de empresa só encerra as sessões do próprio dono — para restringir outra pessoa, o caminho é o papel. A aba Sessões espelha a regra: o botão só aparece na linha da própria pessoa.
 - **A varredura de avisos não passeia mais em outras empresas** (`notifications.routes.ts`, `notifications.schemas.ts`): o `POST /api/notifications/scan` aceitava um `companyId` no corpo e varria a empresa que o cliente escolhesse. O campo saiu do schema; a varredura é sempre a da empresa ativa do token, revalidada no banco.
 - **O administrador da plataforma ganhou coluna própria** (`schema.prisma`, migration `20261011164338_add_platform_role`, `seed.ts`, `src/lib/platform.ts`): `users.platform_role` com o enum `PlatformRole { SUPER_ADMIN }`. A identidade de plataforma deixou de ser a comparação do e-mail no código: o seed marca as contas administrativas, o cadastro de empresa nova injeta os SUPER_ADMIN como OWNER consultando o banco, e a sessão informa `platform: boolean`.
@@ -690,7 +721,7 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/), 
 - **Módulo Produtos + Estoque (backend)**: categorias por empresa, produtos com SKU único, preços em Decimal, estoque mínimo e controle por item; movimentações de entrada/saída/ajuste transacionais (saída acima do saldo → 400), filtro de estoque baixo, resumo para KPIs, RBAC `product:read/write` em todos os papéis e trilha de auditoria completa. Migração `add_products_stock` e 7 testes de integração (suíte agora com 30).
 - **Módulo Produtos + Estoque (frontend)**: página `/app/produtos` com KPIs (ativos / estoque baixo / sem estoque), tabela paginada com busca e filtro "somente estoque baixo", modais de produto, movimentação, histórico e categoria — prova de uso real em `docs/screenshots/10-produtos.png`.
 - **Favicon oficial do projeto**: recorte do emblema hexagonal da logo gerado em alta qualidade (16/32/48px, apple-touch 180px, 512px maskable e `favicon.ico` multi-tamanho), declarado no `index.html` — script reprodutível em `tools/make-favicon.ps1`.
-- **Regra definitiva de acesso**: administrador global `nexusbussiness.admin@gmail.com` (OWNER em todas as empresas, protegido contra remoção/rebaixamento no backend e no seed) documentado em `CREDENCIAIS.md` na raiz do projeto.
+- **Regra definitiva de acesso**: administrador global (OWNER em todas as empresas, protegido contra remoção/rebaixamento no backend e no seed), com o endereço guardado em `CREDENCIAIS.md` na raiz do projeto — hoje lido de `SUPER_ADMIN_EMAIL`, nunca escrito no repositório.
 - **Política de senha** aplicada em todo o sistema (mínimo 8 caracteres, uma maiúscula e um especial): `passwordPolicy.ts` no backend + validação inline pt-BR nos formulários.
 - **Fluxos de autenticação completos**: cadastro self-service (cria usuário + empresa própria como OWNER e já autentica), esqueci a senha em duas etapas com código de recuperação (30 min, uso único, revoga sessões) e rotas `/cadastro` e `/recuperar-senha`.
 - Telas de autenticação (Login, Criar conta, Recuperar senha) em estilo **Embossed/Neumorfismo** com tokens por tema, checkbox "Lembrar de mim" (salva apenas o e-mail), alternância suave entre telas, erros inline, botão ENTRAR com estado de carregamento e indicador animado de "Sucesso!" antes do redirecionamento.

@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { readFileSync } from "node:fs";
+import { randomBytes } from "node:crypto";
 import { resolve } from "node:path";
 import { prisma } from "../src/lib/prisma";
 import {
@@ -16,14 +17,18 @@ import {
 // desenvolvimento do ambiente (não do código) e não imprime senha nenhuma no
 // resumo final.
 
-const SEGREDO = "senha-de-teste-apenas-para-o-ambiente-local";
+// R2: a senha da conta de desenvolvimento é sorteada a cada corrida. O que isso
+// prova é que o seed não tem senha própria — qualquer valor que ele escrevesse
+// por conta nunca seria este.
+const SEGREDO = `senha-de-teste-${randomBytes(9).toString("hex")}`;
+const EMAIL_ADMINISTRADOR = "administrador@exemplo.test";
 
 function ambiente(com: FonteDeSemente): FonteDeSemente {
   return {
     NODE_ENV: "test",
     SEED_ADMIN_PASSWORD: SEGREDO,
     SEED_DEV_PASSWORD: SEGREDO,
-    SUPER_ADMIN_EMAIL: "nexusbussiness.admin@gmail.com",
+    SUPER_ADMIN_EMAIL: EMAIL_ADMINISTRADOR,
     ...com,
   };
 }
@@ -51,9 +56,15 @@ describe("Seed seguro (A8)", () => {
   });
 
   it("a senha da conta de desenvolvimento vem do ambiente, nunca do código", () => {
-    // O arquivo do seed não carrega mais nenhuma senha escrita.
     const fonte = readFileSync(resolve(process.cwd(), "prisma", "seed.ts"), "utf8");
-    expect(fonte).not.toMatch(/Nexus@2026/);
+    // As duas senhas só chegam lidas do mapa de ambiente — nunca de valor escrito.
+    expect(fonte).toMatch(/ambiente\.SEED_(ADMIN|DEV)_PASSWORD/);
+    // Uma leitura do ambiente jamais pode trazer valor de volta: `?? "literal"` está proibido.
+    expect(fonte).not.toMatch(/SEED_(ADMIN|DEV)_PASSWORD[^\n]{0,12}(\?\?|\|\|)[^\n]{0,3}[\x22\x27\x60][^\x22\x27\x60\s]{4,}[\x22\x27\x60]/);
+    // E nenhuma chave do mapa recebe senha escrita: `SEED_ADMIN_PASSWORD: "..."`.
+    expect(fonte).not.toMatch(/SEED_(ADMIN|DEV)_PASSWORD[\x22\x27\x60]?\s*:\s*[\x22\x27\x60][^\x22\x27\x60\s]{4,}[\x22\x27\x60]/);
+    // A senha sorteada desta corrida não existe no código-fonte do seed.
+    expect(fonte).not.toContain(SEGREDO);
     expect(errosDoSeed(ambiente({ SEED_DEV_PASSWORD: undefined })).join(" ")).toContain("SEED_DEV_PASSWORD");
   });
 
@@ -68,12 +79,14 @@ describe("Seed seguro (A8)", () => {
     expect(criaContaDev(ambiente({ NODE_ENV: "test" }))).toBe(true);
   });
 
-  it("o endereço do administrador global vem do ambiente e o padrão só vale fora de produção", () => {
-    expect(emailDoAdministradorGlobal(ambiente({ NODE_ENV: "development" }))).toBe("nexusbussiness.admin@gmail.com");
+  it("o endereço do administrador global vem do ambiente e o padrão é a conta fictícia", () => {
+    expect(emailDoAdministradorGlobal(ambiente({ NODE_ENV: "development" }))).toBe(EMAIL_ADMINISTRADOR);
     expect(emailDoAdministradorGlobal(ambiente({ SUPER_ADMIN_EMAIL: "Outro.Admin@exemplo.com.br" })))
       .toBe("outro.admin@exemplo.com.br");
-    // produção sem a variável: nada de valor fixo herdado do código
+    // produção sem a variável: nada de valor herdado do código
     expect(emailDoAdministradorGlobal({ NODE_ENV: "production" })).toBe("");
-    expect(emailDoAdministradorGlobal({ NODE_ENV: "development" })).toBe("nexusbussiness.admin@gmail.com");
+    // fora de produção, sem a variável, responde a conta fictícia — e ela não
+    // casa com usuário nenhum do banco.
+    expect(emailDoAdministradorGlobal({ NODE_ENV: "development" })).toBe("admin@exemplo.test");
   });
 });

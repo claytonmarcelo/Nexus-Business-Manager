@@ -88,6 +88,12 @@ export function problemasDeProducao(fonte: FonteDeAmbiente): string[] {
   if (fonte.AUTH_EXPOSE_RESET_TOKEN === "1") {
     problemas.push("AUTH_EXPOSE_RESET_TOKEN=1 entrega o código de recuperação pelo HTTP — desligue em produção");
   }
+  // R2: o endereço do administrador global não é mais literal no código. Em
+  // produção ele é obrigação de ambiente — sem ele, a conta que a regra de
+  // acesso protege não existe, e o servidor não sobe.
+  if (!(fonte.SUPER_ADMIN_EMAIL ?? "").trim()) {
+    problemas.push("SUPER_ADMIN_EMAIL não está definido — em produção o endereço do administrador global vem do ambiente, nunca do código");
+  }
   return problemas;
 }
 

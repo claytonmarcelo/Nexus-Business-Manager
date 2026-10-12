@@ -29,6 +29,7 @@ const base: FonteDeAmbiente = {
   JWT_REFRESH_SECRET: SEGREDO_B,
   CORS_ORIGIN: "https://painel.nexus.com.br",
   DATABASE_URL: "mysql://nexus_app:SenhaDoApp2026@banco.interno:3306/nexus",
+  SUPER_ADMIN_EMAIL: "administrador@nexus.com.br",
 };
 
 function configuracao(trocas: FonteDeAmbiente): FonteDeAmbiente {
@@ -110,6 +111,14 @@ describe("Validador de configuração de produção (A9)", () => {
     expect(problemasDeProducao(configuracao({ AUTH_EXPOSE_RESET_TOKEN: "0" }))).toEqual([]);
   });
 
+  it("produção sem SUPER_ADMIN_EMAIL é recusada, e com o endereço definido passa", () => {
+    expect(contem(problemasDeProducao(configuracao({ SUPER_ADMIN_EMAIL: undefined })), "SUPER_ADMIN_EMAIL")).toBe(true);
+    expect(contem(problemasDeProducao(configuracao({ SUPER_ADMIN_EMAIL: "   " })), "SUPER_ADMIN_EMAIL")).toBe(true);
+    // O endereço é uma string qualquer de quem administra a instalação: a régua
+    // cobra presença, não um valor escrito no código.
+    expect(problemasDeProducao(configuracao({ SUPER_ADMIN_EMAIL: "outra@nexus.com.br" }))).toEqual([]);
+  });
+
   it("a régua só vale para produção", () => {
     expect(exigeConfiguracaoDeProducao("production")).toBe(true);
     expect(exigeConfiguracaoDeProducao("development")).toBe(false);
@@ -185,8 +194,24 @@ describe("config/env.ts recusa a subida em produção mal configurada (A9)", () 
       JWT_REFRESH_SECRET: SEGREDO_B,
       CORS_ORIGIN: "https://painel.nexus.com.br",
       DATABASE_URL: "mysql://nexus_app:SenhaDoApp2026@banco.interno:3306/nexus",
+      SUPER_ADMIN_EMAIL: "administrador@nexus.com.br",
     });
     expect(r.stdout, r.stderr).toContain("SONDA_SUBIU");
+  });
+
+  it("produção sem o endereço do administrador global não sobe", () => {
+    // A string vazia é escrita de propósito: sem ela, o dotenv do apps/api/.env
+    // emprestaria o endereço da máquina ao processo filho e a prova passaria
+    // sem estar provando nada.
+    const r = rodar({
+      JWT_ACCESS_SECRET: SEGREDO_A,
+      JWT_REFRESH_SECRET: SEGREDO_B,
+      CORS_ORIGIN: "https://painel.nexus.com.br",
+      DATABASE_URL: "mysql://nexus_app:SenhaDoApp2026@banco.interno:3306/nexus",
+      SUPER_ADMIN_EMAIL: "",
+    });
+    expect(r.stdout).not.toContain("SONDA_SUBIU");
+    expect(r.stderr).toContain("SUPER_ADMIN_EMAIL");
   });
 
   it("fora de produção a régua nova não se aplica", () => {

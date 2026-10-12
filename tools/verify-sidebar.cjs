@@ -3,7 +3,7 @@
 // cima do conteudo, sem empurra-lo, e sair do mouse recolhe) e gaveta
 // off-canvas no tablet/celular (com scrim, Esc e sem overflow horizontal).
 const puppeteer = require("puppeteer-core");
-const { SENHA_ADMIN } = require("./senha-admin.cjs");
+const { EMAIL_ADMIN, SENHA_ADMIN } = require("./senha-admin.cjs");
 
 const CHROME = "C:/Program Files/Google/Chrome/Application/chrome.exe";
 const BASE = "http://localhost:5173";
@@ -30,7 +30,7 @@ async function semToast(page) {
 async function entrada(page) {
   await page.goto(BASE + "/login", { waitUntil: "networkidle0" });
   await page.waitForSelector("input[type=email]");
-  await page.type("input[type=email]", "nexusbussiness.admin@gmail.com");
+  await page.type("input[type=email]", EMAIL_ADMIN);
   await page.type("input[type=password]", SENHA_ADMIN);
   await Promise.all([
     page.waitForFunction(() => window.location.pathname.startsWith("/app"), { timeout: 15000 }),

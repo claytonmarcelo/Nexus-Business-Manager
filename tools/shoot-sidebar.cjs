@@ -1,5 +1,5 @@
 const puppeteer = require("puppeteer-core");
-const { SENHA_ADMIN } = require("./senha-admin.cjs");
+const { EMAIL_ADMIN, SENHA_ADMIN } = require("./senha-admin.cjs");
 (async () => {
   const browser = await puppeteer.launch({
     executablePath: "C:/Program Files/Google/Chrome/Application/chrome.exe",
@@ -9,7 +9,7 @@ const { SENHA_ADMIN } = require("./senha-admin.cjs");
   const page = await browser.newPage();
   await page.goto("http://localhost:5173/login", { waitUntil: "networkidle0" });
   await page.waitForSelector("input[type=email]");
-  await page.type("input[type=email]", "nexusbussiness.admin@gmail.com");
+  await page.type("input[type=email]", EMAIL_ADMIN);
   await page.type("input[type=password]", SENHA_ADMIN);
   await Promise.all([
     page.waitForFunction(() => window.location.pathname.startsWith("/app"), { timeout: 15000 }),

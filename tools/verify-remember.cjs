@@ -1,7 +1,7 @@
 // Prova da regra: "Lembrar de mim" grava o e-mail no navegador, mas ele NUNCA
 // aparece visível no campo; entrar só com a senha usa o e-mail lembrado em silêncio.
 const puppeteer = require("puppeteer-core");
-const { SENHA_ADMIN } = require("./senha-admin.cjs");
+const { EMAIL_ADMIN, SENHA_ADMIN } = require("./senha-admin.cjs");
 const BASE = "http://localhost:5173";
 
 (async () => {
@@ -18,7 +18,7 @@ const BASE = "http://localhost:5173";
   await page.evaluate(() => localStorage.removeItem("nexus.remember.email"));
   await page.reload({ waitUntil: "networkidle0" });
   await page.waitForSelector("input[type=email]");
-  await page.type("input[type=email]", "nexusbussiness.admin@gmail.com", { delay: 4 });
+  await page.type("input[type=email]", EMAIL_ADMIN, { delay: 4 });
   await page.type("input[type=password]", SENHA_ADMIN, { delay: 4 });
   await page.click(".neu-check");
   await page.click(".neu-btn");
@@ -35,7 +35,7 @@ const BASE = "http://localhost:5173";
   ok(emailValue === "", "campo de e-mail vazio ao voltar (valor: '" + emailValue + "')");
   ok(placeholder === "seu@email.com", "placeholder generico, sem dados gravados");
   ok(!!hint, "dica discreta de e-mail lembrado presente");
-  ok(stored === "nexusbussiness.admin@gmail.com", "e-mail gravado no navegador (invisivel)");
+  ok(stored === EMAIL_ADMIN, "e-mail gravado no navegador (invisivel)");
 
   // Passo 3: digitar SÓ a senha e entrar — usa o e-mail lembrado em silêncio.
   await page.type("input[type=password]", SENHA_ADMIN, { delay: 4 });

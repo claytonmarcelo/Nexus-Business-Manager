@@ -1,7 +1,7 @@
 // Prova do modal compartilhado: anatomia, textos padrao, Esc, guarda de
 // descarte, foco inicial, trava de scroll e empilhamento de modais.
 const puppeteer = require("puppeteer-core");
-const { SENHA_ADMIN } = require("./senha-admin.cjs");
+const { EMAIL_ADMIN, SENHA_ADMIN } = require("./senha-admin.cjs");
 const path = require("path");
 const BASE = "http://localhost:5173";
 const OUT = path.join(__dirname, "..", "docs", "screenshots");
@@ -28,7 +28,7 @@ function ok(nome, valor) {
   await page.evaluate(() => localStorage.removeItem("nexus.remember.email"));
   await page.reload({ waitUntil: "networkidle0" });
   await page.waitForSelector("input[type=email]");
-  await page.type("input[type=email]", "nexusbussiness.admin@gmail.com", { delay: 3 });
+  await page.type("input[type=email]", EMAIL_ADMIN, { delay: 3 });
   await page.type("input[type=password]", SENHA_ADMIN, { delay: 3 });
   await page.click(".neu-btn");
   await page.waitForFunction(() => location.pathname.startsWith("/app"), { timeout: 15000 });

@@ -13,10 +13,10 @@
 // não reabre o painel com sessão morta, o tema escolhido no navegador fica no
 // lugar, e nenhum alert() nativo é usado no caminho.
 const puppeteer = require("puppeteer-core");
-const { SENHA_ADMIN } = require("./senha-admin.cjs");
+const { EMAIL_ADMIN, SENHA_ADMIN } = require("./senha-admin.cjs");
 
 const BASE = "http://localhost:5173";
-const EMAIL = "nexusbussiness.admin@gmail.com";
+const EMAIL = EMAIL_ADMIN;
 const AVISO = "Sua sessão expirou. Entre novamente para continuar.";
 
 let total = 0;

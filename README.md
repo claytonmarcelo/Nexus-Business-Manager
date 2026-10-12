@@ -654,8 +654,8 @@ npm install
 npm run prisma:generate -w @nexus/api   # sem isto, nada compila (docs/AUDITORIA.md N9)
 cp apps/api/.env.example apps/api/.env
 # edite apps/api/.env: DATABASE_URL, JWT_ACCESS_SECRET, JWT_REFRESH_SECRET,
-# SEED_ADMIN_PASSWORD com a senha do administrador definitivo (CREDENCIAIS.md)
-# e SEED_DEV_PASSWORD com a senha da conta de desenvolvimento
+# SUPER_ADMIN_EMAIL com o e-mail do administrador definitivo (CREDENCIAIS.md),
+# SEED_ADMIN_PASSWORD com a senha dele e SEED_DEV_PASSWORD com a senha da conta dev
 
 npm run db:migrate            # aplica as 17 migrations
 npm run db:seed               # admin global + admin@nexus.local + empresa nexus-demo (vazia)
@@ -693,7 +693,8 @@ repositório — estão no roadmap, e as decisões de hospedagem estão em `docs
 
 ### Contas e acesso
 
-- **Administrador definitivo do projeto** — `nexusbussiness.admin@gmail.com`, `OWNER` em todas as empresas,
+- **Administrador definitivo do projeto** — o e-mail que você declarar em `SUPER_ADMIN_EMAIL`
+  (no `.env` da máquina; sem ele a API não sobe em produção), `OWNER` em todas as empresas,
   protegido contra remoção e rebaixamento no backend e no seed. A senha fica apenas no `CREDENCIAIS.md` da
   sua máquina (arquivo local, ignorado pelo git) e é lida de `SEED_ADMIN_PASSWORD` na hora do seed — nada de
   credencial no repositório ou no histórico.
@@ -726,7 +727,7 @@ processo com a mensagem do caminho exato, em vez de deixar o serviço subir queb
 | `CRON_ENABLED` | `1` | `0` desliga o relógio das rotinas neste processo (deixa só um servidor agendando) |
 | `TRUST_PROXY` | `0` | saltos de proxy reverso confiáveis: `0` desliga, `1` confia no imediato, até `31`; fora desse formato a API não sobe |
 | `BODY_LIMIT_BYTES` | `1048576` | tamanho máximo de corpo dito no `.env`, não no default do framework |
-| `SUPER_ADMIN_EMAIL` | vazio | endereço do administrador global; fora de produção cai no padrão de desenvolvimento, em produção é obrigatório |
+| `SUPER_ADMIN_EMAIL` | vazio | endereço do administrador global, lido do `.env` da máquina; em produção é obrigatório e a API não sobe sem ele, fora de produção cai na conta fictícia `admin@exemplo.test` |
 | `AUTH_EXPOSE_RESET_TOKEN` | `0` | `1` devolve o código de recuperação na resposta — só para desenvolvimento; em produção o valor `1` derruba a subida |
 | `SEED_ADMIN_PASSWORD` | — | senha do administrador global, lida só pelo `seed.ts`, que para com aviso se estiver ausente |
 | `SEED_DEV_PASSWORD` | — | senha da conta de desenvolvimento `admin@nexus.local`; também só no `seed.ts`, e o seed para se ela faltar |
