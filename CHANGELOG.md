@@ -31,6 +31,12 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/), 
   do administrador não aparece em arquivo rastreado nem em nenhuma linha do histórico**, e a credencial de
   desenvolvimento que aparece continua à espera do aval do dono para ser publicada — e a codificação dos 386
   arquivos rastreados: **sem BOM, sem CRLF**.
+- **A árvore do pacote foi conferida de novo, no clone, depois dos commits:** o mesmo
+  `C:/wamp64/www/nexus-verificacao` foi atualizado para o commit empacotado e medido do zero — typecheck com
+  **0 erros**, build **ok** (Vite em 8,75 s), **230 casos** verdes na API e **20** no web. A varredura de
+  codificação refeita sobre os **387 arquivos rastreados** deu **0 BOM e 0 CR**. Uma linha da P2 do inventário
+  escreveu por descuido o valor da credencial de desenvolvimento, e a correção tirou o literal do arquivo: a
+  varredura manda registrar endereço, não senha.
 
 ---
 

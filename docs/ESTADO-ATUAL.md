@@ -546,6 +546,7 @@ sem este arquivo e sem os três arquivos ignorados do trabalho (`apps/api/.env`,
 | `npm run build` | **ok**, `vite` em 3,81 s |
 | `npm test` | **28 arquivos / 230 casos verdes** na API e **4 arquivos / 20 casos** no web. Nota honesta: a suíte só roda com um `.env` apontando para um MySQL de teste, e esse arquivo não é versionado — para medir isso copiamos o `.env` do diretório de trabalho para o clone (fora do repositório, nunca commitado). Ou seja: o código do clone é suficiente; a configuração continua sendo do dono, como sempre. |
 | BOM e CRLF nos 386 arquivos rastreados | **nenhum** (`OK`) |
+| conferência final na árvore do pacote (`394edbe`, com este arquivo) | o mesmo clone foi atualizado para o commit empacotado e medido de novo: `npm run typecheck` com **0 erros**, `npm run build` **ok** (Vite em 8,75 s), `npm test` com **28 arquivos / 230 casos** e **4 arquivos / 20 casos** verdes. A varredura de codificação refeita sobre os **387 arquivos rastreados** (277 textos, 110 binários) deu **0 BOM e 0 CR**. |
 
 - **Não testável no clone limpo por desenho:** `db:migrate`, `db:seed` e o boot
   do servidor pedem o `.env`, que não é versionado de propósito. No diretório de
