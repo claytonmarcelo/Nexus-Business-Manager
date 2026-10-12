@@ -611,3 +611,41 @@ Só as quatro telas da galeria do `README.md` foram recapturadas nesta rodada (`
 conferidas uma a uma: elas devem mostrar o texto que saiu do cabeçalho, e a renovação completa delas é
 trabalho da Fase 9, quando as provas de navegador passam a rodar em CI.
 
+### N6 — ALTO, resolvido nesta rodada: o alternador Dark/Light "parava" na página de boas-vindas
+
+Relato do dono: em 360×640 (Moto G4) o alternador da vitrine não fazia nada. Antes de mexer em arquivo
+nenhum, a página foi medida em três visuais (360×640, Moto G4 412×915 DPR 2,75 com toque, 1440×900), com o
+payload real do `/api/public/landing`. As respostas:
+
+- **O toque chegava ao botão?** Sim. `document.elementFromPoint` no centro do alternador devolvia
+  `button.theme-switch` nos três visuais; `pointer-events` era `auto`; o cabeçalho não empilhava nada por
+  cima (z-index `auto`, posição `static`).
+- **O estado trocava?** Sim. `data-theme` no `<html>` ia de `dark` para `light` e voltava no terceiro toque,
+  e `localStorage["nexus.theme"]` acompanhava nos dois sentidos. **Nenhum erro de console** em nenhum visual.
+- **A cor trocava?** Não — e aqui está o defeito. O fundo pintado da vitrine continuava `rgb(11, 13, 16)` com
+  o tema claro ligado. Em `/login`, no mesmo navegador e com o mesmo alternador, o corpo ia de
+  `rgb(11, 13, 16)` para `rgb(245, 241, 234)`. Ou seja: o alternador nunca esteve parado; a vitrine é que não
+  escutava.
+- **Causa raiz:** `aplicarCores` (`apps/web/src/lib/landingEstilo.ts`) escrevia a paleta cadastrada no CMS
+  como propriedades *inline* de `--bg`, `--surface`, `--text` etc. no elemento `.landing`. Uma variável
+  customizada inline naquele elemento vence qualquer valor vindo de `[data-theme="light"]` no `<html>` para a
+  resolução de `var()` dentro da subtree. A página pública, portanto, vestia sempre as cores do banco — que
+  são o esquema escuro do produto — nos dois temas. O painel (`/app`) não recebe essas variáveis, então ele
+  sempre trocou corretamente.
+- **Consertado com ela:** (1) `.theme-switch` tinha área sensível de 54×27, abaixo dos 44×44 exigidos em
+  toque; um `::before` transparente de `-9px` vertical leva o alvo a 54×45 sem mudar o desenho, provado por
+  clique a 6 px acima e abaixo do botão nos três visuais. (2) `.landing-hero-veil` usava `background: #000`
+  — preto fixo sobre a foto deixaria o texto do tema claro ilegível; agora usa `var(--bg)`. (3) O
+  `index.html` traz `data-theme="dark"` fixo, então quem salvou o tema claro via a página um *flash* do
+  escuro antes do primeiro paint; `aplicaTemaSalvo()` passou a rodar em `main.tsx` antes de `createRoot`.
+  Script inline no HTML foi descartado porque o CSP de produção é o padrão do helmet
+  (`apps/api/src/plugins/security.ts:9` → `script-src 'self'`).
+- **Decisão registrada:** o CMS guarda **um** esquema de cores, sem par claro/escuro no schema. A paleta
+  cadastrada agora veste só o tema a que pertence, classificado pela luminância relativa do fundo (corte 0,179
+  da própria WCAG); no outro tema as variáveis são retiradas e os tokens do produto agem. Cadastrar duas
+  paletas no editor é a alternativa que resolve o problema de outra forma, e mexe no schema e no formulário —
+  fica como decisão do dono, não foi inventada aqui (§46).
+- **Contraste medido depois da correção:** vitrine com o tema claro em `rgb(245, 241, 234)` sobre texto
+  `rgb(42, 35, 32)` = **13,72:1**; subtítulo suave no mesmo tema = **5,5:1**; texto do herói no escuro =
+  **7,15:1**. Todos acima de 4,5:1.
+

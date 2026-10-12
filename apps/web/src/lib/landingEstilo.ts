@@ -2,7 +2,8 @@ import type { ConfiguracaoSeo, EsquemaCores } from "./landingTypes";
 
 // As cores do CMS mandam na vitrine e não no painel: elas são aplicadas como
 // variáveis locais no elemento raiz da página pública, então o tema escolhido
-// pela pessoa continua valendo dentro do /app.
+// pela pessoa continua valendo dentro do /app. Na vitrine elas só vestem o tema
+// a que pertencem — ver aplicarCores.
 const PARES: [keyof EsquemaCores, string][] = [
   ["fundo", "--bg"],
   ["painel", "--surface"],
@@ -13,19 +14,55 @@ const PARES: [keyof EsquemaCores, string][] = [
   ["borda", "--border"],
 ];
 
-export function aplicarCores(cores: EsquemaCores, raiz: HTMLElement | null): void {
+export type TemaPagina = "dark" | "light";
+
+function corValida(valor: string): boolean {
+  return /^#[0-9a-fA-F]{6}$/.test(valor);
+}
+
+// Luminância relativa da WCAG 1.0 sobre o hexadecimal. É o que diz, sem
+// depender de lista de cores, se o fundo cadastrado é escuro ou claro.
+function luminancia(cor: string): number {
+  const eixo = (canal: number): number => {
+    const s = canal / 255;
+    return s <= 0.03928 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4;
+  };
+  const r = Number.parseInt(cor.slice(1, 3), 16);
+  const g = Number.parseInt(cor.slice(3, 5), 16);
+  const b = Number.parseInt(cor.slice(5, 7), 16);
+  return 0.2126 * eixo(r) + 0.7152 * eixo(g) + 0.0722 * eixo(b);
+}
+
+// O corte de 0.179 é o da própria WCAG para separar cor escura de clara.
+// Fundo em branco ou fora do formato deixa a paleta sem identidade: nesse caso
+// o esquema não é um dos dois, e aplicarCores trata como "vale para ambos".
+export function esquemaDasCores(cores: EsquemaCores): TemaPagina {
+  if (!corValida(cores.fundo)) return "dark";
+  return luminancia(cores.fundo) < 0.179 ? "dark" : "light";
+}
+
+export function aplicarCores(cores: EsquemaCores, raiz: HTMLElement | null, tema: TemaPagina): void {
   if (!raiz) return;
+  // O CMS guarda um esquema só, sem par claro/escuro. Ele veste apenas o tema a
+  // que pertence; no outro as variáveis são retiradas para que os tokens do
+  // tema ativo ajam — é isso que faz o alternador valer também na vitrine, em
+  // vez de deixar a paleta escura por cima do tema claro.
+  const veste = corValida(cores.fundo) ? esquemaDasCores(cores) === tema : true;
   for (const [chave, variavel] of PARES) {
     const valor = cores[chave];
     // Só pinta o que veio preenchido: valor vazio deixa o token do tema agir.
-    if (/^#[0-9a-fA-F]{6}$/.test(valor)) raiz.style.setProperty(variavel, valor);
+    if (veste && corValida(valor)) raiz.style.setProperty(variavel, valor);
     else raiz.style.removeProperty(variavel);
   }
   // --text-2 e --text-3 são aliases do tema; sem refazer aqui o texto suave
-  // perderia o contraste no bloco pintado pelo CMS.
-  if (/^#[0-9a-fA-F]{6}$/.test(cores.textoSuave)) {
+  // perderia o contraste no bloco pintado pelo CMS. E se a paleta não veste
+  // este tema, elas saem junto: sobra só o que o token do tema manda.
+  if (veste && corValida(cores.textoSuave)) {
     raiz.style.setProperty("--text-2", cores.textoSuave);
     raiz.style.setProperty("--text-3", cores.textoSuave);
+  } else {
+    raiz.style.removeProperty("--text-2");
+    raiz.style.removeProperty("--text-3");
   }
 }
 

@@ -95,6 +95,15 @@
   cursor: pointer;
   transition: background 160ms ease, border-color 160ms ease;
 }
+/* Desenho de 54x27 preservado, área sensível de 54x45: em 360px de largura o
+   alvo do dedo precisa chegar aos 44x44 exigidos, e o entorno do botão está
+   livre. Transparente, então não muda nada no que se vê. */
+.theme-switch::before {
+  content: "";
+  position: absolute;
+  inset: -9px 0;
+  border-radius: inherit;
+}
 .theme-switch:hover { border-color: var(--accent); }
 .theme-switch-icon {
   position: relative;

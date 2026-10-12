@@ -24,8 +24,21 @@ function initialTheme(): Theme {
   return "dark";
 }
 
+// O atributo vem de index.html como "dark" porque o banco não tem como saber a
+// preferência de quem chega. Sem esta função, quem salvou o tema claro via a
+// página um flash do tema errado antes de o React pintar. Ela é chamada em
+// main.tsx antes do primeiro render — não num script inline do html, porque o
+// CSP de produção (padrão do helmet) só deixa script de mesma origem.
+export function aplicaTemaSalvo(): Theme {
+  const tema = initialTheme();
+  document.documentElement.setAttribute("data-theme", tema);
+  return tema;
+}
+
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  const [theme, setThemeState] = useState<Theme>(initialTheme);
+  // Inicializar pelo tema salvo já põe o atributo certo antes do primeiro
+  // paint; o efeito abaixo continua responsável por acompanhar as mudanças.
+  const [theme, setThemeState] = useState<Theme>(aplicaTemaSalvo);
 
   useEffect(() => {
     document.documentElement.setAttribute("data-theme", theme);

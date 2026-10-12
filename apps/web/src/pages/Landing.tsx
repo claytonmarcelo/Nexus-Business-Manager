@@ -13,6 +13,7 @@ import { Maintenance } from "../components/landing/Maintenance";
 import { Testimonials } from "../components/landing/Testimonials";
 import { WhatsappWidget } from "../components/landing/WhatsappWidget";
 import { ErrorState, Skeleton } from "../components/StateView";
+import { useTheme } from "../context/ThemeContext";
 import { lerConteudoPublico } from "../lib/landingApi";
 import { aplicarCores, aplicarSeo } from "../lib/landingEstilo";
 import { textoMeta, type PayloadLanding } from "../lib/landingTypes";
@@ -22,6 +23,7 @@ import { tokenStore } from "../lib/tokenStore";
 // legal vem do CMS. O que continua aqui é casca e critério de exibição — qual
 // seção entra e o que fazer enquanto o conteúdo não chega.
 export function Landing() {
+  const { theme } = useTheme();
   const [dado, setDado] = useState<PayloadLanding | null>(null);
   const [erro, setErro] = useState<string | null>(null);
   const [atualizacao, setAtualizacao] = useState(0);
@@ -48,13 +50,14 @@ export function Landing() {
   }, [atualizacao]);
 
   // Paleta e tags de SEO pertencem ao conteúdo publicado: entram no documento
-  // quando ele chega. O tema escolhido pela pessoa continua vivo no /app, que
-  // não recebe nenhuma dessas variáveis.
+  // quando ele chega. A paleta cadastrada veste só o tema a que pertence, por
+  // isso o tema escolhido também dispara este efeito — é o que faz o
+  // alternador valer na página pública e não apenas dentro do /app.
   useEffect(() => {
     if (!dado) return;
-    aplicarCores(dado.cores, raiz.current);
+    aplicarCores(dado.cores, raiz.current, theme);
     aplicarSeo(dado.seo);
-  }, [dado]);
+  }, [dado, theme]);
 
   const capacidade: CapacidadeView[] = useMemo(() => {
     if (!dado || dado.capacidades.length === 0) {

@@ -5,6 +5,44 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/), 
 
 ## [Não lançado]
 
+### O alternador Dark/Light voltou a valer na página de boas-vindas (2026-10-11)
+
+- **Causa raiz medida antes de mexer em arquivo, e não chute.** O toque sempre chegou ao botão
+  (`elementFromPoint` devolvia `button.theme-switch` em 360×640, no Moto G4 e no desktop), `data-theme` trocava,
+  `nexus.theme` acompanhava, nenhum erro de console — e a vitrine continuava com o mesmo fundo. Em `/login` o
+  mesmo alternador clareava a página inteira. O defeito estava numa camada só: a paleta cadastrada no CMS era
+  escrita como propriedades **inline** (`--bg`, `--surface`, `--text`…) no elemento `.landing`, e uma variável
+  inline naquele elemento vence o `[data-theme]` do `<html>` para qualquer `var()` dentro dele. A vitrine
+  vestia as cores do banco nos dois temas; o painel, que não recebe essas variáveis, sempre trocou certo.
+- **A paleta do CMS agora veste só o tema a que pertence.** `esquemaDasCores` classifica o fundo cadastrado
+  pela luminância relativa da WCAG (corte de 0,179, o da própria recomendação) e `aplicarCores` recebe o tema
+  ativo: no tema dele, pinta; no outro, retira todas as variáveis — inclusive as aliases `--text-2` e
+  `--text-3` — para que os tokens do produto ajam. O CMS guarda um esquema só, sem par claro/escuro no schema;
+  cadastrar dois é decisão de produto e está registrada em `docs/AUDITORIA.md` (N6), não foi inventada aqui.
+- **O tema escolhido volta antes do primeiro *flash*.** `aplicaTemaSalvo()` passou a rodar em `main.tsx` antes
+  de `createRoot`, e o `ThemeProvider` usa a mesma função para iniciar. Script inline no `index.html` foi
+  descartado: o CSP de produção é o padrão do helmet, que só aceita script de mesma origem.
+- **O alvo do toque no alternador chegou a 44 px.** O desenho continua 54×27; um `::before` transparente de
+  −9 px vertical amplia a área que responde ao dedo para 54×45. Provado no navegador com clique a 6 px acima e
+  abaixo do botão, nos três visuais.
+- **Saiu a última cor fixa da vitrine.** `.landing-hero-veil` era `background: #000` — sobre a foto, preto
+  fixo deixaria o texto do tema claro ilegível; agora é `var(--bg)`. O verde do canal WhatsApp ficou de fora da
+  varredura por decisão registrada: é identidade do canal, não cor do tema.
+- **Teste de componente entrou no `apps/web`, e começou vermelho.** Vitest + jsdom + Testing Library com o
+  menor conjunto de dependências de desenvolvimento, `npm test` no workspace e na raiz. São 13 casos: o
+  alternador trocando atributo e preferência salva nos dois sentidos, **as cores da vitrine acompanhando o
+  tema** (o caso que era o bug), a preferência voltando ao remontar, Enter e Espaço com rótulo acessível,
+  `aplicaTemaSalvo` antes do render, `esquemaDasCores`/`aplicarCores` nos dois temas e uma varredura que falha
+  se aparecer cor fixa vestindo a vitrine.
+- **Prova de navegador reescrita para a nova regra:** `tools/verify-landing-cms.cjs` foi de 113 para **120
+  checagens** — a etapa que afirmava "a paleta do CMS continua mandando na vitrine" no tema claro afirmava o
+  bug, e passou a medir os dois lados (no escuro a paleta pinta; no claro os tokens voltam), o contraste de
+  leitura das duas leituras (7,15:1 e 5,5:1, ambos acima de 4,5:1) e a área sensível do alternador.
+  `tools/verify-cms.cjs` confere a paleta no tema padrão da vitrine e continua verde (115 checagens).
+- **Validações da rodada:** `npm run typecheck` limpo nos dois workspaces, `npm run build` em 4,47 s,
+  `npm test` na raiz com o backend e o frontend passando.
+
+
 ### O cabeçalho da vitrine ficou só com a marca, o tema e a porta de entrada (2026-10-11)
 
 - **Saíram os botões "Recursos" e "Sobre" do topo da página pública.** Eram os links da navegação de âncoras, que

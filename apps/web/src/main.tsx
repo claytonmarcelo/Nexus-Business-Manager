@@ -1,7 +1,7 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { App } from "./App";
-import { ThemeProvider } from "./context/ThemeContext";
+import { ThemeProvider, aplicaTemaSalvo } from "./context/ThemeContext";
 import { AuthProvider } from "./context/AuthContext";
 
 // Ordem de estilos: AdminLTE (base de componentes) → tokens → Tailwind (utilitários) → global → componentes.
@@ -16,6 +16,11 @@ import "./styles/components.css";
 import "./styles/landing.css";
 import "./styles/cms.css";
 import "./styles/notificacoes.css";
+
+// O tema escolhido volta antes do primeiro paint, e não por script inline no
+// index.html: o CSP de produção é o padrão do helmet, que só aceita script de
+// mesma origem.
+aplicaTemaSalvo();
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>

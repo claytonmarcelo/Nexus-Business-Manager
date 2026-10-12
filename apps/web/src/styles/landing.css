@@ -62,7 +62,9 @@ html {
 .landing-hero-veil {
   z-index: -1;
   inset: 0;
-  background: #000;
+  /* O véu escurece a foto na medida cadastrada, mas a cor dele é a do tema:
+     preto fixo deixaria o texto claro do tema escuro ilegível no tema claro. */
+  background: var(--bg);
 }
 .landing-hero-inner {
   position: relative;

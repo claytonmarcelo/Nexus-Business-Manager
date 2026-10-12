@@ -616,17 +616,112 @@ async function limparItensDeProva(momento) {
     await espera(600);
 
     console.log("== 11) Vitrine nos dois temas ==");
+    // Começa pelo escuro declarado, e não pelo que a página resolveu sozinha:
+    // sem preferência salva o tema vem do prefers-color-scheme do navegador.
+    await page.evaluate(() => localStorage.setItem("nexus.theme", "dark"));
+    await page.reload({ waitUntil: "networkidle0" });
+    await espera(1100);
     await captura(page, "19-landing-cms-dark.png");
+    // Medida no escuro, antes de qualquer troca: é o par que o contraste usa.
+    const noEscuro = await page.evaluate(() => {
+      const vitrine = document.querySelector(".landing");
+      const paragrafo = document.querySelector(".landing-subtitle");
+      return {
+        tema: document.documentElement.getAttribute("data-theme"),
+        variavel: getComputedStyle(vitrine).getPropertyValue("--bg").trim(),
+        pintura: getComputedStyle(vitrine).backgroundColor,
+        texto: getComputedStyle(paragrafo).color,
+      };
+    });
+    ok(
+      "no tema escuro a paleta cadastrada veste a vitrine",
+      noEscuro.variavel === CONFIG_PROVA.cores.fundo,
+      noEscuro.variavel,
+    );
+    const contraste = (fundo, texto) => {
+      const lum = (cor) => {
+        const [r, g, b] = cor.match(/\d+/g).map((n) => {
+          const s = Number(n) / 255;
+          return s <= 0.03928 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4;
+        });
+        return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+      };
+      const a = lum(fundo);
+      const b = lum(texto);
+      return Math.round((((a > b ? a : b) + 0.05) / (Math.min(a, b) + 0.05)) * 100) / 100;
+    };
+    ok(
+      "o texto da vitrine escura tem contraste de leitura",
+      contraste(noEscuro.pintura, noEscuro.texto) >= 4.5,
+      String(contraste(noEscuro.pintura, noEscuro.texto)),
+    );
     await page.evaluate(() => localStorage.setItem("nexus.theme", "light"));
     await page.reload({ waitUntil: "networkidle0" });
     await espera(1100);
-    const claro = await page.evaluate(() => ({
-      tema: document.documentElement.getAttribute("data-theme"),
-      fundo: getComputedStyle(document.querySelector(".landing")).getPropertyValue("--bg").trim(),
-    }));
+    const claro = await page.evaluate(() => {
+      const vitrine = document.querySelector(".landing");
+      const paragrafo = document.querySelector(".landing-subtitle");
+      return {
+        tema: document.documentElement.getAttribute("data-theme"),
+        variavel: getComputedStyle(vitrine).getPropertyValue("--bg").trim(),
+        pintura: getComputedStyle(vitrine).backgroundColor,
+        texto: getComputedStyle(paragrafo).color,
+      };
+    });
     ok("tema claro escolhido pelo visitante", claro.tema === "light", claro.tema);
-    ok("a paleta do CMS continua mandando na vitrine", claro.fundo === CONFIG_PROVA.cores.fundo, claro.fundo);
+    ok(
+      "a paleta escura do CMS não fica por cima do tema claro",
+      claro.variavel !== CONFIG_PROVA.cores.fundo,
+      claro.variavel,
+    );
+    ok(
+      "a vitrine clareia junto com o alternador",
+      claro.pintura === "rgb(245, 241, 234)" &&
+        claro.pintura !== noEscuro.pintura &&
+        claro.texto !== noEscuro.texto,
+      claro.pintura + " / " + claro.texto + " (antes " + noEscuro.pintura + " / " + noEscuro.texto + ")",
+    );
+    ok(
+      "o texto da vitrine clara tem contraste de leitura",
+      contraste(claro.pintura, claro.texto) >= 4.5,
+      String(contraste(claro.pintura, claro.texto)),
+    );
     await captura(page, "19-landing-cms-claro.png");
+    // O alternador tem de valer na vitrine pelo toque, e não só pelo clique do
+    // mouse no centro: 6px acima e abaixo do desenho de 27px de altura já é
+    // área que o dedo alcança e que antes não respondia a nada.
+    await page.evaluate(() => localStorage.removeItem("nexus.theme"));
+    await page.reload({ waitUntil: "networkidle0" });
+    await espera(1100);
+    const alvo = await page.evaluate(() => {
+      const r = document.querySelector(".theme-switch").getBoundingClientRect();
+      return { cx: r.left + r.width / 2, top: r.top, bottom: r.bottom, w: r.width, h: r.height };
+    });
+    const antesDoToque = await page.evaluate(() => document.documentElement.getAttribute("data-theme"));
+    await page.mouse.click(alvo.cx, alvo.top - 6);
+    await espera(350);
+    const depoisDoToque = await page.evaluate(() => ({
+      tema: document.documentElement.getAttribute("data-theme"),
+      gravado: localStorage.getItem("nexus.theme"),
+    }));
+    await page.mouse.click(alvo.cx, alvo.bottom + 6);
+    await espera(350);
+    const deVolta = await page.evaluate(() => document.documentElement.getAttribute("data-theme"));
+    ok(
+      "um toque a 6px do desenho do alternador troca o tema",
+      depoisDoToque.tema !== antesDoToque && depoisDoToque.gravado === depoisDoToque.tema,
+      antesDoToque + " -> " + depoisDoToque.tema,
+    );
+    ok(
+      "o toque do outro lado devolve o tema anterior",
+      deVolta === antesDoToque,
+      deVolta,
+    );
+    ok(
+      "o alvo do alternador mede 44px por 44px",
+      alvo.h + 18 >= 44 && alvo.w >= 44,
+      Math.round(alvo.w) + "x" + Math.round(alvo.h) + " de desenho, " + Math.round(alvo.w) + "x" + Math.round(alvo.h + 18) + " de alvo",
+    );
     await page.evaluate(() => {
       localStorage.removeItem("nexus.theme");
       localStorage.removeItem("nexus.cookies-aviso");
