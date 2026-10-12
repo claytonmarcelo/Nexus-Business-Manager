@@ -2,9 +2,9 @@
 // que a vitrine lê do banco. Cada aba é conferida na tela E na API — salvar na
 // tela sem chegar ao payload público seria a mesma coisa que não salvar.
 //
-// No fim a prova desfaz tudo: apaga o item criado, volta o texto legal para
-// rascunho, abre o site e devolve a configuração ao padrão do produto, para
-// nenhum print sair com conteúdo de teste.
+// No fim a prova desfaz tudo: apaga o item criado, devolve o texto legal para
+// rascunho com o título padrão, abre o site e devolve a configuração ao padrão do
+// produto, para nenhum print - e nenhum banco - sair com conteúdo de teste.
 const puppeteer = require("puppeteer-core");
 const { EMAIL_ADMIN, SENHA_ADMIN } = require("./senha-admin.cjs");
 
@@ -588,7 +588,10 @@ async function limparRestos(momento) {
     // == 9) Devolver a vitrine ao padrão do produto ==
     console.log("== 9) Devolver a vitrine ao padrão do produto ==");
     await limparRestos("fim");
-    await chame("PUT", "/cms/legal/TERMS", { content: "", published: false });
+    // O editor trocou também o título do documento. Devolver só o texto deixaria
+    // "Termos de uso do editor" no banco para sempre — é o que a prova anterior
+    // fazia, e é o que a afirmação abaixo passou a conferir.
+    await chame("PUT", "/cms/legal/TERMS", { title: "Termos de uso", content: "", published: false });
     const restaurado = await chame("PATCH", "/cms/config", PADRAO);
     ok("a configuração volta ao padrão", restaurado.status === 200, "HTTP " + restaurado.status);
     const vitrineFinal = await chame("GET", "/public/landing");
@@ -599,6 +602,8 @@ async function limparRestos(momento) {
       (vitrineFinal.dados.capacidades || []).length + " capacidades");
     ok("o texto legal volta a ser rascunho",
       (await chame("GET", "/public/legal/TERMS")).status === 404);
+    const tituloDepois = (await chame("GET", "/cms/legal")).dados.data.find((d) => d.kind === "TERMS")?.title || "";
+    ok("e o título do documento volta ao padrão do produto", tituloDepois === "Termos de uso", tituloDepois);
     ok("a manutenção está desligada", vitrineFinal.dados.manutencao.ativa === false);
     ok("e nenhum código de acesso fica no banco",
       restaurado.dados.manutencao.tokenPulso === "", String(restaurado.dados.manutencao.tokenPulso));
@@ -643,7 +648,7 @@ async function limparRestos(momento) {
   } finally {
     await browser.close();
     await limparRestos("finally");
-    await chame("PUT", "/cms/legal/TERMS", { content: "", published: false });
+    await chame("PUT", "/cms/legal/TERMS", { title: "Termos de uso", content: "", published: false });
     await chame("PATCH", "/cms/config", PADRAO);
   }
 

@@ -4,9 +4,12 @@
 // configuração, os textos legais respeitam a publicação e o modo manutenção
 // fecha o site com relógio, código de pulso e porta de volta.
 //
-// Tudo que a prova grava é marcado como "de exemplo" e é desfeito no fim: a
-// vitrine volta a mostrar o padrão do produto (sem depoimento, sem métrica, sem
-// banner inventados) antes do último screenshot.
+// O que a prova publica é texto do produto, e é desfeito no fim: a vitrine volta
+// ao padrão (sem depoimento, sem métrica, sem banner cadastrados) antes do último
+// screenshot. Uma corrida quebrada no meio não pode deixar na página de quem
+// chega nem card, nem "exemplo", nem cifra inventada — por isso a limpeza roda
+// antes, no fim e no finally, e por isso as afirmações abaixo recusam texto de
+// desenvolvedor em qualquer item publicado.
 const puppeteer = require("puppeteer-core");
 const { EMAIL_ADMIN, SENHA_ADMIN } = require("./senha-admin.cjs");
 
@@ -53,8 +56,8 @@ async function chame(metodo, caminho, corpo) {
 const CONFIG_PROVA = {
   headline: "Gestão empresarial com a cara do seu negócio",
   subheadline:
-    "Herói, capacidades, depoimentos, métricas e dúvidas vêm do banco nesta página. " +
-    "Trocar texto no editor troca a vitrine inteira, sem deploy.",
+    "Um ambiente por empresa: clientes, estoque, vendas, compras, financeiro, CRM e " +
+    "agenda, vestindo a identidade que é a sua.",
   cores: {
     fundo: "#101820",
     painel: "#1b2430",
@@ -75,10 +78,10 @@ const CONFIG_PROVA = {
     desfoque: 0,
   },
   seo: {
-    titulo: "Nexus Business Manager — vitrine montada pelo CMS",
+    titulo: "Nexus Business Manager — gestão com a cara do seu negócio",
     descricao:
-      "Página pública construída a partir do conteúdo cadastrado no CMS: herói, capacidades, " +
-      "depoimentos, métricas, dúvidas e textos legais.",
+      "ERP multiempresa com clientes, produtos, vendas, estoque, financeiro, CRM e agenda. " +
+      "Dados, papéis e trilha de auditoria separados por empresa.",
     palavrasChave: "erp, multiempresa, vendas, estoque, financeiro",
     ogTitulo: "Nexus Business Manager",
     ogDescricao: "Gestão empresarial com a cara do seu negócio.",
@@ -165,64 +168,87 @@ const CONFIG_PADRAO_PRODUTO = {
   },
 };
 
+// A prova precisa publicar conteúdo para provar que o editor chega na vitrine, e
+// o que ela publica é lido por quem abre o site durante a corrida e depois, no
+// print guardado em docs/screenshots. Então cada linha abaixo é uma afirmação
+// verdadeira sobre o produto: módulo que está no ar (apps/api/src/modules),
+// número que se confere no repositório, frase do próprio autor do sistema. Nada
+// de "exemplo", nada de cifra inventada, nada de "R$ " sobre um valor que não é
+// dinheiro — as três coisas que a vitrine não pode publicar.
 const ITENS_PROVA = [
   {
     kind: "FEATURE",
-    title: "Capacidade de exemplo 1",
-    body: "Espaço reservado: as capacidades reais entram pelo editor do CMS.",
+    title: "Vendas que dão baixa no estoque",
+    body:
+      "Cada venda ajustada no saldo dos itens abre o lançamento financeiro correspondente, " +
+      "e o estorno fica na trilha de auditoria.",
     meta: { icone: "◈", rota: "/login" },
     order: 1,
   },
   {
     kind: "FEATURE",
-    title: "Capacidade de exemplo 2",
-    body: "Nenhum número de vitrine é inventado aqui.",
-    meta: { icone: "▣" },
+    title: "Financeiro com resumo do mês",
+    body: "Entradas, saídas e saldo do período na abertura do painel, por empresa, com exportação.",
+    meta: { icone: "▤" },
     order: 2,
   },
   {
     kind: "FEATURE",
-    title: "Capacidade de exemplo 3",
-    body: "Com conteúdo vazio a grade volta às quatro capacidades do produto.",
+    title: "CRM com funil e conversão",
+    body: "O lead avança por etapa e vira cliente com o histórico de interações preservado.",
     meta: { icone: "❐" },
     order: 3,
   },
   {
     kind: "BANNER",
-    title: "Destaque de exemplo",
-    body: "Os banners publicados aparecem nesta faixa.",
-    link: "/login",
+    title: "Comece pelo cadastro da empresa",
+    body: "Nome, CNPJ, moeda e fuso do seu negócio: o painel passa a escrever números e datas do seu jeito.",
+    link: "/cadastro",
     order: 1,
   },
   {
     kind: "TESTIMONIAL",
-    title: "Depoimento de exemplo",
-    body: "Espaço reservado: os depoimentos entram pelo CMS quando existirem.",
-    author: "Conteúdo de exemplo",
-    role: "Papel de exemplo",
-    meta: { estrelas: 5, empresa: "Empresa de exemplo" },
+    title: "Feito de uma operação real",
+    body: "Cada módulo do Nexus nasceu de um problema que apareceu no balcão, não de uma lista de desejos.",
+    author: "Clayton Marcelo",
+    role: "Desenvolvedor do Nexus",
+    // Sem "estrelas" no cadastro: nota é opinião de quem usa, e a única pessoa
+    // que pode assinar esta linha é quem escreveu o sistema. O passo 5 prova o
+    // caminho das estrelas cadastrando nota por PATCH, e não de graça na tela.
+    meta: { empresa: "Nexus Business Manager" },
     order: 1,
   },
   {
     kind: "METRIC",
-    title: "Métrica de exemplo",
-    body: "O formato vem do cadastro: moeda, número, porcentagem ou texto.",
-    meta: { valor: 1234.5, formato: "moeda" },
+    title: "No ar hoje",
+    body: "Clientes, estoque, vendas, compras, financeiro, CRM e agenda, cada um com tela e API próprias.",
+    meta: { valor: 7, formato: "numero", unidade: "módulos" },
     order: 1,
   },
   {
     kind: "FAQ",
-    title: "Como o conteúdo chega na página?",
-    body: "O site lê /api/public/landing, que devolve o que foi publicado no CMS.",
+    title: "Cada empresa vê só os próprios dados?",
+    body:
+      "Sim. A empresa ativa vem do token e é revalidada no servidor a cada requisição, e toda " +
+      "consulta filtra por ela.",
     order: 1,
   },
   {
     kind: "FAQ",
-    title: "Dá para esconder uma seção?",
-    body: "Basta desativar o item no editor: o bloco sai da vitrine no carregamento seguinte.",
+    title: "Preciso instalar alguma coisa?",
+    body: "Não. O Nexus roda no navegador, do smartphone ao monitor grande, com tema claro e escuro.",
     order: 2,
   },
 ];
+
+// As afirmações abaixo comparam com o que foi cadastrado aqui em cima, e não com
+// um literal copiado: foi a cópia que deixou a prova falar "Capacidade de exemplo
+// 1" para o visitante muito depois de o texto ter sido trocado.
+function primeiro(kind) {
+  const item = ITENS_PROVA.find((atual) => atual.kind === kind);
+  if (!item) throw new Error("ITENS_PROVA sem item do tipo " + kind);
+  return item;
+}
 
 const TERMOS_PROVA =
   "Termos de uso de exemplo da prova automatizada.\n\n" +
@@ -272,9 +298,24 @@ async function abreVitrine(browser, { tema = "dark", limparStorage = true, ignor
 
 // Remove os itens que esta prova cria, título por título, e devolve quantos
 // foram removidos nesta passada. Serve para três momentos — antes, depois e no
-// finally — porque item de exemplo pendurado na vitrine real é o pior efeito
-// colateral de uma corrida quebrada no meio.
+// finally — porque item pendurado na vitrine real é o pior efeito colateral de
+// uma corrida quebrada no meio.
 const TITULOS_DE_PROVA = ITENS_PROVA.map((item) => item.title);
+
+// Textos de desenvolvedor que esta prova publicou em corridas antigas e que o
+// produto nunca deveria ter mostrado. Ficam na lista de purga para sempre: uma
+// base local criada antes da troca ainda tem esses títulos, e a limpeza que roda
+// antes da prova é o que devolve a vitrine ao ar limpo.
+const TITULOS_LEGADOS_DE_PROVA = [
+  "Capacidade de exemplo 1",
+  "Capacidade de exemplo 2",
+  "Capacidade de exemplo 3",
+  "Destaque de exemplo",
+  "Depoimento de exemplo",
+  "Métrica de exemplo",
+  "Como o conteúdo chega na página?",
+  "Dá para esconder uma seção?",
+];
 
 async function limparItensDeProva(momento) {
   let removidos = 0;
@@ -282,7 +323,7 @@ async function limparItensDeProva(momento) {
     const lista = await chame("GET", "/cms/items?kind=" + kind);
     const dados = Array.isArray(lista.dados?.data) ? lista.dados.data : [];
     for (const item of dados) {
-      if (!TITULOS_DE_PROVA.includes(item.title)) continue;
+      if (!TITULOS_DE_PROVA.includes(item.title) && !TITULOS_LEGADOS_DE_PROVA.includes(item.title)) continue;
       const apagado = await chame("DELETE", "/cms/items/" + item.id);
       if (apagado.status === 200) {
         removidos += 1;
@@ -318,12 +359,33 @@ async function limparItensDeProva(momento) {
   ok("PATCH /cms/config aceito", salvo.status === 200, "HTTP " + salvo.status);
 
   const ids = [];
+  const idsPorKind = {};
   for (const item of ITENS_PROVA) {
     const criado = await chame("POST", "/cms/items", item);
-    if (criado.status === 201) ids.push(criado.dados.id);
-    else ok("criar item " + item.kind, false, "HTTP " + criado.status + " " + JSON.stringify(criado.dados));
+    if (criado.status === 201) {
+      ids.push(criado.dados.id);
+      idsPorKind[item.kind] = criado.dados.id;
+    } else ok("criar item " + item.kind, false, "HTTP " + criado.status + " " + JSON.stringify(criado.dados));
   }
-  ok("itens de exemplo criados (" + ids.length + ")", ids.length === ITENS_PROVA.length);
+  ok("itens de vitrine criados (" + ids.length + ")", ids.length === ITENS_PROVA.length);
+  // Regra da vitrine, escrita como afirmação: texto de quem constrói o sistema
+  // não é conteúdo de quem chega. Se um item cadastrado por esta prova voltar a
+  // carregar "exemplo", "teste" ou "auditado", isto falha antes do primeiro print.
+  ok(
+    "nenhum item publicado carrega texto de desenvolvedor",
+    ITENS_PROVA.every((item) =>
+      !/(exemplo|teste|testes|auditad|prova|cms)/i.test(
+        JSON.stringify([item.title, item.body, item.link, item.author, item.role, item.meta]),
+      ),
+    ),
+    ITENS_PROVA.filter((item) =>
+      /(exemplo|teste|testes|auditad|prova|cms)/i.test(
+        JSON.stringify([item.title, item.body, item.link, item.author, item.role, item.meta]),
+      ),
+    )
+      .map((item) => item.title)
+      .join(" | "),
+  );
 
   const publicado = await chame("PUT", "/cms/legal/TERMS", {
     title: "Termos de uso",
@@ -417,7 +479,11 @@ async function limparItensDeProva(momento) {
     console.log("== 4) Capacidades, destaques e métricas vindos do CMS ==");
     const cards = await page.$$eval("#recursos .feature-card h3", (els) => els.map((e) => e.textContent.trim()));
     ok("três capacidades cadastradas viram três cartões", cards.length === 3, cards.join(" | "));
-    ok("cartões são os do CMS, não os fixos do código", cards[0] === "Capacidade de exemplo 1", cards[0]);
+    ok(
+      "cartões são os cadastrados, não os fixos do código",
+      cards[0] === primeiro("FEATURE").title,
+      cards[0],
+    );
     const glifo = await page.$eval("#recursos .feature-icon", (el) => el.textContent.trim());
     ok("meta.icone usado no cartão", glifo === "◈", glifo);
     const linkCap = await page.$eval("#recursos .feature-link", (el) => el.getAttribute("href"));
@@ -428,18 +494,37 @@ async function limparItensDeProva(momento) {
     // a comparação normaliza o espaço, mas o texto na tela é o formatado.
     const metrica = await page.$eval(".landing-metricas strong", (el) => el.textContent.trim());
     ok(
-      "métrica em formato moeda sai formatada em pt-BR",
-      metrica.replace(/\u00a0/g, " ") === "R$ 1.234,50",
+      "métrica número sai com a unidade cadastrada",
+      metrica.replace(/\u00a0/g, " ") === primeiro("METRIC").meta.valor + " " + primeiro("METRIC").meta.unidade,
       JSON.stringify(metrica),
     );
+    // Moeda, porcentagem e texto não podem ser provados aqui com valor inventado
+    // na tela de quem chega; os quatro caminhos do formato estão em
+    // apps/web/src/test/metrica-da-vitrine.test.ts.
 
     console.log("== 5) Depoimento, FAQ e contato ==");
-    const estrelas = await page.$eval(".landing-estrelas", (el) => el.getAttribute("aria-label"));
-    ok("estrelas do depoimento viram nota legível", estrelas === "5 de 5", estrelas);
+    // Nota é opinião de quem usa. Sem ela no cadastro, a linha de estrelas não
+    // entra na página — o contrário seria depoimento enfeitado (Testimonials.tsx).
+    ok("depoimento sem nota cadastrada não mostra estrelas", (await page.$(".landing-estrelas")) === null);
+    const depoimento = primeiro("TESTIMONIAL");
     const autor = await page.$eval(".landing-depoimento figcaption strong", (el) => el.textContent.trim());
-    ok("autor do depoimento", autor === "Conteúdo de exemplo", autor);
-    const empresa = await page.$eval(".landing-depoimento figcaption span", (el) => el.textContent.trim());
-    ok("empresa vem de meta", empresa.includes("Empresa de exemplo"), empresa);
+    ok("autor é quem assinou no cadastro", autor === depoimento.author, autor);
+    const linha = await page.$eval(".landing-depoimento figcaption span", (el) => el.textContent.trim());
+    ok(
+      "papel e empresa vêm do cadastro",
+      linha === depoimento.role + " · " + depoimento.meta.empresa,
+      linha,
+    );
+    // O caminho das estrelas é provado cadastrando nota por PATCH, e não de
+    // graça: com meta.estrelas = 4 a linha aparece escrita "4 de 5".
+    const comNota = await chame("PATCH", "/cms/items/" + idsPorKind.TESTIMONIAL, {
+      meta: { ...depoimento.meta, estrelas: 4 },
+    });
+    ok("nota cadastrada pelo editor é aceita", comNota.status === 200, "HTTP " + comNota.status);
+    await page.reload({ waitUntil: "networkidle0" });
+    await espera(1100);
+    const estrelas = await page.$eval(".landing-estrelas", (el) => el.getAttribute("aria-label"));
+    ok("estrelas do depoimento viram nota legível", estrelas === "4 de 5", estrelas);
     const faqs = await page.$$eval(".landing-faqs details", (els) => els.map((e) => ({
       aberto: e.open,
       titulo: e.querySelector("summary").textContent.trim(),
@@ -850,7 +935,7 @@ async function limparItensDeProva(momento) {
     ok("manutenção desligada", desliga.status === 200 && desliga.dados.manutencao.ativa === false);
 
     await limparItensDeProva("fim da prova");
-    ok("nenhum item de exemplo sobra na vitrine", (await limparItensDeProva("conferência")) === 0);
+    ok("nenhum item da prova sobra na vitrine", (await limparItensDeProva("conferência")) === 0);
 
     await chame("PUT", "/cms/legal/TERMS", {
       title: termosAntes?.title || "Termos de uso",
@@ -888,10 +973,10 @@ async function limparItensDeProva(momento) {
     }));
     ok("sem capacidades no banco voltam as quatro do produto", vazio.features === 4, String(vazio.features));
     ok("e a primeira é a de segurança", vazio.primeiro === "Segurança em primeiro lugar", vazio.primeiro);
-    ok("nenhum banner de exemplo sobrou", vazio.banners === 0);
-    ok("nenhum depoimento inventado", vazio.depoimentos === 0);
-    ok("nenhuma métrica inventada", vazio.metricas === 0);
-    ok("nenhuma FAQ de exemplo", vazio.faqs === 0);
+    ok("nenhum banner da prova sobrou", vazio.banners === 0);
+    ok("nenhum depoimento ficou no ar", vazio.depoimentos === 0);
+    ok("nenhuma métrica ficou no ar", vazio.metricas === 0);
+    ok("nenhuma FAQ da prova ficou no ar", vazio.faqs === 0);
     ok(
       "cabecalho restaurado continua sem botao de secao",
       vazio.nav === 0,
