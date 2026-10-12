@@ -5,6 +5,26 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/), 
 
 ## [Não lançado]
 
+### O "Sobre o Nexus" da vitrine deixou de morar no canto (2026-10-11)
+
+- **O buraco era de medida, não de gosto.** Antes da mudança, o parágrafo do "Sobre" media 658px dentro de uma
+  linha de 1200px: sobravam 271px de tela morta de cada lado, e a seção inteira parecia um bloco encolhido. O
+  culpado era o centrado do texto, que empurrava as margens para dentro em vez de abrir as colunas.
+- **Agora são duas colunas de leitura** (`AboutSection.tsx` + `.landing-sobre`): o título abre a esquerda e os
+  parágrafos ocupam a direita, na grade `0,62fr / 1,38fr` com o mesmo respiro horizontal dos cartões de
+  capacidade. O texto encosta na borda interna da linha (`sobra 0px` medida no navegador), e o `max-width: 72ch`
+  continua cuidando do comprimento de leitura. Abaixo de 860px tudo empilha, com o título vindo antes do texto.
+- **A faixa de métricas virou linha própria** (`.landing-metricas` com `grid-column: 1 / -1`), então a classe
+  condicional `landing-sobre-sem-metricas` e as duas regras CSS dela perderam a razão de existir e saíram — sem
+  métrica cadastrada a seção não abre buraco nenhum, porque o texto já ocupa a linha sozinho.
+- **A prova acompanhou** (`tools/verify-landing-cms.cjs`, 105 → 111 checagens): nos três largures a volta mede que
+  a coluna do "Sobre" chega à borda interna da linha e que o título fica ao lado do texto no desktop e acima dele
+  no tablet e no celular. Conferimos também com duas métricas cadastradas pela API e apagadas pela própria volta:
+  a faixa ocupa a linha inteira em 1440px, recolhe para uma coluna em 390px, e o valor sai formatado pela
+  configuração da empresa. As três capturas da vitrine foram regeneradas.
+- **Nada foi publicado.** O push desta rodada continua parado pela decisão sobre o segredo registrado em
+  `docs/AUDITORIA.md` (N1).
+
 ### O topo do painel parou de repetir o nome do produto (2026-10-11)
 
 - **Saiu o "Business Manager" do cabeçalho.** A marca já está no menu lateral, na aba do navegador e no rodapé;

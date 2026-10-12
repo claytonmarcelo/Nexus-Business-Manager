@@ -7,20 +7,21 @@ import { SOBRE_LANDING } from "./copy";
 // que o dono do site cadastre uma métrica de verdade na seção seguinte.
 export function AboutSection({ metricas }: { metricas: ItemMetrica[] }) {
   return (
-    // Sem métrica cadastrada a segunda coluna da grade ficaria vazia: a classe
-    // abaixo devolve a linha inteira ao texto, com comprimento de leitura próprio.
-    <section
-      className={"landing-sobre" + (metricas.length > 0 ? "" : " landing-sobre-sem-metricas")}
-      id="sobre"
-      aria-label="Sobre o sistema"
-    >
-      <div className="landing-sobre-texto">
+    // Duas colunas de leitura: o título abre a esquerda e os parágrafos ocupam a
+    // direita. Centrar só o bloco de texto deixava a vitrine inteira com um
+    // buraco de cada lado, e era isso que encolhia a seção.
+    <section className="landing-sobre" id="sobre" aria-label="Sobre o sistema">
+      <div className="landing-sobre-titulo">
         <h2>{SOBRE_LANDING.titulo}</h2>
+      </div>
+      <div className="landing-sobre-texto">
         {SOBRE_LANDING.paragrafos.map((paragrafo) => (
           <p key={paragrafo.slice(0, 24)}>{paragrafo}</p>
         ))}
       </div>
       {metricas.length > 0 && (
+        // As métricas, quando o dono cadastra, atravessam a linha inteira em
+        // faixa — embaixo do texto, para não brigar com a coluna do título.
         <ul className="landing-metricas" aria-label="Números do produto">
           {metricas.map((metrica) => (
             <li className="card-surface" key={metrica.id}>

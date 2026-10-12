@@ -144,25 +144,18 @@ html {
 }
 
 /* ---- Sobre + métricas cadastradas ---- */
+/* Título à esquerda, parágrafos à direita: as duas colunas juntas ocupam a
+   mesma linha de 1200px dos cards de recurso, então a seção deixa de ser um
+   bloco estreito solto no meio de uma tela larga. */
 .landing-sobre {
   display: grid;
-  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
-  gap: clamp(1rem, 4vw, 2.5rem);
+  grid-template-columns: minmax(0, 0.62fr) minmax(0, 1.38fr);
+  gap: clamp(1rem, 3vw, 2rem) clamp(1.5rem, 5vw, 4rem);
   align-items: start;
   padding: 0 clamp(1.25rem, 5vw, 4rem);
   max-width: 1200px;
   margin: 0 auto;
   width: 100%;
-}
-/* Sem métrica cadastrada a segunda coluna seria só um buraco na tela: o texto
-   ocupa a linha e ele mesmo mede o próprio comprimento de leitura. */
-.landing-sobre-sem-metricas {
-  grid-template-columns: minmax(0, 1fr);
-}
-/* A coluna de leitura vem para o meio da linha: texto largo sem métricas ao
-   lado deixaria metade da tela em branco, que é o defeito que se queria tirar. */
-.landing-sobre-sem-metricas .landing-sobre-texto {
-  margin-inline: auto;
 }
 .landing-sobre h2,
 .landing-depoimentos h2,
@@ -202,7 +195,11 @@ html {
   list-style: none;
   margin: 0;
   padding: 0;
+  /* Faixa atravessando a linha: as métricas pertencem à seção inteira, não só
+     à coluna do texto. */
+  grid-column: 1 / -1;
   display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(200px, 100%), 1fr));
   gap: 0.75rem;
 }
 .landing-metricas li {

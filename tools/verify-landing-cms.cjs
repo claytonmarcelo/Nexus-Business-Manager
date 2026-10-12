@@ -554,6 +554,29 @@ async function limparItensDeProva(momento) {
         () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
       );
       ok("sem arrasto horizontal em " + nome, overflow <= 1, "excesso " + overflow + "px");
+
+      // A seção "Sobre" é a que já foi embora meio vazio: o título abre a
+      // esquerda e o texto tem de encostar na borda interna da linha, em vez de
+      // ficar um bloco estreito solto no centro da tela.
+      const sobre = await page.evaluate(() => {
+        const s = document.querySelector(".landing-sobre");
+        if (!s) return null;
+        const caixa = (e) => { const b = e.getBoundingClientRect(); return { x: b.x, y: b.y, w: b.width, h: b.height, r: b.right, b: b.bottom }; };
+        const cs = getComputedStyle(s);
+        const pad = parseFloat(cs.paddingRight);
+        return {
+          sobra: Math.round(s.getBoundingClientRect().right - pad - caixa(s.querySelector(".landing-sobre-texto")).r),
+          lado: caixa(s.querySelector(".landing-sobre-texto")).x >= caixa(s.querySelector("h2")).r - 1,
+          embaixo: caixa(s.querySelector(".landing-sobre-texto")).y >= caixa(s.querySelector("h2")).b - 1,
+        };
+      });
+      ok("a coluna do 'Sobre' usa a largura da linha em " + nome, sobre && Math.abs(sobre.sobra) <= 2, sobre ? sobre.sobra + "px" : "sem seção");
+      if (nome === "desktop") {
+        ok("no desktop o título do 'Sobre' abre a esquerda do texto", sobre && sobre.lado, String(sobre && sobre.lado));
+      } else {
+        // Abaixo de 860px a grade vira uma coluna só: título em cima, texto embaixo.
+        ok("no " + nome + " o título do 'Sobre' vem acima do texto", sobre && sobre.embaixo, String(sobre && sobre.embaixo));
+      }
     }
     const navNoCelular = await page.evaluate(() => {
       const nav = document.querySelector(".landing-nav");
