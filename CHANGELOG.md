@@ -47,6 +47,10 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/), 
   Sincronizá-la mudaria o desenho de todas as telas do painel e obrigaria a recapturar as seis telas do README
   e as oito provas de navegador — está em `docs/AUDITORIA.md`, seção "Novos achados" (N7), à espera do aval do
   dono. O diagnóstico da rodada do logout é o N8 do mesmo lugar.
+- **Capturas renovadas pela volta das duas provas:** `tools/verify-landing-cms.cjs` e
+  `tools/verify-cms.cjs` recapturam as telas por onde passam, e as seis que elas tocam voltaram com o
+  conteúdo de sempre em pixels de agora — o relógio da manutenção na vitrine, a previsão escrita no editor.
+  Não há mudança de desenho aí, e é por isso que vão em commit separado.
 - **Validações desta rodada:** `npm run typecheck` limpo nos dois pacotes, `npm run build` ✓, `npm test` com
   api 28 arquivos / 230 testes e web 4 arquivos / 20 testes, `tools/verify-logout.cjs` 22 checagens / 0
   falhas, `tools/verify-landing-cms.cjs` 120 checagens / 0 falhas (a vitrine não pode perder o que ganhou na
