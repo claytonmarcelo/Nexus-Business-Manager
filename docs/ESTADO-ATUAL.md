@@ -482,7 +482,7 @@ Ligadas ao item correspondente de `docs/AUDITORIA.md`.
 | # | Pendência | Ligação | Severidade |
 | --- | --- | --- | --- |
 | P1 | Senha real do administrador visível nos pixels de `docs/screenshots/02-login.png`, já publicada no remoto | AUDITORIA N1 / G7 | **CRÍTICA** — trava o push |
-| P2 | Credencial de desenvolvimento `Nexus@2026` (a mesma do `.env` local) em `apps/api/.env.example:37`, `apps/api/test/seed-seguro.test.ts:56` e `tools/shoot-clients.cjs:17`, e em 26 linhas de patch do histórico | seção D da auditoria + §5 deste prompt | alta para o repositório público; **não vale em produção** |
+| P2 | A credencial de desenvolvimento do seed (o valor não é impresso aqui; é o mesmo do `SEED_DEV_PASSWORD` do `.env` local) está em `apps/api/.env.example:37`, `apps/api/test/seed-seguro.test.ts:56` e `tools/shoot-clients.cjs:17`, e em linhas de patch do histórico — a contagem de linhas sobe a cada correção porque o próprio diff carrega o literal | seção D da auditoria + §5 deste prompt | alta para o repositório público; **não vale em produção** |
 | P3 | Código de recuperação de senha numa captura rastreada (`09-recuperar-senha.png`) | AUDITORIA N2 | média |
 | P4 | Identificador real de empresa/espalhado em arquivos rastreados | AUDITORIA N3 | baixa |
 | P5 | Capturas das outras telas do painel não foram reauditadas uma a uma | AUDITORIA N5 | NÃO VERIFICADO |
