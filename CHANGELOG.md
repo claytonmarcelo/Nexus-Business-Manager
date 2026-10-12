@@ -5,6 +5,53 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/), 
 
 ## [Não lançado]
 
+### Toda sessão encerrada voltou a chegar à página de boas-vindas (2026-10-11)
+
+- **O portão e o botão discordavam, e quem chegasse depois vencia.** `ProtectedRoute` tinha um destino só para
+  quem não tem sessão — `/login` — e nenhuma forma de saber se a pessoa tinha uma sessão que acabou ou se era
+  um visitante que nunca entrou. A vitrine aparecia depois do logout por um `navigate("/", { replace: true })`
+  na mão do botão, correndo contra o próprio estado. Medido antes de editar arquivo: cinco dos sete casos
+  vermelhos, dois deles com o painel ainda no ar em `/app/vendas` e a sessão já morta no disco.
+- **O fim de sessão ganhou motivo.** `AuthContext` passou a registrar `logout`, `expirada` ou `outra-aba` num
+  ref lido **uma única vez** por quem decide o destino — um estado não serviria, porque o `<Navigate>` é
+  escolhido durante o render. A leitura esvazia o registro, então o "voltar" do navegador não reavisa ninguém,
+  e o cache em `useRef` no portão é o que faz o StrictMode (que chama o render duas seguidas) ver o mesmo
+  motivo nas duas passadas. Login e cadastro limpam o motivo: sessão nova não tem o que contar.
+- **As cinco portas de saída, cada uma pelo caminho de verdade.** O botão "Sair"; o `nexus:session-expired`
+  que a API dispara; o 401 de rota de negócio **sem** refresh token em disco, que antes virava rejeição
+  silenciosa e deixava a pessoa numa tela autenticada morta; o `storage` da chave do refresh token — logout
+  feito em outra aba, que agora encerra esta, com a rotação da renovação ignorada porque grava um valor novo;
+  e a renovação recusada no *bootstrap*, que é o caso de quem fecha o navegador e volta semanas depois com o
+  token vencido ou revogado. As quatro primeiras levam à vitrine com o histórico substituído; quem chega sem
+  sessão nenhuma continua indo ao login, com a rota de origem guardada.
+- **Preferência no lugar.** `tokenStore.clear()` continua tirando só `nexus.refresh` e `nexus.pulso`, e foi
+  provado dos dois lados: no jsdom e no navegador, o `nexus.theme = light` atravessa entrar e sair do painel
+  sem mudar um atributo. O `REFRESH_KEY` saiu de dentro do `tokenStore` para o ouvinte de `storage` saber o
+  que procurar, sem copiar a string à mão.
+- **Aviso em Toastr, nenhum `alert()`.** A vitrine lê o motivo do estado da rota e mostra "Sua sessão expirou.
+  Entre novamente para continuar." só quando a sessão é que expirou — sair pelo botão é escolha da pessoa, e
+  "tchau" a cada logout seria barulho. A prova instrumenta `window.alert` e `window.confirm` antes do primeiro
+  documento de cada aba e exige que sigam intocados nos cinco caminhos.
+- **A prova de logout estava certa por acidente.** `tools/verify-logout.cjs` procurava o botão "Sair" no
+  instante em que a URL virava `/app` — o painel monta ~1,5 s depois, quando o bootstrap termina — e
+  registrava `ok(true, ...)` fixo no login, então não media nada. Foi reescrita: espera a `.admin-shell`
+  existir, empurra uma rota real para o histórico antes de sair (para o "voltar" ter o que reabrir), e percorre
+  as cinco portas com **duas abas de verdade** e um 401 respondido pela própria prova. Ficou em **22
+  checagens, 0 falhas**, e o "voltar" agora bate em `/login` com o painel desmontado.
+- **Testes que começaram vermelhos.** `apps/web/src/test/fim-de-sessao.test.tsx`, sete casos, com o fluxo de
+  sessão inteiro exercitado: a rede parada no adaptador do axios (`fabrica-api.ts`), sem trocar pedaço por
+  imitação — interceptor de 401, renovação compartilhada, `AuthContext`, `ProtectedRoute` e a vitrine juntos. A
+  suíte do navegador foi de 13 para **20 testes**; a da API segue em 230.
+- **Registrado, não corrigido:** o AdminLTE veste peças por `data-bs-theme`, chave que este projeto nunca
+  escreve (`apps/web/src/` tem zero ocorrências, o CSS do plugin tem 17 regras sob `[data-bs-theme="dark"]`).
+  Sincronizá-la mudaria o desenho de todas as telas do painel e obrigaria a recapturar as seis telas do README
+  e as oito provas de navegador — está em `docs/AUDITORIA.md`, seção "Novos achados" (N7), à espera do aval do
+  dono. O diagnóstico da rodada do logout é o N8 do mesmo lugar.
+- **Validações desta rodada:** `npm run typecheck` limpo nos dois pacotes, `npm run build` ✓, `npm test` com
+  api 28 arquivos / 230 testes e web 4 arquivos / 20 testes, `tools/verify-logout.cjs` 22 checagens / 0
+  falhas, `tools/verify-landing-cms.cjs` 120 checagens / 0 falhas (a vitrine não pode perder o que ganhou na
+  rodada anterior) e `tools/verify-cms.cjs` 115 checagens / 0 falhas.
+
 ### O alternador Dark/Light voltou a valer na página de boas-vindas (2026-10-11)
 
 - **Causa raiz medida antes de mexer em arquivo, e não chute.** O toque sempre chegou ao botão

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Link, NavLink, Outlet, useNavigate } from "react-router-dom";
+import { Link, NavLink, Outlet } from "react-router-dom";
 import { Logo } from "../Logo";
 import { ThemeToggle } from "../ThemeToggle";
 import { NotificationBell } from "./NotificationBell";
@@ -104,7 +104,6 @@ function PanelLeftIcon() {
 
 export function AdminShell() {
   const { user, can, logout } = useAuth();
-  const navigate = useNavigate();
 
   // Estado da gaveta (mobile/tablet).
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -219,11 +218,12 @@ export function AdminShell() {
   }, [drawerOpen]);
 
   // Regra do projeto: ao deslogar, o usuario volta SEMPRE para a
-  // pagina de boas-vindas (landing). replace() impede o voltar do navegador
-  // de reabrir o painel com sessao morta.
+  // pagina de boas-vindas (landing). Quem garante o destino e o ProtectedRoute,
+  // a partir do motivo que o AuthContext registrou, e replace() de la impede o
+  // voltar do navegador de reabrir o painel com sessao morta. Um navigate()
+  // aqui seria uma corrida com o estado: perdia quando a sessao ainda constava.
   async function handleLogout() {
     await logout();
-    navigate("/", { replace: true });
   }
 
   // Camadas visiveis: primeiro corta os itens sem permissao (e as áreas da

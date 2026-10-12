@@ -148,8 +148,12 @@ São as telas e regras que existem hoje no repositório. O que ainda não está 
   redefinição
 - "Lembrar de mim" grava **só o e-mail**, no navegador, e esse e-mail nunca aparece escrito no campo de
   senha; a tela seguinte pede apenas a senha
-- Deslogar devolve sempre à página de boas-vindas (`/`) com o histórico substituído — o botão "voltar" do
-  navegador não reabre uma tela autenticada
+- Toda sessão que termina devolve a pessoa à página de boas-vindas (`/`) com o histórico substituído — pelo
+  botão "Sair", pela expiração no meio do trabalho, pela revogação ou pelo logout feito em outra aba. O
+  motivo do fim é registrado na saída e lido por quem decide o destino, então o botão "voltar" do navegador
+  não reabre uma tela autenticada e a vitrine avisa em Toastr quando a sessão é que expirou. Quem chega sem
+  sessão nenhuma — sem nunca ter entrado — continua indo ao login, com a rota de origem guardada. Sair do
+  sistema não apaga nenhuma preferência deste navegador, nem o tema escolhido
 
 ### Autorização e papéis
 
@@ -754,7 +758,9 @@ o processo na inicialização com a lista completa na mensagem. O código dessa 
 
 ```bash
 npm run typecheck          # api + web
-npm test                   # 28 arquivos · 230 testes de integração contra MySQL real
+npm test                   # api: 28 arquivos · 230 testes contra MySQL real — web: 4 arquivos · 20 testes no jsdom
+npm run test:api           # só a suíte da API
+npm run test:web           # só a suíte do navegador (Vitest + jsdom + Testing Library)
 npm run test:coverage      # a mesma suíte com a cobertura medida
 npm run build              # produção (tsc + vite build)
 ```
@@ -782,6 +788,10 @@ npm run build              # produção (tsc + vite build)
 | `fuso-dia.test.ts` | meia-noite de São Paulo, Tóquio e Calcutá calculadas à mão, borda de calendário contra borda de instante, série diária e contas vencidas no dia da empresa, e o fuso quebrado que não derruba painel nem sino |
 | `dinheiro-decimal.test.ts` | meio centavo que sobe na base 10, a armadilha do `round` do decimal embutido no Prisma, 2026 parcelas de R$ 0,10 fechando em 20 260 centavos, a porta nos três formatos de digitação e a invariante total = soma das linhas em nota real |
 | `parcelamento.test.ts` | política desligada que não escreve caixa nenhum, à vista que gera uma linha no dia da empresa, 3 parcelas fechando o centavo com vencimento mensal clampado, rascunho que só lança ao confirmar, cancelar que tira as pendentes e preserva a paga, despesa da compra recebida, categoria automática criada uma vez, o carnê invisível para a outra empresa e a porta que recusa parcela inválida |
+| `fim-de-sessao.test.tsx` (web) | sete sessões montadas no jsdom pelo caminho de verdade, com a rede parada no adaptador do axios: o interceptor de 401, o `AuthContext` e o `ProtectedRoute` exercitados juntos — logout pelo botão, `nexus:session-expired` no meio da tela de vendas, `/app` aberto por quem não tem sessão, o evento de `storage` de outra aba, o tema que sobrevive ao sair, o 401 sem refresh token em disco e a renovação recusada no bootstrap |
+| `tema-landing.test.tsx` (web) | o alternador na vitrine montada pelo CMS: os dois sentidos, as cores da vitrine mudando junto, a escolha que volta ao remontar a página, o teclado com rótulo acessível e o tema aplicado antes do primeiro paint do React |
+| `paleta-da-vitrine.test.ts` (web) | a luminância WCAG que decide se a paleta cadastrada é escura ou clara, e o que entra e o que sai do elemento quando ela veste — ou não — o tema ativo, inclusive com cor vazia ou fora do formato |
+| `cores-da-landing.test.ts` (web) | a varredura de cor fixa nos estilos da vitrine: nenhum `#` fora dos tokens do tema, com a única exceção listada e justificada |
 
 Além da suíte, o repositório guarda provas que dirigem o navegador (Puppeteer) e medem pixels, com as
 capturas desta página como subproduto:
@@ -794,6 +804,7 @@ capturas desta página como subproduto:
 | `tools/verify-configuracoes.cjs` | 127 — as quatro abas do `/app/configuracoes` gravando de verdade: telefone e CNPJ conferidos na tela e na API, um bloco salvo sem tocar nos outros (agora são sete blocos na aba Empresa, cada um mandando só as chaves que são suas), CEP/UF/cidade, moeda que chega à sessão e ao painel, meta que vira régua, as duas políticas por empresa, o STAFF lendo tudo sem botão de gravar, troca de senha que não despeja a pessoa, os dois temas e os 390px — com empresa e conta devolvidas ao estado de antes |
 | `tools/verify-parcelamento.cjs` | 55 — a venda parcelada de ponta a ponta na tela, sobre uma empresa de prova criada e apagada pela própria volta: o seletor de doze parcelas, o preço digitado "1.290,50" valendo R$ 1.290,50 na linha e no rodapé, nota pendente que não escreve caixa nenhum, confirmar que escreve as três parcelas exatas no financeiro, o cancelamento que esvazia o caixa e devolve o estoque, e a compra recebida em 2× caindo como despesa na categoria Compras |
 | `tools/verify-rotinas.cjs` | 37 — a tela `/app/rotinas` com as três varreduras, agenda traduzida e próxima execução conferidas contra a API; "Executar agora" que grava o aviso no banco e mostra no toast a mensagem da rotina; pausar pelo diálogo de confirmação e retomar; o atendente sem permissão; o tema claro e os 390px — jobs, avisos e usuário de prova devolvidos ao estado de antes |
+| `tools/verify-logout.cjs` | 22 — as cinco portas de saída da sessão, cada uma pelo caminho de verdade: o botão "Sair" do painel, o 401 de uma chamada de negócio sem refresh token em disco (com o aviso de Toastr medido na tela), o logout feito na segunda aba aberta nesta prova, a renovação recusada pelo servidor no reload e — para não confundir as duas coisas — quem abre `/app` sem sessão nenhuma, que continua indo ao login. Junto: o tema claro atravessando entrar e sair, o refresh que sai do disco, o "voltar" do navegador batendo em tela sem painel e nenhum `alert()` no caminho |
 | `tools/verify-sidebar.cjs` | 88 — ordem e tipografia das seis camadas, itens por permissão, modo trilha, peek, linhas "em breve", o cabeçalho sem repetir a marca e o tema claro |
 | `tools/verify-acoes-confirm.cjs` | 88 — coluna de ações de nove tabelas, anatomia do diálogo, trava de duplo clique, Esc durante a requisição, tema claro e celular |
 | `tools/shoot-tabs.cjs` | 447 — abas, paginação, respiro medido e legibilidade do histórico em 9 páginas, desktop e celular |
@@ -875,6 +886,7 @@ O detalhamento está em [`CHANGELOG.md`](CHANGELOG.md) (Keep a Changelog, mais n
 | `5dce492 → editor` | O editor do CMS chegou: `/app/cms` com as cinco abas, o botão de manutenção que acompanha o rascunho, rascunho e publicação em cores diferentes, a nota de SEO com as 12 checagens na tela, o atalho único para a vitrine e a prova `verify-cms.cjs` com 115 checagens e dez capturas |
 | `d529919 → da9e17e` | Configurações da conta e da empresa em quatro abas: cadastro conferido no servidor, moeda/fuso/idioma regendo o painel, logo, meta de receita e troca de senha que derruba as outras sessões; prova `verify-configuracoes.cjs` com 108 checagens e a suíte em 102 testes |
 | `da9e17e → rotinas` | O relógio do servidor entrou em cena: parser de cron próprio, três varreduras que avisam pelo sino, executor único para a agenda e para o botão "Executar agora", `/app/rotinas` com liga/pausa, prova `verify-rotinas.cjs` com 37 checagens e a suíte em 113 testes |
+| `0adf4a7 → agora` | Duas regras que estavam escritas e não valiam. A vitrine voltou a escutar o alternador: a paleta cadastrada veste só o tema a que pertence, o alvo do toque chegou a 44 px e o tema salvo volta antes do primeiro *flash*. E toda sessão encerrada — pelo botão, por expiração, por 401 sem renovação possível, por logout em outra aba ou por renovação recusada no *bootstrap* — voltou a chegar às boas-vindas, com aviso em Toastr e o portão garantindo o destino; a prova `verify-logout.cjs` foi reescrita (22 checagens) e a suíte chegou a 250 testes: 230 na API e 20 no navegador |
 | `rotinas → Fase 3` | A auditoria comercial (`docs/AUDITORIA.md`) virou execução: Fase 1 blindou o isolamento (escrita com a empresa no `where` por construção, super admin separado do admin de empresa, portas fechadas sem chave, suíte de intrusão A×B) e a Fase 3 fechou a integridade de negócio — estoque decidido pelo banco, política de negativo por empresa, meia-noite no fuso da empresa, dinheiro em centavo do banco ao JSON e a venda confirmada caindo no financeiro em parcelas que fecham o centavo; suíte em 176 testes e as provas `verify-parcelamento.cjs` (55) e `verify-configuracoes.cjs` (127) |
 | `Fase 3 → Bloco A` | O prompt de mercado começou a ser cumprido: hierarquia de papéis em um lugar só, conta ou empresa desativada perdendo o acesso na hora, refresh token preso à empresa da sessão, recuperação de senha que não derruba a vítima nem entrega código em produção, seed e configuração de produção sem senha no código (a API recusa subir mal configurada), varredura de expressões regulares consertada e as duas provas que faltavam no estoque atômico. Cobertura passou a ser medida (`npm run test:coverage`), `docs/STATUS-AJUSTES.md` virou o painel do que está feito, e as seis decisões que pedem a palavra do dono (e-mail, cobrança, fiscal, cadastro aberto, hospedagem e licença) foram escritas em `docs/decisoes/` sem nenhuma integração inventada — suíte em 230 testes |
 

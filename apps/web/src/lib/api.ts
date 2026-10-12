@@ -71,14 +71,26 @@ api.interceptors.response.use(
   async (error: AxiosError) => {
     const original = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
     const status = error.response?.status;
-    const isAuthRoute = original?.url?.includes("/auth/login") || original?.url?.includes("/auth/refresh");
-    if (status === 401 && original && !original._retry && !isAuthRoute && tokenStore.getRefresh()) {
-      original._retry = true;
-      const newToken = await refreshSession();
-      if (newToken) {
-        original.headers.Authorization = `Bearer ${newToken}`;
-        return api(original);
+    const url = original?.url ?? "";
+    // As rotas de autenticação são julgadas por quem as chamou: um 401 no login
+    // é senha errada, e um 401 no logout é a renovação que já estava morta —
+    // nenhum dos dois é "sessão expirada no meio do trabalho".
+    const isAuthRoute = url.includes("/auth/login") || url.includes("/auth/refresh") || url.includes("/auth/logout");
+    if (status === 401 && original && !isAuthRoute) {
+      // Houve sessão em curso e o refresh token continua no disco: renova uma
+      // vez e repete a chamada. Sem token de renovação, não há o que tentar.
+      if (!original._retry && tokenStore.getRefresh()) {
+        original._retry = true;
+        const newToken = await refreshSession();
+        if (newToken) {
+          original.headers.Authorization = `Bearer ${newToken}`;
+          return api(original);
+        }
       }
+      // O 401 de rota de negócio, tenha havido renovação perdida, renovação que
+      // falhou ou simplesmente refresh token nenhum, significa a mesma coisa:
+      // esta aba não tem mais sessão. É o AuthContext quem decide se havia uma
+      // para encerrar — quem nunca entrou não pode ser tratado como expirado.
       window.dispatchEvent(new Event("nexus:session-expired"));
     }
     return Promise.reject(error);

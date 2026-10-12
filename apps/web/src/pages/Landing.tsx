@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useLocation } from "react-router-dom";
 import { AboutSection } from "../components/landing/AboutSection";
 import { BannerStrip } from "../components/landing/BannerStrip";
 import { ContactSection } from "../components/landing/ContactSection";
@@ -13,9 +14,11 @@ import { Maintenance } from "../components/landing/Maintenance";
 import { Testimonials } from "../components/landing/Testimonials";
 import { WhatsappWidget } from "../components/landing/WhatsappWidget";
 import { ErrorState, Skeleton } from "../components/StateView";
+import type { FimDeSessao } from "../context/AuthContext";
 import { useTheme } from "../context/ThemeContext";
 import { lerConteudoPublico } from "../lib/landingApi";
 import { aplicarCores, aplicarSeo } from "../lib/landingEstilo";
+import { notify } from "../lib/notify";
 import { textoMeta, type PayloadLanding } from "../lib/landingTypes";
 import { tokenStore } from "../lib/tokenStore";
 
@@ -58,6 +61,18 @@ export function Landing() {
     aplicarCores(dado.cores, raiz.current, theme);
     aplicarSeo(dado.seo);
   }, [dado, theme]);
+
+  // É na página de boas-vindas que a pessoa chega ao perder a sessão, então o
+  // aviso acontece aqui. O motivo vem pelo estado da rota, posto pelo
+  // ProtectedRoute, e já foi consumido: o "voltar" do navegador não reavisa.
+  // Só a expiração merece mensagem — sair pelo botão é escolha da própria
+  // pessoa, e um "tchau" a cada logout seria barulho. Nada de alert(): Toastr.
+  const { state } = useLocation();
+  useEffect(() => {
+    const motivo = (state as { fimDeSessao?: FimDeSessao } | null)?.fimDeSessao;
+    if (motivo !== "expirada") return;
+    notify.warning("Sua sessão expirou. Entre novamente para continuar.");
+  }, [state]);
 
   const capacidade: CapacidadeView[] = useMemo(() => {
     if (!dado || dado.capacidades.length === 0) {

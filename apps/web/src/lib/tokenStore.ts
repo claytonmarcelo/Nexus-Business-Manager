@@ -1,6 +1,8 @@
 // Armazena o access token apenas em memória (reduz superfície de XSS) e o
 // refresh token em localStorage para sobreviver ao reload. Decisão documentada (seção 33).
-const REFRESH_KEY = "nexus.refresh";
+// A chave é exportada porque o AuthContext escuta o evento "storage" dela: é
+// assim que um logout feito em outra aba encerra esta sessão.
+export const REFRESH_KEY = "nexus.refresh";
 // O pulso da manutencao de plataforma vive so na aba: e uma chave temporaria
 // de acesso, e sessionStorage morre com a aba - exatamente o comportamento que
 // se quer de um bypass (fechar o navegador volta a estar na manutencao).

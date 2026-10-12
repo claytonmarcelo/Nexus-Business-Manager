@@ -649,3 +649,64 @@ payload real do `/api/public/landing`. As respostas:
   `rgb(42, 35, 32)` = **13,72:1**; subtítulo suave no mesmo tema = **5,5:1**; texto do herói no escuro =
   **7,15:1**. Todos acima de 4,5:1.
 
+### N7 — BAIXO, fora do escopo: o tema do produto não é o tema que o AdminLTE olha
+
+Nenhuma linha de `apps/web/src/` escreve `data-bs-theme` (medido com `grep -rn "data-bs-theme" apps/web/src
+apps/web/index.html` → zero ocorrências), e o `adminlte.min.css` importado em `main.tsx` tem **17** regras
+sob `[data-bs-theme="dark"]` e **4** sob `[data-bs-theme="light"]`. O tema escolhido pela pessoa é escrito só
+em `data-theme` no `<html>`, então qualquer peça que o AdminLTE vista por aquela outra chave — modal,
+dropdown, tabela do plugin — fica fora do tema. Não foi corrigido nesta rodada porque sincronizar as duas
+chaves muda o desenho de todas as telas do painel, e isso obriga a recapturar as seis telas do `README.md` e
+as oito provas de navegador: trabalho de rodada própria, com aval do dono. Enquanto isso, o que se vê nas
+telas é o que as provas medem, e elas estão verdes.
+
+### N8 — ALTO, resolvido nesta rodada: sessões encerradas caiam no login, e duas portas não encerravam nada
+
+Regra do projeto: toda sessão que termina — pelo botão, por expiração, por revogação, por conta desativada ou
+por logout em outra aba — devolve a pessoa à página de boas-vindas (`/`). Antes de mexer em arquivo nenhum, o
+caminho foi lido e medido com os sete casos de `apps/web/src/test/fim-de-sessao.test.tsx` montando a sessão
+pelo interceptor de verdade (rede parada no adaptador do axios, nada trocado por imitação). A primeira
+rodada: **5 falhas, 1 verde**. As respostas:
+
+- **Para onde ia quem saía pelo botão?** Para `/login`. `ProtectedRoute.tsx` tinha um único destino para
+  `status === "anonymous"` — `<Navigate to="/login">` — e não tinha como saber se aquela pessoa tinha uma
+  sessão ou se era um visitante que nunca entrou. A vitrine só aparecia porque `handleLogout` chamava
+  `navigate("/", { replace: true })` depois do `await logout()`: o destino certo dependia de um chamada na
+  mão do botão, e não do portão.
+- **A sessão expirada no meio do trabalho encerrava alguma coisa?** Não, se o refresh token tivesse sumido do
+  disco. `lib/api.ts` só despachava `nexus:session-expired` quando `tokenStore.getRefresh()` devolvia um
+  token **e** a chamada ainda não tinha sido repetida. Sem token de renovação, o 401 virava uma rejeição
+  silenciosa: medido no caso verde-depois-vermelho, a tela continuava em `/app/vendas` com o painel pintado
+  (`Expected: "/" / Received: "/app/vendas"`).
+- **Logout em outra aba chegava nesta aba?** Não. Não existia nenhum ouvinte de `storage` no app inteiro, e a
+  chave do refresh token nem era exportada de `tokenStore.ts`. O caso mediu a mesma coisa: `/app/vendas`
+  para sempre, com o painel no ar e a sessão já morta no disco.
+- **E a porta silenciosa — a pessoa fecha o navegador e volta semanas depois?** Também ia ao login. No
+  bootstrap, renovação recusada (`refreshSession()` devolvendo `null`) só fazia `setStatus("anonymous")`, o
+  mesmo caminho de quem nunca teve sessão: a revogação e o vencimento não tinham destino nem aviso.
+- **O logout apagava preferências?** Não, e isso já estava certo: `tokenStore.clear()` tira só
+  `nexus.refresh` e `nexus.pulso`. Foi mantido, e o caso que mede o tema (`nexus.theme = light` antes de
+  entrar, depois de sair) verde dos dois lados — no jsdom e no navegador.
+- **Havia `alert()` no caminho?** Não, em nenhuma das cinco portas. A prova de navegador agora instrumenta
+  `window.alert`/`window.confirm` em cada aba antes do primeiro documento e exige que sigam intocados; o
+  aviso de sessão expirada é Toastr (`lib/notify.ts`), medido pelo texto na tela.
+- **Causa raiz:** não era um bug de destino, era a falta de um estado. O app sabia *que* a sessão tinha
+  acabado, mas não sabia *por quê*, e sem essa informação o portão (`ProtectedRoute`) e o botão
+  (`handleLogout`) discordavam: um mandava ao login, o outro à vitrine, e quem chegava depois do outro
+  vencia.
+- **Consertado com isso:** o `AuthContext` passou a registrar o motivo (`"logout" | "expirada" |
+  "outra-aba"`) num ref lido uma única vez por quem decide o destino, `ProtectedRoute` usa esse motivo para
+  escolher entre `/` (com `replace`, para o "voltar" não reabrir painel morto) e `/login` (com a rota de
+  origem no estado), `lib/api.ts` trata o 401 de rota de negócio como fim de sessão tenha havido renovação
+  tentada ou não — as rotas `/auth/login`, `/auth/refresh` e `/auth/logout` continuam julgadas por quem as
+  chamou —, o `storage` da chave do refresh token encerrou a aba, e o `handleLogout` perdeu o `navigate()`:
+  o destino é garantia do portão, não do botão.
+- **A prova estava errada também:** `tools/verify-logout.cjs` procurava o botão "Sair" no instante em que a
+  URL virava `/app` e achava `null` — o painel monta ~1,5 s depois, quando o bootstrap termina — e ainda
+  registrava `ok(true, ...)` fixo no login. Foi reescrita: espera a `.admin-shell` existir, empurra uma rota
+  real para o histórico antes de sair (para o "voltar" ter o que reabrir), e percorre as cinco portas com
+  duas abas de verdade e um 401 respondido pela própria prova. Ficou em **22 checagens, 0 falhas**.
+- **O que a rodada não tocou:** o servidor continua decidindo a autorização; nada aqui mudou validação,
+  tempo de sessão ou revogação. O aviso de "outra aba" e o de "logout" não ganharam texto — a regra pede
+  mensagem só para a expiração, e inventar frase sem pedido é o caminho para a tela mentir.
+
