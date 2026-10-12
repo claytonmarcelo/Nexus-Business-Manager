@@ -334,7 +334,6 @@ export function AdminShell() {
           >
             <PanelLeftIcon />
           </button>
-          <div className="admin-header-title">Business Manager</div>
           <div className="admin-header-actions">
             {/* Atalho para a vitrine: desde a Fase 1b a vitrine é área da
                 plataforma, e só quem responde por ela abre o editor. */}

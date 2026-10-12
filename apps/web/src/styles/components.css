@@ -548,7 +548,6 @@
   top: 0;
   z-index: 40;
 }
-.admin-header-title { font-weight: 700; color: var(--text-2); font-size: 0.95rem; }
 .admin-header-actions {
   display: flex;
   align-items: center;

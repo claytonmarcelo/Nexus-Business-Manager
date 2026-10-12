@@ -46,7 +46,8 @@ function estado() {
   const shell = document.querySelector(".admin-shell");
   const sidebar = document.querySelector(".admin-sidebar");
   const toggle = document.querySelector(".admin-toggle");
-  const title = document.querySelector(".admin-header-title");
+  const cabecalho = document.querySelector(".admin-header");
+  const acoes = document.querySelector(".admin-header-actions");
   const label = document.querySelector(".admin-nav-label");
   const brand = document.querySelector(".admin-brand-text");
   const svg = toggle ? toggle.querySelector("svg") : null;
@@ -64,7 +65,11 @@ function estado() {
     ariaPressed: toggle ? toggle.getAttribute("aria-pressed") : "",
     ariaControls: toggle ? toggle.getAttribute("aria-controls") : "",
     toggleX: toggle ? Math.round(toggle.getBoundingClientRect().x) : -1,
-    titleX: title ? Math.round(title.getBoundingClientRect().x) : -1,
+    // O cabecalho nao carrega mais marca nenhuma: "Business Manager" saiu da
+    // faixa, e a unica leitura que fica ali e o atalho da vitrine com a conta.
+    temTitulo: Boolean(cabecalho && cabecalho.querySelector(".admin-header-title")),
+    textoCabecalho: cabecalho ? cabecalho.textContent.replace(/\s+/g, " ").trim() : "",
+    acoesX: acoes ? Math.round(acoes.getBoundingClientRect().x) : -1,
     // O x do conteudo e a prova de que o peek nao empurra o layout: tem de
     // continuar exatamente no mesmo lugar com a barra larga por cima.
     conteudoX: (() => { const c = document.querySelector(".admin-content"); return c ? Math.round(c.getBoundingClientRect().x) : -1; })(),
@@ -151,7 +156,8 @@ function estado() {
   let e = await page.evaluate(estado);
   ok("botao de alternancia presente no cabecalho", e.temToggle && e.temSvg);
   ok("hambúrguer de 3 linhas não existe mais", !e.temHamburguer);
-  ok("botao fica a esquerda do titulo Business Manager", e.toggleX < e.titleX, e.toggleX + " < " + e.titleX);
+  ok("o cabecalho nao repete mais a marca do produto", !e.temTitulo && !e.textoCabecalho.includes("Business Manager"), e.textoCabecalho.slice(0, 60));
+  ok("botao de alternancia e o primeiro elemento do cabecalho", e.toggleX >= 0 && e.toggleX < e.acoesX, e.toggleX + " < " + e.acoesX);
   ok("bordas arredondadas no botao", parseInt(e.toggleRadius, 10) >= 8, e.toggleRadius);
   ok("sidebar expandida em desktop", e.larguraSidebar === 264, e.larguraSidebar + "px");
   ok("rotulos dos itens visiveis", e.labelDisplay === "block" || e.labelDisplay === "inline-block" || e.labelDisplay === "flex", e.labelDisplay);
@@ -159,7 +165,7 @@ function estado() {
   ok("aria-expanded verdadeiro com a barra visivel", e.ariaExpanded === "true");
   ok("aria-controls aponta para a sidebar", e.ariaControls === "admin-sidebar" && Boolean(await page.$("#admin-sidebar")));
   const CAMADAS = ["Visão Geral", "Comercial & CRM", "Estoque & Suprimentos", "Serviços & Atendimentos", "Financeiro", "Administração & Sistema"];
-  const ITENS = ["Dashboard", "Notificações", "CRM", "Clientes", "Vendas", "Produtos", "Compras", "Ordens de Serviço", "Agenda", "Financeiro", "Gateways & Cobranças", "Usuários", "Auditoria", "CMS & Site Público", "Configurações"];
+  const ITENS = ["Dashboard", "Notificações", "CRM", "Clientes", "Vendas", "Produtos", "Compras", "Ordens de Serviço", "Agenda", "Financeiro", "Gateways & Cobranças", "Usuários", "Auditoria", "CMS & Site Público", "Rotinas agendadas", "Configurações"];
   ok("as 6 camadas aparecem na ordem pedida", e.titulosVisiveis.join(" | ") === CAMADAS.join(" | "), e.titulosVisiveis.join(" | "));
   ok("nenhuma camada ficou vazia", e.grupoVazio === false);
   ok("na barra larga quem separa a camada e o titulo, nao o filete", e.temFilete === false);
@@ -248,7 +254,7 @@ function estado() {
   ok("no peek o filete da trilha da lugar ao titulo", peek.temFilete === false);
   ok("no peek o em breve volta com nome e ponto", peek.emBreve.every((x) => x.rotuloVisivel && x.ponto));
   ok("nenhum nome de modulo sai cortado no peek", peek.truncados.length === 0, peek.truncados.join(", "));
-  ok("no peek os rotulos voltam na ordem das camadas", peek.rotulosVisiveis.join(", ") === "Dashboard, Notificações, CRM, Clientes, Vendas, Produtos, Compras, Ordens de Serviço, Agenda, Financeiro, Gateways & Cobranças, Usuários, Auditoria, CMS & Site Público, Configurações", peek.rotulosVisiveis.slice(0, 3).join(", "));
+  ok("no peek os rotulos voltam na ordem das camadas", peek.rotulosVisiveis.join(", ") === "Dashboard, Notificações, CRM, Clientes, Vendas, Produtos, Compras, Ordens de Serviço, Agenda, Financeiro, Gateways & Cobranças, Usuários, Auditoria, CMS & Site Público, Rotinas agendadas, Configurações", peek.rotulosVisiveis.slice(0, 3).join(", "));
   ok("sem overflow horizontal na janela durante o peek", peek.overflowX <= 0, "overflow " + peek.overflowX);
   await semToast(page);
   await page.screenshot({ path: SHOTS + "/16-sidebar-peek.png" });
