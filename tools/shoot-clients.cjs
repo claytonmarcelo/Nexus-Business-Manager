@@ -1,6 +1,11 @@
 // Prova de uso real da página de Clientes: cria um cliente pela UI e captura a tela.
+//
+// Quem entra é a conta fictícia de captura (tools/conta-de-captura.cjs): o cadastro que
+// a prova faz é dela, na empresa vazia que ela mesma criou. Nenhuma credencial literal
+// fica neste arquivo — nem a senha da conta de desenvolvimento do banco.
 const puppeteer = require("puppeteer-core");
 const path = require("path");
+const { contaDeCaptura } = require("./conta-de-captura.cjs");
 const BASE = "http://localhost:5173";
 
 (async () => {
@@ -12,9 +17,12 @@ const BASE = "http://localhost:5173";
   });
   const page = await browser.newPage();
   page.on("pageerror", (e) => console.log("pageerror:", e.message));
+  const CAPTA = contaDeCaptura();
   await page.goto(BASE + "/login", { waitUntil: "networkidle0" });
-  await page.type("input[type=email]", "admin@nexus.local");
-  await page.type("input[type=password]", "Nexus@2026");
+  await page.evaluate(() => localStorage.clear());
+  await page.goto(BASE + "/login", { waitUntil: "networkidle0" });
+  await page.type("input[type=email]", CAPTA.email);
+  await page.type("input[type=password]", CAPTA.senha);
   await Promise.all([
     page.waitForFunction(() => window.location.pathname.startsWith("/app"), { timeout: 15000 }),
     page.click("button[type=submit]"),

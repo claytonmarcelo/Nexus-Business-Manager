@@ -738,3 +738,106 @@ isso que se rodou, e a primeira passada quebrou:
   `npm install` de todo mundo, e o prompt de fechamento proíbe funcionalidade nova nesta fase. Fica
   registrado como opção da Fase 7, junto de CI e threshold de cobertura.
 
+## Adenda da execução — Rodada R (segurança antes do push) — Bloco 1, tarefa R1 encerrada — 2026-10-12
+
+### R1 — As 109 imagens do repositório, conferidas uma a uma
+
+**O que foi medido.** `git ls-files` devolve **101** PNGs em `docs/screenshots/` — todos rastreados, nenhum
+arquivo solto na pasta — e mais **8** imagens de marca (`assets/brand/logo/logo.png`,
+`apps/web/src/assets/brand/logo.png` e seis ícones em `apps/web/public/`): **109** arquivos ao todo. As 101
+capturas foram abertas e lidas uma a uma, em oito lotes, com veredito individual. As oito de marca são o mesmo
+logotipo e seus recortes de favicon; a única palavra escrita nelas é "NEXUS BUSINESS MANAGER".
+
+A classificação tem três degraus: **contém** (dado sensível real — credencial, código, e-mail ou nome de
+pessoa), **resíduo** (texto de desenvolvimento, inofensivo mas não é copy de produto) e **limpa**.
+
+**Nove imagens foram classificadas `contém`, e as nove foram recapturadas.** Nenhuma outra captura precisou
+mudar: 92 arquivos seguem byte a byte como estavam, porque as ferramentas de prova ganharam filtros de
+recaptura (`NEXUS_PROVA_FOTOS` e `NEXUS_PROVA_PAGINAS`) justamente para não gerar ruído de diff onde não há
+problema.
+
+| Arquivo | O que expunha | O que mostra agora |
+| --- | --- | --- |
+| `02-login.png` | a senha definitiva do administrador global em texto legível, com o botão do olho clicado (N1) | formulário vazio, `localStorage` limpo antes do clique, olho nunca tocado |
+| `09-recuperar-senha.png` | o código de recuperação de 64 caracteres preenchido no campo (N2) | etapa 2 com o campo de código vazio; o e-mail fotografado (`solicitante@exemplo.test`) não existe no banco, então a API não devolve `devToken` nenhum |
+| `04-usuarios.png` | `nexusbussiness.admin@gmail.com` e `admin@nexus.local` na lista de membros | a conta fictícia `demo@exemplo.test`, com a busca da própria tela filtrada em `exemplo.test` |
+| `18-tabs-usuarios.png` | os mesmos dois e-mails reais | idem acima |
+| `18-tabs-usuarios-celular.png` | os mesmos dois e-mails reais | idem acima |
+| `06-configuracoes-claro.png` | o gmail real no campo "E-mail de acesso" | "Demonstracao Ficticia" / `demo@exemplo.test` |
+| `22-configuracoes-conta.png` | o gmail real no campo "E-mail de acesso" | idem acima |
+| `22-configuracoes-limpo.png` | o gmail real no cabeçalho e na conta | idem acima |
+| `22-configuracoes-empresas.png` | "Eliane Eli (minha empresa)" e ~7 empresas `Empresa-<timestamp>` da conta real | uma única empresa, "Demonstracao (minha empresa)" |
+
+**Como as capturas deixaram de usar a conta real.** Nasceu `tools/conta-de-captura.cjs`: uma conta de
+demonstração fictícia (`demo@exemplo.test` / "Demonstracao Ficticia", sobrenome de empresa
+"Demonstracao (minha empresa)") que a própria ferramenta cria no primeiro uso via `POST /auth/register`. A
+senha dela tem 24 caracteres, é gerada com `crypto.randomInt` (garantindo maiúscula e caractere especial, com
+embaralhamento Fisher-Yates), vem de `NEXUS_CAPTURA_SENHA` quando a variável existe, e é guardada em
+`tools/conta-de-captura.local.json` — arquivo **ignorado** no `.gitignore` desta rodada. Não há literal de
+senha em código nenhum. O e-mail pode ser trocado por `NEXUS_CAPTURA_EMAIL`.
+
+`tools/shoot.cjs` passou a declarar a conta dentro da própria lista de telas: `03-dashboard` e
+`05-auditoria` são as duas capturas que precisam do administrador global (são telas de plataforma, e o
+roteiro as fotografa com a busca/trilha vazia de dado de terceiro); `04-usuarios`, `06-configuracoes-claro`
+vão para a conta de captura; `01-landing` e `02-login` não entram em lugar nenhum. `tools/shoot-auth.cjs`,
+`tools/shoot-tabs.cjs`, `tools/shoot-clients.cjs` e `tools/verify-configuracoes.cjs` abandonaram o
+`require("./senha-admin.cjs")` e a digitação de credencial real.
+
+**Prova de que nenhum script carrega credencial.** `apps/api/test/capturas-sem-credencial.test.ts` varre todos
+os `tools/*.cjs` rastreados e exige: nenhuma digitação de senha com literal no segundo argumento; nenhuma
+ocorrência da senha de desenvolvimento nem da credencial `admin@nexus.local`; nenhum clique em `.eye-toggle`;
+os cinco scripts de identidade sem o e-mail do administrador e sem importar `./senha-admin.cjs`;
+`conta-de-captura.cjs` lendo as duas variáveis de ambiente, usando `crypto`, sem atribuição literal de senha e
+com domínio `exemplo.test`; o trecho do `02-login` sem `page.type(` e com `localStorage.clear()`; o roteiro de
+recuperação com a guarda de sequência hexadecimal e o e-mail inexistente; e o mapa de contas do `shoot.cjs`
+exatamente como acima. **8 casos, todos verdes.** Antes da mudança, os mesmos padrões rodados contra o
+conteúdo de `git show HEAD:` acusaram **7 ofensas** em cinco arquivos — a volta estava vermelha de propósito.
+
+**As corridas que geraram os nove PNGs novos**, com o banco de desenvolvimento de sempre:
+`node tools/shoot-auth.cjs` (com as duas asserções de tela vazia e de ausência de código em `[ok]`),
+`NEXUS_PROVA_PAGINAS=usuarios node tools/shoot-tabs.cjs` (**50 checagens, todas passaram**),
+`NEXUS_PROVA_FOTOS=22-configuracoes-conta,22-configuracoes-limpo,22-configuracoes-empresas,06-configuracoes-claro node tools/verify-configuracoes.cjs`
+(**127 checagens · 0 falhas**, empresa e conta devolvidas ao estado anterior, usuário de prova apagado, nenhum
+erro de JavaScript no caminho) e `node tools/shoot.cjs` para as duas telas de mesa.
+
+**N5 está encerrada.** O "não verificado" que ela registrava não existe mais: as 101 capturas foram conferidas
+uma a uma nesta passada, e as nove com problema foram refeitas.
+
+### N10 — MÉDIO, consequência da regra de administração: toda empresa nova nasce com o administrador global como OWNER
+
+Não é falha de isolamento — é a regra de administração da plataforma escrita em
+`apps/api/src/modules/auth/auth.service.ts`, no `register`: ao criar a conta, todo usuário com
+`platformRole: "SUPER_ADMIN"` é adicionado como `OWNER` da empresa recém-criada. O efeito prático apareceu
+durante a R1: a primeira versão da `04-usuarios.png` recapturada continuou mostrando
+`nexusbussiness.admin@gmail.com` e `admin@nexus.local` na lista de membros da conta fictícia, porque a conta
+fictícia acabou de nascer com o administrador dentro.
+
+**Como a R1 contornou sem tocar na autorização:** as telas de usuários passaram a ser fotografadas com o
+filtro que a própria tela oferece (busca por `exemplo.test`), que é o mesmo gesto que um usuário real faria.
+Nenhuma permissão mudou, nenhum teste de autorização foi enfraquecido. **O que fica para a decisão do dono
+vai para `docs/decisoes/G8-administrador-da-plataforma.md` (tarefa R3)**, junto do risco de LGPD e das
+alternativas. Até lá, vale registrar: em qualquer demonstração pública do painel, a tela de Usuários de uma
+empresa nova sempre lista o administrador global.
+
+### N11 — BAIXO, o nome do dono no rodapé de todas as telas
+
+`apps/web/src/components/layout/AdminShell.tsx:370` escreve "Desenvolvido por Clayton Marcelo" no rodapé do
+painel, e `apps/web/src/components/landing/copy.ts:40` repete a frase no rodapé da vitrine pública
+(`LandingFooter.tsx:26`). Por isso a assinatura aparece legível em praticamente toda captura de mesa — as
+oito conferidas nesta revisão citaram 22 arquivos, e as recapturas de agora também a mostram. Não é dado
+pessoal de terceiro e não é credencial: é o crédito do próprio dono, publicado por escolha dele. **Nada foi
+alterado**, e a imagem não foi regerada por isso. Fica registrado porque a R1 pedia exatamente essa
+distinção, e porque numa vitrine pública o nome aparece para qualquer visitante — se isso um dia for
+indesejado, é uma linha de copy, não uma recaptura.
+
+### N12 — BAIXO, resíduo de banco de desenvolvimento nas capturas
+
+Um conjunto de imagens mostra dados de teste que o banco de desenvolvimento acumula, sem valor para um
+atacante e sem dado de terceiro: nomes de empresa no formato `Empresa-1791738059301-35-368033` (famílias
+`16-`, `20-`, `21-` e `22-`), rótulos de prova como `PROVA-SINO 01..08`, "Teste Direto XYZ", "Prova Rotinas",
+"Prova Leitura" e "Prova Parcela", o endereço `http://localhost:5173/favicon-512.png` dentro do `og:image`
+fotografado em `20-cms-seo.png`, `127.0.0.1` repetido na tela de Auditoria e a frase que cita
+`tools/verify-landing-cms.cjs` dentro de `19-legal-termos.png`. Nada disso foi recapturado: a R1 só mexe em
+imagem classificada `contém`. **A limpeza desses dados é trabalho de banco, não de pixel** — enquanto o
+ambiente de desenvolvimento tiver essas linhas, qualquer recaptura futura vai trazê-las de volta. Fica
+registrado para a rodada que decidir o seed de demonstração.

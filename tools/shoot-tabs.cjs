@@ -11,12 +11,21 @@
 //    seletor de 10/25/50/100, « ‹ páginas › » com desabilitados corretos e
 //    avanco de pagina sem recarregar a tela.
 const puppeteer = require("puppeteer-core");
-const { SENHA_ADMIN } = require("./senha-admin.cjs");
+const { sessaoDaCaptura } = require("./conta-de-captura.cjs");
 const path = require("path");
 
 const CHROME = "C:/Program Files/Google/Chrome/Application/chrome.exe";
 const BASE = "http://localhost:5173";
 const OUT = path.join(__dirname, "..", "docs", "screenshots");
+
+// NEXUS_PROVA_PAGINAS=usuarios roda e fotografa so as telas pedidas. O resto
+// da galeria fica no git exatamente como esta, sem ruido de diff.
+const PEDIDO = (process.env.NEXUS_PROVA_PAGINAS || "")
+  .split(",")
+  .map((nome) => nome.trim())
+  .filter(Boolean);
+const naLista = (p) =>
+  !PEDIDO.length || PEDIDO.some((q) => p.rota.includes(q) || p.foto.includes(q));
 
 const PAGINAS = [
   {
@@ -138,6 +147,11 @@ const PAGINAS = [
   {
     rota: "/app/usuarios",
     foto: "18-tabs-usuarios",
+    // A empresa de captura tem o administrador da plataforma como OWNER por
+    // construcao (Fase 1b; a decisao de fundo e o G8). O print sai com a busca
+    // da propria tela no e-mail ficticio, para nenhuma identidade real ficar
+    // na imagem.
+    filtroDaFoto: "exemplo.test",
     abas: [
       { id: "lista", rotulo: "Lista de Usuários" },
       { id: "permissoes", rotulo: "Permissões (RBAC)" },
@@ -243,6 +257,13 @@ async function esperarPainel(page, id) {
     )
     .catch(() => {});
   await sleep(350);
+}
+
+async function filtraUsuarios(page, texto) {
+  const campo = 'input[aria-label="Buscar usuários"]';
+  await page.waitForSelector(campo, { timeout: 15000 });
+  await page.type(campo, texto, { delay: 4 });
+  await sleep(900);
 }
 
 async function textoDoPainel(page, id) {
@@ -509,20 +530,17 @@ async function checarPainel(page, okFn, aba) {
   page.on("console", (m) => { if (m.type() === "error") erros.push(m.text()); });
   page.on("pageerror", (e) => erros.push(String(e)));
 
-  // Sesao real pela API: o token de refresh vai para o localStorage do navegador.
-  const login = await fetch(BASE.replace(":5173", ":3001") + "/api/auth/login", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email: "nexusbussiness.admin@gmail.com", password: SENHA_ADMIN }),
-  });
-  const sessao = await login.json();
+  // Sessao real pela API, na conta ficticia de captura: o token de refresh vai
+  // para o localStorage do navegador e nenhuma credencial de verdade e digitada.
+  const aberta = await sessaoDaCaptura();
+  const sessao = aberta.tokens;
   if (!sessao.accessToken) throw new Error("login da prova falhou: " + JSON.stringify(sessao).slice(0, 160));
 
   await page.goto(BASE + "/login", { waitUntil: "networkidle0" });
   await page.evaluate((t) => localStorage.setItem("nexus.refresh", t), sessao.refreshToken);
   await semToast(page);
 
-  for (const p of PAGINAS) {
+  for (const p of PAGINAS.filter(naLista)) {
     console.log("== " + p.rota + " ==");
     await page.goto(BASE + p.rota, { waitUntil: "networkidle0" });
     await page.waitForSelector(".nx-tabs", { timeout: 15000 });
@@ -611,6 +629,7 @@ async function checarPainel(page, okFn, aba) {
     await page.evaluate((id) => document.querySelector('[data-tab="' + id + '"]').click(), p.abas[0].id);
     await sleep(700);
     await semToast(page);
+    if (p.filtroDaFoto) await filtraUsuarios(page, p.filtroDaFoto);
     await page.screenshot({ path: path.join(OUT, p.foto + ".png") });
 
     // celular: barra com rolagem horizontal fluida, sem estourar a pagina.
@@ -646,6 +665,7 @@ async function checarPainel(page, okFn, aba) {
       const rolou = await mobile.evaluate(() => document.querySelector(".nx-tabs").scrollLeft > 0);
       ok("barra rola horizontalmente quando ha muitas abas", rolou);
     }
+    if (p.filtroDaFoto) await filtraUsuarios(mobile, p.filtroDaFoto);
     await mobile.screenshot({ path: path.join(OUT, p.foto + "-celular.png") });
     await mobile.close();
   }

@@ -5,6 +5,32 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/), 
 
 ## [Não lançado]
 
+### As capturas do repositório passaram a provar sem credencial de ninguém (2026-10-12)
+
+- **109 imagens conferidas uma a uma**: 101 PNGs em `docs/screenshots/` e 8 arquivos de marca. Nove delas
+  mostravam dado sensível real — a senha do administrador em texto (`02-login.png`), o código de recuperação
+  de 64 caracteres (`09-recuperar-senha.png`), o e-mail pessoal do dono em quatro telas de conta e
+  configurações, e dois e-mails reais na lista de usuários (`04-usuarios`, `18-tabs-usuarios` e a versão de
+  celular). As nove foram recapturadas; as outras 92 não mudaram de byte.
+- **Nasceu a conta de demonstração fictícia** (`tools/conta-de-captura.cjs`): `demo@exemplo.test` /
+  "Demonstracao Ficticia", criada pela própria ferramenta no primeiro uso, com senha de 24 caracteres gerada
+  por `crypto.randomInt` e guardada em `tools/conta-de-captura.local.json`, agora ignorado. Nenhum script de
+  prova digita credencial real nem clica no botão do olho.
+- **A recaptura seletiva existe para não criar ruído**: `NEXUS_PROVA_FOTOS` e `NEXUS_PROVA_PAGINAS` deixam o
+  roteiro rodar de ponta a ponta fotografando só as telas pedidas. Foi por isso que `08-cadastro.png`,
+  regravada sem necessidade numa corrida, voltou a ser exatamente o arquivo do `HEAD`.
+- **Uma asserção para cada promessa**: `apps/api/test/capturas-sem-credencial.test.ts` (**8 casos**) varre os
+  `tools/*.cjs` atrás de literal de senha, credencial de desenvolvimento, clique no olho, import do
+  `senha-admin.cjs` e sequência hexadecimal na tela de recuperação. Antes da mudança, os mesmos padrões
+  acusaram 7 ofensas em cinco arquivos contra o conteúdo do `HEAD`.
+- **O que a revisão revelou e não foi escondido**: criar uma conta adiciona o administrador global como
+  OWNER da empresa recém-nascida, então a tela de Usuários de qualquer empresa nova lista o administrador
+  (achado N10, com o desdobramento em `docs/decisoes/G8-administrador-da-plataforma.md`); o rodapé do painel
+  e da vitrine assina o nome do dono em quase toda captura (N11); e um conjunto de imagens traz resíduo do
+  banco de desenvolvimento — `Empresa-<timestamp>`, "PROVA-SINO", "Teste Direto XYZ" (N12), que é limpeza de
+  banco, não de pixel. A tabela completa está em `docs/AUDITORIA.md`, e a N5 ("não verificado") foi
+  encerrada.
+
 ### A vitrine parou de falar a língua de quem constrói o sistema (2026-10-12)
 
 - **O que estava na tela era texto de prova, não cadastro.** Os cartões "Como o conteúdo chega na página?",

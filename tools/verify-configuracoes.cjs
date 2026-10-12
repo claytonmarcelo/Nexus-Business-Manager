@@ -2,19 +2,27 @@
 // só o que mudou, e o que a API reprova aparece embaixo do campo — não num aviso
 // genérico que a pessoa lê e não sabe onde corrigir.
 //
-// A prova escreve na empresa e na conta do administrador de propósito (é o único
-// cadastro com papel de escrita) e devolve tudo ao valor que encontrou no início.
+// A prova escreve na empresa e na conta da captura fictícia (tools/conta-de-captura.cjs,
+// papel de OWNER) e devolve tudo ao valor que encontrou no início: o administrador real
+// da plataforma nunca entra nesta tela, então nenhum dado dele vai para o git.
 // O papel que não pode gravar é conferido com um usuário de prova criado no banco
 // e apagado no fim: sem rota de exclusão de usuário no produto, ele não pode
 // deixar rastro nem aparecer numa listagem.
 const puppeteer = require("puppeteer-core");
 const path = require("path");
-const { EMAIL_ADMIN, SENHA_ADMIN } = require("./senha-admin.cjs");
+const { contaDeCaptura } = require("./conta-de-captura.cjs");
 
 const CHROME = "C:/Program Files/Google/Chrome/Application/chrome.exe";
 const BASE = process.env.NEXUS_WEB || "http://localhost:5173";
 const API = (process.env.NEXUS_API || "http://localhost:3001") + "/api";
 const SHOTS = "docs/screenshots";
+// A conta desta corrida: fictícia, com empresa própria vazia.
+const CAPTA = contaDeCaptura();
+// NEXUS_PROVA_FOTOS=22-configuracoes-conta,... fotografa só o que foi pedido.
+const FOTOS_PEDIDAS = (process.env.NEXUS_PROVA_FOTOS || "")
+  .split(",")
+  .map((nome) => nome.trim())
+  .filter(Boolean);
 
 let checks = 0;
 const falhas = [];
@@ -156,6 +164,10 @@ async function semToast(page) {
 }
 
 async function foto(page, nome) {
+  if (FOTOS_PEDIDAS.length && !FOTOS_PEDIDAS.includes(nome)) {
+    console.log("  [foto] " + nome + " (fora da lista desta corrida)");
+    return;
+  }
   await page.screenshot({ path: SHOTS + "/" + nome + ".png" });
   console.log("  [foto] " + nome + ".png");
 }
@@ -242,7 +254,7 @@ function diferencas(antes, depois) {
 
 // ----------------------------------------------------------------------- roteiro
 (async () => {
-  const login = await chame("POST", "/auth/login", { email: EMAIL_ADMIN, password: SENHA_ADMIN });
+  const login = await chame("POST", "/auth/login", { email: CAPTA.email, password: CAPTA.senha });
   if (login.status !== 200) {
     console.error("login falhou: " + login.status + " " + JSON.stringify(login.dados));
     process.exit(1);
@@ -275,7 +287,7 @@ function diferencas(antes, depois) {
 
     // == 1) Entrada e as quatro abas ==
     console.log("== 1) Entrar em Configurações ==");
-    await entrarNoPainel(pagina, EMAIL_ADMIN, SENHA_ADMIN);
+    await entrarNoPainel(pagina, CAPTA.email, CAPTA.senha);
     await pagina.goto(BASE + "/app/configuracoes", { waitUntil: "networkidle0" });
     await pagina.waitForSelector(".nx-painel", { timeout: 15000 });
 
@@ -317,7 +329,7 @@ function diferencas(antes, depois) {
       };
     }, "Seus dados");
     ok("o e-mail aparece mas não se edita",
-      emailLeitura.readOnly === true && emailLeitura.valor === EMAIL_ADMIN, JSON.stringify(emailLeitura));
+      emailLeitura.readOnly === true && emailLeitura.valor === CAPTA.email, JSON.stringify(emailLeitura));
     ok("a tela explica por que ele é travado", /não se altera/.test(emailLeitura.dica || ""), String(emailLeitura.dica));
 
     await escreverCampo(pagina, "Seus dados", "Telefone", TELEFONE_PROVA);
