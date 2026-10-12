@@ -5,6 +5,35 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/), 
 
 ## [Não lançado]
 
+### O retrato medido do projeto saiu do código: `docs/ESTADO-ATUAL.md` (2026-10-12)
+
+- **Nada aqui veio de memória.** O arquivo novo é gerado de comando executado nesta rodada: as **105 rotas**
+  da API lidas uma a uma dos 16 arquivos `*.routes.ts` (10 públicas, 14 de plataforma, 81 com permissão
+  RBAC, **0 sem gate**), as **27 tabelas** cruzadas com o delegate que cada serviço realmente chama, as
+  **24 rotas** React, os **386 arquivos rastreados**, as versões dos dois `package.json` e o MySQL **8.4.7**
+  perguntado ao próprio servidor.
+- **A cobertura foi medida com as duas pontas na mesa:** API em **85,57%** de instruções (2.301/2.689) e web
+  em **8,59%** (309/3.597). O número baixo do web é dito com nome: **51 dos 77 arquivos instrumentados estão
+  em 0%**, incluindo as 17 páginas de painel — a garantia dessas telas hoje são as provas de navegador, que
+  não rodam sozinhas. Na API o oco tem endereço: `cron.runner.ts` a **0%** (o laço que dispara a rotina no
+  processo do servidor não roda em teste) e `reports.service.ts` a **53,8%**.
+- **Onde a documentação mentia, ficou escrito:** o README conta **8** rotas de autenticação e o código
+  declara **10**; a tabela de tecnologias diz `react-router-dom 6` e o `package.json` traz `^7.18.4`.
+  Registramos as divergências na seção 9 do inventário em vez de consertar por fora, porque o prompt desta
+  rodada proíbe mudar comportamento sem relatar.
+- **E um clone novo não compilava.** Medido no portão final: `npm ci` seguido de `npm run typecheck` devolve
+  **217 erros**, porque a política de scripts do npm não deixa o Prisma gerar o cliente sozinho. Com
+  `npm run prisma:generate -w @nexus/api` no meio, o mesmo clone passa em typecheck, build e nos **250 casos**
+  das duas suítes. O achado é o **N9** da auditoria, e a linha que faltava entrou no passo a passo do README —
+  uma linha de texto, sem tocar em script nenhum.
+- **Verificado sem mudar comportamento:** os três portões no diretório de trabalho (typecheck com 0 erros,
+  build ok, 28 arquivos / 230 casos e 4 arquivos / 20 casos verdes), a varredura de segredos — **a senha real
+  do administrador não aparece em arquivo rastreado nem em nenhuma linha do histórico**, e a credencial de
+  desenvolvimento que aparece continua à espera do aval do dono para ser publicada — e a codificação dos 386
+  arquivos rastreados: **sem BOM, sem CRLF**.
+
+---
+
 ### Toda sessão encerrada voltou a chegar à página de boas-vindas (2026-10-11)
 
 - **O portão e o botão discordavam, e quem chegasse depois vencia.** `ProtectedRoute` tinha um destino só para

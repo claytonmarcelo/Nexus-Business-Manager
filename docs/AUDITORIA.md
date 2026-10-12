@@ -710,3 +710,31 @@ rodada: **5 falhas, 1 verde**. As respostas:
   tempo de sessão ou revogação. O aviso de "outra aba" e o de "logout" não ganharam texto — a regra pede
   mensagem só para a expiração, e inventar frase sem pedido é o caminho para a tela mentir.
 
+### N9 — BAIXO, corrigido nesta rodada: um clone novo não compila sem gerar o cliente Prisma
+
+O portão de fechamento mandou provar que quem clona o repositório consegue montar o projeto sozinho, na
+ordem `git clone . ../nexus-verificacao` → `npm ci` → `npm run typecheck` → `npm run build`. Foi exatamente
+isso que se rodou, e a primeira passada quebrou:
+
+- **O `npm ci` não gerou o cliente.** Ele concluiu, mas o npm bloqueou por política de scripts o
+  `preinstall` do `prisma` e o `postinstall` do `esbuild` — a saída traz o aviso
+  `npm warn allow-scripts` e sugere `npm approve-scripts`. Sem o generate, `node_modules/.prisma/client`
+  fica sem os tipos do schema.
+- **O typecheck então devolveu 217 erros**, e todos dizem a mesma coisa: o `@prisma/client` não exporta
+  `Role`, `Prisma.Decimal` não existe, `PrismaClientKnownRequestError` não existe. Nenhum deles é defeito
+  de código — é cliente gerado que falta.
+- **Depois de `npm run prisma:generate -w @nexus/api`**, o mesmo clone passou em tudo: typecheck com
+  **0 erros**, build **ok** (Vite em 3,81 s) e a suíte inteira verde — **28 arquivos / 230 casos** na API e
+  **4 arquivos / 20 casos** no web. Para rodar a suíte foi preciso copiar um `.env` para o clone, e isso é
+  o esperado: o arquivo é ignorado de propósito, e a suíte fala com o MySQL de verdade.
+- **Causa raiz:** buraco de receita de bolo, não de código. O README mandava `npm install` e ia direto para
+  `db:migrate`; num ambiente em que a política de scripts do npm está ligada — que é o comportamento padrão
+  de hoje — o generate não acontece sozinho, e a primeira coisa que a pessoa vê são 217 erros sem relação
+  nenhuma com o que ela escreveu.
+- **Corrigido com isso:** a seção "Instalação → Passo a passo" do `README.md` ganhou
+  `npm run prisma:generate -w @nexus/api` logo depois da instalação, com o aviso de que sem aquilo nada
+  compila. É texto: nenhuma linha de código, script ou configuração mudou.
+- **O que a rodada não fez:** não adicionou um `postinstall` ao `package.json`. Isso mudaria o que roda no
+  `npm install` de todo mundo, e o prompt de fechamento proíbe funcionalidade nova nesta fase. Fica
+  registrado como opção da Fase 7, junto de CI e threshold de cobertura.
+

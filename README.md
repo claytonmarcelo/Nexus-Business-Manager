@@ -647,6 +647,7 @@ npm run prisma:generate -w @nexus/api           # regera o client depois de mexe
 
 ```bash
 npm install
+npm run prisma:generate -w @nexus/api   # sem isto, nada compila (docs/AUDITORIA.md N9)
 cp apps/api/.env.example apps/api/.env
 # edite apps/api/.env: DATABASE_URL, JWT_ACCESS_SECRET, JWT_REFRESH_SECRET,
 # SEED_ADMIN_PASSWORD com a senha do administrador definitivo (CREDENCIAIS.md)
