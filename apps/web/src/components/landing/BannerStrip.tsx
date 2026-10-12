@@ -20,7 +20,10 @@ export function BannerStrip({ banners }: { banners: ItemBanner[] }) {
                 target={banner.link.startsWith("/") ? undefined : "_blank"}
                 rel="noopener noreferrer"
               >
-                Ver
+                {/* "Ver" sozinho não diz aonde se vai. Rota interna abre o
+                    próprio sistema; endereço de fora é link externo — ações
+                    diferentes pedem palavras diferentes. */}
+                {banner.link.startsWith("/") ? "Acessar" : "Abrir link"}
               </a>
             )}
           </div>

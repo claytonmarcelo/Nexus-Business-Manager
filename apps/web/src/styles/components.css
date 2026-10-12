@@ -635,11 +635,13 @@
   line-height: 1.12;
 }
 .landing-subtitle { color: var(--text-2); font-size: 1.05rem; line-height: 1.65; max-width: 62ch; }
+/* O respiro de baixo saiu daqui e passou para o .landing-main, para que todas
+   as seções tenham a mesma distância entre si. */
 .landing-features {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(240px, 100%), 1fr));
   gap: 1rem;
-  padding: 1rem clamp(1.25rem, 5vw, 4rem) 4rem;
+  padding: 0 clamp(1.25rem, 5vw, 4rem);
   max-width: 1200px;
   margin: 0 auto;
   width: 100%;
