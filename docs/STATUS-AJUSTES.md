@@ -8,7 +8,8 @@ Situações possíveis: `FEITO` (corrigido e comprovado por teste nesta rodada),
 `BLOQUEADO POR DECISÃO` (depende de resposta do dono — ver `docs/decisoes/`),
 `NÃO VERIFICADA` (não foi possível comprovar).
 
-Atualizada em 2026-10-11, no fim do Bloco A.
+Atualizada em 2026-10-11, no fim do Bloco A, e de novo na rodada em que o cabeçalho do painel perdeu o texto
+da marca (achados N1 a N5 em `docs/AUDITORIA.md`).
 
 ## Bloco A — segurança e isolamento
 
@@ -72,6 +73,7 @@ Atualizada em 2026-10-11, no fim do Bloco A.
 | G4. Cadastro sem verificação de e-mail | BLOQUEADO POR DECISÃO | `docs/decisoes/G4-cadastro-aberto.md` |
 | G5. Hospedagem, domínio, HTTPS e backup | BLOQUEADO POR DECISÃO | `docs/decisoes/G5-hospedagem-e-backup.md` |
 | G6. Licença do repositório | BLOQUEADO POR DECISÃO | `docs/decisoes/G6-licenca.md` |
+| G7. Senha do administrador publicada em captura, com histórico | BLOQUEADO POR DECISÃO | Achado N1 de `docs/AUDITORIA.md`: `docs/screenshots/02-login.png` mostra a senha real revelada, está na galeria do `README.md` e já está no `origin/main`. Exige (a) trocar a senha, (b) recapturar sem o olho ligado e tirar o clique dos dois `tools/shoot*.cjs`, (c) decidir se o histórico é reescrito. O push desta rodada ficou parado por causa disso. |
 
 Nenhum adapter de terceiros foi escrito: o contrato manda entregar porta + adaptador falso +
 documento de decisão **depois** da escolha do dono, e proíbe inventar integração sem credencial.
@@ -94,3 +96,9 @@ CRLF                nenhum arquivo com CRLF
 sem \n final        nenhum arquivo
 npm audit           3 high (Bloco B, PENDENTE)
 ```
+
+Repetidos depois de tirar o texto do cabeçalho (2026-10-11): typecheck e build limpos, a suíte nos mesmos
+28 arquivos / 230 testes, e `tools/verify-sidebar.cjs` em 88 checagens sem erro de console no navegador. O
+**push desta rodada está segurado** pelo achado N1 (`docs/AUDITORIA.md`): a senha do administrador está
+publicada nos pixels de uma captura que já está no `origin/main`, e o prompt de fechamento manda parar e
+reportar antes de publicar qualquer coisa por cima disso.

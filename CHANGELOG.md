@@ -5,6 +5,26 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/), 
 
 ## [Não lançado]
 
+### O topo do painel parou de repetir o nome do produto (2026-10-11)
+
+- **Saiu o "Business Manager" do cabeçalho.** A marca já está no menu lateral, na aba do navegador e no rodapé;
+  no topo ela só disputava espaço com o botão do menu, o atalho da landing page, o sino e o tema. Foi embora o
+  `<div className="admin-header-title">` e, junto, a regra CSS que ficou sem dono (`.admin-header-title` em
+  `components.css`). O botão de alternância passou a ser o primeiro elemento do cabeçalho.
+- **A prova da sidebar passou a vigiar isso** (`tools/verify-sidebar.cjs`, 87 → 88 checagens): uma asserção
+  confere que o cabeçalho não carrega mais nenhum texto de marca, e outra que o botão é o primeiro elemento
+  dele. Aproveitamos para consertar duas listas de itens que estavam desatualizadas no próprio teste — elas
+  não conheciam a tela "Rotinas agendadas" e já vinham falhando antes desta mudança (registrado em
+  `docs/AUDITORIA.md`).
+- **As quatro telas de painel da galeria do README foram recapturadas** (dashboard, Vendas, Financeiro e o
+  editor do site), agora sobre a empresa de demonstração, com o menu em camadas e os indicadores contados no
+  banco. A tabela de provas do README acompanhou a contagem nova.
+- **Achado registrado, não corrigido:** a captura `docs/screenshots/02-login.png`, que está na primeira página
+  do README, mostra a senha real do administrador revelada pelo botão do olho, e `09-recuperar-senha.png` mostra
+  um código de recuperação de desenvolvimento. É segredo publicado no repositório público. Detalhes, alcance e
+  as opções de correção estão em `docs/AUDITORIA.md`, seção "Novos achados" — e o push desta rodada ficou
+  parado até a decisão do dono.
+
 ### O Bloco A do prompt de mercado: quem mandou na sessão, no papel e na configuração (2026-10-11)
 
 > Onze tarefas de contrato (A0 a A11) executadas na ordem, cada uma com teste e commit próprio. A situação de

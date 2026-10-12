@@ -544,3 +544,70 @@ Prisma 6.19 em uso e sem `audit fix --force` — é o Bloco B, registrado como P
 Nada de integração externa foi escrito: SMTP, cobrança, fiscal, verificação de cadastro, hospedagem e licença
 estão como documento de decisão com opções, custo e recomendação em `docs/decisoes/`, esperando resposta do
 dono (Bloco G).
+
+## Novos achados — registrados fora do escopo das fases (2026-10-11)
+
+Estes achados nasceram na rodada de fechamento e na mudança visual do cabeçalho. Nenhum deles renumera a
+tabela de severidades da Fase 0; a contagem de lá (4 CRÍTICO + 1 de processo, 14 ALTO, 12 MÉDIO, 12 BAIXO)
+continua valendo para o que foi auditado ali.
+
+### N1 — CRÍTICO, segredo real publicado: a senha do administrador está nos pixels de uma captura rastreada
+
+`docs/screenshots/02-login.png` (blob `c377aa4e1e956858bebc5f41d723337321e1dd1c`, a mesma coisa no `HEAD` e no
+`origin/main`) mostra o formulário de login com o botão do olho clicado e a **senha definitiva do
+administrador global em texto legível**. Não é texto no repositório — `git grep` pela senha não acha nada,
+porque a limpeza que tirou a senha dos arquivos rastreados funcionou; ela voltou em imagem. A captura está embutida na
+galeria da primeira página do `README.md` (linha 60), então quem abre o repositório público vê o par
+e-mail/senha sem precisar procurar.
+
+- **Como entrou:** `tools/shoot.cjs:41` e `tools/shoot-auth.cjs:22` digitam a senha real vinda de
+  `tools/senha-admin.cjs` e clicam `.eye-toggle` antes de fotografar, para a tela sair "preenchida". Os dois
+  scripts escrevem no mesmo arquivo `02-login.png`.
+- **Alcance medido:** seis commits tocaram esse PNG (`7534a7a` foi o primeiro, `25610a9` o último). A reescrita
+  de histórico que já foi feita uma vez neste projeto tirou a senha dos **textos**, não das **imagens** — o
+  `git log -S` por string não acha, mas o pixel está lá em todas as versões do arquivo.
+- **Por que não foi corrigido em silêncio:** a regra do prompt de fechamento manda parar e reportar segredo
+  real rastreado ou no histórico, e reescrever histórico está na lista de proibidos. Além disso, a senha é a
+  regra de acesso definitiva do dono.
+- **O que a correção exige, na ordem:** (1) trocar a senha do administrador global e atualizar
+  `SEED_ADMIN_PASSWORD` / `tools/senha-admin.local.cjs` / `CREDENCIAIS.md` — sem isso, qualquer outra ação é
+  cosmética, porque a senha já é pública; (2) recapturar `02-login.png` sem revelar a senha (digitar texto de
+  exemplo antes de clicar no olho, ou fotografar com os pontinhos); (3) tirar o clique do `.eye-toggle` dos
+  dois scripts de captura, senão a próxima recaptura vaza de novo; (4) decidir, com o dono, se o histórico é
+  reescrito (`filter-repo`) ou se aceitamos que a versão antiga continua acessível em forks e no cache do
+  GitHub. O passo 4 é decisão dele, não minha.
+- **Estado desta rodada:** o push foi **segurado**. As quatro telas de painel que precisavam ser recapturadas
+  foram, e nenhuma delas mostra credencial.
+
+### N2 — MÉDIO, credencial de desenvolvimento publicada: código de recuperação em `09-recuperar-senha.png`
+
+A mesma família de captura (`tools/shoot-auth.cjs:40`) fotografa a etapa de código com o aviso de
+"Modo desenvolvimento (sem e-mail configurado)" e o **código de 64 caracteres preenchido no campo**. É
+credencial de uma conta de desenvolvimento de 2026-10-10 e, depois da A7, o código é de uso único e vence,
+então o valor prático para um atacante é baixo — mas a forma é de segredo, está num repositório público, e a
+mesma galeria que expõe o `02-login.png` ao lado prova que essas capturas não foram escolhidas com esse cuidado. Sai
+limpa a `08-cadastro.png` (nome e e-mail fictícios, senhas vazias).
+
+### N3 — BAIXO, identificador real espalhado por arquivos rastreados
+
+O e-mail do administrador global (`nexusbussiness.admin@gmail.com`) aparece em **26 arquivos rastreados**:
+`README.md`, `CHANGELOG.md`, `apps/api/.env.example`, `apps/api/prisma/seed.ts`, `apps/api/src/lib/passwordPolicy.ts`,
+`apps/api/test/seed-seguro.test.ts` e os 20 scripts de `tools/`. Sozinho é um identificador, não uma credencial,
+e ele é necessário no `.env.example`/na documentação da regra de acesso. O que muda o peso dele é o N1: com a
+senha na imagem ao lado, o par fecha. Se o dono autorizar, os scripts de prova podem ler o e-mail de
+`tools/senha-admin.local.cjs` junto com a senha, em vez de repetir a string.
+
+### N4 — BAIXO, prova de navegador desatualizada falhando antes da mudança
+
+`tools/verify-sidebar.cjs` tinha duas listas de itens do menu sem "Rotinas agendadas", que entrou na tela em
+`AdminShell.tsx` bem antes desta rodada. A volta já estava vermelha (2 falhas) antes de qualquer edição
+nossa — foi consertada aqui porque a mudança do cabeçalho exigia rodar a prova de qualquer jeito, e ela é a
+mesa onde a tela é conferida. Ficou registrada para que a falha antiga não pareça causada pela mudança nova.
+
+### N5 — NÃO VERIFICADO, as outras capturas do painel
+
+Só as quatro telas da galeria do `README.md` foram recapturadas nesta rodada (`03-dashboard`, `11-vendas`,
+`13-financeiro`, `20-cms-conteudo-dark`). As demais capturas de painel em `docs/screenshots/` não foram
+conferidas uma a uma: elas devem mostrar o texto que saiu do cabeçalho, e a renovação completa delas é
+trabalho da Fase 9, quando as provas de navegador passam a rodar em CI.
+
