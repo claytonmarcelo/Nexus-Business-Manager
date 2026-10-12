@@ -5,6 +5,55 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/), 
 
 ## [Não lançado]
 
+### A vitrine parou de falar a língua de quem constrói o sistema (2026-10-12)
+
+- **O que estava na tela era texto de prova, não cadastro.** Os cartões "Como o conteúdo chega na página?",
+  "Dá para esconder uma seção?" e o destaque "Destaque de exemplo / Ver" não vinham do banco: vinham de
+  `tools/verify-landing-cms.cjs`. A prova publica conteúdo para conferir se o editor chega na vitrine, e o
+  que ela publicava era fala de desenvolvedor — visível em `19-landing-cms-*.png` e em qualquer visita à
+  página durante a corrida.
+- **A prova agora publica produto.** As três capacidades viraram "Vendas que dão baixa no estoque",
+  "Financeiro com resumo do mês" e "CRM com funil e conversão"; o destaque virou "Comece pelo cadastro da
+  empresa", apontando para `/cadastro`; as duas dúvidas passaram a ser as duas perguntas de quem chega
+  ("Cada empresa vê só os próprios dados?" e "Preciso instalar alguma coisa?"). A métrica saiu do
+  "R$ 1.234,50" inventado e virou **7 módulos** — conferível em `apps/api/src/modules`, que tem exatamente
+  esses sete módulos de operação. Uma afirmação nova recusa qualquer item que volte a carregar "exemplo",
+  "teste", "prova" ou "auditado", e a limpeza passou a purgar também os oito títulos antigos, para que uma
+  base criada antes desta troca não fique com o cartão velho pendurado na vitrine.
+- **Depoimento sem nota, e nota só quando alguém a dá.** O depoimento publicado pela prova é assinado por
+  quem escreveu o sistema e não traz estrelas: nota é opinião de quem usa. A linha de estrelas agora aparece
+  quando ela é cadastrada, e é exatamente isso que o passo 5 prova — um `PATCH` cadastra 4 de 5 no item, a
+  tela passa a mostrar "4 de 5", e sem o cadastro a seção fica limpa.
+- **Os quatro formatos da métrica saíram da tela e entraram no teste.** `valorDaMetrica` era função dentro
+  do componente e virou `apps/web/src/lib/metricaVitrine.ts`, com
+  `apps/web/src/test/metrica-da-vitrine.test.ts` (**7 casos**): número com pontuação brasileira, moeda,
+  porcentagem, unidade, texto, valor ausente e formato desconhecido. É por isso que a prova de navegador pôde
+  abrir mão da cifra inventada — a API só aceita número em `valor`, então moeda e porcentagem não têm como
+  ser provados na tela sem mentir para o visitante.
+- **O buraco de ~380px do "Sobre" fechou.** Medido em 1440×900 antes da mudança: a linha da seção media
+  **450px** e a coluna do título, **63px** — um vazio embaixo de um `h2` sozinho. O parágrafo de
+  apresentação desceu para debaixo do título (`.landing-sobre-lead`), e a coluna passou a medir **257px**
+  contra os **343px** da coluna do detalhe. Nenhum parágrafo novo foi escrito para preencher: o que estava
+  folgado de um lado só mudou de coluna.
+- **Ritmo, não enchimento.** A grade de capacidades carregava 4rem de respiro próprio, então havia 109px
+  antes do "Sobre" e 45px entre os outros blocos. O respiro passou para o `.landing-main`, uma distância só
+  entre todas as seções. A página inteira mede hoje **1.545px** no lugar de **1.687px**, com o mesmo texto.
+  Um destaque sozinho estreita a faixa para 760px em vez de esticar um cartão de 1.120px com duas linhas no
+  canto, e o link "Ver" passou a dizer "Acessar" quando a rota é interna e "Abrir link" quando é externa.
+- **Resíduo que a prova do editor deixava no banco.** `tools/verify-cms.cjs` trocava o título do documento
+  legal para provar a escrita e devolvia só o texto: "Termos de uso do editor" ficou morando no banco e no
+  `GET /api/public/landing`. A restauração agora devolve o título padrão do produto, uma afirmação nova
+  confere `GET /cms/legal` depois da limpeza, e o valor que estava na base local foi purgado pela própria
+  API.
+- **Medido depois da mudança:** typecheck dos dois workspaces com **0 erros**, build ok, **28 arquivos /
+  230 casos** verdes na API e **5 arquivos / 27 casos** no web (eram 4 / 20), e
+  `node tools/verify-landing-cms.cjs` com **123 checagens / 0 falhas**. Saíram desta corrida as três
+  capturas da vitrine montada pelo banco (`19-landing-cms-claro.png`, `-dark.png` e `-celular.png`), que são
+  as únicas com mudança real: `01-landing.png`, `19-manutencao.png` e o grupo `20-*` voltaram ao que estava
+  no repositório, porque a recaptura só teria o relógio da contagem regressiva e o quadro da animação do
+  emblema diferentes. A conferência final do banco voltou com as cinco coleções de itens em **0** e os três
+  documentos legais no título padrão, não publicados e sem texto.
+
 ### O retrato medido do projeto saiu do código: `docs/ESTADO-ATUAL.md` (2026-10-12)
 
 - **Nada aqui veio de memória.** O arquivo novo é gerado de comando executado nesta rodada: as **105 rotas**

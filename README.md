@@ -76,8 +76,10 @@ as Configurações (`22-*`), de `tools/verify-configuracoes.cjs`; e a venda parc
 (`24-*`), de `tools/verify-parcelamento.cjs`;
 a agenda e a navegação por abas (`17-*`, `18-*`) saíram em **1440×960** porque calendário e barra de abas
 não cabem nos 900 de altura; e os arquivos com `-celular` no nome têm 390×844. Nas capturas de prova o
-conteúdo cadastrado pela própria volta ao padrão da casa no último passo — `01-landing.png` é a vitrine
-com o banco do jeito que ele está hoje.
+conteúdo que a própria prova cadastra é texto de produto — módulo que está no ar, número conferível no
+repositório, pergunta de quem chega — e ele volta ao padrão da casa no último passo: `01-landing.png` é a
+vitrine com o banco do jeito que ele está hoje, e nenhuma corrida termina deixando cartão de desenvolvedor
+na página de quem chega.
 
 ---
 
@@ -356,7 +358,9 @@ outro tema a vitrine volta aos tokens do produto, e é isso que faz o alternador
 o herói recebe título, subtítulo, dois botões e imagem de fundo, e as faixas
 de capacidades, banners, depoimentos, métricas e dúvidas saem dos itens ativos, na ordem cadastrada. Os textos
 moram em `landing/copy.ts`, a animação de entrada é escalonada e respeita `prefers-reduced-motion`, e o
-emblema continua animado no topo.
+emblema continua animado no topo. O respiro entre as seções é um só, declarado no `.landing-main`, e a coluna do
+título no "Sobre" carrega o parágrafo de abertura: nas duas colunas, em qualquer largura de tela, tem
+conteúdo — o espaço que sobra é o da leitura, não um buraco de layout.
 
 O que não existe no banco não aparece na tela. Sem depoimento ou métrica publicados a seção some, e o cabeçalho
 da vitrine carrega só o que não muda: a marca, o tema e a porta de entrada; com o banco vazio a vitrine continua de pé
