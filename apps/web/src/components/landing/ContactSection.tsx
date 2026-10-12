@@ -1,8 +1,8 @@
 import type { ConfiguracaoContato, ConfiguracaoSocial } from "../../lib/landingTypes";
 
 // Critério único de "tem como falar com a gente": a seção some quando nada foi
-// cadastrado, e a âncora do cabeçalho usa a mesma regra. Rodapé com "Contato"
-// que não mostra telefone nem e-mail é o tipo de vazio que denuncia fachada.
+// cadastrado. Rodapé com "Contato" que não mostra telefone nem e-mail é o tipo
+// de vazio que denuncia fachada.
 export function temContato(contato: ConfiguracaoContato, social: ConfiguracaoSocial): boolean {
   return Boolean(
     contato.email ||

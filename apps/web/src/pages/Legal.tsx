@@ -37,7 +37,7 @@ export function Legal() {
 
   return (
     <div className="app-bg landing">
-      <LandingHeader secoes={[]} />
+      <LandingHeader />
       <main id="conteudo" className="landing-main landing-legal">
         <article className="card-surface">
           <Link to="/" className="landing-legal-volta">

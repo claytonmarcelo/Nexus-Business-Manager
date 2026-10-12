@@ -5,6 +5,25 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/), 
 
 ## [Não lançado]
 
+### O cabeçalho da vitrine ficou só com a marca, o tema e a porta de entrada (2026-10-11)
+
+- **Saíram os botões "Recursos" e "Sobre" do topo da página pública.** Eram os links da navegação de âncoras, que
+  ficava no meio do cabeçalho e só existia ali. O que ela mostrava dependia do cadastro: com depoimento, dúvida ou
+  contato publicados, nasciam mais dois ou três links, e o cabeçalho mudava de forma a cada item ligado no editor.
+- **Foi embora junto o que só servia para alimentá-la**: a lista calculada em `Landing.tsx`, os rótulos
+  `SECOES_LANDING` de `copy.ts`, o tipo `SecaoAncora`, a `prop` do `LandingHeader` e as regras `.landing-nav` do
+  CSS — inclusive o `@media (max-width: 700px)` que a escondia no celular, que ficou sem alvo. Como o
+  `.landing-header` já era `space-between`, a marca ficou à esquerda e o tema com o "Acessar" à direita, em
+  qualquer largura, sem regra nova.
+- **As seções continuaram com o próprio `id`** (`#recursos`, `#sobre`, `#depoimentos`, `#faqs`, `#contato`). O
+  campo "Âncora no site" do editor de capacidades aponta para eles, e um link de capacidade para `#sobre` funciona
+  exatamente como funcionava antes — o que saiu foi o menu do cabeçalho, não o endereço das seções.
+- **A prova vigia o desenho novo** (`tools/verify-landing-cms.cjs`, 111 → 113 checagens): nenhum link de seção no
+  cabeçalho nos três largures, marca e acesso presentes, as cinco ids no lugar e nenhuma âncora da página apontando
+  para seção que não existe. O texto de uma dúvida de exemplo, que dizia que a âncora sumia do cabeçalho, acompanhou
+  a mudança, e a captura da vitrine foi regenerada nos dois temas.
+- **Nada foi publicado.** O push continua parado pela decisão sobre o segredo registrado em `docs/AUDITORIA.md` (N1).
+
 ### O "Sobre o Nexus" da vitrine deixou de morar no canto (2026-10-11)
 
 - **O buraco era de medida, não de gosto.** Antes da mudança, o parágrafo do "Sobre" media 658px dentro de uma

@@ -219,7 +219,7 @@ const ITENS_PROVA = [
   {
     kind: "FAQ",
     title: "Dá para esconder uma seção?",
-    body: "Basta desativar o item no editor: a âncora some do cabeçalho junto.",
+    body: "Basta desativar o item no editor: o bloco sai da vitrine no carregamento seguinte.",
     order: 2,
   },
 ];
@@ -379,23 +379,40 @@ async function limparItensDeProva(momento) {
     ok("--accent recebe o destaque", vars.accent === CONFIG_PROVA.cores.destaque, vars.accent);
     ok("--border recebe a borda", vars.borda === CONFIG_PROVA.cores.borda, vars.borda);
 
-    console.log("== 3) Âncoras só para seção que existe ==");
-    const ancora = await page.$$eval(".landing-nav a", (els) =>
-      els.map((e) => ({ texto: e.textContent.trim(), href: e.getAttribute("href") })),
-    );
-    const esperadas = ["#recursos", "#sobre", "#depoimentos", "#faqs", "#contato"];
+    console.log("== 3) Cabeçalho da vitrine, sem botão de seção ==");
+    const cabecalho = await page.evaluate(() => {
+      const h = document.querySelector(".landing-header");
+      return {
+        nav: h.querySelectorAll(".landing-nav").length,
+        linksDeSecao: Array.from(h.querySelectorAll('a[href^="#"]')).map((a) => a.getAttribute("href")),
+        marca: h.querySelector(".landing-brand-name")?.textContent.trim() || "",
+        acesso: h.querySelector('.landing-actions a[href="/login"]')?.textContent.trim() || "",
+        acoes: h.querySelectorAll(".landing-actions a, .landing-actions button").length,
+      };
+    });
     ok(
-      "cinco âncoras: recursos, sobre, depoimentos, dúvidas, contato",
-      esperadas.every((h) => ancora.some((a) => a.href === h)),
-      ancora.map((a) => a.href).join(" "),
+      "nenhum botão de seção sobrou no cabeçalho",
+      cabecalho.nav === 0 && cabecalho.linksDeSecao.length === 0,
+      cabecalho.linksDeSecao.join(" ") || "cabeçalho limpo",
     );
-    ok("nada de âncora 'Preços' inventada", !ancora.some((a) => /preco/i.test(a.href + a.texto)));
+    ok("a marca continua no cabeçalho", /Nexus/.test(cabecalho.marca), cabecalho.marca);
+    ok(
+      "o acesso ao painel continua no cabeçalho",
+      cabecalho.acesso !== "" && cabecalho.acoes >= 2,
+      `${cabecalho.acesso} / ${cabecalho.acoes} elementos`,
+    );
     const idsReais = await page.evaluate(() =>
       ["recursos", "sobre", "depoimentos", "faqs", "contato"].map((id) =>
         Boolean(document.getElementById(id)),
       ),
     );
-    ok("cada âncora aponta para uma seção na página", idsReais.every(Boolean), idsReais.join(","));
+    ok("as cinco seções continuam com id próprio na página", idsReais.every(Boolean), idsReais.join(","));
+    const quebradas = await page.evaluate(() =>
+      Array.from(document.querySelectorAll('main a[href^="#"], header a[href^="#"]'))
+        .map((a) => a.getAttribute("href"))
+        .filter((href) => !document.getElementById(href.slice(1))),
+    );
+    ok("nenhuma âncora aponta para seção que não existe", quebradas.length === 0, quebradas.join(" "));
 
     console.log("== 4) Capacidades, destaques e métricas vindos do CMS ==");
     const cards = await page.$$eval("#recursos .feature-card h3", (els) => els.map((e) => e.textContent.trim()));
@@ -578,11 +595,23 @@ async function limparItensDeProva(momento) {
         ok("no " + nome + " o título do 'Sobre' vem acima do texto", sobre && sobre.embaixo, String(sobre && sobre.embaixo));
       }
     }
-    const navNoCelular = await page.evaluate(() => {
-      const nav = document.querySelector(".landing-nav");
-      return nav ? getComputedStyle(nav).display : "ausente";
+    const cabecalhoNoCelular = await page.evaluate(() => {
+      const h = document.querySelector(".landing-header");
+      const marca = h.querySelector(".landing-brand-name");
+      const acesso = h.querySelector('.landing-actions a[href="/login"]');
+      return {
+        nav: h.querySelectorAll(".landing-nav").length,
+        marca: marca ? getComputedStyle(marca).display : "ausente",
+        acesso: acesso ? getComputedStyle(acesso).display : "ausente",
+      };
     });
-    ok("no celular as âncoras recolhem", navNoCelular === "none", navNoCelular);
+    ok(
+      "no celular o cabeçalho fica só na marca e no acesso",
+      cabecalhoNoCelular.nav === 0 &&
+        cabecalhoNoCelular.marca !== "none" &&
+        cabecalhoNoCelular.acesso !== "none",
+      JSON.stringify(cabecalhoNoCelular),
+    );
     await page.setViewport({ width: 1440, height: 900, deviceScaleFactor: 1 });
     await espera(600);
 
@@ -758,7 +787,7 @@ async function limparItensDeProva(momento) {
       depoimentos: document.querySelectorAll(".landing-depoimento").length,
       metricas: document.querySelectorAll(".landing-metricas li").length,
       faqs: document.querySelectorAll(".landing-faqs details").length,
-      nav: Array.from(document.querySelectorAll(".landing-nav a")).map((a) => a.getAttribute("href")),
+      nav: document.querySelectorAll(".landing-nav a, .landing-header a[href^='#']").length,
       zap: Boolean(document.querySelector(".landing-whatsapp")),
       h1: document.querySelector(".landing-title")?.textContent.trim() || "",
     }));
@@ -769,9 +798,9 @@ async function limparItensDeProva(momento) {
     ok("nenhuma métrica inventada", vazio.metricas === 0);
     ok("nenhuma FAQ de exemplo", vazio.faqs === 0);
     ok(
-      "âncoras encolhem para o que existe (recursos e sobre; contato padrão vazio)",
-      vazio.nav.length === 2 && vazio.nav.join(",") === "#recursos,#sobre",
-      vazio.nav.join(" "),
+      "cabecalho restaurado continua sem botao de secao",
+      vazio.nav === 0,
+      vazio.nav + " link(s) de secao",
     );
     ok("WhatsApp some com o canal desligado", vazio.zap === false);
     ok("herói volta ao texto padrão", vazio.h1 === CONFIG_PADRAO_PRODUTO.headline, vazio.h1.slice(0, 40));

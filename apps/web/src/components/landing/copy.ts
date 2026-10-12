@@ -41,16 +41,6 @@ export const LANDING_COPY = {
   },
 } as const;
 
-// Rótulos das âncoras do cabeçalho. Uma âncora só entra se a seção existir na
-// tela: link para âncora vazia é o tipo de detalhe que denuncia página de fachada.
-export const SECOES_LANDING = {
-  recursos: { id: "recursos", rotulo: "Recursos" },
-  sobre: { id: "sobre", rotulo: "Sobre" },
-  depoimentos: { id: "depoimentos", rotulo: "Depoimentos" },
-  faqs: { id: "faqs", rotulo: "Dúvidas" },
-  contato: { id: "contato", rotulo: "Contato" },
-} as const;
-
 // A seção "Sobre" é honesta: fala do que está no ar e nomeia o que falta, sem
 // número inventado de clientes, países ou nota de satisfação. Nada aqui é contável.
 export const SOBRE_LANDING = {

@@ -352,8 +352,8 @@ de capacidades, banners, depoimentos, métricas e dúvidas saem dos itens ativos
 moram em `landing/copy.ts`, a animação de entrada é escalonada e respeita `prefers-reduced-motion`, e o
 emblema continua animado no topo.
 
-O que não existe no banco não aparece na tela. Sem depoimento ou métrica publicados a seção some, e as
-âncoras do cabeçalho encolhem para o que realmente está na página; com o banco vazio a vitrine continua de pé
+O que não existe no banco não aparece na tela. Sem depoimento ou métrica publicados a seção some, e o cabeçalho
+da vitrine carrega só o que não muda: a marca, o tema e a porta de entrada; com o banco vazio a vitrine continua de pé
 com as quatro capacidades do produto e os textos padrão da casa — nenhum número, cliente ou depoimento
 inventado. A vitrine é uma só para toda a plataforma, então o conteúdo não tem `company_id` e as permissões
 `content:read`/`content:write` ficaram com o OWNER:
@@ -788,7 +788,7 @@ capturas desta página como subproduto:
 |---|---|
 | `tools/verify-notificacoes.cjs` | 85 — o sino e a tela de avisos sobre dado fabricado pela própria prova: número conferido com a API, painel com os seis recentes, marcar lida no banco seguindo para o Financeiro, as três abas com badge, paginação medida contra `meta.total` do servidor, filtro por tipo, CRM sem aviso do tipo, marcar todos até o vazio, preferências gravadas, lidas de novo após reload e devolvidas ao padrão, tema claro e os 390px |
 | `tools/verify-cms.cjs` | 115 — o editor `/app/cms` aba por aba: cada gravação conferida no payload público e na vitrine renderizada, item criado/escondido/editado/excluído pelo modal, texto legal saindo do 404 para a página, nota de SEO igual na tela e na API, o site fechado em 503 com mensagem e relógio, o código de pulso gerado e usado, tudo devolvido ao padrão, os dois temas e os 390px |
-| `tools/verify-landing-cms.cjs` | 111 — a vitrine montada pelo banco: texto, paleta nos dois temas, âncoras, itens, contato, WhatsApp, cookies, SEO, páginas legais, o "Sobre" em duas colunas encostado na linha de 1200px, três larguras sem arrasto e a manutenção de ponta a ponta (contagem, pulso, IP e o código na sessão) |
+| `tools/verify-landing-cms.cjs` | 113 — a vitrine montada pelo banco: texto, paleta nos dois temas, o cabeçalho só com marca, tema e acesso, itens, contato, WhatsApp, cookies, SEO, páginas legais, o "Sobre" em duas colunas encostado na linha de 1200px, três larguras sem arrasto e a manutenção de ponta a ponta (contagem, pulso, IP e o código na sessão) |
 | `tools/verify-configuracoes.cjs` | 127 — as quatro abas do `/app/configuracoes` gravando de verdade: telefone e CNPJ conferidos na tela e na API, um bloco salvo sem tocar nos outros (agora são sete blocos na aba Empresa, cada um mandando só as chaves que são suas), CEP/UF/cidade, moeda que chega à sessão e ao painel, meta que vira régua, as duas políticas por empresa, o STAFF lendo tudo sem botão de gravar, troca de senha que não despeja a pessoa, os dois temas e os 390px — com empresa e conta devolvidas ao estado de antes |
 | `tools/verify-parcelamento.cjs` | 55 — a venda parcelada de ponta a ponta na tela, sobre uma empresa de prova criada e apagada pela própria volta: o seletor de doze parcelas, o preço digitado "1.290,50" valendo R$ 1.290,50 na linha e no rodapé, nota pendente que não escreve caixa nenhum, confirmar que escreve as três parcelas exatas no financeiro, o cancelamento que esvazia o caixa e devolve o estoque, e a compra recebida em 2× caindo como despesa na categoria Compras |
 | `tools/verify-rotinas.cjs` | 37 — a tela `/app/rotinas` com as três varreduras, agenda traduzida e próxima execução conferidas contra a API; "Executar agora" que grava o aviso no banco e mostra no toast a mensagem da rotina; pausar pelo diálogo de confirmação e retomar; o atendente sem permissão; o tema claro e os 390px — jobs, avisos e usuário de prova devolvidos ao estado de antes |

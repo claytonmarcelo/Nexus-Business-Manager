@@ -1,7 +1,7 @@
 /* ===== Página pública montada pelo CMS =====
    Este arquivo só existe depois que a vitrine passou a ler o banco. As regras
    antigas da landing continuam em components.css; aqui entram as seções novas
-   (âncoras, herói com imagem, destaques, sobre + métricas, depoimentos, FAQs,
+   (herói com imagem, destaques, sobre + métricas, depoimentos, FAQs,
    contato, WhatsApp, aviso de cookies e manutenção).
 
    As cores do CMS chegam como variáveis aplicadas no elemento raiz da página
@@ -40,36 +40,6 @@ html {
   max-width: 720px;
   margin: 0 auto;
   width: 100%;
-}
-
-/* ---- Âncoras do cabeçalho ---- */
-.landing-nav {
-  display: flex;
-  align-items: center;
-  gap: clamp(0.6rem, 2vw, 1.4rem);
-  flex: 1;
-  justify-content: center;
-  flex-wrap: wrap;
-}
-.landing-nav a {
-  color: var(--text-2);
-  text-decoration: none;
-  font-size: 0.85rem;
-  font-weight: 600;
-  letter-spacing: 0.01em;
-  padding: 0.35rem 0.1rem;
-  border-bottom: 1px solid transparent;
-  transition: color 160ms ease, border-color 160ms ease;
-}
-.landing-nav a:hover,
-.landing-nav a:focus-visible {
-  color: var(--accent);
-  border-bottom-color: color-mix(in srgb, var(--accent) 60%, transparent);
-}
-@media (max-width: 700px) {
-  .landing-nav {
-    display: none;
-  }
 }
 
 /* ---- Herói com imagem de fundo, overlay e desfoque ---- */

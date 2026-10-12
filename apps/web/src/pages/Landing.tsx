@@ -1,14 +1,14 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AboutSection } from "../components/landing/AboutSection";
 import { BannerStrip } from "../components/landing/BannerStrip";
-import { ContactSection, temContato } from "../components/landing/ContactSection";
+import { ContactSection } from "../components/landing/ContactSection";
 import { CookieBanner } from "../components/landing/CookieBanner";
 import { FaqAccordion } from "../components/landing/FaqAccordion";
 import { FeatureCard, type CapacidadeView } from "../components/landing/FeatureCard";
 import { Hero } from "../components/landing/Hero";
 import { LandingFooter } from "../components/landing/LandingFooter";
-import { LandingHeader, type SecaoAncora } from "../components/landing/LandingHeader";
-import { LANDING_COPY, SECOES_LANDING } from "../components/landing/copy";
+import { LandingHeader } from "../components/landing/LandingHeader";
+import { LANDING_COPY } from "../components/landing/copy";
 import { Maintenance } from "../components/landing/Maintenance";
 import { Testimonials } from "../components/landing/Testimonials";
 import { WhatsappWidget } from "../components/landing/WhatsappWidget";
@@ -19,8 +19,8 @@ import { textoMeta, type PayloadLanding } from "../lib/landingTypes";
 import { tokenStore } from "../lib/tokenStore";
 
 // A página pública deixou de ser HTML fixo: todo o texto, cor, item e documento
-// legal vem do CMS. O que continua aqui é casca e critério de exibição - qual
-// seção entra, qual âncora existe e o que fazer enquanto o conteúdo não chega.
+// legal vem do CMS. O que continua aqui é casca e critério de exibição — qual
+// seção entra e o que fazer enquanto o conteúdo não chega.
 export function Landing() {
   const [dado, setDado] = useState<PayloadLanding | null>(null);
   const [erro, setErro] = useState<string | null>(null);
@@ -68,19 +68,10 @@ export function Landing() {
     }));
   }, [dado]);
 
-  const secoes = useMemo<SecaoAncora[]>(() => {
-    const lista: SecaoAncora[] = [SECOES_LANDING.recursos, SECOES_LANDING.sobre];
-    if (!dado) return lista;
-    if (dado.depoimentos.length > 0) lista.push(SECOES_LANDING.depoimentos);
-    if (dado.faqs.length > 0) lista.push(SECOES_LANDING.faqs);
-    if (temContato(dado.contact, dado.social)) lista.push(SECOES_LANDING.contato);
-    return lista;
-  }, [dado]);
-
   if (!dado) {
     return (
       <div className="app-bg landing">
-        <LandingHeader secoes={[]} />
+        <LandingHeader />
         <main id="conteudo" className="landing-main landing-carregando">
           {erro ? (
             <ErrorState message={erro} onRetry={recarregar} />
@@ -102,7 +93,7 @@ export function Landing() {
 
   return (
     <div ref={raiz} className="app-bg landing">
-      <LandingHeader secoes={secoes} />
+      <LandingHeader />
       <main id="conteudo" className="landing-main">
         <Hero headline={dado.headline} subheadline={dado.subheadline} hero={dado.hero} />
         <BannerStrip banners={dado.banners} />
