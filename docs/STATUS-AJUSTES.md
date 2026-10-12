@@ -73,6 +73,7 @@ da marca (achados N1 a N5 em `docs/AUDITORIA.md`).
 | G4. Cadastro sem verificação de e-mail | BLOQUEADO POR DECISÃO | `docs/decisoes/G4-cadastro-aberto.md` |
 | G5. Hospedagem, domínio, HTTPS e backup | BLOQUEADO POR DECISÃO | `docs/decisoes/G5-hospedagem-e-backup.md` |
 | G6. Licença do repositório | BLOQUEADO POR DECISÃO | `docs/decisoes/G6-licenca.md` |
+| G8. Administrador da plataforma é OWNER de todas as empresas | BLOQUEADO POR DECISÃO | `docs/decisoes/G8-administrador-da-plataforma.md` — medido na R3: três portas de auto-OWNER (`auth.service.ts:279-293`, `companies.service.ts:34-47`, `seed.ts:107-115`), sem trilha de auditoria separada. Recomendação A+D agora, B como destino.
 | G7. Senha do administrador publicada em captura, com histórico | BLOQUEADO POR DECISÃO | Achado N1 de `docs/AUDITORIA.md`: `docs/screenshots/02-login.png` mostra a senha real revelada, está na galeria do `README.md` e já está no `origin/main`. Exige (a) trocar a senha, (b) recapturar sem o olho ligado e tirar o clique dos dois `tools/shoot*.cjs`, (c) decidir se o histórico é reescrito. O push desta rodada ficou parado por causa disso. |
 
 Nenhum adapter de terceiros foi escrito: o contrato manda entregar porta + adaptador falso +

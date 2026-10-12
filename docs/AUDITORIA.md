@@ -963,3 +963,24 @@ recaptura de vitrine com tarefa de segurança.
 O que fica registrado: **a galeria precisa de uma passada de atualização antes do push** (é trabalho da R11,
 de documentação), e só esta imagem foi medida — as outras 100 não foram reabertas para comparar com a
 interface de hoje, então não se sabe quantas estão no mesmo estado. **NÃO VERIFICADO** fora deste arquivo.
+
+### R3 — O que a leitura provou, e o que ela deixou registrado (relatório, sem código)
+
+A R3 não mudou autorização nenhuma: foram cinco arquivos lidos (`companies.service.ts`, `prisma/seed.ts`,
+`lib/passwordPolicy.ts`, `users.service.ts`, `lib/company-context.ts`) mais os três que a regra toca de fato
+(`auth.service.ts`, `lib/audit.ts`, `lib/platform.ts`) e as rotas que lêem a auditoria. As respostas, com
+linha, estão em `docs/decisoes/G8-administrador-da-plataforma.md`. Resumo do que ficou de fora das perguntas:
+
+- **N14 — MÉDIO, auditoria de plataforma escrita no tenant errado.** As rotas reservadas da plataforma gravam
+  `companyId: ctx.companyId` (`modules/cron/cron.routes.ts:27-35` e `:44-46`), isto é, a empresa ativa na
+  sessão de quem clicou. Uma ação que é da plataforma inteira aparece no log de um tenant específico: sobra
+  registro no lugar errado e falta no lugar certo. Não foi corrigido — a R3 é relatório, e mexer nisso é
+  mudança de comportamento que depende da decisão do G8.
+- **N15 — informação, não é falha.** O `companyId` da auditoria de plataforma não é o único ruído do tipo: a
+  trilha não tem campo nenhum que diga "esta linha é do administrador agindo como plataforma". É o item (b)
+  da terceira pergunta da R3, e é o que a opção D do G8 resolve.
+- **NÃO VERIFICADO:** se cada escrita de CMS gera auditoria. Contei 1 chamada em `cms.routes.ts` e 5 em
+  `cms.service.ts`, mas nenhuma rota foi conferida individualmente.
+- **Divergência do próprio prompt, registrada:** a tabela de blocos diz "Bloco 1 = R1 a R4", e a seção 7 manda
+  executar "o Bloco 1 (R1 a R3)" e parar na PARADA 1. Fui pela seção 7, que é a ordem explícita de execução e
+  a que define o ponto de parada — a R4 (privacidade do login) ficou de fora desta parada de propósito.

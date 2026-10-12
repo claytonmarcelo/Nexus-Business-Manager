@@ -5,6 +5,31 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/), 
 
 ## [Não lançado]
 
+### Documentada a decisão que estava escondida no cadastro: o administrador da plataforma entra em toda empresa (2026-10-12)
+
+- **O que foi lido, não alterado.** A tarefa R3 da rodada de segurança era relatório, e foi isso que ela foi:
+  cinco arquivos lidos com calma (`companies.service.ts`, `prisma/seed.ts`, `passwordPolicy.ts`,
+  `users.service.ts`, `company-context.ts`) mais o `auth.service.ts`, o `audit.ts` e o `platform.ts` que a regra
+  toca de fato. Nenhuma permissão mudou neste commit.
+- **A resposta curta:** sim — toda empresa nova nasce com o administrador global como `OWNER`, por três portas
+  (`auth.service.ts:279-293` no cadastro, `companies.service.ts:34-47` na criação de empresa e
+  `prisma/seed.ts:107-115`, que repõe o vínculo em **todas** as empresas do banco a cada corrida do seed). Ele
+  não perde o papel (`users.service.ts:115-124`), e `OWNER` é `["*"]` na matriz de permissões. Não há bypass de
+  isolamento: cada requisição continua conferindo vínculo, conta ativa e empresa ativa em
+  `company-context.ts:20-47` — é o vínculo universal que abre a porta.
+- **O que não existe:** auditoria separada do administrador. A trilha grava o mesmo par
+  usuário/empresa de qualquer pessoa, e a tela filtra pela empresa do contexto. Cada dono vê a ação do
+  administrador no próprio log — o que é bom —, mas não há visão de plataforma, nem marca de "agiu como
+  plataforma", nem aviso a quem entra. Pior: as rotas da plataforma gravam a auditoria na empresa que estava
+  ativa na sessão de quem clicou (achado N14).
+- **Por que isso importa:** é a diferença entre operador e controlador na LGPD (arts. 5º II e VII, 6º I/III/VI,
+  39 e 46), e é uma cláusula que hoje só existe no código.
+- **O documento:** `docs/decisoes/G8-administrador-da-plataforma.md` põe o risco em português, compara quatro
+  saídas (A honestidade documental · B acesso elevado sob demanda, com motivo e validade · C OWNER só em
+  demonstração · D manter o vínculo e auditar à parte) com prós, contras e esforço, e recomenda **A + D agora,
+  B como destino**. O `docs/STATUS-AJUSTES.md` ganhou a linha G8. A decisão é do dono, e nada anda até ela
+  chegar.
+
 ### O endereço do dono e a senha de desenvolvimento saíram do repositório (2026-10-12)
 
 - **Onde estava, medido antes de mexer**: o endereço pessoal do administrador global tinha **32 ocorrências em
