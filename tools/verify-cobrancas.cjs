@@ -862,7 +862,9 @@ async function garantaProdutoDeApoio() {
     const aindaPendente = await linhaDaCobranca(pagina, avulsa.number);
     ok("sem motivo a cobranca continua pendente, e nada foi enviado",
       !!aindaPendente && aindaPendente.situacao === "Pendente", aindaPendente && aindaPendente.situacao);
-    await pagina.type("#cx-motivo", "Cliente desistiu do orcamento", { delay: 2 });
+    // P11 (decisao D4): o campo nao e mais do modal desta tela — e o mesmo dialogo
+    // de confirmacao com motivo das ordens de servico, entao o seletor e da casa.
+    await pagina.type('[role="dialog"] .nx-confirm-motivo textarea', "Cliente desistiu do orcamento", { delay: 2 });
     await cliqueEmBotao(pagina, "Cancelar cobrança", '[role="dialog"]', "confirmar o cancelamento");
     await espereTexto(pagina, "Cobrança cancelada.");
     await situacaoNaTela(pagina, avulsa.number, "Cancelada");

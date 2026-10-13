@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { api, extractErrorMessage } from "../lib/api";
 import { useAuth } from "../context/AuthContext";
 import { notify } from "../lib/notify";
-import { confirmAction } from "../lib/confirm";
+import { confirmAction, confirmActionComMotivo } from "../lib/confirm";
 import { Modal, useDirty } from "../components/Modal";
 import { Pagination, PAGE_SIZE_PADRAO } from "../components/Pagination";
 import { Tabs, TabPanel, useTabState, type TabItem } from "../components/Tabs";
@@ -251,7 +251,30 @@ export function OrdensDeServico() {
   async function mover(o: Ordem, alvo: Status) {
     const temPeca = o.items.some((i) => i.kind === "PART");
     const nome = "#" + o.number + " " + o.title;
-    const perguntas = perguntaDeMovimento(o, alvo, temPeca, nome);
+    const { motivo, ...perguntas } = perguntaDeMovimento(o, alvo, temPeca, nome);
+
+    // Cancelar e estornar pedem motivo escrito (P11 / N36, decisão D4). Os outros
+    // movimentos seguem o diálogo sim/não de sempre: nenhum contrato antigo mudou.
+    if (motivo) {
+      await confirmActionComMotivo({
+        ...perguntas,
+        ...motivo,
+        maxLength: 500,
+        placeholder: alvo === "CANCELLED" && o.status === "COMPLETED"
+          ? "O que levou ao estorno"
+          : "O que levou ao cancelamento",
+        action: async (texto) => {
+          // A falha sobe para o diálogo de propósito: ele continua aberto, mostra a
+          // mensagem do servidor e devolve o texto já escrito. Fechar e jogar o
+          // motivo no toast faria a pessoa digitar tudo de novo.
+          await api.post("/service-orders/" + o.id + "/status", { status: alvo, note: texto });
+          notify.success(MENSAGEM_SUCESSO[alvo]);
+          reabrir();
+        },
+      });
+      return;
+    }
+
     await confirmAction({
       ...perguntas,
       action: async () => {
@@ -505,7 +528,22 @@ const MENSAGEM_SUCESSO: Record<Status, string> = {
   CANCELLED: "Ordem cancelada.",
 };
 
-function perguntaDeMovimento(o: Ordem, alvo: Status, temPeca: boolean, nome: string) {
+/**
+ * O que cada movimento pergunta antes de acontecer. `motivo` só vem no cancelamento
+ * e no estorno (P11 / N36): os outros movimentos continuam o diálogo sim/não de
+ * sempre, porque descrever uma decisão que não destrói nada é burocracia.
+ */
+type PerguntaDeMovimento = {
+  title: string;
+  text: string;
+  nome: string;
+  detalhe: string;
+  confirmLabel: string;
+  danger: boolean;
+  motivo?: { rotuloMotivo: string; ajudaMotivo: string };
+};
+
+function perguntaDeMovimento(o: Ordem, alvo: Status, temPeca: boolean, nome: string): PerguntaDeMovimento {
   if (alvo === "COMPLETED") {
     return {
       title: "Concluir ordem de serviço",
@@ -529,6 +567,14 @@ function perguntaDeMovimento(o: Ordem, alvo: Status, temPeca: boolean, nome: str
         : "Nada é baixado do estoque, e a ordem deixa de contar no que está em aberto.",
       confirmLabel: "Cancelar ordem",
       danger: true,
+      // P11 / N36: o campo que transforma o "sim" mudo em uma decisão explicada.
+      // Estornar uma concluída é outra decisão — o rótulo e a ajuda dizem isso.
+      motivo: {
+        rotuloMotivo: eraConcluida ? "Motivo do estorno" : "Motivo do cancelamento",
+        ajudaMotivo: eraConcluida
+          ? "O motivo entra no histórico como estorno do estoque."
+          : "O motivo fica no histórico da ordem.",
+      },
     };
   }
   if (alvo === "WAITING") {

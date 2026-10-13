@@ -1,4 +1,4 @@
-import { useRef, useState, type ReactNode } from "react";
+import { useRef, useState, useId, type ReactNode } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { Modal } from "./Modal";
 import { ACTIONS } from "../lib/uiCopy";
@@ -132,6 +132,172 @@ export function ConfirmationDialog({
       ) : null}
     </Modal>
   );
+}
+
+/**
+ * Diálogo de confirmação que não aceita um "sim" mudo (P11 / N36, decisão D4).
+ *
+ * Superfície NOVA e aditiva: `confirmAction` continua exatamente como era, com o
+ * mesmo contrato sim/não. Aqui muda uma coisa só — o botão de confirmar não dispara
+ * requisição nenhuma enquanto o campo de motivo estiver vazio, porque cancelar uma
+ * ordem, estornar uma concluída e riscar uma cobrança do carnê são decisões que
+ * seis meses depois ninguém lembra por que aconteceram. O motivo escrito vai no
+ * histórico da empresa (nota da OS, `reason` da cobrança) e a tela deixa de ser o
+ * único lugar onde a explicação existiu.
+ */
+export interface ConfirmMotivoOptions extends Omit<ConfirmActionOptions, "action"> {
+  /** Rótulo do campo: "Motivo do cancelamento", "Motivo do estorno". */
+  rotuloMotivo: string;
+  /** Ajuda discreta abaixo do campo, dizendo onde o motivo vai aparecer depois. */
+  ajudaMotivo?: string;
+  placeholder?: string;
+  /** Espelho do `max` da rota: a tela não deixa escrever o que o servidor rejeita. */
+  maxLength?: number;
+  /** A ação recebe o motivo já aparado. */
+  action: (motivo: string) => Promise<unknown>;
+}
+
+/** O aviso de campo vazio, montado a partir do próprio rótulo: "Diga o motivo do estorno." */
+function digaOMotivo(rotulo: string): string {
+  const minusculo = rotulo.charAt(0).toLowerCase() + rotulo.slice(1);
+  return "Diga o " + minusculo + ".";
+}
+
+export function ConfirmationMotivoDialog({
+  opts, onResolve,
+}: {
+  opts: ConfirmMotivoOptions;
+  onResolve: (confirmado: boolean) => void;
+}) {
+  const [motivo, setMotivo] = useState("");
+  const [faltouMotivo, setFaltouMotivo] = useState(false);
+  const [gravando, setGravando] = useState(false);
+  const [erro, setErro] = useState<string | null>(null);
+  const campo = useRef<HTMLTextAreaElement>(null);
+  // Id do campo vem do React: a página embaixo do diálogo tem os seus próprios
+  // inputs, e um id fixo colaria com o de outra tela aberta por cima.
+  const campoId = useId();
+  // Mesma trava síncrona do diálogo comum, pelo mesmo motivo: o `disabled` só
+  // chega ao DOM depois do re-render, e dois cliques colados chamariam a rota duas vezes.
+  const emExecucao = useRef(false);
+  const rotulo = opts.confirmLabel ?? ACTIONS.confirm;
+
+  async function confirmar(): Promise<void> {
+    if (emExecucao.current) return;
+    const aparado = motivo.trim();
+    if (!aparado) {
+      // O pedido não sai da tela, e a explicação aparece dentro do próprio
+      // diálogo: um aviso que some em três segundos não ensina nada a ninguém.
+      setFaltouMotivo(true);
+      campo.current?.focus();
+      return;
+    }
+    emExecucao.current = true;
+    setFaltouMotivo(false);
+    setGravando(true);
+    setErro(null);
+    try {
+      await opts.action(aparado);
+      onResolve(true);
+    } catch (err) {
+      emExecucao.current = false;
+      setErro(extractErrorMessage(err));
+      setGravando(false);
+    }
+  }
+
+  function fechar(): void {
+    if (emExecucao.current) return;
+    onResolve(false);
+  }
+
+  return (
+    <Modal
+      title={opts.title}
+      size="sm"
+      // Acima da barra lateral (45) e de qualquer formulário aberto (70).
+      zIndex={90}
+      busy={gravando}
+      onClose={fechar}
+      footer={
+        <>
+          <button
+            type="button"
+            className="btn btn-ghost"
+            onClick={fechar}
+            disabled={gravando}
+          >
+            {opts.cancelLabel ?? ACTIONS.back}
+          </button>
+          <button
+            type="button"
+            className={"btn " + (opts.danger ? "btn-risk" : "btn-brand")}
+            onClick={() => void confirmar()}
+            disabled={gravando}
+            aria-busy={gravando}
+          >
+            {gravando ? <span className="nx-confirm-spin" aria-hidden="true" /> : null}
+            <span>{gravando ? rotulo + "…" : rotulo}</span>
+          </button>
+        </>
+      }
+    >
+      <p className="nx-confirm-texto">{frase(opts.text, opts.nome)}</p>
+      {opts.detalhe ? <p className="nx-confirm-detalhe">{opts.detalhe}</p> : null}
+
+      <div className="field nx-confirm-motivo">
+        <label className="field-label" htmlFor={campoId}>{opts.rotuloMotivo}</label>
+        <textarea
+          id={campoId}
+          ref={campo}
+          className="input"
+          rows={3}
+          value={motivo}
+          placeholder={opts.placeholder}
+          maxLength={opts.maxLength}
+          disabled={gravando}
+          data-autofocus=""
+          aria-invalid={faltouMotivo ? true : undefined}
+          onChange={(event) => {
+            setMotivo(event.target.value);
+            // A pessoa escreveu: o aviso perde o sentido e sai da frente.
+            if (faltouMotivo) setFaltouMotivo(false);
+          }}
+        />
+        {faltouMotivo ? (
+          <span className="field-error" role="alert">{digaOMotivo(opts.rotuloMotivo)}</span>
+        ) : null}
+        {opts.ajudaMotivo ? <span className="field-hint">{opts.ajudaMotivo}</span> : null}
+      </div>
+
+      {erro ? (
+        <p className="nx-confirm-erro" role="alert">
+          {erro}
+        </p>
+      ) : null}
+    </Modal>
+  );
+}
+
+/**
+ * O mesmo contrato do `abrirConfirmacao`, com o motivo como condição: resolve
+ * `true` depois que a ação passou, `false` em qualquer saída sem escrita.
+ */
+export function abrirConfirmacaoComMotivo(opts: ConfirmMotivoOptions): Promise<boolean> {
+  return new Promise((resolve) => {
+    const raizAtiva = montar();
+    seq += 1;
+    raizAtiva.render(
+      <ConfirmationMotivoDialog
+        key={seq}
+        opts={opts}
+        onResolve={(ok) => {
+          raizAtiva.render(null);
+          resolve(ok);
+        }}
+      />,
+    );
+  });
 }
 
 /** Aviso informativo de um botão só, no mesmo visual (substitui o alert nativo). */

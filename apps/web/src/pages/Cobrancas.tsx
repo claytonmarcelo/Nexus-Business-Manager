@@ -4,6 +4,7 @@ import { api, extractErrorMessage } from "../lib/api";
 import { useAuth } from "../context/AuthContext";
 import { notify } from "../lib/notify";
 import { Modal, useDirty } from "../components/Modal";
+import { confirmActionComMotivo } from "../lib/confirm";
 import { Pagination, PAGE_SIZE_PADRAO } from "../components/Pagination";
 import { Tabs, TabPanel, useTabState, type TabItem } from "../components/Tabs";
 import { EmptyState, ErrorState, LoadingInline } from "../components/StateView";
@@ -178,7 +179,6 @@ export function Cobrancas() {
   const [detalhe, setDetalhe] = useState<Cobranca | null>(null);
   const [detalheErro, setDetalheErro] = useState<string | null>(null);
   const [pagando, setPagando] = useState<Cobranca | null>(null);
-  const [cancelando, setCancelando] = useState<Cobranca | null>(null);
   // A lista que vale é a do último filtro, não a do último pacote. Cada recarga
   // recebe um número e só escreve na tela se ainda for o mais novo: limpar o
   // vencimento e escolher a situação no mesmo segundo dispara dois pedidos, a rede
@@ -232,6 +232,33 @@ export function Cobrancas() {
 
   function reabrir() {
     setRecarga((n) => n + 1);
+  }
+
+  // P11 (decisão D4): o cancelamento saiu do modal próprio da tela e foi para o
+  // diálogo de confirmação com motivo, o mesmo das ordens de serviço. A regra de
+  // negócio não mudou — o servidor já exigia o `reason` — e a copy continuou a
+  // mesma: o contexto do documento em cima, o aviso do caixa embaixo do campo.
+  async function cancelar(c: Cobranca) {
+    await confirmActionComMotivo({
+      title: "Cancelar cobrança",
+      text: "Deseja realmente cancelar a cobrança {nome}?",
+      nome: "#" + c.number + " · " + (c.clientName ?? "—") + " · " + formatCurrency(c.amount),
+      detalhe: "O que já entrou no caixa não é desfeito aqui: pagamento registrado se estorna de propósito, no Financeiro.",
+      confirmLabel: "Cancelar cobrança",
+      danger: true,
+      rotuloMotivo: "Motivo do cancelamento",
+      ajudaMotivo: "Sem motivo a cobrança não sai do carnê: o cancelamento é uma decisão registrada, não um apagar.",
+      placeholder: "Cliente desistiu, venda estornada, cobrança lançada em duplicidade",
+      maxLength: 500,
+      action: async (motivo) => {
+        // A falha fica no diálogo, com o texto já escrito: fechar e abrir toast
+        // jogaria fora o motivo que a pessoa acabou de digitar.
+        await api.post("/charges/" + c.id + "/cancel", { reason: motivo });
+        notify.success("Cobrança cancelada.");
+        setDetalhe(null);
+        reabrir();
+      },
+    });
   }
 
   async function abrirDetalhe(id: string) {
@@ -351,7 +378,7 @@ export function Cobrancas() {
                           {escrita && c.status === "PENDING" ? (
                             <>
                               <button type="button" className="btn btn-ghost btn-sm" onClick={() => setPagando(c)}>Pagar</button>
-                              <button type="button" className="btn btn-ghost btn-sm nx-cb-perigo" onClick={() => setCancelando(c)}>Cancelar</button>
+                              <button type="button" className="btn btn-ghost btn-sm nx-cb-perigo" onClick={() => void cancelar(c)}>Cancelar</button>
                             </>
                           ) : null}
                         </div>
@@ -412,14 +439,6 @@ export function Cobrancas() {
           cobranca={pagando}
           onClose={() => setPagando(null)}
           onSalvo={() => { setPagando(null); reabrir(); }}
-        />
-      ) : null}
-
-      {cancelando ? (
-        <CancelamentoDeCobranca
-          cobranca={cancelando}
-          onClose={() => setCancelando(null)}
-          onSalvo={() => { setCancelando(null); setDetalhe(null); reabrir(); }}
         />
       ) : null}
     </div>
@@ -888,64 +907,6 @@ function RegistroDePagamento({ cobranca, onClose, onSalvo }: { cobranca: Cobranc
       <div className="field">
         <label className="field-label" htmlFor="pg-anotacao">Anotação do recebimento</label>
         <textarea id="pg-anotacao" className="input" rows={2} maxLength={500} value={anotacao} onChange={(e) => setAnotacao(e.target.value)} placeholder="Banco, terminal, quem recebeu" />
-      </div>
-    </Modal>
-  );
-}
-
-// ---- Cancelar, com motivo ----
-
-function CancelamentoDeCobranca({ cobranca, onClose, onSalvo }: { cobranca: Cobranca; onClose: () => void; onSalvo: () => void }) {
-  const [motivo, setMotivo] = useState("");
-  const [gravando, setGravando] = useState(false);
-  const sujo = useDirty({ motivo });
-  const campo = useRef<HTMLTextAreaElement>(null);
-
-  async function salvar() {
-    if (!motivo.trim()) {
-      notify.error("Diga o motivo do cancelamento.");
-      campo.current?.focus();
-      return;
-    }
-    setGravando(true);
-    try {
-      await api.post("/charges/" + cobranca.id + "/cancel", { reason: motivo.trim() });
-      notify.success("Cobrança cancelada.");
-      onSalvo();
-    } catch (err) {
-      notify.error(extractErrorMessage(err));
-    } finally {
-      setGravando(false);
-    }
-  }
-
-  return (
-    <Modal
-      title="Cancelar cobrança"
-      subtitle={"#" + cobranca.number + " · " + (cobranca.clientName ?? "—") + " · " + formatCurrency(cobranca.amount)}
-      onClose={onClose}
-      onSubmit={() => void salvar()}
-      submitLabel="Cancelar cobrança"
-      busyLabel="Cancelando…"
-      busy={gravando}
-      dirty={sujo}
-      tone="danger"
-      hint="O que já entrou no caixa não é desfeito aqui: pagamento registrado se estorna de propósito, no Financeiro."
-    >
-      <div className="field">
-        <label className="field-label" htmlFor="cx-motivo">Motivo do cancelamento</label>
-        <textarea
-          id="cx-motivo"
-          ref={campo}
-          className="input"
-          rows={3}
-          maxLength={500}
-          data-autofocus
-          value={motivo}
-          onChange={(e) => setMotivo(e.target.value)}
-          placeholder="Cliente desistiu, venda estornada, cobrança lançada em duplicidade"
-        />
-        <p className="form-note">Sem motivo a cobrança não sai do carnê: o cancelamento é uma decisão registrada, não um apagar.</p>
       </div>
     </Modal>
   );

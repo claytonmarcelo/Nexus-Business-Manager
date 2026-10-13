@@ -1,5 +1,40 @@
 ## [Não lançado]
 
+### A casa que abre no login deixou de ser sorteio, e cancelar passou a exigir motivo escrito (2026-10-13)
+
+- **O que estava errado (N32 / P11, decisões D5 e D4 do dono).** `pickMembership`, sem empresa pedida no
+  login, devolvia "a primeira ativa" na ordem que o `include` do Prisma entregava — e em MySQL essa ordem é a
+  do índice de `company_users`, isto é, a do uuid. Quem tem mais de uma casa viajava no tempo: o cabeçalho do
+  painel mudava sozinho quando um vínculo novo nascia ou o banco trocava. Do outro lado, o movimento de estado
+  feito pela tela não tinha como dizer *por quê*: a rota de ordem aceita `note`, o histórico guarda e a tela
+  mostra, mas o diálogo de confirmação era sim/não; e na cobrança a rota **exige** `reason`, com um modal
+  separado só para digitar aquilo.
+- **Empresa lembrada, com regra em três passos.** `users.last_company_id` (migration aditiva
+  `20261013030000_add_empresa_lembrada`, sem chave estrangeira de propósito: a lembrança não pode segurar
+  ninguém numa casa que caiu). A ordem agora é **pedida > lembrada > vínculo mais antigo**, com desempate por
+  `createdAt` e depois `id`. `switch-company` grava a lembrança, o refresh de token sem empresa segue a
+  lembrança, e pedir empresa no login não reescreve o que a pessoa escolheu por último. Medido no banco de
+  prova: o administrador de prova tem três vínculos, o mais antigo é "Nexus Demo", a ordem por uuid entregaria
+  "Empresa-1791925362473-5-134714" primeiro, e a API hoje devolve "Nexus Demo". A conta fixa das capturas tem
+  **um** vínculo só — conferido por login real — então nenhuma tela do README mudou de cabeçalho.
+- **`confirmActionComMotivo`: diálogo novo, contrato antigo intacto.** Superfície aditiva em `lib/confirm.ts`
+  sobre o mesmo `Modal` e a mesma trava de duplo clique: motivo obrigatório, aviso dentro do diálogo
+  ("Diga o motivo do cancelamento." / "Diga o motivo do estorno."), texto preservado quando a rota falha, e
+  `maxLength` espelhando os 500 caracteres da rota. Entraram no caminho **cancelar ordem**, **estornar ordem
+  concluída** — o rótulo muda porque o estoque volta — e **cancelar cobrança**, que perdeu o modal próprio e
+  ganhou o texto dele como `nome`, `detalhe` e `ajudaMotivo`. `confirmAction` não mudou de assinatura, e os
+  cinco diálogos padronizados do painel continuam exatamente como estavam.
+- **Prova de que fechou.** Vermelho medido antes do verde nos dois lados: o teste da empresa lembrada caía com
+  a escolha por uuid, e o clique sem motivo chegava à rede antes de a tela barrar. Verde: sete casos em
+  `apps/api/test/empresa-lembrada.test.ts` (incluindo o de três empresas que a decisão pediu), dois casos novos
+  em `ordens-de-servico.test.tsx` e o vazio de `cobrancas.test.tsx`, e as duas provas de navegador refeitas —
+  `tools/verify-ordens-de-servico.cjs` agora tenta o estorno com o campo vazio, vê a linha continuar
+  "Concluída", escreve o motivo e confere que ele chegou ao histórico (**107 checagens, 0 falhas**, contra
+  103 antes), e `tools/verify-cobrancas.cjs` fecha a seção "cancelamento com motivo" (**137 checagens,
+  0 falhas**). As cinco capturas de cobrança refazidas pela prova foram descartadas: mesmas pixels.
+  Registrado em `docs/adr/0011-empresa-lembrada-no-login.md`, `docs/adr/0012-dialogo-de-confirmacao-com-motivo.md`
+  e nas entradas N32 e N36 de `docs/AUDITORIA.md`.
+
 ### As provas ganharam um banco próprio, e o do desenvolvedor voltou a ser só do desenvolvedor (2026-10-13)
 
 - **O que a regra mandava, e o que a medição mostrou.** Teste nenhum podia escrever no banco de

@@ -129,6 +129,7 @@ F5.1 a F5.7) não são citáveis. Numeração adotada: tarefa do prompt de conti
 |---|---|---|---|---|
 | T0. Retomada: ler o contrato, conferir a árvore, registrar o ponto de partida | FEITA | base publicada `0d80215`; o commit que traz esta linha fecha a T0 | `git status --porcelain` vazio; `git rev-parse HEAD` = `git ls-remote origin HEAD` = `0d802154461cc8ce53018131ea6e3250a24c4986`; tabela F0→F9 lida em `docs/STATUS-AJUSTES.md:32-37` com F4, F5, F6, F7, F8 e F9 em `PENDENTE`; `ls .ia` sem diretório | N53 |
 | T1. Banco de teste separado, com as provas fora do banco de desenvolvimento (D6) | FEITA | dois commits desta rodada; o que traz esta linha fecha a T1 | Vermelho medido antes da mudança: `apps/api/test/banco-de-teste-separado.test.ts` caiu com `expected { users: 542, companies: 46, ... } to deeply equal { users: 541, companies: 45, ... }` — a suíte escrevia no banco de desenvolvimento. Verde depois: suíte inteira no banco de prova, e as duas provas de navegador regravadas (`tools/verify-ordens-de-servico.cjs` 103 checagens / 0 falhas, `tools/verify-notificacoes.cjs` 85 / 0) com `diff` das medições do banco de desenvolvimento **sem saída** e o banco de prova crescendo (+5 sessões, +17 auditorias, +4 movimentações). Conferência vermelha contra servidor de desenvolvimento (HTTP 401 com a instrução do comando), verde contra `npm run dev:api:teste`. Backup do banco de desenvolvimento feito antes de qualquer limpeza, fora do repositório (`mysqldump`, ~14 MB). Investigação de origem pedida pela D6: das 45 empresas do banco de desenvolvimento, 42 com nome do padrão dos helpers, 2 casas de demonstração, 1 com nome digitado; uma linha órfã deixada por prova listada e apagada (`542 → 541`) | N54, N55 |
+| T2. N32 e P11: a casa do login com regra determinística (D5) e o motivo obrigatório nos movimentos (D4) | FEITA | dois commits desta rodada (backend com a lembrança, frontend com o diálogo); o que traz esta linha fecha a T2 | Vermelho medido dos dois lados antes do verde, com o fonte novo guardado e reposto em seguida: `apps/api/test/empresa-lembrada.test.ts` contra o `auth.service.ts` do HEAD caiu **6 de 7** — `expected 'aa-empresa-8g5d76' to be 'zz-empresa-8g5d76'` no desempate e `expected 'xx-casa-8g67x7-c' to be 'yy-casa-8g67x7-b'` na renovação sem empresa gravada; os três casos novos do navegador caíram contra o frontend do HEAD (`3 failed | 24 passed`), com `getByLabelText("Motivo do cancelamento")` sem achar campo nenhum. Verde: 7/7, 27/27 nas duas telas, suíte inteira **API 39 arquivos / 361 casos** e **web 10 / 79** sem falha nem skip. Migration aditiva `20261013030000_add_empresa_lembrada` aplicada nos dois bancos. Medição da consequência, no banco de prova: o administrador de prova tem três vínculos, o mais antigo é "Nexus Demo" e a ordem por uuid entregaria "Empresa-1791925362473-5-134714" primeiro — a API hoje devolve "Nexus Demo"; a conta fixa de capturas tem **um** vínculo, então o cabeçalho das telas do README continua "Demonstracao (minha empresa)", conferido por login real e não por suposição. Provas de navegador refeitas: `verify-ordens-de-servico.cjs` **107 checagens / 0 falhas** (eram 103) e `verify-cobrancas.cjs` **137 / 0**, com o clique vazio barrado antes da rede e o motivo da tela aparecendo no histórico. Banco de desenvolvimento medido depois da rodada inteira: `usuarios=541 empresas=45 vinculos=49 sessoes=2186 auditorias=67722 tabelas=32` — os mesmos números da T1, linha por linha. As cinco capturas de cobrança que a prova regravou foram descartadas uma a uma: mesmas pixels | N32 e N36 fechados; N56 |
 
 ### Portões da T0 (2026-10-13)
 
@@ -176,6 +177,43 @@ capturas                   21-notificacoes-*.png (5) refazem e entram: a casa de
                            banco de prova tem seis avisos, e o banco de desenvolvimento carregava
                            onze, cinco deles sobra de corrida antiga. 25-ordens-*.png (4) foram
                            descartados: conteúdo idêntico, só ruído de compressão
+```
+
+### Portões da T2 (2026-10-13)
+
+```
+npm run typecheck          ok (api + web, sem saída)
+npm run build              ok — 948,00 kB / 278,39 kB gzip de JS e 395,28 kB / 60,57 kB de CSS; o aviso
+                           de chunk acima de 500 kB continua (é trabalho da T4)
+npm test                   API 39 arquivos / 361 casos em 405,72 s e web 10 / 79 em 11,02 s — zero
+                           falha, zero skip, tudo contra nexusbusinessmanager_teste
+vermelho antes do verde    API: `empresa-lembrada.test.ts` rodado contra o `auth.service.ts` do HEAD caiu
+                           6 de 7 — "expected 'aa-empresa-8g5d76' to be 'zz-empresa-8g5d76'" no desempate
+                           por id e "expected 'xx-casa-8g67x7-c' to be 'yy-casa-8g67x7-b'" na renovação de
+                           token sem empresa. Web: os três casos novos rodados contra os cinco arquivos do
+                           HEAD caíram (3 failed | 24 passed), com `getByLabelText("Motivo do
+                           cancelamento")` sem achar campo nenhum. Fontes originais guardados no Temp,
+                           repostos, e verde medido em seguida: 7/7 e 27/27
+banco de desenvolvimento   medido depois da rodada inteira (suíte + duas provas de navegador):
+                           usuarios=541 empresas=45 vinculos=49 sessoes=2186 auditorias=67722 tabelas=32 —
+                           os mesmos números da T1, linha por linha
+banco de prova             migration aditiva `20261013030000_add_empresa_lembrada` aplicada nos dois
+                           bancos. Consequência medida por login real: o administrador de prova tem três
+                           vínculos e a API devolve "Nexus Demo" (a ordem por uuid daria
+                           "Empresa-1791925362473-5-134714"); a conta fixa de capturas tem um vínculo só e
+                           continua "Demonstracao (minha empresa)" — nenhuma tela do README mudou de
+                           cabeçalho por causa da D5
+provas de navegador        verify-ordens-de-servico.cjs 107 checagens / 0 falhas (eram 103);
+                           verify-cobrancas.cjs 137 checagens / 0 falhas, com a seção "cancelamento com
+                           motivo" barrando o clique vazio antes da rede
+capturas                   as cinco imagens de cobrança que a prova regravou foram conferidas uma a uma e
+                           descartadas (`git restore`): cabeçalho, cartões, filtros, linhas e pílulas
+                           idênticos ao que está publicado
+node -c tools/*.cjs        os dois arquivos desta rodada, zero erro de sintaxe
+codificação                17 arquivos desta rodada: BOM 0, CR 0, caractere de alfabeto não latino 0
+segredos                   varredura do patch inteiro (20 arquivos, 874 linhas adicionadas): 0 atribuições
+                           com valor literal; as 42 batidas restantes são referência de variável, comentário
+                           ou fixture de teste (`@nexus.test`, domínio reservado). Nenhum valor impresso
 ```
 
 ## Bloco A — segurança e isolamento

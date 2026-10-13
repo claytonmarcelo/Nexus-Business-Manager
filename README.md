@@ -22,7 +22,7 @@
   <img src="https://img.shields.io/badge/Vite-7-646CFF?logo=vite&logoColor=white" alt="Vite 7">
   <img src="https://img.shields.io/badge/AdminLTE-4.10-343a40?logo=laravel&logoColor=white" alt="AdminLTE 4.10">
   <img src="https://img.shields.io/badge/Tailwind-4-06B6D4?logo=tailwindcss&logoColor=white" alt="Tailwind 4">
-  <img src="https://img.shields.io/badge/testes-427%20testes%20em%2047%20arquivos-brightgreen" alt="427 testes em 47 arquivos">
+  <img src="https://img.shields.io/badge/testes-440%20testes%20em%2049%20arquivos-brightgreen" alt="440 testes em 49 arquivos">
 </p>
 
 <p align="center">
@@ -58,9 +58,12 @@ recebimento entra, o financeiro que lança a receita em cotas exatas e a ordem d
 estoque. O resto das
 capturas continua no repositório — saiu da galeria, não do disco.
 
-Os números que aparecem nas telas saíram do banco local de desenvolvimento no dia das capturas. O `seed`
-cria a empresa `nexus-demo` **vazia** — não há dados de fachada no código; os registros que os indicadores
-contam vieram das provas automatizadas e dos testes de integração, que escrevem de verdade na mesma base.
+Os números que aparecem nas telas saíram de banco local no dia em que cada captura foi feita: as provas de
+navegador, que são quem regrava as imagens, hoje só sobem contra o **banco de prova**
+(`nexusbusinessmanager_teste`), e as capturas feitas antes da separação ainda vieram da base de
+desenvolvimento. O `seed` cria a empresa `nexus-demo` **vazia** — não há dados de fachada no
+código; os registros que os indicadores contam vieram das provas automatizadas e dos testes de integração,
+que escrevem de verdade e devolvem o que mexem.
 
 <div align="center">
 
@@ -855,7 +858,7 @@ o processo na inicialização com a lista completa na mensagem. O código dessa 
 
 ```bash
 npm run typecheck          # api + web
-npm test                   # api: 37 arquivos · 350 testes contra MySQL real — web: 10 arquivos · 77 testes no jsdom
+npm test                   # api: 39 arquivos · 361 testes contra o MySQL de prova — web: 10 arquivos · 79 testes no jsdom
 npm run test:api           # só a suíte da API
 npm run test:web           # só a suíte do navegador (Vitest + jsdom + Testing Library)
 npm run test:coverage      # a mesma suíte com a cobertura medida
@@ -922,9 +925,10 @@ caminho para uma base apresentável é cadastrar produto, abrir uma venda e conf
 lançamento financeiro; as provas de navegador fazem exatamente isso e devolvem os registros ao estado
 original quando terminam.
 
-Para uma vitrine com dados, rode a suíte (`npm test`) contra o banco de desenvolvimento: os testes escrevem
-de verdade e deixam clientes, produtos, vendas, compras, financeiro, leads e compromissos para os
-indicadores contarem.
+Para uma vitrine com dados, suba o banco de prova (`npm run db:prova` + `npm run dev:api:teste`) e rode as
+provas de navegador (`node tools/verify-*.cjs`): elas cadastram cliente, produto, venda, ordem de serviço e
+cobrança de verdade, e devolvem os registros ao estado original no fim. A suíte de testes (`npm test`) também
+escreve no banco de prova — nunca no de desenvolvimento, que é a regra da decisão D6 do dono.
 
 ---
 
@@ -990,6 +994,8 @@ O detalhamento está em [`CHANGELOG.md`](CHANGELOG.md) (Keep a Changelog, mais n
 | `rotinas → Fase 3` | A auditoria comercial (`docs/AUDITORIA.md`) virou execução: Fase 1 blindou o isolamento (escrita com a empresa no `where` por construção, super admin separado do admin de empresa, portas fechadas sem chave, suíte de intrusão A×B) e a Fase 3 fechou a integridade de negócio — estoque decidido pelo banco, política de negativo por empresa, meia-noite no fuso da empresa, dinheiro em centavo do banco ao JSON e a venda confirmada caindo no financeiro em parcelas que fecham o centavo; suíte em 176 testes e as provas `verify-parcelamento.cjs` (55) e `verify-configuracoes.cjs` (127) |
 | `Fase 3 → Bloco A` | O prompt de mercado começou a ser cumprido: hierarquia de papéis em um lugar só, conta ou empresa desativada perdendo o acesso na hora, refresh token preso à empresa da sessão, recuperação de senha que não derruba a vítima nem entrega código em produção, seed e configuração de produção sem senha no código (a API recusa subir mal configurada), varredura de expressões regulares consertada e as duas provas que faltavam no estoque atômico. Cobertura passou a ser medida (`npm run test:coverage`), `docs/STATUS-AJUSTES.md` virou o painel do que está feito, e as seis decisões que pedem a palavra do dono (e-mail, cobrança, fiscal, cadastro aberto, hospedagem e licença) foram escritas em `docs/decisoes/` sem nenhuma integração inventada — suíte em 230 testes |
 | `Bloco A → agora` | A auditoria virou produto: o menu perdeu as linhas que não abriam porta (F3.1), a trilha de auditoria da plataforma ganhou tela própria (F2), a ordem de serviço desceu do caderno para o estoque (F3.2) e o carnê de cobranças manuais entrou registrando o recebimento por pessoa e escrevendo uma única receita no caixa (F3.2). A barra lateral chegou a 17 linhas, as duas provas novas somam 103 e 137 checagens, e a suíte fechou em 427 testes — 350 na API contra o MySQL real e 77 no jsdom |
+| `agora → T1` | As provas e os testes ganharam banco próprio (`nexusbusinessmanager_teste`, declarado em `DATABASE_URL_TESTE`): `npm run db:prova` monta e semeia, `npm run dev:api:teste` sobe a API nele, e toda `tools/verify-*.cjs` confere o servidor pelo login antes de abrir o navegador — servidor no banco errado é HTTP 401 com a instrução do comando. Medido com `diff` tabela por tabela: o banco de desenvolvimento saiu idêntico da rodada inteira (541 usuários, 45 empresas, 2.186 sessões, 67.722 auditorias) enquanto o de prova crescia. Suíte em 354 + 77, e a cadeia de migrations abriu o achado N54 (em MySQL zerado ela para na segunda migration) |
+| `T1 → T2` | Duas decisões do dono viraram código. A casa que abre no login deixou de ser sorteio do índice: **pedida > lembrada (`users.last_company_id`) > vínculo mais antigo**, com desempate por `createdAt` e `id`, lembrança escrita por `switch-company` e respeitada pelo refresh (ADR-0011). E cancelar ordem, estornar ordem concluída e cancelar cobrança passaram a exigir **motivo escrito** em diálogo novo e aditivo (`confirmActionComMotivo`, ADR-0012) — sem motivo nada sai pela rede, e o texto digitado sobrevive ao erro da rota. Provas de navegador em 107 e 137 checagens, suíte em 361 + 79 |
 
 ---
 

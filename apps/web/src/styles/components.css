@@ -1593,6 +1593,11 @@ a.nexus-footer-autor:focus-visible { color: var(--text); text-decoration: underl
   font-weight: 700;
 }
 
+/* Campo de motivo obrigatorio (P11): o dialogos de confirmacao e pequeno, entao o
+   bloco respira menos que um formulario de pagina e nao deixa o rodape colado. */
+.nx-confirm-motivo { margin: 0.9rem 0 0; }
+.nx-confirm-motivo textarea.input { min-height: 74px; resize: vertical; line-height: 1.5; }
+
 /* Spinner dentro do botao de confirmação: mesma animação do resto da casa. */
 .nx-confirm-spin {
   width: 14px;

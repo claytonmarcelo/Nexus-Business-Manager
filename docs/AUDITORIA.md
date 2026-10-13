@@ -1360,16 +1360,25 @@ passaram a devolver zero — a prova fechava 35/37. Lido no banco, o evento est�
 janela da corrida, e a prova voltou a fechar **37 checagens, 0 falhas**. O que a F2 não rodou foi esta família
 de prova de navegador — argumento a mais para o `npm run verify` único que a F5 promete.
 
-### N32 — fora do escopo, relatado: o cabeçalho das capturas do painel mudou de empresa porque o `pickMembership` escolhe a primeira empresa ativa que o banco entrega
+### N32 — corrigido na T2 (decisão D5 do dono): a casa que o painel mostra no cabeçalho agora é determinística
 
 A casa da vitrine nas capturas de painel era "Nexus Demo". Depois do `admin:criar` da F1.4, o administrador
-da plataforma passou a ter vínculo de `OWNER` nas 37 empresas do banco de desenvolvimento — 33 delas criadas
-por suíte de teste com nome gerado — e `pickMembership` (`auth.service.ts:71-81`), sem empresa pedida, devolve
-a **primeira** ativa na ordem que o banco entrega. O login das provas não pede empresa, então o cabeçalho saiu
-com `Empresa-<marca-de-tempo>`. Não é dado de cliente: é casa de teste criada pela própria suíte. Não foi
-corrigido aqui porque a escolha é do dono entre (a) pedir a empresa de demonstração no login das provas,
-(b) dar à casa demo o vínculo mais antigo do banco de desenvolvimento, ou (c) aceitar o cabeçalho como está.
-Vai para a mesma passada da F9 que fecha o N13.
+da plataforma passou a ter vínculo de `OWNER` nas empresas do banco — e `pickMembership`, sem empresa pedida,
+devolvia a **primeira** ativa na ordem que o `include` do Prisma entregava, que em MySQL é a ordem do índice
+de `company_users`, isto é, a ordem do uuid. Trocar de banco, recriar vínculo ou ganhar uma empresa nova de
+teste mudava o cabeçalho da pessoa sem ela pedir.
+
+Fechado com a regra em três passos do ADR-0011: a empresa **pedida** no login manda; sem pedido volta a
+empresa **lembrada** no cadastro (`users.last_company_id`, migration aditiva
+`20261013030000_add_empresa_lembrada`, escrita por `switch-company` e respeitada pelo refresh de token sem
+empresa); sem lembrança, o vínculo **mais antigo**, com desempate por `createdAt` e depois por `id` — ordem
+que não depende de uuid nem de índice de banco. Pedir empresa no login não reescreve a lembrança, e uma
+lembrança que caiu (vínculo removido ou empresa adormecida) desce para a regra determinística sem derrubar a
+sessão. Medido com a mudança aplicada: o administrador de prova tem três vínculos, o mais antigo é
+"Nexus Demo", e a ordem por uuid entregaria "Empresa-1791925362473-5-134714" primeiro — a API hoje devolve
+"Nexus Demo". A conta fixa de capturas tem **um** vínculo só, então o cabeçalho das telas do README e das
+provas continua "Demonstracao (minha empresa)", conferido por login real e não por suposição. Prova em
+`apps/api/test/empresa-lembrada.test.ts` (sete casos, incluindo o de três empresas que a decisão pediu).
 
 ### O que foi verificado e não é achado
 
@@ -1427,16 +1436,25 @@ cabeçalho da tela que a imagem existe para provar. Entrou `semToast(pagina)` an
 espera o aviso sair do DOM. Não é maquiagem de print: é a diferença entre uma captura que mostra o produto e
 uma que mostra o teste.
 
-### N36 — fora do escopo, relatado em vez de corrigido em silêncio: a tela não oferece motivo no movimento de estado
+### N36 — corrigido na T2 (decisão D4 do dono, mesmo caso do P11): o movimento passou a exigir motivo escrito na tela
 
 A rota `POST /service-orders/:id/status` aceita `note` opcional, o histórico guarda o campo e a tela mostra
-`.nx-os-motivo` quando ele vem preenchido. O que falta é o meio: `mover()` chama a rota sem nota, porque o
-diálogo de confirmação da casa é de sim/não. Resultado medido na prova — a linha do tempo de uma ordem movida
-pelo navegador registra quem moveu e quando, sem o porquê; a de uma ordem movida pela API mostra o motivo.
-Não foi corrigido aqui porque a decisão não é deste módulo: colocar campo de motivo no movimento significa
-mexer no contrato dos diálogos de confirmação de todo o painel (a padronização foi a tarefa que fechou os
-cinco diálogos existentes), e decidir isso sozinho seria inventar interface fora do anexo. É pergunta para o
-dono na hora da Parte 2, e a prova já cobre os dois caminhos para que a resposta seja medida, não discutida.
+`.nx-os-motivo` quando ele vem preenchido. O que faltava era o meio: `mover()` chamava a rota sem nota, porque
+o diálogo de confirmação da casa é de sim/não. Na cobrança era pior — `POST /charges/:id/cancel` **exige**
+`reason`, e a tela tinha um modal próprio só para digitar aquilo.
+
+Fechado com superfície nova e aditiva (ADR-0012): `confirmActionComMotivo` em `lib/confirm.ts`, montada sobre
+o mesmo `Modal` e a mesma trava de duplo clique, com campo de motivo obrigatório, aviso dentro do diálogo
+("Diga o motivo do cancelamento." / "Diga o motivo do estorno.") e o texto digitado preservado quando a rota
+falha. `confirmAction` continuou exatamente como era — os cinco diálogos padronizados do painel não mudaram de
+contrato. Entraram no caminho as três decisões que registram dinheiro ou trabalho: **cancelar ordem**,
+**estornar ordem concluída** (o rótulo muda para estorno porque o estoque volta) e **cancelar cobrança** —
+esta perdeu o modal próprio, e o que o modal dizia virou `nome`, `detalhe` e `ajudaMotivo` do diálogo novo.
+Medido: dois casos novos em `apps/web/src/test/ordens-de-servico.test.tsx` (sem motivo nada sai pela rede;
+com motivo a nota chega à rota), o caso de cobrança vazio em `cobrancas.test.tsx`, e as duas provas de
+navegador — `tools/verify-ordens-de-servico.cjs` com o estorno tentando o clique vazio antes de escrever e
+confirmando que o motivo da tela apareceu no histórico, e `tools/verify-cobrancas.cjs` na seção
+"cancelamento com motivo".
 
 ### N37 — fora do escopo, relatado: a ordem de serviço concluída não gera lançamento financeiro nem venda
 
@@ -1705,3 +1723,15 @@ Parte do achado que fica em aberto, registrada em vez de escondida: entre 20:30 
 desenvolvimento ganhou duas sessões e quatro linhas de auditoria de logins reais da conta
 "Administrador Nexus". **NÃO VERIFICADO** quem foi: as ferramentas rodadas nesta sessão não respondem por
 eles, e a linha não foi tocada.
+
+### N56 — corrigido na T2: a documentação sobreviveu à separação dos bancos mandando escrever no banco errado
+
+A T1 moveu a suíte e as provas para `nexusbusinessmanager_teste`, mas deixou para trás três frases do README
+que diziam o contrário do código: "Os números que aparecem nas telas saíram do banco local de desenvolvimento"
+(hoje as provas que regravam as imagens só sobem contra o banco de prova, conferido pelo login), "rode a suíte
+(`npm test`) contra o banco de desenvolvimento: os testes escrevem de verdade" — exatamente a regra que a
+decisão D6 apagou — e as duas contagens publicadas (o selo "427 testes em 47 arquivos" e a linha
+`npm test # api: 37 arquivos · 350 testes`), que já estavam velhas antes desta rodada: a suíte da T1 media
+38 arquivos / 354 casos. Corrigidas com a medição na mão: **39 arquivos / 361 casos** na API e **10 / 79** no
+jsdom, 440 testes em 49 arquivos. Achado de documentação, não de código: quem lesse o README ia fazer a prova
+escrever no banco de quem está trabalhando, que é o acidente que a T1 existiu para impedir.

@@ -457,8 +457,11 @@ describe("Cobranças na tela (F3.2 Parte 2)", () => {
     await act(async () => {
       fireEvent.click(within(dialogo).getByRole("button", { name: "Cancelar cobrança" }));
     });
+    // P11 (decisão D4): o mesmo diálogo de confirmar ordem de serviço. O pedido não
+    // sai, e a explicação fica escrita no próprio diálogo em vez de sumir num aviso.
     expect(chamadas.some((c) => c.url === "/charges/cb-1/cancel")).toBe(false);
-    expect(vi.mocked(notify.error).mock.calls.length).toBeGreaterThan(0);
+    expect(dialogo.textContent).toContain("Diga o motivo do cancelamento");
+    expect(dialogo.textContent).toContain("Sem motivo a cobrança não sai do carnê");
 
     fireEvent.change(within(dialogo).getByLabelText("Motivo do cancelamento"), { target: { value: "Cliente desistiu" } });
     await act(async () => {

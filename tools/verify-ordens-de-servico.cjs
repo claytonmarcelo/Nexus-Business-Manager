@@ -658,6 +658,15 @@ async function garantaPeca(p) {
     const corpoCancelar = await textoDoDialogo(pagina);
     ok("o dialogo de estorno diz que as pecas voltam ao estoque",
       /voltam ao estoque/.test(corpoCancelar), corpoCancelar.replace(/\s+/g, " ").slice(0, 80));
+    // P11 (decisao D4): o estorno passou a pedir frase escrita. Sem ela o botao ate
+    // pode ser clicado, mas nenhum pedido sai da tela — e a ordem continua concluida.
+    await cliqueEmBotao(pagina, "Cancelar ordem", '[role="dialog"]', "tentar estornar sem motivo");
+    await espereTexto(pagina, "Diga o motivo do estorno.");
+    const concluidaSemMotivo = await linhaDaOrdem(pagina, os3.number);
+    ok("sem motivo a concluida nao estorna nada, e a linha esta intacta",
+      !!concluidaSemMotivo && concluidaSemMotivo.situacao === "Concluída",
+      concluidaSemMotivo && concluidaSemMotivo.situacao);
+    await pagina.type('[role="dialog"] .nx-confirm-motivo textarea', "Servico devolvido pelo cliente", { delay: 2 });
     await cliqueEmBotao(pagina, "Cancelar ordem", '[role="dialog"]', "confirmar o estorno");
     await espereTexto(pagina, "Ordem cancelada.");
     await situacaoNaTela(pagina, os3.number, "Cancelada");
@@ -709,6 +718,11 @@ async function garantaPeca(p) {
     ok("a linha do tempo mostra o motivo registrado na mudanca",
       motivoApi.some((m) => m.includes("Peca aplicada na manutencao do hall")),
       motivoApi.join(" | ").slice(0, 80));
+    // E mostra também o que a tela escreveu no diálogo de estorno (P11): a frase
+    // digitada no cancelamento é o que fica no histórico da empresa.
+    ok("o motivo escrito na tela do estorno ficou no histórico",
+      motivoApi.some((m) => m.includes("Servico devolvido pelo cliente")),
+      motivoApi.join(" | ").slice(0, 120));
     await cliqueEmBotao(pagina, "Fechar", '[role="dialog"]', "fechar o documento da concluida");
 
     // 3.8 filtro, busca e ordenacao no servidor

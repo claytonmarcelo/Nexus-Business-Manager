@@ -321,6 +321,10 @@ describe("Ordens de serviço na tela (F3.2 Parte 1)", () => {
     expect(dialogo.textContent).toContain("Deseja realmente concluir");
     // O aviso explica o efeito real: as peças baixam do estoque agora.
     expect(dialogo.textContent).toContain("estoque");
+    // P11 (decisão D4): o motivo obrigatório é uma surface nova e aditiva. Um
+    // movimento que não destrói nada — concluir — continua o diálogo sim/não que
+    // sempre foi: nenhum campo de motivo aparece aqui.
+    expect(within(dialogo).queryByLabelText(/motivo/i)).toBeNull();
     await act(async () => {
       fireEvent.click(within(dialogo).getByRole("button", { name: "Concluir ordem" }));
     });
@@ -332,6 +336,74 @@ describe("Ordens de serviço na tela (F3.2 Parte 1)", () => {
     expect(vi.mocked(notify.success)).toHaveBeenCalledWith("Ordem concluída.");
     // Nenhuma caixa nativa foi usada em lugar do diálogo do sistema.
     expect(document.querySelectorAll("dialog")).toHaveLength(0);
+  });
+
+  it("cancelar ordem exige motivo escrito, e sem motivo nada sai", async () => {
+    const cancelada = { ...EM_ANDAMENTO, status: "CANCELLED" };
+    paredeRede(rotasPadrao([{ caminho: "/service-orders/os-1/status", status: 200, data: cancelada }]));
+    monte();
+    await screen.findByText("#1042");
+
+    const linha = screen.getByText("Troca de correia").closest("tr") as HTMLElement;
+    await act(async () => {
+      fireEvent.click(within(linha).getByText("Cancelar"));
+    });
+    const dialogo = await screen.findByRole("dialog", { name: "Cancelar ordem de serviço" });
+    const campo = within(dialogo).getByLabelText("Motivo do cancelamento");
+
+    await act(async () => {
+      fireEvent.click(within(dialogo).getByRole("button", { name: "Cancelar ordem" }));
+    });
+    // O pedido não saiu: cancelar sem porquê é apagar, e a casa não apaga.
+    expect(chamadas.some((c) => c.url === "/service-orders/os-1/status")).toBe(false);
+    expect(dialogo.textContent).toContain("Diga o motivo");
+
+    fireEvent.change(campo, { target: { value: "Cliente desistiu do serviço" } });
+    await act(async () => {
+      fireEvent.click(within(dialogo).getByRole("button", { name: "Cancelar ordem" }));
+    });
+    await waitFor(() => {
+      const POST = chamadas.find((c) => c.metodo === "POST" && c.url === "/service-orders/os-1/status");
+      // N36: a rota já aceitava `note`; o que faltava era a tela mandar o motivo.
+      expect(POST?.corpo).toEqual({ status: "CANCELLED", note: "Cliente desistiu do serviço" });
+    });
+    expect(vi.mocked(notify.success)).toHaveBeenCalledWith("Ordem cancelada.");
+  });
+
+  it("estornar uma concluída também escreve o motivo, com o rótulo do estorno", async () => {
+    const concluida = { ...EM_ANDAMENTO, status: "COMPLETED", completedAt: "2026-10-05T18:00:00.000Z" };
+    // A rota de status vem antes da rota larga de lista: o adaptador casa a
+    // primeira que esteja contida na URL, e "/service-orders" está em todas.
+    paredeRede(rotasPadrao([
+      { caminho: "/service-orders/os-1/status", status: 200, data: { ...concluida, status: "CANCELLED" } },
+      { caminho: "/service-orders", status: 200, data: pagina([concluida]) },
+    ]));
+    monte();
+    await screen.findByText("#1042");
+
+    const linha = screen.getByText("Troca de correia").closest("tr") as HTMLElement;
+    await act(async () => {
+      fireEvent.click(within(linha).getByText("Cancelar"));
+    });
+    const dialogo = await screen.findByRole("dialog", { name: "Cancelar ordem de serviço" });
+    // Estorno é outra decisão: o campo pede o motivo do estorno, e a ajuda diz
+    // que as peças voltam ao estoque.
+    const campo = within(dialogo).getByLabelText("Motivo do estorno");
+    expect(dialogo.textContent).toContain("estorno");
+
+    await act(async () => {
+      fireEvent.click(within(dialogo).getByRole("button", { name: "Cancelar ordem" }));
+    });
+    expect(chamadas.some((c) => c.url === "/service-orders/os-1/status")).toBe(false);
+
+    fireEvent.change(campo, { target: { value: "Serviço não foi entregue" } });
+    await act(async () => {
+      fireEvent.click(within(dialogo).getByRole("button", { name: "Cancelar ordem" }));
+    });
+    await waitFor(() => {
+      const POST = chamadas.find((c) => c.metodo === "POST" && c.url === "/service-orders/os-1/status");
+      expect(POST?.corpo).toEqual({ status: "CANCELLED", note: "Serviço não foi entregue" });
+    });
   });
 
   it("o detalhe busca a ordem com histórico e dá saída em papel", async () => {
