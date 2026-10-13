@@ -1,17 +1,23 @@
 import type { FastifyInstance } from "fastify";
 import { resolveCompanyContext } from "../../lib/company-context";
 import { assertPlatformAdmin } from "../../lib/platform";
-import { audit } from "../../lib/audit";
+import { audit, ESCOPO_PLATAFORMA } from "../../lib/audit";
 import { alternarJobSchema } from "./cron.schemas";
 import * as service from "./cron.service";
 
 // Rotinas agendadas (seção 37, Operações). Rotina é coisa da plataforma, não de
 // uma empresa: desde a Fase 1 de isolamento só o administrador da plataforma
 // (platformRole SUPER_ADMIN, conferido no banco a cada requisição) lista, liga
-// e executa. A empresa ativa continua assinando a auditoria.
+// e executa.
 // A varredura global do "executar agora" alcança todas as empresas ativas — o
 // mesmo escopo do sino administrativo (POST /notifications/scan usa a empresa
 // ativa; aqui a decisão é do job, não do requisitante).
+//
+// F2 (N14): a empresa ativa da sessão deixou de assinar esses eventos. Ligar um
+// job ou rodar uma varredura mexe na plataforma inteira, então o evento nasce com
+// escopo de plataforma e a sessão fica registrada no metadata — ler a trilha da
+// plataforma é o que atravessa tenants, e cada empresa continua vendo só o que é
+// dela na própria aba de Auditoria.
 export async function cronRoutes(app: FastifyInstance): Promise<void> {
   app.get("/ops/jobs", { preHandler: [app.authenticate] }, async (req) => {
     await assertPlatformAdmin(req);
@@ -27,6 +33,7 @@ export async function cronRoutes(app: FastifyInstance): Promise<void> {
     await audit({
       userId: ctx.userId,
       companyId: ctx.companyId,
+      scope: ESCOPO_PLATAFORMA,
       action: "cron.job.updated",
       entity: "cron_job",
       entityId: slug,
@@ -44,6 +51,7 @@ export async function cronRoutes(app: FastifyInstance): Promise<void> {
     await audit({
       userId: ctx.userId,
       companyId: ctx.companyId,
+      scope: ESCOPO_PLATAFORMA,
       action: "cron.job.run",
       entity: "cron_job",
       entityId: slug,

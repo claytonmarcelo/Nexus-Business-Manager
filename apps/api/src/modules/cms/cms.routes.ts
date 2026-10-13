@@ -1,7 +1,7 @@
 import type { FastifyInstance } from "fastify";
 import { resolveCompanyContext } from "../../lib/company-context";
 import { assertPlatformAdmin } from "../../lib/platform";
-import { audit } from "../../lib/audit";
+import { audit, ESCOPO_PLATAFORMA } from "../../lib/audit";
 import { notFound } from "../../lib/errors";
 import {
   atualizarItem,
@@ -91,7 +91,7 @@ export async function cmsRoutes(app: FastifyInstance): Promise<void> {
       userId: ctx.userId, companyId: ctx.companyId, ip: req.ip,
     });
     await audit({
-      userId: ctx.userId, companyId: ctx.companyId, action: "cms.maintenance.token",
+      userId: ctx.userId, companyId: ctx.companyId, scope: ESCOPO_PLATAFORMA, action: "cms.maintenance.token",
       entity: "landing_config", entityId: "default", ip: req.ip,
     });
     return { token };

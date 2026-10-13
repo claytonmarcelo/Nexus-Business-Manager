@@ -3,7 +3,7 @@ import { Prisma } from "@prisma/client";
 import type { LandingItemKind, LegalKind } from "@prisma/client";
 import { prisma } from "../../lib/prisma";
 import { badRequest, notFound } from "../../lib/errors";
-import { audit } from "../../lib/audit";
+import { audit, ESCOPO_PLATAFORMA } from "../../lib/audit";
 
 // ===== CMS da página pública =====
 // O conteúdo mora no banco (não em código) para que a administração da
@@ -382,6 +382,7 @@ export async function salvarConfig(mudanca: MudancaConfig, ator: Ator): Promise<
   await audit({
     userId: ator.userId,
     companyId: ator.companyId,
+    scope: ESCOPO_PLATAFORMA,
     action: "cms.config.updated",
     entity: "landing_config",
     entityId: CONFIG_ID,
@@ -471,6 +472,7 @@ export async function criarItem(input: ItemInput, ator: Ator) {
   await audit({
     userId: ator.userId,
     companyId: ator.companyId,
+    scope: ESCOPO_PLATAFORMA,
     action: "cms.item.created",
     entity: "landing_item",
     entityId: criado.id,
@@ -502,6 +504,7 @@ export async function atualizarItem(id: string, input: Partial<ItemInput>, ator:
   await audit({
     userId: ator.userId,
     companyId: ator.companyId,
+    scope: ESCOPO_PLATAFORMA,
     action: "cms.item.updated",
     entity: "landing_item",
     entityId: atualizado.id,
@@ -520,6 +523,7 @@ export async function removerItem(id: string, ator: Ator) {
   await audit({
     userId: ator.userId,
     companyId: ator.companyId,
+    scope: ESCOPO_PLATAFORMA,
     action: "cms.item.delete",
     entity: "landing_item",
     entityId: id,
@@ -574,6 +578,7 @@ export async function salvarLegal(
   await audit({
     userId: ator.userId,
     companyId: ator.companyId,
+    scope: ESCOPO_PLATAFORMA,
     action: salvo.published ? "cms.legal.published" : "cms.legal.updated",
     entity: "legal_document",
     entityId: salvo.id,

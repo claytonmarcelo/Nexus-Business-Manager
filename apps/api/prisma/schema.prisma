@@ -163,6 +163,9 @@ model AuditLog {
   id        String   @id @default(uuid()) @db.VarChar(36)
   userId    String?  @map("user_id") @db.VarChar(36)
   companyId String?  @map("company_id") @db.VarChar(36)
+  // F2 (N14): "tenant" (padrao) ou "platform". A coluna decide em qual
+  // trilha o evento aparece; evento de plataforma nunca tem empresa dona.
+  scope     String   @default("tenant") @db.VarChar(16)
   action    String
   entity    String
   entityId  String?  @map("entity_id") @db.VarChar(36)
@@ -173,6 +176,7 @@ model AuditLog {
   company   Company? @relation(fields: [companyId], references: [id], onDelete: SetNull)
 
   @@index([companyId, createdAt])
+  @@index([scope, createdAt])
   @@index([userId])
   @@map("audit_logs")
 }

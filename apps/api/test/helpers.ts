@@ -51,6 +51,16 @@ export async function login(email: string, password: string, companyId?: string)
   return (res.json() as { accessToken: string }).accessToken;
 }
 
+// Leitura do metadata da auditoria: evento de plataforma guarda a empresa da
+// sessão como origem, nunca como dona da linha.
+export function origemDaSessao(metadata: unknown): string | null {
+  if (metadata && typeof metadata === "object" && "empresaDaSessao" in metadata) {
+    const valor = (metadata as { empresaDaSessao?: unknown }).empresaDaSessao;
+    if (typeof valor === "string") return valor;
+  }
+  return null;
+}
+
 // Apaga o fixture na ordem filho -> pai. Com o banco finalmente em InnoDB
 // (reparo da Fase 1, tools/para-innodb.cjs) as chaves estrangeiras valem de
 // verdade, e os RESTRICT de negócio — item de venda/compra aponta produto,

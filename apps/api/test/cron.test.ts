@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
-import { app, makeAccount, login, cleanup, type Fixture } from "./helpers";
+import { app, login, cleanup, makeAccount, origemDaSessao, type Fixture } from "./helpers";
 import { prisma } from "../src/lib/prisma";
 import { parseCron, cronCombina, proximaExecucao, agendaLegivel } from "../src/modules/cron/cron.parse";
 import { registrarJobsPadrao } from "../src/modules/cron/cron.service";
@@ -239,17 +239,26 @@ describe("Cron: rotas /ops/jobs e executor", () => {
     expect(comAviso!.body).toContain("1 venda confirmada");
   });
 
-  it("rotina fantasma não roda (404) e o auditor viu as corridas manuais", async () => {
+  it("rotina fantasma não roda (404) e a trilha da plataforma viu as corridas manuais", async () => {
     const fantasma = await app.inject({
       method: "POST", url: "/api/ops/jobs/nao-existe/run", headers: auth(admin.token),
     });
     expect(fantasma.statusCode).toBe(404);
+    // Rotina é da plataforma: a varredura atravessa todas as empresas, então o
+    // evento não pode pertencer a nenhuma. A empresa do token fica como origem.
     const auditados = await prisma.auditLog.findMany({
-      where: { action: { in: ["cron.job.run", "cron.job.updated"] }, companyId: admin.f.companyId },
+      where: {
+        userId: admin.f.userId,
+        action: { in: ["cron.job.run", "cron.job.updated"] },
+        scope: "platform",
+      },
       orderBy: { createdAt: "desc" },
       take: 20,
     });
     expect(auditados.some((a) => a.action === "cron.job.run")).toBe(true);
     expect(auditados.some((a) => a.action === "cron.job.updated")).toBe(true);
+    expect(auditados.length).toBeGreaterThan(1);
+    expect(auditados.every((a) => a.companyId === null)).toBe(true);
+    expect(auditados.every((a) => origemDaSessao(a.metadata) === admin.f.companyId)).toBe(true);
   });
 });

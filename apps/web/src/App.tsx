@@ -19,6 +19,7 @@ import { Settings } from "./pages/Settings";
 import { Cms } from "./pages/Cms";
 import { Notifications } from "./pages/Notifications";
 import { Rotinas } from "./pages/Rotinas";
+import { PlataformaAuditoria } from "./pages/PlataformaAuditoria";
 import { Legal } from "./pages/Legal";
 import { Forbidden, NotFound, Unauthorized } from "./pages/errors";
 
@@ -55,6 +56,7 @@ export function App() {
           <Route path="cms" element={<Cms />} />
           <Route path="notificacoes" element={<Notifications />} />
           <Route path="rotinas" element={<Rotinas />} />
+          <Route path="auditoria-plataforma" element={<PlataformaAuditoria />} />
         </Route>
         <Route path="*" element={<NotFound />} />
       </Routes>

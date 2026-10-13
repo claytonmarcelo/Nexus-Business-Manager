@@ -29,6 +29,17 @@ const ACAO_PRONTA: Record<string, string> = {
   "finance.cancelled": "Lançamento cancelado",
   "agenda.done": "Compromisso concluído",
   "agenda.cancelled": "Compromisso cancelado",
+  // Ações da plataforma (vitrine, textos legais e rotinas): só aparecem na
+  // auditoria da plataforma, mas o rótulo mora aqui, junto dos outros.
+  "cms.config.updated": "Configuração da vitrine publicada",
+  "cms.item.created": "Item da vitrine criado",
+  "cms.item.updated": "Item da vitrine atualizado",
+  "cms.item.delete": "Item da vitrine removido",
+  "cms.legal.published": "Documento legal publicado",
+  "cms.legal.updated": "Documento legal atualizado",
+  "cms.maintenance.token": "Pulso de manutenção gerado",
+  "cron.job.updated": "Rotina agendada alterada",
+  "cron.job.run": "Rotina agendada executada",
 };
 
 // Nome de cada origem, para as acoes genericas (create/update/delete).
@@ -47,6 +58,10 @@ const ORIGEM: Record<string, string> = {
   stock: "Estoque",
   user: "Usuário",
   company: "Empresa",
+  landing_config: "Vitrine",
+  landing_item: "Item da vitrine",
+  legal_document: "Documento legal",
+  cron_job: "Rotina agendada",
 };
 
 const VERBO: Record<string, string> = {

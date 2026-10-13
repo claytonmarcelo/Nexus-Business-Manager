@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { Link } from "react-router-dom";
 import { api, extractErrorMessage } from "../lib/api";
 import { Pagination, PAGE_SIZE_PADRAO } from "../components/Pagination";
 import { EmptyState, ErrorState, LoadingInline } from "../components/StateView";
@@ -7,6 +8,7 @@ import { baixarCsv } from "../lib/csv";
 import { notify } from "../lib/notify";
 import { formatDateTime } from "../lib/format";
 import { descricaoDaAcao } from "../lib/auditLabels";
+import { useAuth } from "../context/AuthContext";
 
 interface AuditRow {
   id: string;
@@ -56,6 +58,10 @@ function rotuloEntidade(entity: string): string {
 // Auditoria em três abas: trilha completa, recorte sensível (filtrado no
 // servidor, para a paginação continuar correta) e exportação CSV do recorte.
 export function Audit() {
+  const { user } = useAuth();
+  // Quem tem o papel da plataforma enxerga a outra trilha, então recebe o atalho;
+  // para o resto da empresa fica só a explicação de por que certas ações não aparecem.
+  const podeAbrirTrilha = user?.platform === true;
   const { active, onSelect } = useTabState(ABAS, "logs");
   const [busca, setBusca] = useState("");
   const [entidade, setEntidade] = useState("");
@@ -266,6 +272,24 @@ export function Audit() {
         </div>
       </div>
 
+      <div className="card-surface panel">
+        <h2 className="nx-panel-title">O que esta trilha não mostra</h2>
+        <p className="nx-panel-sub">
+          Aqui aparece só o que aconteceu dentro desta empresa. Publicar um texto da vitrine, alterar um
+          documento legal ou ligar uma rotina agendada alcança todas as empresas de uma vez, por isso essas
+          ações têm trilha própria, reservada ao administrador da plataforma. Pelo combinado de hoje
+          (registrada em docs/decisoes/G8), o administrador da plataforma também é proprietário desta empresa:
+          quando ele age como dono da empresa, a ação aparece aqui como a de qualquer outro usuário.
+        </p>
+        {podeAbrirTrilha ? (
+          <div className="toolbar">
+            <Link className="btn btn-ghost btn-sm" to="/app/auditoria-plataforma">
+              Abrir a trilha da plataforma
+            </Link>
+            <span className="toolbar-note">A sua sessão tem o papel de administrador da plataforma.</span>
+          </div>
+        ) : null}
+      </div>
       <Tabs
         tabs={ABAS}
         active={active}

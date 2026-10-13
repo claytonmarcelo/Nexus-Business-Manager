@@ -1,5 +1,5 @@
 import { describe, it, expect, afterAll, beforeEach } from "vitest";
-import { app, makeAccount, login, cleanup } from "./helpers";
+import { app, login, cleanup, makeAccount, origemDaSessao } from "./helpers";
 import { prisma } from "../src/lib/prisma";
 import {
   CONFIG_ID,
@@ -375,7 +375,7 @@ describe("CMS da página pública", () => {
     expect((await app.inject({ method: "GET", url: "/api/clients", headers: auth(token) })).statusCode).toBe(200);
   });
 
-  it("cada gravação do CMS deixa trilha na auditoria da empresa de quem editou", async () => {
+  it("cada gravação do CMS carimba a plataforma e guarda a empresa da sessão (N14)", async () => {
     const { f, token } = await dono();
     await app.inject({ method: "PATCH", url: "/api/cms/config", headers: auth(token), payload: { headline: "Headline auditado para o teste" } });
     const item = await app.inject({
@@ -387,13 +387,17 @@ describe("CMS da página pública", () => {
     created.itemIds.push(item.json().id as string);
 
     const logs = await prisma.auditLog.findMany({
-      where: { userId: f.userId, entity: { in: ["landing_config", "landing_item"] } },
+      where: { userId: f.userId, scope: "platform", entity: { in: ["landing_config", "landing_item"] } },
       orderBy: { createdAt: "desc" },
       take: 10,
     });
     expect(logs.some((l) => l.action === "cms.config.updated")).toBe(true);
     expect(logs.some((l) => l.action === "cms.item.created" && l.entityId === item.json().id)).toBe(true);
-    expect(logs.every((l) => l.companyId === f.companyId)).toBe(true);
+    // O site público é da plataforma, não da empresa: a linha nasce sem dona, e o
+    // tenant onde o editor estava sentado aparece como origem, no metadata.
+    expect(logs.every((l) => l.companyId === null && l.scope === "platform")).toBe(true);
+    expect(logs.every((l) => origemDaSessao(l.metadata) === f.companyId)).toBe(true);
+    expect(logs.length).toBeGreaterThan(1);
   });
 
   it("POST sem corpo, como o axios envia, é aceito: JSON malformado continua 400", async () => {
