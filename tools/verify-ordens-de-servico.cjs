@@ -474,7 +474,15 @@ async function garantaPeca(p) {
     ok("a tela abre com o titulo do produto", titulo === "Ordens de Serviço", titulo);
     await espereTexto(pagina, "#" + os1.number);
 
-    // 3.1 indicadores = resumo da API, lido agora
+    // 3.1 indicadores = resumo da API, lido agora. Os oito cartoes so existem quando o
+    // resumo chega: a tela os monta atras do `sumario ? ... : null`, e a tabela nao
+    // espera por eles. Medir sem esperar e a mesma armadilha da prova de cobrancas —
+    // a pagina esta certa, e a medicao e que chega cedo demais.
+    const cartoesProntos = await pagina
+      .waitForFunction(() => document.querySelectorAll(".kpi").length === 8, { timeout: 15000 })
+      .then(() => true)
+      .catch(() => false);
+    ok("os oito cartoes do resumo chegaram antes da leitura", cartoesProntos === true);
     const daApi = (await chame("GET", "/service-orders/summary")).dados;
     const kpiDaTela = await pagina.evaluate(() => {
       const mapa = {};
