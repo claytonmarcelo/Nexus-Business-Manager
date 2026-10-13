@@ -22,7 +22,7 @@
   <img src="https://img.shields.io/badge/Vite-7-646CFF?logo=vite&logoColor=white" alt="Vite 7">
   <img src="https://img.shields.io/badge/AdminLTE-4.10-343a40?logo=laravel&logoColor=white" alt="AdminLTE 4.10">
   <img src="https://img.shields.io/badge/Tailwind-4-06B6D4?logo=tailwindcss&logoColor=white" alt="Tailwind 4">
-  <img src="https://img.shields.io/badge/testes-230%20testes%20em%2028%20arquivos-brightgreen" alt="230 testes em 28 arquivos">
+  <img src="https://img.shields.io/badge/testes-388%20testes%20em%2045%20arquivos-brightgreen" alt="388 testes em 45 arquivos">
 </p>
 
 <p align="center">
@@ -33,10 +33,13 @@
   <code>/app/cms</code> cadastra tudo isso; nas notificações o sino do cabeçalho e a tela
   <code>/app/notificacoes</code> estão no ar, e <code>/app/rotinas</code> mostra, pausa e dispara as três varreduras
   que o sistema faz sozinho no horário marcado, e a nota confirmada já cai no financeiro em parcelas mensais
-  que fecham o centavo. O que existe como tabela pronta mas sem módulo (modelos de
+  que fecham o centavo. O atendimento também entrou: <code>/app/ordens-de-servico</code> registra quem está
+  com qual máquina, aplica as peças da ordem e dá saída no estoque só quando o serviço é concluído, com o
+  número da ordem na movimentação e o documento pronto para o cliente assinar. O que existe como tabela pronta
+  mas sem módulo (modelos de
   e-mail e gateways de pagamento) e o que ainda nem tem tabela está marcado um por um em
   <a href="#m%C3%B3dulos">Módulos</a> e no <a href="#roadmap">Roadmap</a>. Nada no menu aponta para uma
-  rota que não existe: módulo em construção aparece apagado, com "em breve".</sub>
+  rota que não existe: o que não tem tela não tem linha — a barra lateral só lista porta que abre.</sub>
 </p>
 
 ---
@@ -47,7 +50,7 @@ Capturas do sistema rodando (Fastify + Prisma sobre MySQL no backend, React + Ad
 todas no quadro de **1440×900**, duas por linha e na mesma escala de exibição. Cada imagem é um link: o
 clique abre o arquivo no tamanho capturado. As seis abaixo são o caminho mais curto pelo produto: a
 vitrine pública, a entrada, o painel com os números da empresa ativa, a venda parcelada saindo do
-formulário, o financeiro que a recebe em cotas exatas e o editor que monta a vitrine. O resto das
+formulário, o financeiro que a recebe em cotas exatas e a ordem de serviço que baixa a peça do estoque. O resto das
 capturas continua no repositório — saiu da galeria, não do disco.
 
 Os números que aparecem nas telas saíram do banco local de desenvolvimento no dia das capturas. O `seed`
@@ -64,17 +67,19 @@ contam vieram das provas automatizadas e dos testes de integração, que escreve
 | :--: | :--: |
 | <a href="docs/screenshots/03-dashboard.png"><img src="docs/screenshots/03-dashboard.png" alt="Painel em tema escuro com os cartões de indicadores contados no banco da empresa ativa, abas de Metas e Alertas" width="360"></a> | <a href="docs/screenshots/24-parcelamento-formulario.png"><img src="docs/screenshots/24-parcelamento-formulario.png" alt="Aba Nova Venda em tema escuro: cliente, item com quantidade e preço unitário, o seletor de 3 parcelas com a nota de que a última fecha o centavo, observações e o total de R$ 2.581,00 no rodapé" width="360"></a> |
 
-| Financeiro recebendo as parcelas | Editor da vitrine · tema escuro |
+| Financeiro recebendo as parcelas | Ordem de serviço · tema escuro |
 | :--: | :--: |
-| <a href="docs/screenshots/24-parcelamento-financeiro.png"><img src="docs/screenshots/24-parcelamento-financeiro.png" alt="Aba Contas a Pagar / Receber do Financeiro em tema escuro: os cartões de a receber, a pagar e vencidos, o resumo do mês e as três parcelas da mesma venda com valor, vencimento e situação pendente" width="360"></a> | <a href="docs/screenshots/20-cms-conteudo-dark.png"><img src="docs/screenshots/20-cms-conteudo-dark.png" alt="Editor do site público na aba Conteúdo, tema escuro: textos do topo, as sete cores da vitrine com quadrado e hexadecimal, herói, WhatsApp, contato e redes, cada bloco com o seu botão de gravar" width="360"></a> |
+| <a href="docs/screenshots/24-parcelamento-financeiro.png"><img src="docs/screenshots/24-parcelamento-financeiro.png" alt="Aba Contas a Pagar / Receber do Financeiro em tema escuro: os cartões de a receber, a pagar e vencidos, o resumo do mês e as três parcelas da mesma venda com valor, vencimento e situação pendente" width="360"></a> | <a href="docs/screenshots/25-ordens-lista.png"><img src="docs/screenshots/25-ordens-lista.png" alt="Tela Ordens de serviço em tema escuro: os oito indicadores do resumo, a barra de busca com os filtros de situação, prioridade, responsável e período, e a tabela das ordens da empresa com a situação em pílula, o total em real e os botões de Iniciar, Concluir e Cancelar na última coluna" width="360"></a> |
 
 </div>
 
 As outras capturas continuam em `docs/screenshots/` com a origem declarada: a vitrine montada pelo banco
 (`19-*`) saiu de `tools/verify-landing-cms.cjs`; o editor (`20-*`), de `tools/verify-cms.cjs`; os avisos
 (`21-*`), de `tools/verify-notificacoes.cjs`; as rotinas agendadas (`23-*`), de `tools/verify-rotinas.cjs`;
-as Configurações (`22-*`), de `tools/verify-configuracoes.cjs`; e a venda parcelada caindo no financeiro
-(`24-*`), de `tools/verify-parcelamento.cjs`;
+as Configurações (`22-*`), de `tools/verify-configuracoes.cjs`; a venda parcelada caindo no financeiro
+(`24-*`), de `tools/verify-parcelamento.cjs`; e as Ordens de Serviço (`25-*`), de
+`tools/verify-ordens-de-servico.cjs` — a prova cria a própria ordem, inicia, aguarda peça, conclui, estorna e
+apaga o atendente de prova no último passo;
 a agenda e a navegação por abas (`17-*`, `18-*`) saíram em **1440×960** porque calendário e barra de abas
 não cabem nos 900 de altura; e os arquivos com `-celular` no nome têm 390×844. Nas capturas de prova o
 conteúdo que a própria prova cadastra é texto de produto — módulo que está no ar, número conferível no
@@ -88,7 +93,9 @@ apagadas de "Ordens de Serviço" e "Gateways & Cobranças": `07-*`, `10-*`, `11-
 nesta rodada porque a ferramenta que as produz está desalinhada da interface de hoje. Os dois pontos estão
 escritos em `docs/AUDITORIA.md` (N29 e N30), com a passada completa marcada para a F9 junto do N13. As
 demais famílias do painel (`16-*`, `21-*`, `22-*`, `23-*`, `03-*`, `04-*`, `05-*`) foram recapturadas com a
-barra de 15 linhas.
+barra de 15 linhas. Na F3.2 o menu ganhou a 16ª linha — "Ordens de serviço", na camada Serviços & Atendimentos —
+e a família `16-*`, que é a própria barra, foi repetida com ela; as outras cinco famílias recapturadas na F3.1
+seguem com 15 linhas e passam na mesma passada do N30, na F9.
 
 ---
 
@@ -125,6 +132,9 @@ servidor: não é a tela que decide o que a pessoa pode ver.
   calculada no servidor
 - **Estoque que ninguém digita**: venda confirmada dá saída, cancelamento devolve, compra recebida dá
   entrada — cada movimento fica registrado com tipo e referência
+- **Atendimento que mexe no estoque de verdade**: a ordem de serviço aplica peças e mão de obra, dá saída no
+  saldo só quando é concluída, e cancelar uma concluída devolve tudo como estorno — com o número da ordem na
+  movimentação, o histórico de quem moveu e o mesmo `allowNegativeStock` da empresa valendo aqui
 - **Conta fechada conferível**: total de venda e de compra é soma feita no servidor, nunca confiada ao
   navegador, e a exportação CSV entrega a mesma coleção que a listagem mostra
 - **Trilha de auditoria**: cada escrita relevante grava autor, ação, entidade e empresa, e a tela de
@@ -442,7 +452,7 @@ se o site está aberto ou em manutenção. A vitrine é única para toda a plata
 
 | Módulo | Banco | API | Tela | Estado |
 |---|:--:|:--:|:--:|---|
-| Autenticação, cadastro e recuperação | ✅ | ✅ 8 rotas | ✅ | no ar |
+| Autenticação, cadastro e recuperação | ✅ | ✅ 10 rotas | ✅ | no ar: login, cadastro, recuperação por código, renovação e encerramento de sessão, conta própria, troca de senha e troca de empresa |
 | Sessões e revogação de tokens | ✅ | ✅ | ✅ (aba Sessões) | no ar |
 | Papéis e permissões (RBAC) | ✅ | ✅ | ✅ (aba Permissões) | no ar |
 | Multiempresa (isolamento e troca) | ✅ | ✅ | ✅ (Configurações) | no ar |
@@ -453,6 +463,7 @@ se o site está aberto ou em manutenção. A vitrine é única para toda a plata
 | Financeiro (lançamentos, resumo e o carnê que a nota gera) | ✅ | ✅ 9 rotas | ✅ | no ar |
 | CRM (leads e funil) | ✅ | ✅ 6 rotas | ✅ | no ar |
 | Agenda (janela, recorrência, FullCalendar) | ✅ | ✅ 7 rotas | ✅ | no ar |
+| Ordens de serviço (atendimento, peças e baixa de estoque) | ✅ 3 tabelas | ✅ 6 rotas | ✅ | no ar: `/app/ordens-de-servico` com os oito indicadores do resumo, busca, filtros e paginação no servidor, documento para imprimir, tabela que vira cartão no celular e estoque que só baixa na conclusão |
 | Painel e relatórios agregados | ✅ | ✅ 8 rotas | ✅ | no ar |
 | Auditoria (trilha da empresa e trilha da plataforma) | ✅ | ✅ 2 rotas | ✅ 2 telas | no ar: `/app/auditoria` com as três abas de sempre, e `/app/auditoria-plataforma` reservada a quem responde pela plataforma |
 | Usuários e membros de empresa | ✅ | ✅ 6 rotas | ✅ | no ar |
@@ -464,7 +475,6 @@ se o site está aberto ou em manutenção. A vitrine é única para toda a plata
 | Modelos de e-mail | ✅ | 🚧 | 🚧 | tabela `email_templates` criada; SMTP ainda não existe |
 | Rotinas agendadas (cron) | ✅ | ✅ 3 rotas | ✅ | no ar: `/app/rotinas` com as três varreduras do relógio — contas vencidas, estoque baixo e relatório diário —, liga/pausa e "Executar agora" |
 | Gateways e cobranças | ✅ | 🚧 | 🚧 | tabelas com provedores (`MERCADO_PAGO`, `EFI`, `STRIPE`) e ambiente; **nenhuma integração inventada** enquanto não houver credencial real |
-| Ordens de serviço / atendimento em campo | 🚧 | 🚧 | 🚧 | sem tabela, sem rota e sem linha no menu: existe só como linha desta tabela |
 | SaaS: planos, assinaturas e faturas | 🚧 | 🚧 | 🚧 | a caminho |
 | Backup e restauração | 🚧 | 🚧 | 🚧 | a caminho |
 
@@ -525,20 +535,21 @@ importa só o CSS do AdminLTE) e `sweetalert2` (substituído pelo diálogo de co
   apps/
     api/
       prisma/
-        schema.prisma          27 models, 15 enums, todas as tabelas com @@map
-        migrations/            12 migrations, da fundação ao conteúdo da vitrine
+        schema.prisma          30 models, 19 enums, todas as tabelas com @@map
+        migrations/            19 migrations, da fundação às ordens de serviço
         seed.ts                admin global + conta de dev + empresa nexus-demo (vazia)
       src/
-        app.ts                 16 módulos + modo manutenção antes das rotas + parser de corpo vazio
+        app.ts                 17 módulos + modo manutenção antes das rotas + parser de corpo vazio
                                + handler de erro e 404
         config/env.ts          .env validado com Zod (subida falha cedo)
         lib/                   errors, rbac, company-context, audit, pagination, tokens, password, prisma
         plugins/               security.ts, auth.ts (decorator `authenticate`),
                                    maintenance.ts (gancho global com allowlist de volta)
         modules/               auth, companies, users, audit, clients, products, sales,
-                               purchases, finance, crm, agenda, reports, notifications, cms, cron, health
+                               purchases, finance, crm, agenda, reports, notifications, cms, cron,
+                               service-orders, health
                                — cada módulo com <x>.routes.ts e <x>.service.ts
-        test/                  16 arquivos de integração contra MySQL real + helpers.ts
+        test/                  36 arquivos de integração contra MySQL real + helpers.ts
     web/
       src/
         App.tsx                rotas públicas, /app/* protegida e as páginas de erro
@@ -552,7 +563,7 @@ importa só o CSS do AdminLTE) e `sweetalert2` (substituído pelo diálogo de co
                                layout/ (AdminShell, NotificationBell)
         pages/                 Landing, Legal, Login, Register, ForgotPassword, Dashboard, Clients,
                                Products, Sales, Purchases, Finance, CRM, Agenda, Users, Audit,
-                               PlataformaAuditoria, Settings,
+                               PlataformaAuditoria, Settings, OrdensDeServico,
                                Cms, Notifications, Rotinas, erros
   assets/brand/logo/           logo oficial e os recortes usados pelo favicon
   docs/
@@ -564,7 +575,8 @@ importa só o CSS do AdminLTE) e `sweetalert2` (substituído pelo diálogo de co
                                licença e o administrador da plataforma
     adr/                       0001 persistência única · 0002 multiempresa e RBAC · 0003 AdminLTE + design
                                system · 0004 rodapé único · 0005 semente sem demonstração · 0006 bootstrap do
-                               administrador · 0007 escopo da auditoria
+                               administrador · 0007 escopo da auditoria · 0008 ordem de serviço baixa estoque na
+                               conclusão
     design/palette.md          paleta oficial extraída da logo
     screenshots/               as capturas desta página
   tools/                       provas de navegador, recaptura de telas e utilitários do repo
@@ -627,23 +639,26 @@ tipados como `VarChar(36)` para manter as chaves compostas dentro do limite do I
 | Vendas e compras | `Sale`, `SaleItem`, `Supplier`, `Purchase`, `PurchaseItem` |
 | Financeiro | `FinanceCategory`, `FinanceEntry` |
 | Notificações | `Notification`, `NotificationPreference` |
+| Atendimento | `ServiceOrder`, `ServiceOrderItem`, `ServiceOrderHistory` |
 | Site público e operações | `LandingConfig`, `LandingItem`, `LegalDocument`, `CronJob`, `EmailTemplate`, `PaymentGateway` — site, manutenção e rotinas já têm tela; modelos de e-mail e gateways seguem só tabela |
 
-Quinze enums dão o vocabulário: `Role`, `SaleStatus`, `PurchaseStatus`, `StockMovementKind`, `EntryType`,
-`EntryStatus`, `LeadStatus`, `AgendaEventType`, `AgendaRecurrence`, `AgendaStatus`,
-`NotificationPriority`, `LandingItemKind`, `LegalKind`, `GatewayProvider`, `GatewayEnvironment`.
+Dezenove enums dão o vocabulário: `Role`, `PlatformRole`, `SaleStatus`, `PurchaseStatus`,
+`StockMovementKind`, `EntryType`, `EntryStatus`, `LeadStatus`, `AgendaEventType`, `AgendaRecurrence`,
+`AgendaStatus`, `NotificationPriority`, `LandingItemKind`, `LegalKind`, `GatewayProvider`,
+`GatewayEnvironment`, `ServiceOrderStatus`, `ServiceOrderPriority`, `ServiceOrderItemKind`.
 
 Unicidade que importa: e-mail global; `slug` de empresa; `company_users (user_id, company_id)`; documento de
 cliente, SKU de produto, nome de categoria, nome de fornecedor e nome+tipo de categoria financeira são únicos
 **dentro da empresa**, não no banco inteiro. `dedupe_key` segura a duplicação de aviso nas varreduras.
 
-Dezessete migrations, na ordem em que chegaram:
+Dezenove migrations, na ordem em que chegaram:
 
 ```text
 init_foundation → add_clients → add_auth_flows → add_products_stock → add_sales →
 add_suppliers_purchases → add_finance → add_crm → add_agenda → add_agenda_recorrencia →
 add_admin_cms_ops → add_cms_content → add_platform_role → add_refresh_used_at →
-add_company_allow_negative_stock → add_documento_vinculo_financeiro → add_refresh_token_empresa
+add_company_allow_negative_stock → add_documento_vinculo_financeiro → add_refresh_token_empresa →
+add_escopo_da_auditoria → add_ordens_de_servico
 ```
 
 As quatro migrations que chegaram na execução da auditoria trazem as linhas de reversão escritas no próprio
@@ -680,7 +695,7 @@ cp apps/api/.env.example apps/api/.env
 # SUPER_ADMIN_EMAIL com o e-mail do administrador definitivo (CREDENCIAIS.md),
 # SEED_ADMIN_PASSWORD com a senha dele e SEED_DEV_PASSWORD com a senha da conta dev
 
-npm run db:migrate            # aplica as 17 migrations
+npm run db:migrate            # aplica as 19 migrations
 npm run db:seed               # desenvolvimento: admin global + admin@nexus.local + empresa nexus-demo (vazia)
 # produção não usa o seed para criar o administrador: npm run admin:criar -w @nexus/api
 # (docs/PRODUCAO.md traz a ordem inteira de subida)
@@ -813,7 +828,7 @@ o processo na inicialização com a lista completa na mensagem. O código dessa 
 
 ```bash
 npm run typecheck          # api + web
-npm test                   # api: 28 arquivos · 230 testes contra MySQL real — web: 4 arquivos · 20 testes no jsdom
+npm test                   # api: 36 arquivos · 326 testes contra MySQL real — web: 9 arquivos · 62 testes no jsdom
 npm run test:api           # só a suíte da API
 npm run test:web           # só a suíte do navegador (Vitest + jsdom + Testing Library)
 npm run test:coverage      # a mesma suíte com a cobertura medida
@@ -860,9 +875,10 @@ capturas desta página como subproduto:
 | `tools/verify-landing-cms.cjs` | 123 — a vitrine montada pelo banco: texto, a paleta cadastrada vestindo só o tema a que pertence (escuro pinta, claro devolve os tokens ao produto, com o contraste das duas leituras medido), o toque a 6 px do desenho do alternador trocando o tema nos 54×45, o cabeçalho só com marca, tema e acesso, itens, contato, WhatsApp, cookies, SEO, páginas legais, o "Sobre" em duas colunas encostado na linha de 1200px, três larguras sem arrasto e a manutenção de ponta a ponta (contagem, pulso, IP e o código na sessão) |
 | `tools/verify-configuracoes.cjs` | 127 — as quatro abas do `/app/configuracoes` gravando de verdade: telefone e CNPJ conferidos na tela e na API, um bloco salvo sem tocar nos outros (agora são sete blocos na aba Empresa, cada um mandando só as chaves que são suas), CEP/UF/cidade, moeda que chega à sessão e ao painel, meta que vira régua, as duas políticas por empresa, o STAFF lendo tudo sem botão de gravar, troca de senha que não despeja a pessoa, os dois temas e os 390px — com empresa e conta devolvidas ao estado de antes |
 | `tools/verify-parcelamento.cjs` | 55 — a venda parcelada de ponta a ponta na tela, sobre uma empresa de prova criada e apagada pela própria volta: o seletor de doze parcelas, o preço digitado "1.290,50" valendo R$ 1.290,50 na linha e no rodapé, nota pendente que não escreve caixa nenhum, confirmar que escreve as três parcelas exatas no financeiro, o cancelamento que esvazia o caixa e devolve o estoque, e a compra recebida em 2× caindo como despesa na categoria Compras |
+| `tools/verify-ordens-de-servico.cjs` | 102 — a ordem de serviço de ponta a ponta, sobre a casa de demonstração: os oito indicadores batidos contra o resumo do servidor, a ordem criada pela aba Nova ordem com a prévia do rodapé conferida centavo a centavo, o caminho Iniciar → Aguardar peça → Concluir com o **saldo lido no banco antes e depois de cada movimento**, o estorno da concluída devolvendo exatamente o que saiu, o documento aberto e enviado à impressora, busca, filtro, ordenação e o rodapé que conta o recorte, os dois temas, a tabela que vira cartão em 390px e a sessão de um atendente de prova — 403 nas duas portas de escrita, sem aba de criação, sem botão de cancelar, sem chamada à equipe e sem caixa nativa — com a ordem devolvida ao dono e o atendente apagado no fim |
 | `tools/verify-rotinas.cjs` | 37 — a tela `/app/rotinas` com as três varreduras, agenda traduzida e próxima execução conferidas contra a API; "Executar agora" que grava o aviso no banco e mostra no toast a mensagem da rotina; pausar pelo diálogo de confirmação e retomar; o atendente sem permissão; o tema claro e os 390px — jobs, avisos e usuário de prova devolvidos ao estado de antes |
 | `tools/verify-logout.cjs` | 22 — as cinco portas de saída da sessão, cada uma pelo caminho de verdade: o botão "Sair" do painel, o 401 de uma chamada de negócio sem refresh token em disco (com o aviso de Toastr medido na tela), o logout feito na segunda aba aberta nesta prova, a renovação recusada pelo servidor no reload e — para não confundir as duas coisas — quem abre `/app` sem sessão nenhuma, que continua indo ao login. Junto: o tema claro atravessando entrar e sair, o refresh que sai do disco, o "voltar" do navegador batendo em tela sem painel e nenhum `alert()` no caminho |
-| `tools/verify-sidebar.cjs` | 102 — ordem e tipografia das seis camadas, itens por permissão, modo trilha, peek e o cabeçalho sem repetir a marca, tudo com o contrato novo da F3.1: nenhuma linha da barra larga está sem destino, toda linha é link de uma rota que existe no painel, a barra não escreve "em breve" em lugar nenhum, e as quinze linhas são clicadas uma a uma com o endereço e o título da tela conferidos depois de cada clique |
+| `tools/verify-sidebar.cjs` | 102 — ordem e tipografia das seis camadas, itens por permissão, modo trilha, peek e o cabeçalho sem repetir a marca, tudo com o contrato novo da F3.1: nenhuma linha da barra larga está sem destino, toda linha é link de uma rota que existe no painel, a barra não escreve "em breve" em lugar nenhum, e as dezesseis linhas são clicadas uma a uma com o endereço e o título da tela conferidos depois de cada clique |
 | `tools/verify-acoes-confirm.cjs` | 88 — coluna de ações de nove tabelas, anatomia do diálogo, trava de duplo clique, Esc durante a requisição, tema claro e celular |
 | `tools/shoot-tabs.cjs` | 447 — abas, paginação, respiro medido e legibilidade do histórico em 9 páginas, desktop e celular |
 | `tools/shoot-crm.cjs` | 42 — funil, KPIs, filtros, mudança de estágio, conversão conferida na tela de Clientes e celular sem overflow |
@@ -915,8 +931,7 @@ fora do git, com histórico reescrito antes do primeiro push.
 1. **Modelos de e-mail** — cadastrar e editar os modelos guardados em `email_templates`;
    SMTP só depois de haver credencial real
 2. **Gateways e cobranças** — só com credencial de ambiente; nada de integração de fachada
-3. **Ordens de serviço / atendimento** — módulo novo com o mesmo padrão de estado vigiado e auditoria
-4. **SaaS: planos, assinaturas e faturas** · **backup e restauração** · **CI** com suíte automatizada a
+3. **SaaS: planos, assinaturas e faturas** · **backup e restauração** · **CI** com suíte automatizada a
    cada push
 
 ---

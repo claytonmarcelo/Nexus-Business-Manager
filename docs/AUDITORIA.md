@@ -1379,3 +1379,101 @@ Vai para a mesma passada da F9 que fecha o N13.
   guarda antiga que o contrato novo só reforça.
 - O filtro `.filter((grupo) => grupo.items.length > 0)` continua no `AdminShell`: sem as linhas apagadas, uma
   camada cujo acesso for revogado some inteira, em vez de deixar um título órfão.
+
+---
+
+## Adenda da execução — F3.2 Parte 1 (Ordens de Serviço) encerrada — 2026-10-13
+
+O anexo do PROMPT_IDE voltou a pedido do dono e a F3.2 deixou de estar parada. A Parte 1 está entregue nas
+duas pontas: o backend saiu no commit `3a32119` (três tabelas, recurso `service_order` na matriz de
+permissões, seis rotas, 35 casos de integração) e a tela sai neste lote — `/app/ordens-de-servico` com duas
+abas, oito indicadores, filtros e paginação no servidor, documento para imprimir e a tabela que vira cartão
+no celular. Guarda: 10 casos em `apps/web/src/test/ordens-de-servico.test.tsx` e 102 verificações em
+`tools/verify-ordens-de-servico.cjs`, que confere estoque no banco antes e depois de cada movimento, mede os
+oito indicadores contra o `GET /service-orders/summary`, roda a sessão de um atendente de prova e devolve o
+banco ao estado anterior no `finally`. Decisão de produto registrada em
+`docs/adr/0008-ordem-de-servico-baixa-estoque-na-conclusao.md`. Portões da rodada: typecheck dos dois lados
+limpo, build `914,87 kB / 271,50 kB gzip` de JS e `390,88 kB / 60,01 kB` de CSS, API **36 arquivos / 326
+casos** e web **9 arquivos / 62 casos**, zero falha e zero skip.
+
+### N33 — corrigido nesta rodada porque a captura denunciou: a tabela de nove colunas não cabia na janela de 1440
+
+Medido na primeira corrida da prova: a tabela pedia **1244 px** e a área visível do painel entregava
+**1126 px**, então a coluna Ações — a que tem os botões de Iniciar, Concluir e Cancelar — ficava fora da
+tela em 1440×900, o quadro que o próprio README declara como padrão das capturas. Não foi consertado na
+intuição: a largura foi medida com script de bancada, `scrollWidth` da tabela contra `clientWidth` do trilho
+que a envolve, antes e depois da mudança. A tabela passou a
+ter respiro próprio (`.nx-os-tabela { min-width: 1080px }` com cabeçalho e células em `0.72rem 0.5rem`),
+dentro de um trilho que assume o transbordo em vez de cortar o conteúdo (`.nx-os-scroll { overflow-x: auto }`),
+e os botões de linha encolheram para `0.74rem`. Hoje a mesma checagem devolve **1126 x 1126** — a tabela
+inteira dentro da janela, sem transbordar o painel — e virou asserção permanente na prova: se uma coluna nova
+estourar a largura, a corrida falha em vez de sair bonita e cortada.
+
+### N34 — corrigido nesta rodada: o dinheiro quebrava no meio do número, e a pílula quebrava no meio da palavra
+
+Duas regras da casa brigaram com o conteúdo da ordem de serviço. O `td.mono` global tem
+`overflow-wrap: anywhere`, que serve para código interno longo e fez "R$ 195,00" virar duas linhas na coluna
+Total; a pílula de status, estreita, escreveu "Aguardand / o peça". O dinheiro é a coluna que o dono lê para
+bater caixa, e um número partido em duas linhas não é um número. Correção local, sem tocar nas outras
+tabelas: `td.mono` volta a `overflow-wrap: normal` com `white-space: nowrap` dentro da tabela de ordens, a
+`.status-pill` quebra no espaço e nunca no meio da palavra, e o título da ordem — esse sim texto longo que
+precisa caber — mantém `overflow-wrap: anywhere`. As três capturas de lista (escuro, claro e celular) foram
+repetidas depois da mudança e conferidas uma a uma.
+
+### N35 — corrigido nesta rodada: as capturas saíam com o aviso da operação anterior por cima da tela
+
+O toastr de sucesso da criação ficava visível quando a prova fotografava a lista logo depois, cobrindo o
+cabeçalho da tela que a imagem existe para provar. Entrou `semToast(pagina)` antes de cada `captura()`, que
+espera o aviso sair do DOM. Não é maquiagem de print: é a diferença entre uma captura que mostra o produto e
+uma que mostra o teste.
+
+### N36 — fora do escopo, relatado em vez de corrigido em silêncio: a tela não oferece motivo no movimento de estado
+
+A rota `POST /service-orders/:id/status` aceita `note` opcional, o histórico guarda o campo e a tela mostra
+`.nx-os-motivo` quando ele vem preenchido. O que falta é o meio: `mover()` chama a rota sem nota, porque o
+diálogo de confirmação da casa é de sim/não. Resultado medido na prova — a linha do tempo de uma ordem movida
+pelo navegador registra quem moveu e quando, sem o porquê; a de uma ordem movida pela API mostra o motivo.
+Não foi corrigido aqui porque a decisão não é deste módulo: colocar campo de motivo no movimento significa
+mexer no contrato dos diálogos de confirmação de todo o painel (a padronização foi a tarefa que fechou os
+cinco diálogos existentes), e decidir isso sozinho seria inventar interface fora do anexo. É pergunta para o
+dono na hora da Parte 2, e a prova já cobre os dois caminhos para que a resposta seja medida, não discutida.
+
+### N37 — fora do escopo, relatado: a ordem de serviço concluída não gera lançamento financeiro nem venda
+
+A OS baixa estoque, numera, documenta e audita; não abre conta a receber. Isso é decisão de escopo da
+Parte 1, escrita no ADR-0008, e não um buraco esquecido: o anexo coloca o dinheiro do atendimento na Parte 2
+(Gateways & Cobranças). Registrado aqui para que ninguém leia a tela nova e ache que o financeiro está
+ligado quando não está.
+
+### N38 — armadilha de medição, não defeito do produto: o espaço invisível do `Intl` e o maiúsculo do `innerText`
+
+Dois falsos positivos custaram uma corrida inteira da prova e valem ficar escritos porque vão voltar.
+`Intl.NumberFormat('pt-BR')` coloca **U+00A0** entre "R$" e o número, então comparar texto formatado com
+literal de espaço comum nunca casa — a normalização `/\u00a0/g` é obrigatória em toda asserção de dinheiro.
+E `innerText` reflete `text-transform: uppercase` do CSS: a varredura de "código interno na tela" casou
+"URGENT" dentro de "URGENTES" do indicador de prioridade. A varredura passou a ler `textContent`, que é o
+texto-fonte, e a checagem continua com diagnóstico de contexto no motivo, para a próxima falha dizer onde
+estava e não só que falhou.
+
+### N39 — consequência prevista: a barra lateral ganhou a 16ª linha e as capturas antigas ficaram uma linha mais velhas
+
+O item "Ordens de serviço" entrou no menu, que passou de 15 para **16 linhas em 6 camadas**. As famílias
+recapturadas na F3.1 (`16-*`, `21-*`, `22-*`, `23-*`, `03-*`, `04-*`, `05-*`) mostram a barra de 15, e as nove
+famílias do N30 seguem mostrando a barra anterior à F3.1. O README dizia "recapturadas com a barra de 15
+linhas" sem dizer que a barra mudou de novo — a frase foi corrigida neste lote e o destino é o mesmo:
+passada completa das ferramentas de captura na F9, junto do N13.
+
+### O que foi verificado e não é achado
+
+- O isolamento não foi presumido: a prova cria um `STAFF` de prova na mesma empresa, mede 403 nas duas
+  portas de escrita (criar e estornar), confere que a aba de criação não aparece, que ele só tem caminho na
+  ordem atribuída a ele, que não vê botão de cancelar em estado nenhum e que a tela não bate na porta da
+  equipe sem `user:read` — nada de caixa nativa de diálogo na sessão inteira.
+- O estorno foi conferido no saldo, não na cara: cancelar uma concluída devolve exatamente o que a
+  conclusão tirou, com movimentação `IN` de nota `Estorno da OS n`.
+- O `history` de uma OS recém-criada tem uma linha só (`toStatus: OPEN`), e o texto "A ordem ainda não mudou
+  de estado" na tela é verdadeiro, não enchimento.
+- A numeração por empresa é provada por corrida no `ordens-de-servico.test.ts`, e o `UNIQUE (company_id,
+  number)` continua sendo a palavra final: a tela não escolhe número e não pode repetir.
+- O piso do teste do menu subiu de 15 para 16 linhas e continua piso, não teto: um item a menos por
+  permissão revogada é o comportamento que a outra metade do mesmo teste protege.

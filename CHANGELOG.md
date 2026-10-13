@@ -1,5 +1,52 @@
 ## [Não lançado]
 
+### A ordem de serviço desceu do caderno do balcão para o estoque (2026-10-13)
+
+- **O atendimento ganhou casa.** Entre a nota (Vendas) e o caixa (Financeiro) não havia nada para quem
+  conserta ou instala: o serviço vivia no papel do balcão e a peça saía do estoque por acidente. Entraram três
+  tabelas (`service_orders`, `service_order_items`, `service_order_histories`), o recurso `service_order` na
+  matriz de permissões e seis rotas atrás do mesmo gate de sessão do resto do painel — o backend no commit
+  `3a32119`, a tela `/app/ordens-de-servico` neste lote. A barra lateral passou de 15 para **16 linhas**, e a
+  linha que voltou a existir é link de página que existe.
+- **Quatro regras mandam no módulo, e nenhuma delas é escolha da tela.** O estoque baixa na **conclusão**, não
+  na abertura, porque OS aberta é intenção e baixa é fato — e a política `allowNegativeStock` da empresa é
+  lida no mesmo caminho que a venda usa, então a ordem não consegue baixar o que a empresa não deixa baixar.
+  O único caminho de volta é o **estorno**, que nasce como movimentação de entrada com a nota do número e
+  fica com OWNER e ADMIN. O **número é por empresa**, nunca recomeça e nunca repete: trava na linha da
+  empresa, `MAX + 1` e o índice único fechando a porta, com retry medido para chave duplicada e deadlock. O
+  **dinheiro sai do servidor em centavo**, com a linha arredondada uma vez e o desconto subtraído depois da
+  soma — a tela mostra prévia, nunca resultado. Decisão escrita em
+  `docs/adr/0008-ordem-de-servico-baixa-estoque-na-conclusao.md`.
+- **O atendente não é o dono da tela.** `STAFF` não tem `service_order:write`, e o serviço ainda aperta: ele só
+  mexe na ordem atribuída a ele, só no andamento e nas anotações, e nunca cancela. A prova mediu os 403 nas
+  duas portas de escrita, a aba de criação que não aparece, o botão de cancelar que não existe para ele e a
+  tela que não bate na porta da equipe sem `user:read` — com nenhuma caixa nativa de diálogo na sessão inteira.
+- **Vermelho antes, verde depois, nas três camadas.** 35 casos em `apps/api/test/ordens-de-servico.test.ts`
+  (numeração em corrida, máquina de estados, 404 entre empresas, estorno no saldo), 10 em
+  `apps/web/src/test/ordens-de-servico.test.tsx` (indicadores vindos do resumo, busca e filtro no servidor,
+  diálogo de confirmação antes de mexer no estoque, documento que dá saída em papel) e a prova de navegador
+  nova, `tools/verify-ordens-de-servico.cjs`, fechando com **102 verificações e 0 falhas**: cada saldo conferido
+  no banco antes e depois do movimento, os oito indicadores batidos contra o `GET /service-orders/summary`, a
+  ordem criada, iniciada, aguardada, concluída, estornada e devolvida ao dono no `finally`.
+- **A captura denunciou três defeitos que o console não mostrava.** A tabela de nove colunas pedia 1244 px
+  numa área de 1126 e a coluna Ações ficava fora da tela; o `overflow-wrap: anywhere` do `td.mono` partia
+  "R$ 195,00" em duas linhas e a pílula quebrava "Aguardando" no meio; e o aviso da operação anterior
+  continuava por cima da tela fotografada. Os três foram corrigidos medindo antes e depois, e a largura virou
+  asserção da corrida — 1126 x 1126 hoje. Descrito em N33, N34 e N35.
+- **Sete capturas novas, todas de banco de demonstração.** `25-ordens-lista`, `-formulario`, `-confirmacao`,
+  `-detalhe`, `-claro`, `-celular` e `-atendente`, e a lista em 1440×900 entrou na galeria do README no lugar
+  da tela do editor, que continua em `20-*`.
+- **Achados que a rodada deixou abertos, relatados em vez de consertados escondido.** N36: o diálogo de
+  confirmação da casa é de sim/não, então a tela chama a rota de status sem nota e o motivo do movimento só
+  aparece quando a mudança veio pela API — decidir campo de motivo mexe no contrato dos diálogos de todo o
+  painel e é pergunta para o dono. N37: a ordem concluída não gera lançamento financeiro nem venda, que é a
+  fronteira com a Parte 2. N38: duas armadilhas de medição (`U+00A0` do `Intl` e maiúsculo do `innerText`) que
+  custaram uma corrida e agora estão escritas. N39: a barra mudou de novo e as capturas antigas ficaram uma
+  linha mais velhas.
+- **Portões da rodada:** typecheck dos dois lados limpo, build `914,87 kB / 271,50 kB gzip`, API **36 arquivos /
+  326 casos** e web **9 arquivos / 62 casos**, zero falha e zero skip. A Parte 2 (Gateways & Cobranças)
+  continua parada: o anexo manda apresentar a Parte 1 e esperar o "pode seguir".
+
 ### O menu lateral passou a só mostrar porta que abre (2026-10-13)
 
 - **Duas linhas riscadas saíram do menu, e a regra virou tipo.** "Ordens de Serviço" e "Gateways & Cobranças"

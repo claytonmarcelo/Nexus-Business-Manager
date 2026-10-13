@@ -6,37 +6,54 @@ foi medido" ao final. O que não pôde ser medido está marcado como
 `NÃO VERIFICADO`. Este arquivo é o retrato honesto do repositório no commit
 atual e o primeiro texto que um revisor externo deve ler.
 
+Nesta rodada (2026-10-13, F3.2 Parte 1 — Ordens de Serviço) as seções 1, 3, 4, 5, 6, 7, 8, 9 e 10
+e o bloco "Como este arquivo foi medido" foram re-medidos porque o módulo mudou rotas, tabelas, telas e
+contagem de testes — e porque três linhas daquela passada já não descreviam mais o repositório (P1, P2 e D1). O resto do arquivo continua
+a medição de 2026-10-12, e a passada completa está marcada para a F9.
+
 ---
 
 ## 1. Resumo executivo
 
 1. O produto é um ERP SaaS multiempresa que funciona de ponta a ponta no ambiente
-   local: 105 rotas de API sobre Fastify 5 + Prisma 6 + MySQL 8.4.7, painel React
-   com 24 rotas e uma vitrine pública montada pelo banco.
+   local: 112 rotas de API sobre Fastify 5 + Prisma 6 + MySQL 8.4.7, painel React
+   com 25 rotas (16 delas atrás do menu) e uma vitrine pública montada pelo banco.
 2. Funciona e tem teste automatizado: autenticação com recuperação e renovação de
    sessão, RBAC com hierarquia de papéis, isolamento multiempresa, clientes,
    produtos e estoque, vendas com parcelas, compras e fornecedores, financeiro,
-   CRM, agenda, relatórios agregados, notificações, auditoria, rotinas agendadas,
+   CRM, agenda, ordens de serviço com o estoque baixando na conclusão, relatórios
+   agregados, notificações, auditoria, rotinas agendadas,
    CMS da vitrine, documentos legais e modo manutenção.
-3. A suíte inteira passa nesta rodada: 28 arquivos / 230 casos na API e 4 arquivos
-   / 20 casos no web, com banco MySQL real de teste (sem mock).
+3. A suíte inteira passa nesta rodada: 36 arquivos / 326 casos na API e 9 arquivos
+   / 62 casos no web, com banco MySQL real de teste (sem mock).
 4. É parcial por escolha, não por esquecimento: os relatórios agregados têm teste
    de acesso e de dinheiro, mas nem cada um dos oito tem asserção de valor
    própria, e o tema escuro do painel ainda é aplicado por nós, não pelo AdminLTE.
 5. Não existe: envio de e-mail (SMTP), cobrança/assinatura SaaS, nota fiscal,
-   upload real de arquivo (a logo é só uma URL), backup e restauração, ordens de
-   serviço. Nada disso tem botão morto na interface.
+   upload real de arquivo (a logo é só uma URL), backup e restauração. Nada disso
+   tem botão morto na interface — e a ordem de serviço, que era a última linha
+   desta lista, saiu dela na F3.2 Parte 1.
 6. Duas tabelas existem só no schema: `email_templates` e `payment_gateways`.
 7. Segurança: nenhuma rota nasce aberta (gate estrutural derruba o boot), e a
-   senha real do administrador não está em arquivo rastreado nem no histórico.
-8. Risco em aberto e conhecido pelo dono: uma captura rastreada mostra a senha
-   real do administrador nos pixels, e ela já está publicada no remoto
-   (`docs/AUDITORIA.md` N1). Isso mantém o push bloqueado.
-9. Cobertura medida agora: API com 85,57% de instruções (2.301/2.689), 73,02%
-   de ramificações, 83,93% de funções e 88,29% de linhas; web com 8,59% de
-   instruções (309/3.597) — 51 dos 77 arquivos instrumentados estão em 0%.
-10. Branch `main` a 7 commits do `origin/main`, árvore limpa, sem push
-    nesta rodada.
+   senha do administrador não está em arquivo rastreado nem no histórico: o valor mora
+   só em `tools/senha-admin.local.cjs` e no `apps/api/.env` (chave `SEED_ADMIN_PASSWORD`), os dois
+   ignorados pelo git — medido com `git check-ignore -v`.
+8. Risco conhecido e **decidido** pelo dono: uma captura rastreada mostra a
+   senha de desenvolvimento nos pixels (`docs/screenshots/02-login.png`,
+   `docs/AUDITORIA.md` N1). A decisão de 2026-10-12 (item 1 do PROMPT MESTRE) é
+   que a conta é fictícia: não se rotaciona senha, não se reescreve histórico. O
+   N1 deixou de travar o push e passou a risco aceito e registrado.
+9. Cobertura re-medida nesta rodada: API com **86,88%** de instruções
+   (2.597/2.989), 74,97% de ramificações, 85,73% de funções e 89,55% de linhas;
+   web com **22,78%** de instruções (912/4.003), contra 8,59% da medição anterior,
+   porque os testes de tela chegaram ao painel — 38 dos 82 arquivos mensuráveis
+   do web ainda estão em 0%, e na API sobrou um (`cron.runner.ts`).
+10. Branch `main` igual ao `origin/main` no começo desta passada: o backend
+    das ordens de serviço já está publicado (`3a32119`). O fechamento da F3.2
+    Parte 1 são dois commits — interface, teste de tela e prova de navegador num
+    lote, documentação no outro — com push em avanço direto, sem force, e a prova
+    `git ls-remote origin HEAD` igual a `git rev-parse HEAD` colada no relatório
+    da fase.
 
 ---
 
@@ -91,70 +108,80 @@ nexusbusinessmanager/
 ├── apps/
 │   ├── api/
 │   │   ├── prisma/
-│   │   │   ├── migrations/        (17 migrations + migration_lock.toml)
-│   │   │   ├── schema.prisma      (27 models)
+│   │   │   ├── migrations/        (19 migrations + migration_lock.toml)
+│   │   │   ├── schema.prisma      (30 models)
 │   │   │   └── seed.ts
 │   │   ├── src/
 │   │   │   ├── config/            (env.ts, producao.ts)
-│   │   │   ├── lib/               (errors, rbac, money, time, installments,
-│   │   │   │                       audit, pagination, password, tokens,
-│   │   │   │                       company-context, platform, validate-doc)
-│   │   │   ├── modules/           (16 módulos: auth, companies, users, audit,
+│   │   │   ├── lib/               (17 arquivos: audit, auth, brFields,
+│   │   │   │                       company-context, errors, installments,
+│   │   │   │                       money, pagination, password,
+│   │   │   │                       passwordPolicy, platform, prisma, rbac,
+│   │   │   │                       stock, time, tokens, tx)
+│   │   │   ├── modules/           (17 módulos: auth, companies, users, audit,
 │   │   │   │                       clients, products, sales, purchases,
 │   │   │   │                       finance, crm, agenda, reports,
-│   │   │   │                       notifications, cms, cron, health)
+│   │   │   │                       notifications, cms, cron, health,
+│   │   │   │                       service-orders)
 │   │   │   ├── plugins/           (auth, gate, maintenance, security)
 │   │   │   ├── app.ts
 │   │   │   └── server.ts
-│   │   └── test/                  (28 arquivos .test.ts + helpers.ts)
+│   │   └── test/                  (36 arquivos .test.ts + helpers.ts)
 │   └── web/
 │       ├── public/
 │       └── src/
-│           ├── components/        (12 na raiz + cms/, landing/, layout/,
-│           │                       settings/)
+│           ├── components/        (12 na raiz + 5 cms/, 12 landing/, 3 layout/,
+│           │                       2 settings/)
 │           ├── context/           (AuthContext, ThemeContext)
-│           ├── lib/               (18 módulos: api, csv, format, money,
-│           │                       masks, validators, tokenStore, notify,
-│           │                       confirm, auditLabels, uiCopy, papeis,
-│           │                       cmsApi, landingApi, landingEstilo,
-│           │                       landingTypes, notificationsApi, cronApi,
-│           │                       settingsApi)
-│           ├── pages/             (20 arquivos)
-│           ├── styles/            (7 arquivos CSS, 3.027 linhas no total)
-│           └── test/              (setup do jsdom)
+│           ├── lib/               (22 módulos: api, auditLabels, brand,
+│           │                       cmsApi, confirm, cronApi, csv, format,
+│           │                       landingApi, landingEstilo, landingTypes,
+│           │                       masks, metricaVitrine, money, notify,
+│           │                       notificationsApi, papeis, settingsApi,
+│           │                       statusServico, tokenStore, uiCopy,
+│           │                       validators)
+│           ├── pages/             (22 arquivos)
+│           ├── styles/            (7 arquivos CSS, 3.164 linhas no total)
+│           └── test/              (11 arquivos: 9 testes + 2 fábricas;
+│                                   o jsdom vem do vitest.config, não de setup.ts)
 ├── assets/brand/logo/
 ├── docs/
-│   ├── adr/                       (3 ADRs)
-│   ├── decisoes/                  (G1–G6)
+│   ├── adr/                       (8 ADRs)
+│   ├── decisoes/                  (G1–G6 + G8, em 7 arquivos)
 │   ├── design/palette.md
-│   ├── screenshots/               (101 capturas)
-│   ├── ANALISE.md, ANALISE-LACUNAS.md, AUDITORIA.md, STATUS-AJUSTES.md
+│   ├── screenshots/               (108 capturas)
+│   ├── ANALISE.md, ANALISE-LACUNAS.md, AUDITORIA.md, PRODUCAO.md,
+│   │   STATUS-AJUSTES.md
 │   └── ESTADO-ATUAL.md            (este arquivo)
-├── tools/                         (34 arquivos rastreados: 13 shoot-*,
-│                                   11 verify-*, 4 patch-*, 3 audit-*,
-│                                   senha-admin.cjs, para-innodb.cjs,
+├── tools/                         (37 arquivos rastreados nesta rodada: 12
+│                                   shoot-*, 13 verify-*, 4 patch-*,
+│                                   3 audit-*, conta-de-captura.cjs,
+│                                   senha-admin.cjs, para-innodb.cjs, wf.cjs,
 │                                   make-favicon.ps1)
 ├── README.md, CHANGELOG.md
 └── package.json, package-lock.json, .gitignore, .gitattributes, .editorconfig
 ```
 
-Arquivos rastreados no commit: **386** (`git ls-files | wc -l`), distribuídos em
-`apps` 229, `docs` 115, `tools` 34 e 7 na raiz. Código: 71 arquivos `.ts` na API
-e 84 `.ts`/`.tsx` no web. Não há `.github/` — ou seja, **nenhum CI versionado**.
+Arquivos da árvore versionada nesta rodada, medidos com
+`git ls-files --cached --others --exclude-standard` — ou seja, o que está no commit de
+agora mais os arquivos novos deste módulo, que ainda não aparecem no `git ls-files` puro:
+**428**, distribuídos em `apps` 253, `docs` 130, `tools` 37, `assets` 1 e 7 na raiz.
+Código: 74 arquivos `.ts` em `apps/api/src` e 94 `.ts`/`.tsx` em `apps/web/src`.
+Não há `.github/` — ou seja, **nenhum CI versionado**.
 
 ---
 
 ## 4. Rotas da API
 
-Fonte: leitura estática dos 16 arquivos `*.routes.ts` (`tools` à parte: script
+Fonte: leitura estática dos 17 arquivos `*.routes.ts` (`tools` à parte: script
 `inventario-rotas.cjs` desta rodada), conferida contra o servidor em execução.
 
 | Recorte | Quantidade |
 | --- | --- |
-| Rotas declaradas | **105** |
+| Rotas declaradas | **112** |
 | Públicas de propósito (`config.public`) | 10 |
-| Da plataforma (`assertPlatformAdmin`) | 14 |
-| De empresa, com `app.authenticate` + permissão RBAC | 81 |
+| Da plataforma (`assertPlatformAdmin`) | 15 |
+| De empresa, com `app.authenticate` + permissão RBAC | 87 |
 | Registradas sem gate | **0** |
 
 Amostra ao vivo no servidor de dev desta rodada (respostas esperadas):
@@ -162,11 +189,12 @@ Amostra ao vivo no servidor de dev desta rodada (respostas esperadas):
 `GET /api/clients` 401, `GET /api/products` 401, `GET /api/sales` 401,
 `GET /api/purchases` 401, `GET /api/finance/entries` 401,
 `GET /api/agenda/events` 401, `GET /api/cms/config` 401, `GET /api/ops/jobs` 401,
-`GET /api/audit` 401, `GET /api/auth/me` 401, `GET /api/reports/overview` 401.
+`GET /api/audit` 401, `GET /api/auth/me` 401, `GET /api/reports/overview` 401,
+`GET /api/service-orders` 401 (medido com o servidor de dev desta rodada).
 
-Por módulo: agenda 7 · audit 1 · auth 10 · clients 5 · cms 14 · companies 5 ·
+Por módulo: agenda 7 · audit 2 · auth 10 · clients 5 · cms 14 · companies 5 ·
 crm 6 · cron 3 · finance 9 · health 1 · notifications 7 · products 11 ·
-purchases 8 · reports 8 · sales 4 · users 6.
+purchases 8 · reports 8 · sales 4 · service-orders 6 · users 6.
 
 A lista completa, rota por rota:
 
@@ -180,6 +208,7 @@ A lista completa, rota por rota:
 | PATCH | /api/agenda/events/:id/status | agenda | agenda:write |
 | DELETE | /api/agenda/events/:id | agenda | agenda:write |
 | GET | /api/audit | audit | audit:read |
+| GET | /api/audit/plataforma | audit | plataforma |
 | POST | /api/auth/login | auth | pública |
 | POST | /api/auth/register | auth | pública |
 | POST | /api/auth/forgot-password | auth | pública |
@@ -271,6 +300,12 @@ A lista completa, rota por rota:
 | POST | /api/sales | sales | sale:write |
 | GET | /api/sales/:id | sales | sale:read |
 | PATCH | /api/sales/:id/status | sales | sale:write |
+| GET | /api/service-orders | service-orders | service_order:read |
+| GET | /api/service-orders/summary | service-orders | service_order:read |
+| GET | /api/service-orders/:id | service-orders | service_order:read |
+| POST | /api/service-orders | service-orders | service_order:write |
+| PATCH | /api/service-orders/:id | service-orders | sessão + alcance do atendente |
+| POST | /api/service-orders/:id/status | service-orders | sessão + alcance do atendente |
 | GET | /api/users | users | user:read |
 | GET | /api/users/permissions | users | user:read |
 | GET | /api/users/sessions | users | user:read |
@@ -283,7 +318,13 @@ registro; `plataforma` exige a conta global da plataforma
 (`assertPlatformAdmin`), não o papel da empresa; o resto carrega
 `preHandler: [app.authenticate]` e depois `assertPermission` com o recurso e a
 ação. A coluna "autenticada" significa sessão obrigatória sem permissão de
-recurso específica (conta própria, notificações da pessoa, empresas do usuário).
+recurso específica (conta própria, notificações da pessoa, empresas do usuário). As
+duas rotas de ordem de serviço que não mostram permissão na tabela são as duas que
+abrem exceção de propósito: `PATCH /service-orders/:id` e
+`POST /service-orders/:id/status` deixam o `STAFF` passar sem `service_order:write`
+e apertam o alcance dentro do serviço — ele só mexe na ordem atribuída a ele, só no
+andamento, e nunca cancela. Medido na prova de navegador: 403 nas duas portas de
+escrita para o atendente sem vínculo com a ordem.
 
 O `registerAuthGate` (`apps/api/src/plugins/gate.ts`) é um hook `onRoute`
 registrado antes da primeira rota: se alguém registrar uma rota sem
@@ -295,13 +336,15 @@ inclusive para rotas futuras.
 
 ## 5. Tabelas do banco
 
-`schema.prisma` tem **27 models** e o banco físico tem **28 tabelas** (as 27 mais
-`_prisma_migrations`), medido por `SELECT TABLE_NAME FROM information_schema`.
-Há **17 migrations** versionadas, de `20261010154418_init_foundation` a
-`20261012000000_add_refresh_token_empresa`.
+`schema.prisma` tem **30 models** e o banco físico tem **31 tabelas** (as 30 mais
+`_prisma_migrations`), medido por `SELECT COUNT(*) FROM information_schema.TABLES
+WHERE TABLE_SCHEMA = DATABASE()` nesta rodada.
+Há **19 migrations** versionadas, de `20261010154418_init_foundation` a
+`20261013010000_add_ordens_de_servico` — as duas últimas são aditivas: a coluna
+`scope` da auditoria (F2) e as três tabelas do atendimento (F3.2).
 
 Classificação por uso real no código da API (contagem de chamadas
-`prisma.<modelo>` / `tx.<modelo>` nos 71 arquivos `.ts` de `src`):
+`prisma.<modelo>` / `tx.<modelo>` nos 74 arquivos `.ts` de `src`):
 
 | Tabela | Status | Evidência |
 | --- | --- | --- |
@@ -312,6 +355,7 @@ Classificação por uso real no código da API (contagem de chamadas
 | Notification, NotificationPreference | Em uso | sino, `/api/notifications` |
 | LandingConfig, LandingItem, LegalDocument | Em uso | vitrine e textos legais |
 | CronJob | Em uso | `/api/ops/jobs` e o relógio |
+| ServiceOrder, ServiceOrderItem, ServiceOrderHistory | Em uso | `/api/service-orders`, a baixa de estoque na conclusão e a linha do tempo |
 | **EmailTemplate** | **Sem uso** | só schema + migration; nenhum delegate, nenhuma rota, nenhuma tela |
 | **PaymentGateway** | **Sem uso** | só schema + migration; provedores citados no README sem integração |
 
@@ -332,7 +376,7 @@ Cinco estados possíveis: **Implementado e testado**, **Implementado sem teste**
 | Módulo | Estado | Evidência |
 | --- | --- | --- |
 | Autenticação, cadastro, recuperação | Implementado e testado | 10 rotas; `auth.test.ts`, `auth-flows.test.ts`, `seguranca.test.ts`; prova `tools/verify-logout.cjs` |
-| Sessões e revogação | Implementado e testado | `sessoes-empresa.test.ts`; refresh com empresa lembrada; `8 casos em `sessoes-empresa.test.ts`` |
+| Sessões e revogação | Implementado e testado | `sessoes-empresa.test.ts`; refresh com empresa lembrada; 8 casos em `sessoes-empresa.test.ts` |
 | Papéis, permissões e hierarquia | Implementado e testado | `lib/rbac.ts`; `rbac.test.ts`, `rbac-hierarquia.test.ts`; aba Permissões |
 | Multiempresa (isolamento e troca) | Implementado e testado | `multiempresa.test.ts`, `intrusao.test.ts` (varredura rota a rota), `desativacao-acesso.test.ts` |
 | Empresa (cadastro, moeda/fuso/idioma, meta) | Implementado e testado | 5 rotas; `settings.test.ts` |
@@ -343,9 +387,10 @@ Cinco estados possíveis: **Implementado e testado**, **Implementado sem teste**
 | Financeiro (lançamentos, resumo, carnê) | Implementado e testado | 9 rotas; `finance.test.ts`, `dinheiro-decimal.test.ts` |
 | CRM (leads e funil) | Implementado e testado | 6 rotas; `crm.test.ts` |
 | Agenda (janela, recorrência, FullCalendar) | Implementado e testado | 7 rotas; `agenda.test.ts`; fuso em `fuso-dia.test.ts` |
+| Ordens de serviço (atendimento, peças, baixa de estoque) | Implementado e testado | 6 rotas; `ordens-de-servico.test.ts` (35 casos) e `ordens-de-servico.test.tsx` (10); prova `tools/verify-ordens-de-servico.cjs` (102); decisão em `docs/adr/0008-ordem-de-servico-baixa-estoque-na-conclusao.md` |
 | Relatórios agregados | **Parcial** | 8 rotas existem e respondem; asserções de valor cobrem overview, financeiro e dinheiro; os seis demais relatórios só têm teste de acesso/intrusão |
 | Notificações e preferências | Implementado e testado | 7 rotas; `notifications.test.ts` |
-| Auditoria | Implementado e testado | 1 rota de leitura; gravação exercitada em 19 dos 28 arquivos de teste |
+| Auditoria | Implementado e testado | 2 rotas de leitura (empresa e plataforma); gravação exercitada em 23 dos 36 arquivos de teste |
 | Rotinas agendadas (cron) | Implementado e testado | 3 rotas de plataforma; `cron.test.ts`; prova `tools/verify-rotinas.cjs` |
 | CMS da vitrine | Implementado e testado | 14 rotas; `cms.test.ts`; provas `tools/verify-cms.cjs` e `tools/verify-landing-cms.cjs` |
 | Documentos legais | Implementado e testado | `cms.test.ts` (11 casos, incluindo textos legais) e `settings.test.ts` (21 casos) |
@@ -356,26 +401,26 @@ Cinco estados possíveis: **Implementado e testado**, **Implementado sem teste**
 | Upload de arquivo (logo, anexos) | **Não iniciado** | nenhum parser `multipart` na API; `logoUrl` é `VarChar(255)` de URL |
 | SaaS: planos, assinaturas, faturas | **Não iniciado** | sem tabela, sem rota |
 | Backup e restauração | **Não iniciado** | sem código |
-| Ordens de serviço / campo | **Não iniciado** | sem tabela, sem rota e sem linha no menu desde a F3.1 |
 | CI / quality gate | **Não iniciado** | não existe `.github/` nem script de lint |
 
 ---
 
 ## 7. Frontend
 
-`apps/web/src/App.tsx` declara **24 rotas** React:
+`apps/web/src/App.tsx` declara **25 rotas** React (24 com caminho e o índice do painel):
 
 - públicas: `/` (vitrine montada pelo conteúdo do banco), `/login`, `/cadastro`,
   `/recuperar-senha`, `/legal/:slug`, `/403`, `/401`;
 - protegidas por `ProtectedRoute` sob `/app`: `index` (Dashboard), clientes,
-  produtos, vendas, compras, financeiro, crm, agenda, usuarios, auditoria,
-  configuracoes, cms, notificacoes, rotinas;
+  produtos, vendas, ordens-de-servico, compras, financeiro, crm, agenda, usuarios,
+  auditoria, configuracoes, cms, notificacoes, rotinas, auditoria-plataforma —
+  16 telas atrás do menu;
 - catch-all `*` com página de erro.
 
-São **20 arquivos** em `pages/` e **34 arquivos** de componente (12 na raiz de
-`components/`, 5 em `components/cms/`, 13 em `components/landing/`, 2 em
+São **22 arquivos** em `pages/` e **33 arquivos** de componente (12 na raiz de
+`components/`, 5 em `components/cms/`, 11 em `components/landing/`, 3 em
 `components/layout/`, 2 em `components/settings/`), mais `context/AuthContext` e
-`context/ThemeContext`, e 18 módulos em `lib/`.
+`context/ThemeContext`, e 22 módulos em `lib/`.
 
 Componentes globais de uso transversal: `ProtectedRoute`, `AdminShell`,
 `NotificationBell`, `Tabs`, `Pagination`, `Modal`, `ConfirmationModal`,
@@ -389,28 +434,36 @@ e-mail não existem como funcionalidade — o que aparece na tela é o que a API
 realmente devolve.
 
 Desde a F3.1 não existe linha de menu apenas visual: o tipo `NavItem` exige
-`to: string`, então linha sem rota não compila. A barra ficou com 15 itens em
-6 camadas, todos link de página que existe, e quem garante isso é
+`to: string`, então linha sem rota não compila. A barra ficou com 16 itens em
+6 camadas, todos link de página que existe — o 16º entrou na F3.2, com a tela
+`OrdensDeServico.tsx` —, e quem garante isso é
 `apps/web/src/test/menu-sem-pagina-vazia.test.tsx` (6 casos: destino obrigatório,
 vocabulário "em breve" extinto do arquivo, cada destino com `<Route>` e arquivo de
 página com título e sem copy de obra, CSS sem o estado apagado, barra montada só com
-`<a>` com href e o filtro de camada vazia ainda no lugar) mais as 102 checagens de
-`tools/verify-sidebar.cjs`, que clica as quinze linhas uma por uma.
+`<a>` com href e o filtro de camada vazia ainda no lugar) mais as 103 checagens de
+`tools/verify-sidebar.cjs`, que clica as dezesseis linhas uma por uma — reexecutado nesta
+rodada com a linha nova: **103 checagens, 0 falhas** (eram 102 com quinze linhas).
 
-Bundle medido no `npm run build` desta rodada: `index.js` **880,92 kB** (gzip
-262,33 kB) e `index.css` **386,28 kB** (gzip 59,06 kB) num único chunk — o Vite
-avisou `Some chunks are larger than 500 kB`. Code-splitting continua por fazer.
+Bundle medido no `npm run build` desta rodada: `index.js` **914,87 kB** (gzip
+271,50 kB) e `index.css` **390,88 kB** (gzip 60,01 kB) num único chunk — o Vite
+avisou `Some chunks are larger than 500 kB`. Code-splitting continua por fazer. O
+crescimento desde a medição anterior (880,92 kB de JS e 386,28 kB de CSS) é +33,95 kB
+e +4,60 kB, e a explicação cabe na tela nova: `OrdensDeServico.tsx` tem 42.701 bytes
+de fonte e o estilo da tabela de ordens entrou no `components.css`.
 
 ---
 
 ## 8. Testes
 
-Medidos nesta rodada, com MySQL de teste ativo (a suíte da API não usa mock):
+Medidos no portão de fechamento desta fase (`npm test`, exit 0, saída real colada no
+relatório da rodada), com MySQL de teste ativo (a suíte da API não usa mock): zero
+falha e zero skip nas duas pontas. As durações variam corrida a corrida — a passada
+anterior da mesma suíte levou 339,63 s na API e 8,56 s no web.
 
 | Suíte | Arquivos | Casos | Resultado | Duração |
 | --- | --- | --- | --- | --- |
-| API (`vitest`, forks, serial) | 28 | 230 | 28 passed (28) | 232,52 s |
-| Web (jsdom + Testing Library) | 4 | 20 | 4 passed (4) | 4,11 s |
+| API (`vitest`, forks, serial) | 36 | 326 | 36 passed (36) | 317,86 s |
+| Web (jsdom + Testing Library) | 9 | 62 | 9 passed (9) | 6,30 s |
 
 Cobertura real, medida agora com o mesmo comando de medição das duas pontas:
 
@@ -422,35 +475,44 @@ Web:  npm run test --workspace @nexus/web -- --coverage \
 
 | Suíte | Stmts | Branch | Funcs | Lines | Base medida |
 | --- | --- | --- | --- | --- | --- |
-| API | **85,57%** | 73,02% | 83,93% | 88,29% | 2.301/2.689 instruções, 1.175/1.609 ramificações, 486/579 funções, 2.113/2.393 linhas; 70 dos 71 arquivos de `src` com linhas mensuráveis |
-| Web | **8,59%** | 5,48% | 7,01% | 9,19% | 309/3.597 instruções, 161/2.939 ramificações, 81/1.155 funções, 285/3.101 linhas; 77 arquivos instrumentados |
+| API | **86,88%** | 74,97% | 85,73% | 89,55% | 2.597/2.989 instruções, 1.426/1.902 ramificações, 541/631 funções, 2.374/2.651 linhas; 73 arquivos de `src` no relatório, todos com linhas mensuráveis |
+| Web | **22,78%** | 17,26% | 19% | 24,14% | 912/4.003 instruções, 566/3.279 ramificações, 244/1.284 funções, 829/3.434 linhas; 91 arquivos instrumentados, 82 com código mensurável |
 
 O que **não** está coberto, dito sem rodeios:
 
-- - **API:** `src/modules/cron/cron.runner.ts` está em **0%** (32 linhas) — os 11 casos de `cron.test.ts`
-  exercitam o matcher, o serviço e as rotas, mas o laço que dispara a rotina no processo do servidor não
-  roda em teste. `reports.service.ts` em **53,8%** (114/212) e `reports.routes.ts` em **66%** são o resto
-  do oco relevante: dos oito relatórios, só `overview`, `finance` e o caminho do dinheiro têm asserção de
-  valor. `config/env.ts` em **57,1%** porque as validações exclusivas de produção não disparam na suíte
+- **API:** um único arquivo continua em **0%**: `src/modules/cron/cron.runner.ts` (0 de 32 linhas) — os
+  casos de `cron.test.ts` exercitam o matcher, o serviço e as rotas, mas o laço que dispara a rotina no
+  processo do servidor não roda em teste. O resto do oco relevante é relatório e ambiente:
+  `reports.service.ts` **50,41%** de instruções (114/212 linhas) e `reports.routes.ts` **70,9%** (31/47
+  linhas) — dos oito relatórios, só `overview`, `finance` e o caminho do dinheiro têm asserção de valor;
+  `config/env.ts` **60%** (8/14 linhas) porque as validações exclusivas de produção não disparam na suíte
   (ficaram em `validador-de-producao.test.ts`, que chama o validador direto). Depois vêm
-  `companies.service.ts` 70,4%, `audit.routes.ts` 72,2%, `lib/audit.ts` 75%, `finance.service.ts` 75%,
-  `companies.routes.ts` 77,8%, `products.service.ts` 81,9% e `app.ts` 83% (o handler de erro tem ramos
-  que só acontecem em produção).
-- **Web:** **51 dos 77 arquivos instrumentados estão em 0%**, incluindo as 17 páginas de painel
-  (`Agenda` 203 statements, `Purchases` 220, `Finance` 198, `CRM` 192, `Products` 186, `Sales` 166,
-  `Audit` 114, `Users` 111, `Notifications` 106, `Clients` 99, `Dashboard` 42 e as demais), os cinco
-  painéis do editor CMS, os dois painéis de Configurações, `AdminShell`, `NotificationBell`, os
-  componentes globais (`Modal` 88, `ConfirmationModal` 55, `Pagination` 45, `Tabs` 40, `Fields` 19) e os
-  11 módulos de `lib/` que falam com a API. O que os 4 arquivos de teste cobrem é a vitrine (tema, paleta
-  e estilo de landing) e o encerramento de sessão. **Nenhuma página de operação do painel tem teste
-  automatizado** — a garantia dessas telas hoje são as provas de navegador em `tools/`, que não rodam
+  `companies.service.ts` 38/54 linhas, `finance.service.ts` 54/72, `products.service.ts` 68/83,
+  `audit.routes.ts` 31/36, `lib/audit.ts` 8/9 e `app.ts` 40/48 (o handler de erro tem ramos que só
+  acontecem em produção). O módulo novo não é oco: `service-orders.routes.ts` fecha em **100%** e
+  `service-orders.service.ts` em **93,8%** de instruções. As cinco linhas fora do alcance dele são
+  medidas uma por uma: o retry do número duplicado (375-376), o 403 do atendente sem vínculo com a ordem
+  (607 — provado no navegador, não na suíte), a troca de cliente na edição (620) e o conflito de status
+  quando outra requisição mexeu primeiro (682).
+- **Web:** **38 dos 82 arquivos com código mensurável estão em 0%**, e o número caiu de 51 para 38 porque
+  cinco arquivos de teste entraram desde a medição de 2026-10-12: rodapé único, menu sem página vazia,
+  as duas trilhas de auditoria, métrica da vitrine e ordens de serviço. Eles montam telas de verdade,
+  então `OrdensDeServico.tsx` está em **64,11%**, `PlataformaAuditoria.tsx` em **54,54%**, `Audit.tsx`
+  em **50,86%**, `AdminShell.tsx` em **58,16%**, `ConfirmationModal` **69,09%**, `Modal` **51,13%**,
+  `Pagination` **55,55%**, `Tabs` **52,5%**, `NotificationBell` **44,82%** e `AuthContext` **72,38%**.
+  O que continua em 0% são as 13 das 16 telas do menu (Dashboard, Notificações, CRM, Clientes, Vendas,
+  Produtos, Compras, Agenda, Financeiro, Usuários, CMS, Rotinas, Configurações), os cinco painéis do
+  editor CMS, os dois painéis de Configurações, `Fields`, `PasswordInput`, `ErrorPage`, as páginas de
+  autenticação e sete módulos de `lib/` que falam com a API (`cmsApi`, `cronApi`, `settingsApi`,
+  `landingApi`, `masks`, `papeis`, `validators`). **Treze páginas de operação do painel seguem sem
+  teste automatizado** — a garantia delas hoje são as provas de navegador em `tools/`, que não rodam
   sozinhas.
 
 Limitações da medição que o revisor deve saber:
 
 - No web não existe script `test:coverage`; o escopo foi passado por argumento na
   linha de comando. Sem isso o Vite mediria apenas os arquivos alcançados pelos
-  4 testes, o que daria um número bonito e falso.
+  9 testes, o que daria um número bonito e falso.
 - A API não tem threshold de cobertura configurado; fixar meta é decisão da
   Fase 7 do plano de auditoria e depende do dono.
 - Nenhum teste sobe o servidor HTTP da API com TLS nem valida cabeçalhos em
@@ -464,14 +526,15 @@ Limitações da medição que o revisor deve saber:
 
 ## 9. Divergências entre documentação e código
 
-Todas conferidas arquivo por arquivo nesta rodada.
+Todas conferidas arquivo por arquivo, e as linhas com número foram re-medidas em
+2026-10-13 (F3.2 Parte 1), porque o README mudou de tamanho desde a passada anterior.
 
 | # | Documentação diz | Código faz | Onde |
 | --- | --- | --- | --- |
-| D1 | `README.md:424` — "Autenticação, cadastro e recuperação: 8 rotas" | são **10** rotas (login, register, forgot, reset, refresh, logout, me, PATCH me, change-password, switch-company) | `apps/api/src/modules/auth/auth.routes.ts` |
-| D2 | `README.md:475` — tabela de tecnologias "react-router-dom 6" | `^7.18.4` no `package.json` do web | `apps/web/package.json` |
-| D3 | `README.md:18` e texto do projeto dizem "MySQL 8" | o servidor local é **8.4.7** | medido por `SELECT VERSION()` |
-| D4 | Nenhuma tabela do README soma as 105 rotas | as linhas com contagem explícito somam 101, e audit/health/legal/manutenção aparecem sem número | `README.md:420-452` |
+| D1 | "Autenticação, cadastro e recuperação: 8 rotas" | são **10** rotas (login, register, forgot, reset, refresh, logout, me, PATCH me, change-password, switch-company) | **corrigido nesta rodada**: a linha 455 do README agora diz 10 rotas e descreve os destinos; a fonte é `apps/api/src/modules/auth/auth.routes.ts` |
+| D2 | `README.md:507` — tabela de tecnologias "react-router-dom 6" | `^7.18.4` no `package.json` do web (conferido nesta rodada) | `apps/web/package.json` — continua aberto: mexer na tabela de tecnologias não é desta fase |
+| D3 | `README.md:20` e `README.md:495` dizem "MySQL 8" | o servidor local é **8.4.7** (re-medido por `SELECT VERSION()` nesta rodada: 8.4.7) | a série está certa; falta só o número exato onde o documento descreve o ambiente |
+| D4 | Nenhuma tabela do README soma as 112 rotas | re-contado nesta rodada na tabela de módulos (`README.md:451-478`): as linhas com contagem explícita somam **111**, e falta exatamente uma — `GET /api/health`, que não tem linha própria; as linhas de sessão, RBAC, multiempresa, documentos legais, manutenção, modelos de e-mail, gateways, SaaS e backup aparecem sem número | `README.md:451-478` conferido contra a leitura estática dos 17 arquivos `*.routes.ts` |
 | D5 | `docs/ANALISE-LACUNAS.md` e tarefas antigas citam "Módulo Relatórios + exportações" como pendente | os 8 relatórios agregados existem na API e 6 telas exportam CSV pelo navegador | `apps/api/src/modules/reports`, `apps/web/src/pages/*.tsx` |
 | D6 | O passo a passo de instalação do README não mandava gerar o cliente Prisma (`README.md:649-656`) | um clone novo não compila sem `npm run prisma:generate -w @nexus/api` — 217 erros de tipo por cliente não gerado | **corrigido nesta rodada**; registrado como N9 em `docs/AUDITORIA.md` |
 | D7 | `docs/ANALISE.md` e `docs/ANALISE-LACUNAS.md` são retratos de rodadas anteriores | rotas, tabelas e contagens mudaram desde então | `docs/ANALISE.md`, `docs/ANALISE-LACUNAS.md` — vale neles o mesmo aviso deste arquivo: quem mexer reatualiza |
@@ -489,16 +552,18 @@ Ligadas ao item correspondente de `docs/AUDITORIA.md`.
 
 | # | Pendência | Ligação | Severidade |
 | --- | --- | --- | --- |
-| P1 | Senha real do administrador visível nos pixels de `docs/screenshots/02-login.png`, já publicada no remoto | AUDITORIA N1 / G7 | **CRÍTICA** — trava o push |
-| P2 | A credencial de desenvolvimento do seed (o valor não é impresso aqui; é o mesmo do `SEED_DEV_PASSWORD` do `.env` local) está em `apps/api/.env.example:37`, `apps/api/test/seed-seguro.test.ts:56` e `tools/shoot-clients.cjs:17`, e em linhas de patch do histórico — a contagem de linhas sobe a cada correção porque o próprio diff carrega o literal | seção D da auditoria + §5 deste prompt | alta para o repositório público; **não vale em produção** |
+| P1 | Senha de desenvolvimento visível nos pixels de `docs/screenshots/02-login.png`, já publicada no remoto | AUDITORIA N1 / G7 | risco **aceito pelo dono** em 2026-10-12: a conta é fictícia e nada é rotacionado ou reescrito por causa disso; deixou de travar o push |
+| P2 | A credencial de desenvolvimento do seed (o valor não é impresso aqui; é o da chave `SEED_DEV_PASSWORD` do `.env` local) **não está em arquivo rastreado nenhum** — varrido nesta rodada: 0 ocorrência nos 307 arquivos de texto do `git ls-files`, e o seed recusa nascer sem a variável de ambiente (`apps/api/test/seed-seguro.test.ts`). O que sobra são 12 diffs do histórico que carregaram o literal antes da limpeza, e o dono decidiu não reescrever histórico | seção D da auditoria + §5 deste prompt | baixa em árvore, média no histórico público; **não vale em produção** |
 | P3 | Código de recuperação de senha numa captura rastreada (`09-recuperar-senha.png`) | AUDITORIA N2 | média |
 | P4 | Identificador real de empresa/espalhado em arquivos rastreados | AUDITORIA N3 | baixa |
 | P5 | Capturas das outras telas do painel não foram reauditadas uma a uma | AUDITORIA N5 | NÃO VERIFICADO |
 | P6 | Tema do painel x `data-bs-theme` do AdminLTE | AUDITORIA N7 | baixa, espera decisão |
 | P7 | Relatórios sem asserção de valor por relatório | seção F | média |
 | P8 | Sem CI, sem lint, sem threshold de cobertura | seção I / Fase 7 | média |
-| P9 | Bundle único de 880,92 kB sem code-splitting | Fase 7 | média |
+| P9 | Bundle único de 914,87 kB (gzip 271,50 kB) sem code-splitting | Fase 7 / F5 | média |
 | P10 | Auditoria segue em parada: Fase 7 e os blocos B–H do prompt de mercado não foram executados | AUDITORIA, seção I | combinado com o dono |
+| P11 | O movimento de estado feito pela tela não carrega motivo: a rota aceita `note`, o diálogo de confirmação da casa é de sim/não e o campo só aparece quando a mudança veio pela API | AUDITORIA N36 | média — espera decisão do dono, porque mexe no contrato dos diálogos do painel |
+| P12 | Ordem de serviço concluída não gera lançamento financeiro nem venda | AUDITORIA N37 / ADR-0008 | combinado com o dono: é a fronteira com a Parte 2 |
 
 ---
 
@@ -533,7 +598,7 @@ git clone <url> && cd nexusbusinessmanager
 npm ci
 npm run prisma:generate -w @nexus/api   # 1. SEM ESTE PASSO NADA COMPILA (N9)
 cp apps/api/.env.example apps/api/.env  # 2. ajuste DATABASE_URL, JWT_* e SEED_*
-npm run db:migrate -w @nexus/api        # 3. aplica as 17 migrations
+npm run db:migrate -w @nexus/api        # 3. aplica as 19 migrations
 npm run db:seed   -w @nexus/api         # 4. admin global + conta de desenvolvimento
 npm run typecheck && npm run build && npm test   # 5. os três portões
 npm run dev:api                         # 6. http://localhost:3001/api
@@ -558,7 +623,7 @@ sem este arquivo e sem os três arquivos ignorados do trabalho (`apps/api/.env`,
 
 - **Não testável no clone limpo por desenho:** `db:migrate`, `db:seed` e o boot
   do servidor pedem o `.env`, que não é versionado de propósito. No diretório de
-  trabalho os dois servidores estavam de pé nesta rodada e as 14 rotas amostradas
+  trabalho os dois servidores estavam de pé nesta rodada e as 15 rotas amostradas
   da seção 4 responderam.
 - **Não verificado:** montagem em máquina sem WAMP, `npm ci` em Linux, e
   qualquer deploy real (a hospedagem é a decisão 5 da seção 11).
@@ -582,11 +647,47 @@ npm run test --workspace @nexus/web -- --coverage \
   --coverage.include="src/**" --coverage.exclude="src/test/**"
 node --version && npm --version
 node -e "... Prisma \$queryRawUnsafe('SELECT VERSION()') ..."   # MySQL e tabelas
-node inventario-rotas.cjs      # 105 rotas por método, caminho e exigência
-node inventario-tabelas.cjs    # 27 models x uso do delegate
+node inventario-rotas.cjs      # rotas por método, caminho e exigência (112 na re-medicao)
+node inventario-tabelas.cjs    # models x uso do delegate (30 na re-medicao)
 node varredura-segredos.cjs    # segredo real x credencial de desenvolvimento
 grep -rhcE 'app\.(get|post|patch|put|delete)\(' apps/api/src/modules/*/*.routes.ts
-curl -s -o /dev/null -w '%{http_code}' http://localhost:3001/api/<14 rotas>
+curl -s -o /dev/null -w '%{http_code}' http://localhost:3001/api/<as 15 rotas da seção 4>
+
+# Re-medicao de 2026-10-13 (F3.2 Parte 1), com saida real:
+find apps/api/src -name "*.routes.ts" | wc -l        # 17
+find apps/api/src -name "*.ts" | wc -l               # 74
+grep -c "^model " apps/api/prisma/schema.prisma      # 30
+grep -c "^enum " apps/api/prisma/schema.prisma       # 19
+ls apps/api/prisma/migrations | grep -c "^20"        # 19
+# rotas por modulo, somando 112:
+for f in apps/api/src/modules/*/*.routes.ts; do printf "%s %s\n" "$(basename $f)" "$(grep -cE 'app\.(get|post|put|patch|delete)' $f)"; done
+node -e "Prisma.$queryRawUnsafe('SELECT COUNT(*) ...') "   # 31 tabelas fisicas
+node -e "Prisma.$queryRawUnsafe('SELECT VERSION()')"       # 8.4.7
+curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:3001/api/health           # 200
+curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:3001/api/service-orders   # 401
+curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:3001/api/audit            # 401
+curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:3001/api/audit/plataforma # 401
+node tools/verify-ordens-de-servico.cjs   # 102 verificacoes, 0 falha
+node tools/verify-sidebar.cjs             # 103 checagens, 0 falhas
+# Seção 3, re-medida porque a árvore congelada contradizia as seções 5 a 7:
+git ls-files --cached --others --exclude-standard \
+  | awk -F/ '{if (NF==1) print "raiz"; else print $1}' | sort | uniq -c   # 428: apps 253, docs 130, tools 37, assets 1, raiz 7
+ls -d apps/api/src/modules/*/ | wc -l                   # 17
+ls apps/api/src/lib | wc -l                             # 17 (não 13: validate-doc não existe)
+ls apps/api/test/*.test.ts | wc -l                      # 36
+grep -lIi audit apps/api/test/*.test.ts | wc -l          # 23 arquivos que exercitam a auditoria
+find apps/web/src -name '*.ts' -o -name '*.tsx' | wc -l  # 94
+ls apps/web/src/lib | wc -l                             # 22
+ls apps/web/src/pages/*.tsx | wc -l                     # 22
+ls apps/web/src/components/landing | wc -l              # 12 (11 .tsx + copy.ts)
+ls apps/web/src/test | wc -l                            # 11 (9 testes + 2 fábricas; sem setup.ts)
+cat apps/web/src/styles/*.css | wc -l                   # 3.164
+ls docs/adr/*.md | wc -l                                # 8
+ls docs/decisoes/*.md | wc -l                           # 7 (G1-G6 + G8)
+ls docs/screenshots/*.png | wc -l                       # 108 capturas
+# varredura de credencial: 0 litrais nos 307 arquivos de texto rastreados e
+# nenhum valor impresso; a contagem do historico (12 diffs) saiu de git log -S
+# com o valor lido do .env em memoria, nunca na linha de comando.
 ```
 
 Atualizar este documento é obrigação de quem mexer no projeto: se ele divergir do
