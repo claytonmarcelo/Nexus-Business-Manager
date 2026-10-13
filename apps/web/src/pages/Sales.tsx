@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { api, extractErrorMessage } from "../lib/api";
 import { useAuth } from "../context/AuthContext";
 import { notify } from "../lib/notify";
@@ -583,13 +584,31 @@ function SaleReports() {
 }
 
 // Detalhe da venda: cabeçalho com situação e lista dos itens com totais por linha.
+// "Gerar cobrança" atravessa para a tela do carnê levando o id da venda na URL: a
+// cobrança nasce com o cliente e o total lidos na fonte, e quem só lê vendas não
+// vê o botão porque abrir cobrança é escrita do módulo de cobranças.
 function SaleDetailModal({ sale, onClose }: { sale: SaleRow; onClose: () => void }) {
+  const navegar = useNavigate();
+  const { can } = useAuth();
   return (
     <Modal
       title={<>Venda <span className={"status-pill " + statusClass[sale.status]}>{statusLabel[sale.status]}</span></>}
       label="Detalhe da venda"
       subtitle={(sale.clientName ?? "Consumidor final") + " · " + formatDateTime(sale.createdAt)}
       onClose={onClose}
+      footer={
+        <>
+          <span className="nx-modal-hint">A cobrança entra no carnê e vira lançamento quando o recebimento for registrado.</span>
+          <div className="nx-modal-actions">
+            <button type="button" className="btn btn-ghost" onClick={onClose}>Fechar</button>
+            {can("charge:write") ? (
+              <button type="button" className="btn btn-brand" onClick={() => navegar("/app/cobrancas?venda=" + sale.id)}>
+                Gerar cobrança
+              </button>
+            ) : null}
+          </div>
+        </>
+      }
     >
         <dl className="kv">
           <div><dt>Cliente</dt><dd>{sale.clientName ?? "Consumidor final"}</dd></div>

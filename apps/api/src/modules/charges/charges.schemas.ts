@@ -83,9 +83,27 @@ export const createChargeSchema = z
  * dinheiro entrou, ele é do caixa. `paidMethod` ausente significa "entrou pelo
  * método da própria cobrança" — o balcão que cobra em PIX e recebe em dinheiro
  * informa, e quem anota o óbvio não precisa repetir.
+ *
+ * `paidAt` é dia de calendário (AAAA-MM-DD), não instante, pela mesma razão do
+ * vencimento: o atendimento foi sexta e a digitação é segunda, e o que a pessoa
+ * sabe é o dia — a hora exata ela não sabe, e o fuso da empresa é o serviço que
+ * conhece (`lib/time.ts`). Quem não digita nada recebe `agora` do relógio, que é
+ * o caso de quem marca o fato na hora em que ele acontece. Formato é julgamento
+ * aqui; se o dia existe e se ele já chegou é julgamento do serviço, com o fuso
+ * cadastrado na mão.
  */
 export const payChargeSchema = z.object({
   paidMethod: z.enum(METODOS_COBRANCA).optional(),
+  // Campo de data vazio é "não dito", não "formato errado": o `transform` vem
+  // antes do julgamento de forma para a caixa limpa do formulário não virar 400.
+  paidAt: z
+    .string()
+    .trim()
+    .optional()
+    .transform(emptyToUndef)
+    .refine((dia) => dia === undefined || /^\d{4}-\d{2}-\d{2}$/.test(dia), {
+      message: "Use a data do recebimento no formato AAAA-MM-DD",
+    }),
   paymentNote: z.string().trim().max(500).optional().transform(emptyToUndef),
 });
 

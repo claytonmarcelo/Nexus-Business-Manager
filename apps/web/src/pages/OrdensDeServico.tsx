@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { api, extractErrorMessage } from "../lib/api";
 import { useAuth } from "../context/AuthContext";
 import { notify } from "../lib/notify";
@@ -893,6 +894,10 @@ function DetalheDaOrdem({
   onAnotar: () => void;
   onClose: () => void;
 }) {
+  // A cobrança de uma ordem é a cara dela: o id viaja na URL e a tela do carnê
+  // lê cliente, título e total direto na ordem.
+  const navegar = useNavigate();
+  const { can } = useAuth();
   const somaLinhas = ordem.items.reduce((acc, i) => acc + i.lineTotal, 0);
 
   function imprimir() {
@@ -912,6 +917,9 @@ function DetalheDaOrdem({
           <div className="nx-modal-actions">
             <button type="button" className="btn btn-ghost" onClick={onClose}>Fechar</button>
             <button type="button" className="btn btn-ghost" onClick={imprimir}>Imprimir</button>
+            {can("charge:write") ? (
+              <button type="button" className="btn btn-ghost" onClick={() => navegar("/app/cobrancas?os=" + ordem.id)}>Gerar cobrança</button>
+            ) : null}
             {podeAnotar ? <button type="button" className="btn btn-ghost" onClick={onAnotar}>Anotar</button> : null}
             {podeEditarEstrutura ? <button type="button" className="btn btn-brand" onClick={onEditar}>Editar ordem</button> : null}
           </div>

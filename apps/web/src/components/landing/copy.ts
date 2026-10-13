@@ -47,11 +47,13 @@ export const SOBRE_LANDING = {
       "requisição — nunca do que a pessoa digita no endereço.",
     "Já estão no ar os módulos do dia a dia de um negócio: clientes, produtos e estoque, vendas com " +
       "baixa e estorno, compras com fornecedor, financeiro com resumo mensal, CRM com funil e conversão " +
-      "em cliente, agenda com recorrência e painel com relatórios agregados e exportação CSV. Cada " +
-      "indicador do painel é uma conta feita no banco daquela empresa.",
-    "O que ainda não chegou tem nome, não promessa: ordens de serviço, cobrança por gateway com " +
-      "credencial real e planos de assinatura. Nenhuma dessas telas está no painel — quem entra hoje " +
-      "vê e abre só o módulo que existe de verdade.",
+      "em cliente, agenda com recorrência, ordem de serviço que dá baixa na peça quando o técnico " +
+      "conclui, carnê de cobrança manual que registra quem recebeu e lança a receita uma única vez no " +
+      "caixa, e painel com relatórios agregados e exportação CSV. Cada indicador do painel é uma conta " +
+      "feita no banco daquela empresa.",
+    "O que ainda não chegou tem nome, não promessa: cobrança automática por gateway com credencial " +
+      "real e planos de assinatura. Nenhuma dessas telas está no painel — quem entra hoje vê e abre só " +
+      "o módulo que existe de verdade.",
     "A interface é a mesma nos dois temas e em qualquer largura de tela, com paginação feita no " +
       "servidor e estados desenhados para carregando, vazio, erro e nenhum resultado com os filtros " +
       "aplicados.",

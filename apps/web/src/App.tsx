@@ -11,6 +11,7 @@ import { Clients } from "./pages/Clients";
 import { Products } from "./pages/Products";
 import { Sales } from "./pages/Sales";
 import { OrdensDeServico } from "./pages/OrdensDeServico";
+import { Cobrancas } from "./pages/Cobrancas";
 import { Purchases } from "./pages/Purchases";
 import { Finance } from "./pages/Finance";
 import { CRM } from "./pages/CRM";
@@ -50,6 +51,7 @@ export function App() {
           <Route path="ordens-de-servico" element={<OrdensDeServico />} />
           <Route path="compras" element={<Purchases />} />
           <Route path="financeiro" element={<Finance />} />
+          <Route path="cobrancas" element={<Cobrancas />} />
           <Route path="crm" element={<CRM />} />
           <Route path="agenda" element={<Agenda />} />
           <Route path="usuarios" element={<Users />} />

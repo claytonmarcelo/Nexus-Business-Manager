@@ -1920,3 +1920,160 @@ a.nexus-footer-autor:focus-visible { color: var(--text); text-decoration: underl
   .nx-os-doc .nx-os-empresa, .nx-os-doc .nx-os-assinatura, .nx-os-doc .nx-os-quando, .nx-os-doc .nx-os-quem, .nx-os-doc dt { color: #555 !important; }
   .nx-os-doc .status-pill { background: transparent !important; border: 1px solid #999 !important; }
 }
+
+
+/* ============================================================
+   COBRANÇAS (F3.2 Parte 2): o carnê na tela, o cadastro do
+   recebimento e o documento que vai ao papel
+   ============================================================ */
+
+/* As três situações e o selo de vencida. O verde é o dinheiro que entrou, o
+   âmbar é a data que passou: quem varre a lista decide pelo selo, não pela
+   conta de cabeça. */
+.status-pill.is-cb-pending { background: color-mix(in srgb, var(--info) 14%, transparent); color: var(--info); }
+.status-pill.is-cb-paid { background: color-mix(in srgb, var(--success) 14%, transparent); color: var(--success); }
+.status-pill.is-cb-cancelled { background: color-mix(in srgb, var(--danger) 14%, transparent); color: var(--danger); }
+.status-pill.is-cb-overdue {
+  margin-left: 0.3rem;
+  background: color-mix(in srgb, var(--warning) 18%, transparent);
+  color: var(--warning);
+}
+
+/* O título da cobrança é o link do documento: sem casinha de botão, sem desvio. */
+.nx-cb-abrir { padding: 0; height: auto; text-align: left; }
+.nx-cb-perigo { color: var(--danger); }
+
+/* Nove colunas, com o valor e a data numa linha só. O que não couber rola na
+   horizontal em vez de desaparecer atrás da borda, igual à irmã ordem de
+   serviço. */
+.nx-cb-scroll { overflow-x: auto; }
+.nx-cb-tabela { min-width: 1020px; }
+.nx-cb-tabela thead th { font-size: 0.7rem; letter-spacing: 0.04em; }
+.nx-cb-tabela thead th,
+.nx-cb-tabela tbody td { padding: 0.72rem 0.5rem; overflow-wrap: anywhere; }
+.nx-cb-tabela tbody td.mono { overflow-wrap: normal; white-space: nowrap; }
+.nx-cb-tabela .nx-cb-abrir { overflow-wrap: anywhere; }
+.nx-cb-tabela .status-pill { padding-inline: 0.45rem; overflow-wrap: normal; }
+.nx-cb-tabela .row-actions { gap: 0.3rem; }
+.nx-cb-tabela .row-actions .btn { padding: 0.22rem 0.42rem; font-size: 0.74rem; }
+
+/* Formulário em trilhos: a grade se desfaz sozinha no celular. */
+.nx-cb-grade {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 0.8rem;
+  margin-bottom: 0.9rem;
+}
+/* A linha que devolve o documento escolhido: cliente e total lidos da fonte. */
+.nx-cb-vinculo-nota {
+  margin: -0.3rem 0 0.9rem;
+  padding: 0.5rem 0.7rem;
+  border: 1px dashed var(--border);
+  border-radius: 10px;
+  background: var(--surface-2);
+  color: var(--text-2);
+  font-size: 0.82rem;
+}
+.nx-cb-vinculo-nota strong { color: var(--text-1); }
+
+/* No celular a tabela deixa de ser tabela: cada cobrança vira um cartão com o
+   próprio rótulo, lido do data-rotulo que a linha já carrega. */
+@media (max-width: 820px) {
+  .nx-cb-scroll { overflow-x: visible; }
+  .nx-cb-tabela { min-width: 0; }
+  .nx-cb-tabela thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+  .nx-cb-tabela tbody { display: grid; gap: 0.6rem; padding: 0.7rem; }
+  .nx-cb-tabela tr {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0.15rem;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 0.75rem 0.85rem;
+    background: var(--surface-2);
+  }
+  .nx-cb-tabela td {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 0.8rem;
+    border: 0;
+    padding: 0.15rem 0;
+  }
+  .nx-cb-tabela td::before {
+    content: attr(data-rotulo);
+    color: var(--text-3);
+    font-size: 0.74rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .nx-cb-tabela .col-acoes { min-width: 0; }
+  .nx-cb-tabela .row-actions { justify-content: flex-end; flex-wrap: wrap; }
+}
+
+/* O documento da cobrança: o mesmo bloco que a tela mostra e que o papel recebe. */
+.nx-cb-doc {
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 1rem 1.1rem;
+  background: var(--surface-2);
+}
+.nx-cb-doc-cabeca { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; }
+.nx-cb-empresa { margin: 0; color: var(--text-3); font-size: 0.76rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; }
+.nx-cb-numero { margin: 0.2rem 0 0; font-size: 1.05rem; }
+.nx-cb-titulo { margin: 0.25rem 0 0; font-size: 0.88rem; color: var(--text-2); }
+.nx-cb-situacao { margin: 0; text-align: right; }
+.nx-cb-titulo-secao { margin: 0 0 0.4rem; font-size: 0.95rem; }
+.nx-cb-receber,
+.nx-cb-recibo { border-top: 1px solid var(--border); padding-top: 0.7rem; }
+.nx-cb-linha { display: flex; gap: 0.6rem; align-items: baseline; margin: 0.2rem 0; font-size: 0.86rem; }
+.nx-cb-linha span { color: var(--text-3); min-width: 140px; }
+.nx-cb-instrucoes { margin: 0.3rem 0 0; font-size: 0.84rem; color: var(--text-2); }
+.nx-cb-motivo { margin: 0.3rem 0 0; font-size: 0.84rem; color: var(--text-2); }
+.nx-cb-assinatura { margin: 0.9rem 0 0; color: var(--text-3); font-size: 0.82rem; }
+.nx-cb-aviso-valor { margin: 0 0 0.9rem; font-size: 0.88rem; color: var(--text-2); }
+
+/* Cadastro de recebimento: o catálogo inteiro em cartões. O que está fora do ar
+   é mais discreto e não tem formulário — a explicação ocupa o lugar dele. */
+.nx-gw-lista { display: grid; gap: 0.9rem; }
+.nx-gw-card {
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 0.9rem 1rem 1rem;
+  background: var(--surface-2);
+}
+.nx-gw-card--off { padding: 0.8rem 1rem; background: transparent; }
+.nx-gw-titulo { margin: 0; font-size: 0.98rem; }
+.nx-gw-situacao { margin: 0.2rem 0 0.7rem; color: var(--text-3); font-size: 0.78rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; }
+.nx-gw-card--off .nx-gw-situacao { color: var(--warning); }
+.nx-gw-motivo { margin: 0; color: var(--text-2); font-size: 0.84rem; }
+
+/* Papel: o documento da ordem de serviço já abriu este caminho (body inteiro
+   some, o modal perde a caixa). Aqui entra só a cobrança, para o recibo sair do
+   mesmo jeito que a ordem sai. */
+@media print {
+  .nx-cb-doc, .nx-cb-doc * { visibility: visible; }
+  .nx-cb-doc { position: static !important; border: 0 !important; background: #fff !important; padding: 0 !important; }
+  .nx-cb-doc, .nx-cb-doc * { color: #111 !important; }
+  .nx-cb-doc .nx-cb-empresa,
+  .nx-cb-doc .nx-cb-titulo,
+  .nx-cb-doc .nx-cb-assinatura,
+  .nx-cb-doc .nx-cb-instrucoes,
+  .nx-cb-doc .nx-cb-motivo,
+  .nx-cb-doc .nx-cb-linha span,
+  .nx-cb-doc dt { color: #555 !important; }
+  .nx-cb-doc .status-pill { background: transparent !important; border: 1px solid #999 !important; }
+  .nx-cb-doc .nx-cb-receber,
+  .nx-cb-doc .nx-cb-recibo { border-top: 1px solid #bbb !important; }
+}

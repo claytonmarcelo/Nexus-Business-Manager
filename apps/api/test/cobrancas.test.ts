@@ -1,6 +1,7 @@
 import { describe, it, expect, afterAll } from "vitest";
 import { prisma } from "../src/lib/prisma";
 import { app, makeAccount, login, cleanup, uid } from "./helpers";
+import { diaNoFuso, fusoDaEmpresa } from "../src/lib/time";
 
 // F3.2 Parte 2 — Cobranças e Gateways.
 //
@@ -267,8 +268,15 @@ describe("Cobranças — pagar e cancelar", () => {
     const c = await novaCobranca(token, cli, { amount: "200,00" });
     const res = await pagar(token, c.id, { paidMethod: "DINHEIRO", paymentNote: "Recebido no balcao" });
     expect(res.statusCode, res.body).toBe(200);
-    const corpo = res.json() as { status: string; paidAt: string | null; paidByName: string | null; financeEntryId: string | null };
+    const corpo = res.json() as {
+      status: string; method: string; paidMethod: string | null;
+      paidAt: string | null; paidByName: string | null; financeEntryId: string | null;
+    };
     expect(corpo.status).toBe("PAID");
+    // Cobrada como boleto, recebida em dinheiro: as duas formas ficam registradas,
+    // e é a do recebimento que o carnê mostra depois que o dinheiro entrou.
+    expect(corpo.method).toBe("BOLETO");
+    expect(corpo.paidMethod).toBe("DINHEIRO");
     expect(corpo.paidAt).not.toBeNull();
     expect(corpo.paidByName).toBe("Teste");
     expect(corpo.financeEntryId).not.toBeNull();
@@ -299,6 +307,47 @@ describe("Cobranças — pagar e cancelar", () => {
     // A prova não é o id devolvido, é o banco: esta empresa não tinha nenhum
     // lançamento antes da corrida, e continua tendo exatamente um.
     expect(await prisma.financeEntry.count({ where: { companyId: f.companyId } })).toBe(1);
+  });
+
+  // O anexo da Parte 2 pede o modal de recebimento com data, forma e observacao:
+  // o balcao atende sexta e escreve segunda, e o dia em que o dinheiro entrou e um
+  // fato que quem recebeu conhece melhor que o relogio do servidor.
+  it("a data do recebimento e do operador, e o dia escolhido e o que entra no banco", async () => {
+    const { f, token } = await conta("OWNER");
+    const cli = await cliente(token, "Cliente Data");
+    const c = await novaCobranca(token, cli, { amount: "120,00" });
+    const fuso = await fusoDaEmpresa(f.companyId);
+    const ontem = diaEmpresa(fuso, -1);
+    const res = await pagar(token, c.id, { paidAt: ontem, paymentNote: "Entrou ontem no caixa" });
+    expect(res.statusCode, res.body).toBe(200);
+    const corpo = res.json() as { paidAt: string | null; financeEntryId: string | null };
+    expect(corpo.paidAt).not.toBeNull();
+    expect(diaNoFuso(fuso, new Date(corpo.paidAt as string))).toBe(ontem);
+
+    const lancamento = await prisma.financeEntry.findUnique({ where: { id: corpo.financeEntryId as string } });
+    expect(lancamento).not.toBeNull();
+    expect(lancamento?.paidAt ? diaNoFuso(fuso, lancamento.paidAt) : null).toBe(ontem);
+    // O que a data digitada muda e a entrada do dinheiro. O vencimento do
+    // lancamento continua o dia combinado com o cliente: atrasar o registro nao
+    // atrasa a conta, e adiantar o registro nao adianta o prazo.
+    expect(lancamento?.dueDate?.getTime()).toBe(new Date(c.dueDate).getTime());
+  });
+
+  it("recebimento de um dia que ainda nao chegou, e data fora de formato, sao recusados", async () => {
+    const { f, token } = await conta("OWNER");
+    const cli = await cliente(token, "Cliente Futuro");
+    const fuso = await fusoDaEmpresa(f.companyId);
+    const c1 = await novaCobranca(token, cli);
+    // Tres dias a frente: longe o bastante para nenhum fuso do mundo transformar o
+    // "hoje" da empresa em "ontem" do servidor.
+    expect((await pagar(token, c1.id, { paidAt: diaEmpresa(fuso, 3) })).statusCode).toBe(400);
+    expect(((await detalhe(token, c1.id)).json() as { status: string }).status).toBe("PENDING");
+    // Nada foi escrito na linha: recusado e recusado antes de virar estado.
+    expect(await prisma.financeEntry.count({ where: { companyId: f.companyId } })).toBe(0);
+
+    const c2 = await novaCobranca(token, cli, { title: "Cobranca com data torta" });
+    expect((await pagar(token, c2.id, { paidAt: "20/10/2026" })).statusCode).toBe(400);
+    expect((await pagar(token, c2.id, { paidAt: "2026-13-45" })).statusCode).toBe(400);
   });
 
   it("pagar o que já está pago, ou cancelar o que já foi pago, é conflito", async () => {

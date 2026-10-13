@@ -5,7 +5,7 @@ import { badRequest, conflict, notFound } from "../../lib/errors";
 import { paginate, skipTake, type PaginationInput } from "../../lib/pagination";
 import { audit } from "../../lib/audit";
 import { centavos, moedaDeCentavos } from "../../lib/money";
-import { calendarioDaEmpresa, diaDeCalendario, fusoDaEmpresa, meiaNoiteDoDia, mesNoFuso } from "../../lib/time";
+import { calendarioDaEmpresa, diaDeCalendario, diaNoFuso, fusoDaEmpresa, meiaNoiteDoDia, mesNoFuso } from "../../lib/time";
 import { transacaoEstoque } from "../../lib/tx";
 import { adapterDoProvedor } from "./charge-adapters";
 import type { CreateChargeInput, PayChargeInput } from "./charges.schemas";
@@ -457,6 +457,38 @@ export async function summary(companyId: string) {
 // ---- Pagar ----
 
 /**
+ * O instante em que o dinheiro entrou, dito por quem recebeu.
+ *
+ * Sem dia digitado vale o relógio do servidor, porque quem marca o recebimento na
+ * hora do fato não tem o que corrigir. Com dia digitado, o dia é de calendário e
+ * a empresa é quem manda: a meia-noite daquele dia no fuso cadastrado
+ * (`meiaNoiteDoDia`) é o instante que entra na coluna, e a leitura de volta
+ * (`diaNoFuso`) devolve exatamente o que a pessoa escreveu — é por essa leitura
+ * que as duas portas abaixo existem:
+ *
+ *  - dia que não existe no calendário ("2026-02-30", "2026-13-45"): `Date.UTC`
+ *    transborda o excesso em vez de reclamar, e a meia-noite calculada cairia
+ *    num dia que ninguém escreveu. Recusar na porta custa um 400; gravar o dia
+ *    errado custa um caixa que não confere com o carnê;
+ *  - dia que ainda não chegou para a empresa: recebimento retroage, não adianta.
+ *    Comparar os dois rótulos "AAAA-MM-DD" é aritmética de calendário no fuso de
+ *    quem cobra, e três dias de folga bastam para nenhum fuso do mundo virar o
+ *    jogo. Registrar receita de amanhã é inventar dinheiro no caixa.
+ */
+async function instanteDoRecebimento(companyId: string, dia: string | undefined): Promise<Date> {
+  if (!dia) return new Date();
+  const fuso = await fusoDaEmpresa(companyId);
+  const instante = meiaNoiteDoDia(fuso, Number(dia.slice(0, 4)), Number(dia.slice(5, 7)), Number(dia.slice(8, 10)));
+  if (diaNoFuso(fuso, instante) !== dia) {
+    throw badRequest(`"${dia}" não é um dia do calendário. Use AAAA-MM-DD com um dia que existe.`);
+  }
+  if (dia > diaNoFuso(fuso)) {
+    throw badRequest(`O recebimento não pode ser registrado em ${dia}: esse dia ainda não chegou para a empresa.`);
+  }
+  return instante;
+}
+
+/**
  * Registra o recebimento e escritura a receita — as duas coisas na mesma
  * transação, uma única vez.
  *
@@ -471,6 +503,11 @@ export async function summary(companyId: string) {
  * O lançamento nasce dentro da mesma transação e a coluna `finance_entry_id` é
  * UNIQUE: mesmo que alguém escreva outro caminho de pagamento amanhã, uma
  * cobrança não consegue apontar para duas receitas.
+ *
+ * O dia que a pessoa digita muda a ENTRADA do dinheiro, nunca o vencimento: o
+ * lançamento recebe o `dueDate` da cobrança e o `paidAt` do dia dito, então
+ * registrar hoje uma conta que venceu semana passada não rebatiza a conta como
+ * nova, e o atraso continua visível no financeiro.
  */
 export async function payCharge(
   companyId: string,
@@ -484,7 +521,9 @@ export async function payCharge(
   if (atual.status === "PAID") throw conflict("Esta cobrança já está paga.");
   if (atual.status === "CANCELLED") throw conflict("Cobrança cancelada não se paga: reabra uma nova.");
 
-  const recebidoEm = new Date();
+  // Antes de reivindicar a linha: um recebimento recusado não pode ter mudado
+  // nada, nem o status, nem o caixa.
+  const recebidoEm = await instanteDoRecebimento(companyId, input.paidAt);
   const metodo = input.paidMethod ?? atual.method;
   // O mesmo formato do lançamento gerado por venda/compra (lib/installments.ts):
   // rótulo curto, travessão, e o que o operador lê no financeiro já diz de onde
@@ -547,7 +586,15 @@ export async function payCharge(
     entity: "charge",
     entityId: id,
     ip,
-    metadata: { number: atual.number, amount: num(atual.amount), method: metodo },
+    // O dia dito na tela vai junto: a auditoria precisa conseguir distinguir o
+    // recebimento marcado na hora do recebimento escrito dias depois, porque o
+    // segundo é uma escolha de pessoa e responde por ela.
+    metadata: {
+      number: atual.number,
+      amount: num(atual.amount),
+      method: metodo,
+      dataInformada: input.paidAt ?? null,
+    },
   });
 
   return getCharge(companyId, id);

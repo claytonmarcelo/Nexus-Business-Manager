@@ -60,6 +60,7 @@ const NAV_GROUPS: NavGroup[] = [
     title: "Financeiro",
     items: [
       { to: "/app/financeiro", label: "Financeiro", icon: "◫", permission: "finance:read" },
+      { to: "/app/cobrancas", label: "Cobranças", icon: "◱", permission: "charge:read" },
     ],
   },
   {
