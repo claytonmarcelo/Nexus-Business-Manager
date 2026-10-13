@@ -50,8 +50,8 @@ export const SOBRE_LANDING = {
       "em cliente, agenda com recorrência e painel com relatórios agregados e exportação CSV. Cada " +
       "indicador do painel é uma conta feita no banco daquela empresa.",
     "O que ainda não chegou tem nome, não promessa: ordens de serviço, cobrança por gateway com " +
-      "credencial real e planos de assinatura. Essas linhas aparecem marcadas como " +
-      "em construção no menu e na tabela de módulos do produto.",
+      "credencial real e planos de assinatura. Nenhuma dessas telas está no painel — quem entra hoje " +
+      "vê e abre só o módulo que existe de verdade.",
     "A interface é a mesma nos dois temas e em qualquer largura de tela, com paginação feita no " +
       "servidor e estados desenhados para carregando, vazio, erro e nenhum resultado com os filtros " +
       "aplicados.",

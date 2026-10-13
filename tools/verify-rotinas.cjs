@@ -152,6 +152,7 @@ async function criarStaff(companyId) {
 
   await abrirBanco();
   // Retrato do início: estado das rotinas e avisos já existentes das varreduras.
+  const inicioDaProva = new Date();
   const jobsAntes = await prisma.cronJob.findMany();
   const idsAvisosAntes = new Set(
     (await prisma.notification.findMany({
@@ -326,8 +327,16 @@ async function criarStaff(companyId) {
 
     // ---- 7. a auditoria viu as corridas manuais ----
     console.log("\n-- auditoria --");
+    // Fase 2 (ADR-0007): escrita de plataforma perde o companyId e ganha escopo.
+    // O "executar agora" e o liga/pausa são eventos da plataforma — procurá-los pelo
+    // id da empresa da sessão é que devolve zero. A busca passa a ser pelo escopo,
+    // limitada à janela desta corrida.
     const auditados = await prisma.auditLog.findMany({
-      where: { action: { in: ["cron.job.run", "cron.job.updated"] }, companyId: empresa.id },
+      where: {
+        action: { in: ["cron.job.run", "cron.job.updated"] },
+        scope: "platform",
+        createdAt: { gte: inicioDaProva },
+      },
       orderBy: { createdAt: "desc" }, take: 20,
     });
     ok("cada \"executar agora\" deixou trilha na auditoria",

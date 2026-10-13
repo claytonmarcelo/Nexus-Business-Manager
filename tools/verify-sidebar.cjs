@@ -99,21 +99,24 @@ function estado() {
       // pseudo-elemento desligado. O que conta e estar gerado E visivel.
       return cs.content !== "none" && cs.content !== "" && cs.display !== "none";
     })(),
-    emBreve: Array.from(document.querySelectorAll(".admin-nav-item.is-soon")).map((s) => {
-      const l = s.querySelector(".admin-nav-label");
-      const ic = s.querySelector(".admin-nav-icon");
-      const c = s.querySelector(".admin-nav-soon");
-      const depois = ic ? getComputedStyle(ic, "::after") : null;
+    // F3.1: nenhuma linha da barra pode nascer sem destino. Um SPAN no lugar do
+    // link, um href vazio ou a etiqueta "em breve" sao a mesma pagina vazia com
+    // outro nome. Os tres viram achado aqui, em qualquer largura de tela.
+    itens: Array.from(document.querySelectorAll(".admin-nav-item")).map((a) => {
+      const etiqueta = a.querySelector(".admin-nav-soon");
       return {
-        nome: l ? l.textContent : "?",
-        rotuloVisivel: l ? l.getBoundingClientRect().height > 0 : false,
-        // O ponto no canto do icone e o aviso que sobra quando nao ha largura
-        // para escrever "em breve" ao lado do nome.
-        ponto: Boolean(depois) && depois.width === "5px" && parseFloat(depois.borderRadius) > 0,
-        etiqueta: c ? c.textContent : "",
-        altura: Math.round(s.getBoundingClientRect().height),
+        rotulo: a.getAttribute("aria-label") || "?",
+        tag: a.tagName,
+        href: a.getAttribute("href"),
+        textoEtiqueta: etiqueta ? etiqueta.textContent : "",
+        emObra: a.className.includes("is-soon") || a.getAttribute("aria-disabled") === "true",
+        altura: Math.round(a.getBoundingClientRect().height),
       };
     }),
+    textoBarra: (() => {
+      const n = document.querySelector(".admin-nav");
+      return n ? n.textContent.replace(/\s+/g, " ").trim() : "";
+    })(),
     // A ordem dos rotulos dos itens e a ordem da barra larga.
     rotulosVisiveis: Array.from(document.querySelectorAll(".admin-nav-label"))
       .filter((s) => s.getBoundingClientRect().height > 0)
@@ -125,8 +128,8 @@ function estado() {
       return alvos.length === 0 || !Array.from(alvos).some((a) => a.getBoundingClientRect().height > 0);
     }),
     larguraItem: (() => { const i = document.querySelector(".admin-nav-item"); return i ? Math.round(i.getBoundingClientRect().width) : -1; })(),
-    // Nome cortado em "Ordens de Serv..." e o defeito que a etiqueta "em breve"
-    // pode causar: ela nao pode roubar a largura do rotulo.
+    // Nome cortado em "CMS & Site Pu..." e o defeito que a linha apertada pode
+    // causar: o rotulo do modulo nunca pode perder largura.
     truncados: Array.from(document.querySelectorAll(".admin-nav-label"))
       .filter((s) => s.getBoundingClientRect().height > 0 && s.scrollWidth > s.clientWidth + 1)
       .map((s) => s.textContent),
@@ -165,7 +168,10 @@ function estado() {
   ok("aria-expanded verdadeiro com a barra visivel", e.ariaExpanded === "true");
   ok("aria-controls aponta para a sidebar", e.ariaControls === "admin-sidebar" && Boolean(await page.$("#admin-sidebar")));
   const CAMADAS = ["Visão Geral", "Comercial & CRM", "Estoque & Suprimentos", "Serviços & Atendimentos", "Financeiro", "Administração & Sistema"];
-  const ITENS = ["Dashboard", "Notificações", "CRM", "Clientes", "Vendas", "Produtos", "Compras", "Ordens de Serviço", "Agenda", "Financeiro", "Gateways & Cobranças", "Usuários", "Auditoria", "CMS & Site Público", "Rotinas agendadas", "Configurações"];
+  // As 15 linhas da barra de um administrador da plataforma, na ordem das camadas.
+  // Ordem de Serviço e Gateways & Cobranças nao estao aqui: sairam do menu na
+  // F3.1 e voltam na F3.2, quando as duas telas existirem de verdade.
+  const ITENS = ["Dashboard", "Notificações", "CRM", "Clientes", "Vendas", "Produtos", "Compras", "Agenda", "Financeiro", "Usuários", "Auditoria", "CMS & Site Público", "Rotinas agendadas", "Auditoria da plataforma", "Configurações"];
   ok("as 6 camadas aparecem na ordem pedida", e.titulosVisiveis.join(" | ") === CAMADAS.join(" | "), e.titulosVisiveis.join(" | "));
   ok("nenhuma camada ficou vazia", e.grupoVazio === false);
   ok("na barra larga quem separa a camada e o titulo, nao o filete", e.temFilete === false);
@@ -190,16 +196,11 @@ function estado() {
     ok("titulo de camada com letter-spacing de tracking", parseFloat(estiloTitulo.espaco) > 0, estiloTitulo.espaco);
     ok("titulo de camada usa o cinz do sistema", estiloTitulo.cor === "rgb(107, 114, 128)", estiloTitulo.cor);
   }
-  ok("modulos ainda sem obra aparecem na camada", e.emBreve.map((x) => x.nome).join(", ") === "Ordens de Serviço, Gateways & Cobranças", e.emBreve.map((x) => x.nome).join(", "));
-  ok("na barra larga o em breve tem ponto no icone e texto acessivel", e.emBreve.every((x) => x.rotuloVisivel && x.ponto && x.etiqueta === "em breve"), e.emBreve.map((x) => x.nome + ":" + (x.ponto ? "ponto" : "sem ponto")).join(", "));
   {
-    const soon = await page.evaluate(() => {
-      const s = document.querySelector(".admin-nav-item.is-soon");
-      return { tag: s.tagName, aria: s.getAttribute("aria-disabled"), href: s.getAttribute("href"), etiqueta: s.querySelector(".admin-nav-soon").textContent, dica: s.getAttribute("title") };
-    });
-    ok("item em breve NAO e um link", soon.tag === "SPAN" && soon.href === null, soon.tag);
-    ok("item em breve diz que esta em breve", soon.etiqueta === "em breve" && soon.aria === "true", soon.etiqueta);
-    ok("item em breve explica na dica", /em construcao|construção/.test(soon.dica || ""), soon.dica);
+    const semDestino = e.itens.filter((i) => i.tag !== "A" || !i.href || i.href === "#" || i.emObra || /em breve/i.test(i.textoEtiqueta));
+    ok("F3.1: nenhuma linha da barra larga esta sem destino", semDestino.length === 0, semDestino.map((i) => i.rotulo).join(", "));
+    ok("F3.1: toda linha da barra larga e link de uma rota do painel", e.itens.every((i) => i.tag === "A" && String(i.href).startsWith("/app")), e.itens.map((i) => i.href).join(", "));
+    ok("F3.1: a barra nao escreve 'em breve' em lugar nenhum", !/em breve/i.test(e.textoBarra), e.textoBarra.slice(0, 60));
   }
   ok("os itens ficaram dentro das suas camadas", e.rotulosVisiveis.join(", ") === ITENS.join(", "), e.rotulosVisiveis.slice(0, 4).join(", ") + "...");
   await semToast(page);
@@ -223,7 +224,7 @@ function estado() {
   ok("aria-expanded passa a falso", e.ariaExpanded === "false");
   ok("na trilha os titulos de camada somem", e.titulosVisiveis.length === 0 && e.qtdTitulos === 6, "visiveis " + e.titulosVisiveis.length);
   ok("na trilha sobra um filete no lugar de cada titulo", e.temFilete === true);
-  ok("na trilha o em breve continua marcado no icone", e.emBreve.every((x) => !x.rotuloVisivel && x.ponto && x.altura > 20));
+  ok("F3.1: na trilha toda linha continua sendo link com destino", e.itens.every((i) => i.tag === "A" && String(i.href).startsWith("/app") && i.altura > 20), e.itens.length + " linhas");
   ok("na trilha so os icones ficam alinhados", e.larguraItem > 50 && e.larguraItem < 80, e.larguraItem + "px");
   ok("sem rolagem horizontal dentro da sidebar", e.sidebarOverflowX <= 0, "estouro " + e.sidebarOverflowX + "px");
   ok("conteudo nao estoura a largura da janela", e.overflowX <= 0, "overflow " + e.overflowX);
@@ -252,9 +253,9 @@ function estado() {
   ok("sem rolagem horizontal dentro da barra no peek", peek.sidebarOverflowX <= 0, "estouro " + peek.sidebarOverflowX + "px");
   ok("o peek revela os titulos de camada de novo", peek.titulosVisiveis.length === 6, "visiveis " + peek.titulosVisiveis.length);
   ok("no peek o filete da trilha da lugar ao titulo", peek.temFilete === false);
-  ok("no peek o em breve volta com nome e ponto", peek.emBreve.every((x) => x.rotuloVisivel && x.ponto));
+  ok("F3.1: no peek nenhuma linha perdeu o destino", peek.itens.every((i) => i.tag === "A" && String(i.href).startsWith("/app")), peek.itens.length + " linhas");
   ok("nenhum nome de modulo sai cortado no peek", peek.truncados.length === 0, peek.truncados.join(", "));
-  ok("no peek os rotulos voltam na ordem das camadas", peek.rotulosVisiveis.join(", ") === "Dashboard, Notificações, CRM, Clientes, Vendas, Produtos, Compras, Ordens de Serviço, Agenda, Financeiro, Gateways & Cobranças, Usuários, Auditoria, CMS & Site Público, Rotinas agendadas, Configurações", peek.rotulosVisiveis.slice(0, 3).join(", "));
+  ok("no peek os rotulos voltam na ordem das camadas", peek.rotulosVisiveis.join(", ") === ITENS.join(", "), peek.rotulosVisiveis.join(", "));
   ok("sem overflow horizontal na janela durante o peek", peek.overflowX <= 0, "overflow " + peek.overflowX);
   await semToast(page);
   await page.screenshot({ path: SHOTS + "/16-sidebar-peek.png" });
@@ -321,6 +322,41 @@ function estado() {
     return Math.round(r.width) + "x" + Math.round(r.height);
   });
   ok("area de toque adequada (>= 36px)", larguraBotao === "38x38", larguraBotao);
+
+  // F3.1: a barra nao pode prometer nada. Cada linha visivel e clicada e a tela
+  // que abre tem de ter titulo de pagina — nada de casulo vazio, nada de 404.
+  console.log("== Toda linha do menu abre uma pagina com titulo (F3.1) ==");
+  await page.setViewport({ width: 1440, height: 900 });
+  await page.reload({ waitUntil: "networkidle0" });
+  await page.waitForSelector(".admin-nav-item", { timeout: 15000 });
+  await espera(500);
+  {
+    const linhas = await page.evaluate(() =>
+      Array.from(document.querySelectorAll(".admin-nav-item")).map((a) => ({
+        rotulo: a.getAttribute("aria-label"),
+        href: a.getAttribute("href"),
+      }))
+    );
+    ok("a barra larga lista as 15 linhas do produto", linhas.length === 15, String(linhas.length));
+    for (const linha of linhas) {
+      await page.click('.admin-nav-item[aria-label="' + linha.rotulo + '"]');
+      await page.waitForFunction(
+        (esperado) => window.location.pathname === esperado,
+        { timeout: 15000 },
+        linha.href
+      );
+      await espera(420);
+      const tela = await page.evaluate(() => {
+        const h = document.querySelector(".page-title");
+        return {
+          titulo: h ? h.textContent.trim() : "",
+          erro: Boolean(document.querySelector(".error-page")),
+          vazia: !h && !document.querySelector(".page"),
+        };
+      });
+      ok(linha.href + " abre tela com titulo", !tela.erro && !tela.vazia && tela.titulo.length > 0, linha.rotulo + " -> " + (tela.titulo || "sem titulo"));
+    }
+  }
 
   console.log("== Tablet 820px ==");
   await page.setViewport({ width: 820, height: 1180 });

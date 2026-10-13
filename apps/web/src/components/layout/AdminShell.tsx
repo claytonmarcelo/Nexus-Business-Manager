@@ -10,10 +10,8 @@ interface NavItem {
   label: string;
   icon: string;
   permission?: string;
-  /** Rota do modulo. Item de camada ainda em obra nao tem rota nenhuma. */
-  to?: string;
-  /** Justifica o item sem rota: vira dica no icone e rotulo "em breve". */
-  emBreve?: string;
+  /** Rota do modulo. Toda linha da barra e uma pagina que existe e abre. */
+  to: string;
   /** Área da plataforma (Fase 1b): só o administrador da plataforma vê e abre. */
   plataforma?: boolean;
 }
@@ -54,7 +52,6 @@ const NAV_GROUPS: NavGroup[] = [
   {
     title: "Serviços & Atendimentos",
     items: [
-      { label: "Ordens de Serviço", icon: "✦", emBreve: "Ordens de serviço: módulo ainda em construção." },
       { to: "/app/agenda", label: "Agenda", icon: "▤", permission: "agenda:read" },
     ],
   },
@@ -62,7 +59,6 @@ const NAV_GROUPS: NavGroup[] = [
     title: "Financeiro",
     items: [
       { to: "/app/financeiro", label: "Financeiro", icon: "◫", permission: "finance:read" },
-      { label: "Gateways & Cobranças", icon: "▭", permission: "settings:read", emBreve: "Gateways e cobranças: área ainda em construção." },
     ],
   },
   {
@@ -289,7 +285,7 @@ export function AdminShell() {
             <div className="admin-nav-group" key={grupo.title}>
               <p className="admin-nav-group-title">{grupo.title}</p>
               <div className="admin-nav-items">
-                {grupo.items.map((item) => (item.to ? (
+                {grupo.items.map((item) => (
                   <NavLink
                     key={item.to}
                     to={item.to}
@@ -301,20 +297,7 @@ export function AdminShell() {
                     <span className="admin-nav-icon" aria-hidden="true">{item.icon}</span>
                     <span className="admin-nav-label">{item.label}</span>
                   </NavLink>
-                ) : (
-                  // Modulo anunciado na camada, mas ainda sem pagina: nao vira
-                  // link (link quebrado seria pior) e diz o porquê na dica.
-                  <span
-                    key={item.label}
-                    className="admin-nav-item is-soon"
-                    aria-disabled="true"
-                    title={item.emBreve}
-                  >
-                    <span className="admin-nav-icon" aria-hidden="true">{item.icon}</span>
-                    <span className="admin-nav-label">{item.label}</span>
-                    <span className="admin-nav-soon">em breve</span>
-                  </span>
-                )))}
+                ))}
               </div>
             </div>
           ))}
