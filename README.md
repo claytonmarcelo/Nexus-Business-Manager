@@ -688,8 +688,12 @@ aceso. Atrás de proxy reverso, `TRUST_PROXY` declara quantos saltos são confi�
 proxy imediato, até 31) — sem isso o IP registrado na auditoria e usado no rate-limit é o do proxy.
 
 O seed é a outra trava: em produção ele aborta antes da primeira consulta se `ALLOW_DEV_SEED` não estiver
-definido, e a conta de desenvolvimento só nasce fora de produção. Não há `Dockerfile` nem pipeline de CI no
-repositório — estão no roadmap, e as decisões de hospedagem estão em `docs/decisoes/G5-hospedagem-e-backup.md`.
+definido, e nada da demonstração entra num banco de produção — nem a conta de desenvolvimento
+(`SEED_DEV_ACCOUNT=1`), nem a empresa `nexus-demo` (`SEED_DEMO_COMPANY=1`). As duas escritas são declaradas uma
+a uma porque liberar o seed não equivale a querer vitrine de teste no banco de um cliente; o que sobra em
+produção é o administrador da plataforma e as rotinas. A decisão está em
+`docs/adr/0005-semente-sem-demonstracao-em-producao.md`. Não há `Dockerfile` nem pipeline de CI no repositório —
+estão no roadmap, e as decisões de hospedagem estão em `docs/decisoes/G5-hospedagem-e-backup.md`.
 
 ### Contas e acesso
 
@@ -701,7 +705,9 @@ repositório — estão no roadmap, e as decisões de hospedagem estão em `docs
 - **Conta de desenvolvimento** — `admin@nexus.local`, `OWNER` da empresa `nexus-demo`; é a conta usada pela
   suíte de testes e pelas provas de navegador. A senha não mora no código: vem de `SEED_DEV_PASSWORD`, e o
   seed para com aviso se a variável estiver ausente. Fora de produção ela nasce sempre; em produção só nasce
-  se `SEED_DEV_ACCOUNT=1` for declarado de propósito.
+  se `SEED_DEV_ACCOUNT=1` for declarado de propósito — e aí o seed exige também `SEED_DEMO_COMPANY=1`, porque
+  a conta dev é dona da casa de demonstração e uma peça sem a outra não administra nada. Nenhuma das duas
+  existe em banco de produção por padrão, e `garantias-conta-de-demonstracao.test.ts` prova isso.
 - Cadastro self-service em `/cadastro` para criar conta e empresa própria sem tocar no seed.
 
 Regra de senha em todo o sistema: mínimo 8 caracteres, com ao menos uma letra maiúscula e um caractere
@@ -731,8 +737,9 @@ processo com a mensagem do caminho exato, em vez de deixar o serviço subir queb
 | `AUTH_EXPOSE_RESET_TOKEN` | `0` | `1` devolve o código de recuperação na resposta — só para desenvolvimento; em produção o valor `1` derruba a subida |
 | `SEED_ADMIN_PASSWORD` | — | senha do administrador global, lida só pelo `seed.ts`, que para com aviso se estiver ausente |
 | `SEED_DEV_PASSWORD` | — | senha da conta de desenvolvimento `admin@nexus.local`; também só no `seed.ts`, e o seed para se ela faltar |
-| `SEED_DEV_ACCOUNT` | `0` | `1` força a conta de desenvolvimento mesmo em produção (uso explícito de homologação) |
-| `ALLOW_DEV_SEED` | `0` | única maneira de o seed rodar em `NODE_ENV=production`; sem ele o seed aborta antes da primeira consulta |
+| `SEED_DEV_ACCOUNT` | `0` | `1` força a conta de desenvolvimento mesmo em produção (homologação explícita); pede `SEED_DEMO_COMPANY=1` junto |
+| `SEED_DEMO_COMPANY` | `0` | `1` libera a empresa de demonstração `nexus-demo` em produção; fora de produção ela é criada sempre |
+| `ALLOW_DEV_SEED` | `0` | única maneira de o seed rodar em `NODE_ENV=production`; sem ele o seed aborta antes da primeira consulta, e liberá-lo não libera as duas peças acima |
 
 Em `NODE_ENV=production` a validação ganha uma régua extra (segredo de no mínimo 32 caracteres e sem marca
 de exemplo, CORS público, banco fora de root, `AUTH_EXPOSE_RESET_TOKEN` desligado): qualquer violação derruba
@@ -790,6 +797,7 @@ npm run build              # produção (tsc + vite build)
 | `oversell.test.ts` | sete cenários que martelam a mesma linha em paralelo: duas confirmações da mesma nota, duas vendas disputando o saldo, a mesma compra recebida duas vezes, duas saídas manuais simultâneas, cancelar e receber ao mesmo tempo, o mesmo produto em duas linhas (6+6 sobre saldo 10) que devolve 400 sem escrever nada, e o saldo que é exatamente a soma do razão — o banco decide, nunca o JavaScript |
 | `validador-de-producao.test.ts` | a régua de produção como função pura: segredo abaixo de 32 caracteres, os dois iguais ou com marca de exemplo, CORS de localhost/IP local/coringa, banco `root` sem senha e `AUTH_EXPOSE_RESET_TOKEN=1` cada um recusado; `TRUST_PROXY` aceitando só 0 a 31; e o `env.ts` que derruba o processo em vez de subir quebrado |
 | `seed-seguro.test.ts` | o seed abortando em produção sem `ALLOW_DEV_SEED` sem escrever usuário nenhum, o motivo dito inteiro, a ausência de `SEED_ADMIN_PASSWORD` parando qualquer ambiente, e a prova de que nenhuma senha de conta de desenvolvimento mora no código |
+| `garantias-conta-de-demonstracao.test.ts` | o plano de escrita do seed em produção, medido com um cliente que só anota: nem a conta de desenvolvimento nem a `nexus-demo` são pedidas, o administrador da plataforma e as rotinas continuam, a conta dev sem casa de demonstração é recusa, nenhuma senha sai no log, e a recusa sem `ALLOW_DEV_SEED` não escreve usuário nem empresa no banco real |
 | `estoque-politica.test.ts` | a saída barrada enquanto a empresa não autorizou, o negativo visível depois de ligar a chave, e a política lida por empresa nas três portas de saída |
 | `fuso-dia.test.ts` | meia-noite de São Paulo, Tóquio e Calcutá calculadas à mão, borda de calendário contra borda de instante, série diária e contas vencidas no dia da empresa, e o fuso quebrado que não derruba painel nem sino |
 | `dinheiro-decimal.test.ts` | meio centavo que sobe na base 10, a armadilha do `round` do decimal embutido no Prisma, 2026 parcelas de R$ 0,10 fechando em 20 260 centavos, a porta nos três formatos de digitação e a invariante total = soma das linhas em nota real |

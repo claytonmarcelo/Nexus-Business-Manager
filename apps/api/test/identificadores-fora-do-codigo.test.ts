@@ -24,6 +24,18 @@ const SENHA_DE_DESENVOLVIMENTO = ["Nex", "us", "@", "20", "26"].join("");
 // exemplo.test.
 const FORMADO_DOMINIO_PESSOAL = /@gmail\.com/i;
 
+// F1.3 fecha também a porta estrutural: não basta proibir os dois valores
+// conhecidos, nenhuma chave de credencial do projeto pode receber valor escrito
+// em arquivo rastreado — nem hoje, nem no arquivo novo que chegar depois. O nome
+// das chaves mora num vetor e as aspas do padrão saem de String.fromCharCode,
+// porque uma linha que escrevesse o literal
+// seria a primeira violação capturada pela própria varredura.
+const CHAVES_DE_CREDENCIAL = ["SEED_ADMIN_PASSWORD", "SEED_DEV_PASSWORD", "NEXUS_CAPTURA_SENHA"];
+const ASPAS = String.fromCharCode(34, 39, 96);
+const LITERAL_APOS_CHAVE = new RegExp(
+  `(${CHAVES_DE_CREDENCIAL.join("|")})[^A-Za-z0-9_]{0,3}[:=]{1,2}\\s*[${ASPAS}][^${ASPAS}\\s]{4,}[${ASPAS}]`,
+);
+
 function arquivosRastreados(): string[] {
   const saida = execFileSync("git", ["-C", RAIZ, "ls-files", "-z"], { maxBuffer: 64e6 });
   // Arquivo que o git ainda lista mas o disco já não tem: é o intervalo entre
@@ -67,6 +79,19 @@ describe("Identificadores reais fora do código (R2)", () => {
 
   it("nenhum arquivo rastreado traz a senha de desenvolvimento do seed", () => {
     expect(ocorrencias(SENHA_DE_DESENVOLVIMENTO)).toEqual([]);
+  });
+
+  it("nenhuma chave de credencial recebe valor literal em arquivo rastreado (F1.3)", () => {
+    expect(ocorrencias(LITERAL_APOS_CHAVE)).toEqual([]);
+    // Um guarda que não pega o exemplo que ele mesmo descreve não guarda nada:
+    // as três formas abaixo são o positivo e os dois negativos da regra.
+    const aspas = String.fromCharCode(34);
+    const chave = CHAVES_DE_CREDENCIAL[1] ?? "";
+    expect(LITERAL_APOS_CHAVE.test(chave + " = " + aspas + "ValorDeExemplo123" + aspas)).toBe(true);
+    expect(LITERAL_APOS_CHAVE.test(chave + "=defina-uma-senha-forte")).toBe(false);
+    expect(LITERAL_APOS_CHAVE.test(chave + ": variavelDoAmbiente")).toBe(false);
+    // O vetor de nomes não pode virar a própria violação da varredura.
+    expect(LITERAL_APOS_CHAVE.test(CHAVES_DE_CREDENCIAL.map((c) => aspas + c + aspas).join(", "))).toBe(false);
   });
 
   it("o padrão fora de produção é a conta fictícia admin@exemplo.test", () => {

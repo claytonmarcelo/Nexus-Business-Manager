@@ -1130,3 +1130,53 @@ Tests  1 failed | 3 passed (4)
   (`{"status":"ok","db":"up"}`). Nenhuma imagem nova com dado real entrou no repositório; as capturas publicadas do
   README são de topo de tela e não mostram rodapé, então não houve recaptura obrigatória.
 
+### F1.3 encerrada: o seed em produção deixou de levar a demonstração junto — 2026-10-12
+
+- **N21 — MÉDIO (configuração, resolvido dentro da própria fase): `ALLOW_DEV_SEED=1` era licença para a vitrine
+  inteira.** A chave nasceu na Fase 2 como a única maneira de o seed rodar em `NODE_ENV=production`, mas o
+  `semear()` criava a empresa `nexus-demo` em todo caminho que passasse por ele. Resultado: um operador que
+  liberava o seed para cadastrar o administrador da plataforma, num banco de cliente, recebia junto uma empresa
+  de demonstração vazia e sem uso. Agora cada peça tem a sua escrita — `SEED_DEMO_COMPANY=1` para a casa,
+  `SEED_DEV_ACCOUNT=1` para a conta — e a recusa nova amarra as duas: pedir a conta dev sem a casa devolve
+  motivo pronto, porque a conta é `OWNER` justamente daquela empresa. Nada foi rotacionado nem apagado (§0.1 do
+  dono): as contas fictícias continuam as mesmas fora de produção.
+- **N22 — BAIXO (fora do escopo, relatado sem mexer): a varredura estrutural não alcança os segredos de JWT.**
+  O guarda novo de `identificadores-fora-do-codigo.test.ts` cobre `SEED_ADMIN_PASSWORD`, `SEED_DEV_PASSWORD` e
+  `NEXUS_CAPTURA_SENHA`. Ele não inclui `JWT_ACCESS_SECRET`/`JWT_REFRESH_SECRET` porque
+  `test/validador-de-producao.test.ts` escreve o placeholder documentado do `.env.example` entre aspas, de
+  propósito, para provar que o validador recusa valor de tutorial (`"troque-por-um-segredo-forte-de-32-mais-bytes"`,
+  linhas 180, 181, 220 e 221). Incluir as duas chaves obrigaria a lista a abrir exceção para o único caso que é
+  exemplo legítimo, e um guarda com exceção para o caso principal não guarda. Nenhum segredo real está nesse
+  range — a régua de 32 caracteres e o teste de processo filho (`config/env.ts` recusando a subida) ficam na F2,
+  onde a matriz de rotas já exige varrer superfície inteira.
+- **N23 — BAIXO (informativo, nada corrigido): em produção a recusa chega antes do seed abrir a boca.**
+  Rodar `NODE_ENV=production npm run db:seed` na máquina do desenvolvimento não imprime o `Seed recusado —` de
+  `errosDoSeed`: o processo morre em `src/config/env.ts` (a régua A9 roda na importação, via
+  `src/lib/prisma.ts`), porque o `.env` local carrega segredo de exemplo, CORS de localhost e banco `root` sem
+  senha. É defesa em camada funcionando, não defeito — e a mensagem nomeia variáveis e motivos sem imprimir valor
+  nenhum, conferido na saída: seis problemas listados, nenhum segredo. Fica registrado porque muda o que o
+  operador vê (primeiro o erro de configuração, depois o do seed) e porque a F1.4 precisa subir o
+  `admin:criar` com configuração válida de produção, onde aí sim `ALLOW_DEV_SEED` e as travas de demonstração
+  são a segunda porta.
+- **Seed real, fora de produção (medido na CLI, não só em teste):** `npm run db:seed` no `.env` da máquina
+  devolveu `empresaDemo: 'nexus-demo'`, `contaDev: 'admin@nexus.local (senha definida via SEED_DEV_PASSWORD,
+  só para desenvolvimento)'` e as rotinas — ou seja, a trava nova não quebrou o caminho de desenvolvimento, e o
+  resumo continua sem senha nenhuma. O endereço do administrador global impresso nessa saída vem do `.env` local
+  e não é copiado para documento nenhum.
+- **Verificado e limpo:** `tools/conta-de-captura.local.json` guarda a senha gerada da conta fictícia de captura
+  (24 caracteres, `demo@exemplo.test`) e está no `.gitignore` linha 41 — `git ls-files` não o devolve, então
+  nenhum valor de credencial de ferramenta de prova entra no repositório.
+- **Prova vermelha e verde, na ordem.** Vermelho com o teste escrito antes de qualquer mudança no seed:
+  `Test Files 1 failed / Tests 6 failed | 3 passed (9)` — as importações que ainda não existiam, mais a trava
+  ausente no `.env.example`. Replays honestos: devolvendo só o `prisma/seed.ts` ao HEAD (e deixando o
+  `.env.example` já corrigido), a mesma suíte dá `5 failed | 4 passed (9)`, com
+  `TypeError: empresaDeDemonstracao is not a function` e, no caso central,
+  `AssertionError: expected [ 'nexus-demo' ] to deeply equal []` — o seed de produção ainda pedia a casa de
+  demonstração no plano de escrita. Restaurada a correção, o arquivo devolve `9 passed (9)`. Verde da rodada:
+  `7 passed (7)` no guarda R2, `6 passed (6)` no `seed-seguro.test.ts`, e a suíte inteira em
+  `32 passed (32) / 260 passed (260)` na API com `6 passed (6) / 39 passed (39)` no web. O teste que injeta um
+  cliente que só anota é o que permite provar o plano de escrita sem encostar no banco do desenvolvedor; a
+  recusa sem `ALLOW_DEV_SEED` continua medida no banco real, contando usuários e empresas antes e depois.
+- **Codificação medida:** 398 arquivos rastreados, 288 de texto — BOM 0, CRLF 0, sem quebra final 0, e 0
+  ocorrências de alfabeto não latino no fonte novo, no teste, no ADR-0005 e nas mensagens de commit.
+

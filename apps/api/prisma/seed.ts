@@ -29,10 +29,24 @@ export function emailDoAdministradorGlobal(ambiente: FonteDeSemente): string {
   return ambiente.NODE_ENV === "production" ? "" : ADMINISTRADOR_GLOBAL_FICTICIO;
 }
 
+// As duas peças de demonstração têm nome fixo e exportado: o teste da F1.3
+// procura exatamente estes valores, e o seed não escreve casa de demonstração em
+// banco de cliente sem uma declaração própria para isso.
+export const CONTA_DE_DESENVOLVIMENTO = "admin@nexus.local";
+export const EMPRESA_DE_DEMONSTRACAO = "nexus-demo";
+
 // A conta de desenvolvimento não nasce em produção (Fase 2). `SEED_DEV_ACCOUNT=1`
 // é a exceção escrita de propósito, para um ambiente de teste que quer a conta.
 export function criaContaDev(ambiente: FonteDeSemente): boolean {
   return ambiente.NODE_ENV !== "production" || ambiente.SEED_DEV_ACCOUNT === "1";
+}
+
+// F1.3: a casa de demonstração obedece à mesma lógica. `ALLOW_DEV_SEED=1` libera o
+// seed subir em produção — administrador da plataforma e rotinas —, mas empresa de
+// demonstração só entra num banco com a escrita `SEED_DEMO_COMPANY=1`, porque
+// "posso semear" não significa "quero dado de vitrine no banco do cliente".
+export function empresaDeDemonstracao(ambiente: FonteDeSemente): boolean {
+  return ambiente.NODE_ENV !== "production" || ambiente.SEED_DEMO_COMPANY === "1";
 }
 
 // Lista de motivos para recusar (vazia = pode semear). Nada aqui toca o banco.
@@ -53,6 +67,11 @@ export function errosDoSeed(ambiente: FonteDeSemente): string[] {
   }
   if (criaContaDev(ambiente) && !ambiente.SEED_DEV_PASSWORD) {
     problemas.push("SEED_DEV_PASSWORD não está definida — a senha da conta de desenvolvimento não mora mais no código");
+  }
+  if (criaContaDev(ambiente) && !empresaDeDemonstracao(ambiente)) {
+    problemas.push(
+      "SEED_DEV_ACCOUNT=1 sem SEED_DEMO_COMPANY=1 — a conta de desenvolvimento é dona da empresa de demonstração; declare as duas escritas ou nenhuma",
+    );
   }
   return problemas;
 }
@@ -77,6 +96,7 @@ async function ensureUser(
 export interface ResumoDoSeed {
   adminDefinitivo: string;
   contaDev: string;
+  empresaDemo: string;
   empresasComOwner: number;
   rotinas: number;
 }
@@ -95,14 +115,16 @@ export async function semear(
   const superEmail = emailDoAdministradorGlobal(ambiente);
   const superAdmin = await ensureUser(cliente, superEmail, "Administrador Nexus", ambiente.SEED_ADMIN_PASSWORD ?? "");
   const devAdmin = criaContaDev(ambiente)
-    ? await ensureUser(cliente, "admin@nexus.local", "Administrador Nexus", ambiente.SEED_DEV_PASSWORD ?? "")
+    ? await ensureUser(cliente, CONTA_DE_DESENVOLVIMENTO, "Administrador Nexus", ambiente.SEED_DEV_PASSWORD ?? "")
     : null;
 
-  const company = await cliente.company.upsert({
-    where: { slug: "nexus-demo" },
-    update: {},
-    create: { name: "Nexus Demo", slug: "nexus-demo" },
-  });
+  const casa = empresaDeDemonstracao(ambiente)
+    ? await cliente.company.upsert({
+        where: { slug: EMPRESA_DE_DEMONSTRACAO },
+        update: {},
+        create: { name: "Nexus Demo", slug: EMPRESA_DE_DEMONSTRACAO },
+      })
+    : null;
 
   // O administrador definitivo recebe OWNER em TODAS as empresas do banco.
   const companies = await cliente.company.findMany({ select: { id: true } });
@@ -114,11 +136,11 @@ export async function semear(
     });
   }
 
-  if (devAdmin) {
+  if (devAdmin && casa) {
     await cliente.companyUser.upsert({
-      where: { userId_companyId: { userId: devAdmin.id, companyId: company.id } },
+      where: { userId_companyId: { userId: devAdmin.id, companyId: casa.id } },
       update: { role: "OWNER" },
-      create: { userId: devAdmin.id, companyId: company.id, role: "OWNER" },
+      create: { userId: devAdmin.id, companyId: casa.id, role: "OWNER" },
     });
   }
 
@@ -136,7 +158,10 @@ export async function semear(
   // (ou o CREDENCIAIS.md da máquina), não o terminal nem o histórico do git.
   const resumo: ResumoDoSeed = {
     adminDefinitivo: superEmail,
-    contaDev: devAdmin ? "admin@nexus.local (senha definida via SEED_DEV_PASSWORD, só para desenvolvimento)" : "não criada (produção)",
+    contaDev: devAdmin
+      ? `${CONTA_DE_DESENVOLVIMENTO} (senha definida via SEED_DEV_PASSWORD, só para desenvolvimento)`
+      : "não criada (produção)",
+    empresaDemo: casa ? EMPRESA_DE_DEMONSTRACAO : "não criada (produção)",
     empresasComOwner: companies.length,
     rotinas: JOBS.length,
   };

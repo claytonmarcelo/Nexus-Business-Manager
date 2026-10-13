@@ -21,7 +21,7 @@ válidas como histórico do que já foi comprovado.
 |---|---|---|
 | F0. Retomar e publicar os commits da rodada de segurança | FEITO | Portão de avanço direto reaberto por decisão do dono: `git merge origin/main` (commit `772cc77`, sem force, sem rebase, sem reescrever histórico) com o `README.md` da árvore local vencendo o conteúdo — o do GitHub trazia o e-mail pessoal de volta na linha 633. Depois do merge: 917 linhas, zero marca de conflito, nenhuma ocorrência de domínio pessoal. Push `2cfa2e9..772cc77` e prova `git ls-remote origin HEAD` = `772cc77559bf9f21a1373af5fc9a2f7cfb282ecc` = `git rev-parse HEAD`. Com o MySQL religado pelo dono, a suíte volta a ser medida: API 31 arquivos / 250 casos e web 5 / 27, zero falha. || F1.1. Eliminar caracteres não latinos e instalar a guarda permanente | FEITO | Varredura em quatro escopos (284 arquivos de texto, histórico inteiro de mensagens de commit, patch dos commits pendentes, README do `origin/main`): único achado foram 4 ocorrências de U+03A3 em `docs/AUDITORIA.md:462`, `:473` e `:527`, reescritas como "soma das linhas", "soma das parcelas" e `soma(ENTRADAS) − soma(SAIDAS)`. Guarda: `apps/api/test/caracteres-permitidos.test.ts` (4 casos, 35 scripts por propriedade Unicode, varre `--cached --others --exclude-standard` e confere a mensagem do `HEAD`). Vermelho mostrado duas vezes — com o sigma na árvore (`Array(4)`) e com arquivo temporário de prova (`docs/_prova-caractere-proibido.md:3 U+4E00`, apagado em seguida) — e verde final `4 passed (4)`. |
 | F1.2. Rodapé único (`AppFooter` + `brand.ts`) | FEITO | Um só rodapé na vitrine, na página legal e no painel; `LandingFooter.tsx` apagado e o `<footer className="admin-footer">` do `AdminShell` junto. Marca em `apps/web/src/lib/brand.ts`; versão `v0.1.0` injetada no build a partir do `package.json` (conferida no `dist`); ano dinâmico; crédito do dono como texto, com link seguro só quando `urlDoAutor` for preenchida; Termos/Privacidade/LGPD apenas quando publicados; indicador de serviço vindo do `GET /api/health` real. Texto saiu de `--text-3` (4,02:1 / 3,14:1) para `--text-2` (8,64:1 / 5,50:1). Colisão com o `.app-footer` do AdminLTE registrada em N19; guarda R2 endurecido em N20. Prova: 12 casos em `apps/web/src/test/rodape-unico.test.tsx`, vermelho primeiro, e captura em 1440x900 dos dois temas no navegador. |
-| F1.3. Garantias da conta de demonstração | PENDENTE | `test/seed-seguro.test.ts` já cobre parte; falta o pacote da fase. |
+| F1.3. Garantias da conta de demonstração | FEITO | `ALLOW_DEV_SEED=1` passou a liberar só a subida do seed em produção: administrador da plataforma e rotinas. A conta de desenvolvimento pede `SEED_DEV_ACCOUNT=1` e a casa `nexus-demo` pede `SEED_DEMO_COMPANY=1`, cada uma declarada de propósito; pedir a conta dev sem a casa agora é recusa com motivo. Prova: `test/garantias-conta-de-demonstracao.test.ts` (9 casos — plano de escrita medido com cliente que anota, resumo sem senha, coerência com o validador de produção, e a recusa contada no banco real) e a varredura estrutural nova em `test/identificadores-fora-do-codigo.test.ts` (7 casos). Decisão em `docs/adr/0005-semente-sem-demonstracao-em-producao.md`. Nada foi rotacionado: §0.1 do dono. |
 | F1.4. Bootstrap do administrador da plataforma (`admin:criar`) | PENDENTE | Não existe o script na raiz nem em `@nexus/api`. |
 | F2. Matriz de rotas, G8 opção D (N14) e superfície de ataque | PENDENTE | `isolamento-rotas.test.ts` não existe. |
 | F3. Menu sem "em breve" + Ordens de Serviço e Gateways & Cobranças | PENDENTE — e falta anexo | Restam exatamente os dois itens `emBreve` em `AdminShell.tsx:57` e `:65`. O `PROMPT_IDE_ORDENS_E_COBRANCAS.md` não está no contexto desta sessão: pedir reanexo antes de executar a F3.2. |
@@ -58,6 +58,27 @@ navegador           vitrine 1440x900 nos dois temas e painel logado pela conta f
                     links, fundo transparente e "Serviço operacional" vindo do GET /api/health real
 contraste medido    --text-2: 8,64:1 (noite) e 5,50:1 (dia) sobre --bg; selo sobre --surface-2: 7,00:1 / 5,26:1
                     --text-3, do rodapé antigo: 4,02:1 / 3,14:1 — reprovado nos dois temas
+```
+
+### Portões medidos na F1.3 (2026-10-12, garantias da conta de demonstração)
+
+```
+npm run typecheck   ok (api + web, sem saída)
+npm run build       ok — inalterado por esta fase: 882,31 kB / 262,77 kB de JS e 387,27 kB / 59,26 kB de CSS
+                    (o aviso de chunk >500 kB continua, é trabalho da F5)
+npm test            API 32 arquivos / 260 casos e web 6 / 39 — zero falha, zero skip
+                    (API era 31 / 250 na F1.2; o arquivo novo traz 9 casos e o guarda R2, +1)
+prova vermelha      com o teste escrito antes de qualquer mudança no seed: Test Files 1 failed /
+                    Tests 6 failed | 3 passed (9). Replay do vermelho devolvendo só o seed ao HEAD
+                    (.env.example já corrigido): 5 failed | 4 passed, com
+                    "TypeError: empresaDeDemonstracao is not a function" e
+                    "AssertionError: expected [ 'nexus-demo' ] to deeply equal []" — o seed de produção pedia a
+                    casa de demonstração. Verde final do arquivo: 9 passed (9)
+codificação         398 arquivos rastreados, 288 de texto: BOM 0, CRLF 0, sem quebra final 0
+caracteres          0 ocorrências de alfabeto não latino no fonte, no teste, no ADR e nas mensagens de commit
+                    (guarda permanente test/caracteres-permitidos.test.ts na suíte da API)
+seed real           a recusa de produção continua antes da primeira consulta: contagem de usuários e de
+                    empresas idêntica antes e depois do semear() recusado
 ```
 
 

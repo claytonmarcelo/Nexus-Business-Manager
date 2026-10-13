@@ -5,6 +5,27 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/), 
 
 ## [Não lançado]
 
+### A demonstração deixou de caber num banco de produção (2026-10-12)
+
+- **Cada peça da vitrine pede a própria senha de ambiente.** `ALLOW_DEV_SEED=1` passa a liberar apenas a subida
+  do seed em produção: administrador da plataforma e rotinas. A empresa de demonstração `nexus-demo` agora só
+  entra com `SEED_DEMO_COMPANY=1`, declaração escrita de propósito, igual à conta de desenvolvimento, que já
+  dependia de `SEED_DEV_ACCOUNT=1`.
+- **Conta dev sem casa é recusa, não meio cadastro.** Pedir `admin@nexus.local` em produção sem a empresa de
+  demonstração derruba o seed com o motivo na mensagem: a conta dev é `OWNER` daquela casa, então uma peça sem a
+  outra não administraria nada.
+- **Prova pelo plano de escrita.** `apps/api/test/garantias-conta-de-demonstracao.test.ts` (9 casos) injeta um
+  cliente Prisma que registra cada upsert em vez de escrever: em produção não sai nenhuma empresa, sai um único
+  usuário e saem as cinco rotinas. A recusa continua medida no banco real, agora contando usuários e empresas
+  antes e depois.
+- **Nada rotacionado, por decisão do dono.** As contas fictícias e suas senhas de desenvolvimento ficam como
+  estão (§0.1 do PROMPT MESTRE): o que mudou é a porta que as impede de aparecer em produção.
+- **Porta estrutural de credencial.** `identificadores-fora-do-codigo.test.ts` ganhou a varredura que proíbe
+  `SEED_ADMIN_PASSWORD`, `SEED_DEV_PASSWORD` e `NEXUS_CAPTURA_SENHA` de receber valor literal em qualquer arquivo
+  rastreado — e o próprio teste confere que a armadilha continua pegando um exemplo escrito na própria linha do teste.
+- **Documentado onde se lê.** `apps/api/.env.example` e o README trazem a trava nova; a decisão está em
+  `docs/adr/0005-semente-sem-demonstracao-em-producao.md`.
+
 ### O rodapé do produto deixou de ser dois: vitrine e painel agora usam um só componente (2026-10-12)
 
 - **Um componente, um arquivo de marca.** `AppFooter` (`apps/web/src/components/layout/AppFooter.tsx`) passou a ser
