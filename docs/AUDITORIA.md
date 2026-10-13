@@ -1217,3 +1217,97 @@ Tests  1 failed | 3 passed (4)
 - **A guarda estrutural da F1.3 passou a cobrir a chave nova:** `ADMIN_CRIAR_SENHA` entrou no vetor de chaves de
   `identificadores-fora-do-codigo.test.ts`, então nenhum arquivo rastreado pode atribuir valor literal a ela — e
   o placeholder do `.env.example` é fraco de propósito, conferido em teste: copiá-lo não instala conta nenhuma.
+
+## Adenda da execução — F2 (matriz de rotas, opção D do G8 e N14) encerrada — 2026-10-13
+
+### N14 e N15 — FECHADOS
+
+**N14 — MÉDIO, auditoria de plataforma escrita no tenant errado.** Fechado na F2 com a opção D do G8, por
+construção e não por convenção: `AuditLog.scope` (`apps/api/prisma/schema.prisma:168`, migração aditiva
+`20261013000000_add_escopo_da_auditoria`) decide a trilha, e o `audit()` (`apps/api/src/lib/audit.ts:33-41`)
+**anula** o `companyId` de todo evento marcado `platform` — a linha nasce com empresa dona nula e a empresa da
+sessão passa a `metadata.empresaDaSessao`, como origem. As 8 escritas de plataforma medidas no `src` (5 em
+`modules/cms/cms.service.ts`, 1 em `modules/cms/cms.routes.ts`, 2 em `modules/cron/cron.routes.ts`) carregam o
+escopo, e a leitura nova `GET /api/audit/plataforma` (`modules/audit/audit.routes.ts:98-135`) filtra por escopo,
+exige `assertPlatformAdmin` conferido no banco e nunca devolve `companyId` — devolve o **nome** da empresa de
+origem. Decisão registrada em `docs/adr/0007-escopo-da-auditoria.md`.
+
+**N15 — informação, não é falha.** O campo que faltava ("esta linha é do administrador agindo como plataforma")
+existe agora, é a coluna `scope`, e o desenho completo está no ADR-0007.
+
+Também fecha o "NÃO VERIFICADO" que a R3 registrou sobre o CMS: medido por contagem de blocos, as **6** rotas de
+escrita do CMS (config, item criar/editar/apagar, texto legal publicar, token de manutenção) têm bloco `audit({`
+correspondente, e a regra 9 do guarda estrutural não deixa um módulo de tenant carimbar plataforma nem a leitura
+de auditoria gerar auditoria.
+
+### N26 — documento e máquina mediram números diferentes (divergência de doc, nada de código)
+
+- `docs/ESTADO-ATUAL.md:154` diz **105** rotas declaradas, **14** de plataforma e **81** de empresa. Lido do
+  próprio Fastify nesta rodada (`onRoute` antes de `ready()`, sem `app.routes`, que não existe na versão 5):
+  **158** eventos = 51 GET + 51 HEAD + 27 POST + 19 PATCH + 7 DELETE + 2 PUT + 1 OPTIONS, ou **106** rotas de
+  negócio (método + caminho), das quais **10** públicas, **15** de plataforma e **81** de empresa. A diferença é
+  exatamente a rota nova desta fase (`GET /api/audit/plataforma`). O `HEAD` espelha todo `GET`
+  (`exposeHeadRoutes` do Fastify 5) e o `OPTIONS *` vem do CORS; nenhum dos dois fura o gate, e isso é a regra 2 do
+  guarda.
+- Defeito de tabela consertado na mesma rodada: em `docs/STATUS-AJUSTES.md` a linha da F0 estava colada na da
+  F1.1 (um `|` faltando no fim da linha da F0, que virou `||` no meio do texto), então a tabela renderizava a
+  F1.1 como colunas extras da F0. Reparado junto das linhas da F2, do G8 e da F5.
+- A opção D do G8 escreveu a tela como `/app/plataforma/auditoria`; a entregue foi **`/app/auditoria-plataforma`**,
+  seguindo o padrão de rota do painel (uma segmento por tela, sem subpasta). O documento de decisão foi
+  atualizado com a diferença em vez de o código seguir o rascunho calado.
+- `docs/ESTADO-ATUAL.md` é retrato de rodada anterior — o próprio arquivo avisa que quem mexer reatualiza. A
+  re-medida completa dele está combinada para a F9; aqui fica registrada a diferença conhecida: mais **uma** rota
+  de API e mais **uma** tela de painel desde a rodada que o escreveu.
+
+### N27 — a migração é aditiva e a história não foi reescrita (limitação conhecida)
+
+No banco de desenvolvimento, com **45.609** eventos de auditoria, as linhas de entidade de plataforma escritas
+**antes** da coluna nova (**3.705** medidas: `landing_config`, `landing_item`, `legal_document` e `cron_job` com
+`scope: "tenant"`) continuam na trilha do tenant. Dessas, **800** têm `companyId` preenchido — é o ruído antigo
+do N14, e ele continua visível para o dono daquele tenant — e **2.905** já nasciam sem empresa nenhuma (as
+corridas do relógio, que não têm sessão). Nada foi corrigido em massa: reescrever auditoria para melhorar a
+métrica é justamente o que a trilha existe para impedir, e §0.1 do dono manda não limpar histórico. Hoje há
+**195** linhas de plataforma, todas com `companyId` nulo, e a mais antiga delas é desta rodada
+(2026-10-13) — ou seja, depois da coluna nenhuma linha de plataforma nasceu com dona, que é a asserção central do
+N14. Se um dia houver produção com histórico assim, a decisão de corrigir é do dono e vai para
+`docs/decisoes/`, não para um script silencioso.
+
+### N28 — fora do escopo, relatado em vez de corrigido em silêncio: o `intrusao.test.ts` alcança uma minoria das rotas
+
+Lidas as chamadas de `test/intrusao.test.ts` como pares método + caminho com `:param` e `${...}` normalizados,
+são **32** pares (o cabeçalho do próprio guarda fala em "33 URLs escolhidas", que conta caminhos e não pares) e
+todos os 32 batem em rotas existentes. Contra as **106** rotas medidas, **74** não são atacadas pelo teste de
+intrusão A×B. Não foi corrigido aqui: escrever intrusão para 74 rotas é rodada própria, e a F2 prometeu matriz,
+N14 e superfície anônima — esta última cobrindo o buraco de outro jeito, ao bater sem token nas **96** rotas não
+públicas e exigir 401 em todas (regra 7 do guarda). Vale como candidata da F8 (cobertura) ou de uma rodada de
+endurecimento antes da F9.
+
+### O que foi verificado e não é achado
+
+- `POST /api/auth/switch-company` não vaza empresa: exige linha em `company_user` (`auth.service.ts:199-205`) e
+  devolve 403 para quem não é membro, provado em `test/multiempresa.test.ts` ("trocar para empresa da qual não se
+  é membro → 403"). Na matriz ele aparece na lista `DE_CONTA` do guarda, porque é rota de sessão e não de
+  contexto de empresa — não é bypass.
+- A régua que ficou de pé é o `test/isolamento-rotas.test.ts`, com **9 regras verdes**: (1) nenhuma rota nasce
+  sem `app.authenticate` e sem carimbo de pública; (2) o espelho HEAD e o preflight OPTIONS são só o que o gate
+  isenta; (3) as públicas são exatamente a lista declarada, nem uma a mais; (4) a contagem medida bate com a
+  contagem declarada nos arquivos de rota; (5) cada rota é plataforma, empresa ou conta, e as de conta são as
+  declaradas; (6) toda escrita de tenant pede permissão ou é escrita da própria sessão; (7) toda rota
+  autenticada recusa quem não tem token; (8) nenhuma auditoria de plataforma carimba a empresa da sessão (N14);
+  (9) só módulo de plataforma carimba evento de plataforma, e quem lê não escreve.
+
+### Portões e provas medidos nesta rodada
+
+- **Vermelho primeiro:** o N14 nasceu vermelho em `test/cms.test.ts:396` e `test/cron.test.ts:252` — as duas
+  assersções liam a trilha pelo `companyId` do tenant, comportamento que a fase veio mudar. Reescritas para o
+  contrato novo (escopo `platform`, `companyId` nulo e origem no metadata) **sem** enfraquecer: os casos ganharam
+  `length > 1` para o guarda não passar em branco.
+- **Prova de que as guardas mordem (mutação):** trocar `audit()` para respeitar o `companyId` recebido em evento
+  de plataforma devolve **5 falhas** na suíte da API; com o código correto, 0.
+- **Verde:** API **35 arquivos / 291 testes** e web **7 arquivos / 46 testes**, ambos com código de saída 0;
+  `tsc -p tsconfig.json --noEmit` (API) e `tsc -b --noEmit` (web) limpos; `npm run build` no ar com o mesmo aviso
+  conhecido de chunk único (889 kB minificados, 265 kB em gzip — é a F5, não é desta fase).
+- **Prova de navegador** `tools/verify-auditoria-plataforma.cjs`: **29 verificações, 0 falhas**, com o banco
+  devolvido ao estado anterior (rotina restaurada, 2 eventos da prova removidos, STAFF de prova apagado). A prova
+  não deixa captura no repositório, e o motivo está escrito no cabeçalho do arquivo: a trilha mostra nomes reais
+  de empresa do banco de desenvolvimento.

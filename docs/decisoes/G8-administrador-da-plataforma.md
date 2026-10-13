@@ -1,7 +1,8 @@
 # G8 — Administrador da plataforma é OWNER de todas as empresas
 
-**Situação:** AGUARDA DECISÃO DO DONO · **Década:** 2026-10-12 · **A tarefa R3 é relatório: nenhum código de
-autorização foi alterado nesta rodada.**
+**Situação:** AGUARDA DECISÃO DO DONO para A/B/C · **Década:** 2026-10-12, atualizado em 2026-10-13 ·
+**A opção D foi entregue na F2 do PROMPT MESTRE: nenhuma autorização mudou, e a trilha separada passou a
+existir.** O retrato do código abaixo é o que a R3 mediu; a seção "O que mudou desde a R3" diz o que vale hoje.
 
 ## O que o código faz hoje, com arquivo e linha
 
@@ -95,3 +96,50 @@ cliente.
 entrar na empresa de terceiros só por acesso temporário, com motivo e trilha (cenário B)?**
 
 Sem essa resposta nada muda: o vínculo de hoje continua exatamente como está, e a R3 não toca em código.
+
+## O que mudou desde a R3 — a opção D foi entregue na F2 (2026-10-13)
+
+Nenhuma autorização foi tocada: o administrador continua `OWNER` de toda empresa pelos mesmos três caminhos
+medidos acima, `assertPlatformAdmin` continua conferido no banco a cada requisição, e a pergunta do fim deste
+documento continua sem resposta. O que mudou é a **prova técnica** de quem ele é quando age pela plataforma, que
+é exatamente o item (a), (b) e o "ruído medido" da seção "O que NÃO existe hoje".
+
+**1. O registro agora diz de quem é o evento.** `AuditLog.scope` vale `"tenant"` (padrão) ou `"platform"`, e o
+`audit()` (`apps/api/src/lib/audit.ts:33-41`) **anula** o `companyId` de todo evento de plataforma por
+construção: a linha nasce sem empresa dona. A empresa em que o administrador estava sentado continua registrada,
+em `metadata.empresaDaSessao`, como origem — não como posse. Isso fecha o **ruído medido** do item acima: as 8
+escritas de plataforma (5 em `cms.service.ts`, 1 em `cms.routes.ts`, 2 em `cron.routes.ts`) não aparecem mais no
+log do tenant como se fossem do tenant.
+
+**2. A visão de plataforma existe.** `GET /api/audit/plataforma` (`audit.routes.ts:98-135`) lê só
+`scope: "platform"`, atravessa tenants, e devolve `origemSessao` com o **nome** da empresa de origem — nunca um
+`companyId`. A tela `/app/auditoria-plataforma` (menu "Auditoria da plataforma", visível apenas com
+`user.platform === true`) mostra Ação · Entidade · Quem · Origem da sessão · IP · Quando, com filtro, período e
+exportação CSV. O caminho entregue difere do rascunho da opção D ("`/app/plataforma/auditoria`"): o nome segue o
+padrão de rota do painel, e isso está registrado na divergência N26 de `docs/AUDITORIA.md`.
+
+**3. O item (a) está respondido e o (c) não.** Hoje se sabe, em uma tela, o que o administrador fez pela
+plataforma, em qual empresa ele estava e quando — sem abrir a auditoria tenant por tenant. Já o **aviso ao dono
+da empresa quando o administrador entra** não foi entregue como notificação em tempo de entrada: o que existe é o
+painel permanente na Auditoria da empresa ("O que esta trilha não mostra"), que diz que ações de plataforma têm
+trilha própria e reservada. Avisar o dono no momento do acesso é escolha de produto e de contrato (item A e a
+pergunta abaixo), não correção técnica, e continua com o dono.
+
+**4. O item (b) morreu por construção, não por convenção.** A guarda estrutural
+`apps/api/test/isolamento-rotas.test.ts` (regras 8 e 9) exige que todo evento de plataforma declare o escopo e
+que a lista de arquivos que carimbam plataforma seja exatamente a lista dos módulos de plataforma — um módulo de
+tenant que tentar se carimbar como plataforma quebra o teste, assim como uma rota de leitura de auditoria que
+começar a escrever. A leitura de auditoria não gera auditoria (`audit.routes.ts` tem zero blocos `audit({`).
+
+**5. A história não foi reescrita.** No banco de desenvolvimento, 3.705 linhas de entidade de plataforma escritas
+antes da coluna nova seguem com `scope: "tenant"` e empresa dona. Nada foi corrigido em massa: reescrever
+auditoria para melhorar a métrica é o que a trilha existe para impedir. Limitação registrada como N27.
+
+**Medida desta rodada:** a matriz lida do próprio Fastify dá **106** rotas de negócio (método + caminho, sem as
+espelhos de `HEAD` e sem o `OPTIONS *` do CORS), das quais **10** públicas de propósito, **15** de plataforma
+(11 de CMS + 3 de rotinas + a nova leitura da trilha) e **81** de empresa; **0** rotas registradas sem gate. A
+varredura anônima pelas 95 rotas não públicas devolveu 401 em todas.
+
+**O que a F2 não responde:** se o vínculo `OWNER` automático deve continuar. A opção D deixou a trilha pronta —
+ela é o que torna a opção B uma mudança de procedimento, e não de arquitetura — mas o poder em si continua
+exatamente como a R3 descreveu.

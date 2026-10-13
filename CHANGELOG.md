@@ -1,9 +1,40 @@
-# Changelog
-
-Todas as mudanças notáveis deste projeto, em português brasileiro.
-Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/), ordem mais novo primeiro.
-
 ## [Não lançado]
+
+### A auditoria da plataforma deixou de morar no log do cliente (2026-10-13)
+
+- **A matriz de rotas passou a ser lida do próprio Fastify.** `apps/api/test/isolamento-rotas.test.ts` (9 regras)
+  coleta as rotas pelo gancho `onRoute` antes do `ready()` e confere a contagem contra os arquivos de rota:
+  **106** rotas de negócio (158 eventos, contando os 51 `HEAD` que o Fastify 5 espelha de cada `GET` e o
+  `OPTIONS *` do CORS), **10** públicas declaradas uma a uma, **15** de plataforma, **81** de empresa e **0**
+  sem gate. A varredura anônima bate sem token nas **96** rotas não públicas e exige 401 em todas — porta nova
+  que alguém marcar como `config.public` fora da lista derruba o teste.
+- **N14 fechado por construção.** Evento de plataforma não consegue mais nascer com empresa dona: `AuditLog.scope`
+  (`tenant` por padrão, `platform`) decide a trilha, e `lib/audit.ts:33-41` anula o `companyId` de todo evento
+  marcado como plataforma, movendo a empresa da sessão para `metadata.empresaDaSessao` — origem, não posse. As 8
+  escritas de plataforma (5 em `cms.service.ts`, 1 em `cms.routes.ts`, 2 em `cron.routes.ts`) carregam o escopo, e
+  o guarda estrutural não deixa módulo de tenant carimbar plataforma nem a leitura de auditoria gerar auditoria.
+- **A trilha da plataforma ganhou leitura e tela.** `GET /api/audit/plataforma` exige `assertPlatformAdmin`
+  conferido no banco a cada requisição, filtra por escopo e nunca devolve `companyId` — devolve o **nome** da
+  empresa de origem, com "empresa removida" quando o vínculo sumiu. `/app/auditoria-plataforma` (menu "Auditoria
+  da plataforma", visível só com `user.platform === true`) traz Ação · Entidade · Quem · Origem da sessão · IP ·
+  Quando, filtro por entidade, período, busca e CSV. Sem o papel, a tela diz "Área reservada da plataforma" e
+  nenhuma chamada de rede sai do navegador.
+- **A Auditoria da empresa passou a explicar o que ela não mostra.** Painel permanente entre o cabeçalho e as abas,
+  com atalho para a outra trilha só para quem tem o papel, e nove rótulos novos em `lib/auditLabels.ts`
+  ("cms.config.updated" → "Configuração da vitrine publicada", "cron.job.run" → "Rotina agendada executada") para
+  a tela falar a língua do negócio em vez do código interno.
+- **Nada foi reescrito na história.** A migração é aditiva: as 3.705 linhas de entidade de plataforma anteriores à
+  coluna seguem onde sempre estiveram, e a limitação está registrada como N27 em `docs/AUDITORIA.md`. O poder do
+  administrador também não mudou — é a opção D do G8, que entrega a prova técnica e deixa a decisão A/B/C com o
+  dono (`docs/decisoes/G8-administrador-da-plataforma.md` ganhou a seção "O que mudou desde a R3", e o desenho está
+  em `docs/adr/0007-escopo-da-auditoria.md`).
+- **Prova vermelha, mutação e navegador.** O vermelho veio antes da correção, em `cms.test.ts` e `cron.test.ts`, que
+  liam a trilha pelo `companyId` do tenant; os casos foram reescritos para o contrato novo e ganharam `length > 1`
+  para o guarda não passar em branco. Mutar o `audit()` para respeitar o `companyId` recebido devolve 5 falhas.
+  Verde da rodada: API **35 arquivos / 291 casos** (com o teste comportamental novo
+  `auditoria-da-plataforma.test.ts`, 6 casos), web **7 arquivos / 46 casos**, typecheck e build limpos, e
+  `tools/verify-auditoria-plataforma.cjs` com **29 verificações / 0 falhas** devolvendo o banco ao estado anterior.
+  Nenhum print desta prova vai para o repositório: a trilha mostra nomes reais do banco de desenvolvimento.
 
 ### O administrador da plataforma de produção ganhou porta própria, e ela não abre sozinha (2026-10-12)
 

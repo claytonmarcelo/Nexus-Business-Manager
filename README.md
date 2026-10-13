@@ -119,7 +119,9 @@ servidor: não é a tela que decide o que a pessoa pode ver.
 - **Conta fechada conferível**: total de venda e de compra é soma feita no servidor, nunca confiada ao
   navegador, e a exportação CSV entrega a mesma coleção que a listagem mostra
 - **Trilha de auditoria**: cada escrita relevante grava autor, ação, entidade e empresa, e a tela de
-  Auditoria é a leitura dessa trilha — inclusive com as alterações sensíveis marcadas
+  Auditoria é a leitura dessa trilha — inclusive com as alterações sensíveis marcadas. O que o administrador da
+  plataforma faz pela vitrine, pelos textos legais e pelas rotinas do relógio fica numa trilha à parte, que nenhuma
+  empresa lê
 - **Interface nos dois temas**: noite sofisticada (`#0B0D10`) e dia elegante (`#F5F1EA`), com a escolha
   persistida no navegador, e a paleta extraída da logo oficial
 - **Estados de verdade**: carregando, vazio, sem permissão, erro e nenhum resultado com estes filtros —
@@ -313,6 +315,12 @@ qualquer tela do painel — sem recarregar a página, sem biblioteca de ícones 
 - Abas **Logs do Sistema / Alterações Sensíveis / Exportação**; a marcação de alteração sensível é calculada
   no servidor para a paginação continuar honesta, e `lib/auditLabels.ts` traduz o código interno para a
   linguagem do negócio ("lead.contacted" → "Contato realizado")
+- **Duas trilhas, cada uma com o seu leitor**: a Auditoria da empresa mostra o que aconteceu naquela empresa —
+  inclusive quando o administrador global agiu como dono dela — e um painel permanente diz que as ações da
+  plataforma têm trilha própria. `/app/auditoria-plataforma` é essa trilha: atravessa tenants, existe só para quem
+  responde pela plataforma, e mostra a empresa de origem da sessão pelo **nome**, nunca por identificador. No banco,
+  um evento de plataforma nasce sem empresa dona por construção (`apps/api/src/lib/audit.ts:33-41`), então nenhuma
+  ação global sobra no log de um cliente
 - **Equipe**: membros por empresa com papel, convite de usuário existente, paginação global e a matriz de
   permissões na aba RBAC
 - **Sessões**: a lista mostra os refresh tokens vivos (não revogados e não expirados) por usuário; encerrar
@@ -437,7 +445,7 @@ se o site está aberto ou em manutenção. A vitrine é única para toda a plata
 | CRM (leads e funil) | ✅ | ✅ 6 rotas | ✅ | no ar |
 | Agenda (janela, recorrência, FullCalendar) | ✅ | ✅ 7 rotas | ✅ | no ar |
 | Painel e relatórios agregados | ✅ | ✅ 8 rotas | ✅ | no ar |
-| Auditoria | ✅ | ✅ | ✅ | no ar |
+| Auditoria (trilha da empresa e trilha da plataforma) | ✅ | ✅ 2 rotas | ✅ 2 telas | no ar: `/app/auditoria` com as três abas de sempre, e `/app/auditoria-plataforma` reservada a quem responde pela plataforma |
 | Usuários e membros de empresa | ✅ | ✅ 6 rotas | ✅ | no ar |
 | Notificações e preferências | ✅ | ✅ 7 rotas | ✅ | no ar: sino no cabeçalho em toda tela do painel e `/app/notificacoes` com abas, filtros por tipo, paginação no servidor e preferências |
 | Configurações da conta e da empresa | ✅ | ✅ 5 rotas | ✅ | no ar: `/app/configuracoes` em quatro abas — conta, cadastro e endereço da empresa, moeda/fuso/idioma, logo, meta de receita e troca de empresa |
@@ -533,7 +541,8 @@ importa só o CSS do AdminLTE) e `sweetalert2` (substituído pelo diálogo de co
                                PasswordInput, ProtectedRoute, ThemeToggle, landing/, cms/,
                                layout/ (AdminShell, NotificationBell)
         pages/                 Landing, Legal, Login, Register, ForgotPassword, Dashboard, Clients,
-                               Products, Sales, Purchases, Finance, CRM, Agenda, Users, Audit, Settings,
+                               Products, Sales, Purchases, Finance, CRM, Agenda, Users, Audit,
+                               PlataformaAuditoria, Settings,
                                Cms, Notifications, Rotinas, erros
   assets/brand/logo/           logo oficial e os recortes usados pelo favicon
   docs/
@@ -541,8 +550,11 @@ importa só o CSS do AdminLTE) e `sweetalert2` (substituído pelo diálogo de co
     ANALISE-LACUNAS.md         lacunas contra o PROMPT MESTRE de 67 seções
     AUDITORIA.md               auditoria comercial: achados por severidade e o que foi feito de cada um
     STATUS-AJUSTES.md          situação de cada tarefa do prompt de mercado, com a prova apontada
-    decisoes/                  G1 a G6 — SMTP, cobrança, fiscal, cadastro aberto, hospedagem e licença
-    adr/                       0001 persistência única · 0002 multiempresa e RBAC · 0003 AdminLTE + design system
+    decisoes/                  G1 a G6 e G8 — SMTP, cobrança, fiscal, cadastro aberto, hospedagem,
+                               licença e o administrador da plataforma
+    adr/                       0001 persistência única · 0002 multiempresa e RBAC · 0003 AdminLTE + design
+                               system · 0004 rodapé único · 0005 semente sem demonstração · 0006 bootstrap do
+                               administrador · 0007 escopo da auditoria
     design/palette.md          paleta oficial extraída da logo
     screenshots/               as capturas desta página
   tools/                       provas de navegador, recaptura de telas e utilitários do repo
@@ -781,7 +793,7 @@ o processo na inicialização com a lista completa na mensagem. O código dessa 
 | Validação | Zod em todas as entradas; categorias e tipos cruzados validados; `pageSize` acima do limite devolve 400 |
 | Tráfego | helmet, CORS restrito por env, rate-limit global 100/min e limites próprios em login (10/min), cadastro e recuperação (5/min) e bypass da manutenção (30/min) |
 | Disponibilidade | modo manutenção fecha a API de negócio com 503 e deixa `/api/health`, `/api/auth`, `/api/public`, `/api/cms` e `/api/notifications` abertos (o sino continua pedindo sessão); quem entra com o token de pulso (comparação em tempo constante) ou o IP permitido |
-| Auditoria | toda escrita relevante grava autor, empresa, ação, entidade, metadados e IP; tela somente leitura; marcação de alteração sensível feita no servidor |
+| Auditoria | toda escrita relevante grava autor, empresa, ação, entidade, metadados e IP; tela somente leitura; marcação de alteração sensível feita no servidor; eventos da plataforma perdem a empresa dona e ganham trilha reservada (`scope` no banco, `docs/adr/0007-escopo-da-auditoria.md`) |
 | Respostas de erro | handler central com códigos coerentes (400/401/403/404/409/429/500) e sem stack em produção |
 | Terceiros | **nenhuma integração inventada**: gateways de pagamento e SMTP têm tabela mas não têm chamada; o canal de e-mail fica guardado e desligado enquanto não houver credencial real |
 
