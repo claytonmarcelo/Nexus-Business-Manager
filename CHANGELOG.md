@@ -1,5 +1,34 @@
 ## [Não lançado]
 
+### O menu lateral passou a só mostrar porta que abre (2026-10-13)
+
+- **Duas linhas riscadas saíram do menu, e a regra virou tipo.** "Ordens de Serviço" e "Gateways & Cobranças"
+  estavam na barra apagados, com etiqueta "em breve" e nenhuma página atrás. Um produto entregue para empresas
+  não pode oferecer corredor sem porta: `NavItem` agora exige `to: string`, então item sem destino não compila
+  mais. Saíram junto o ramo `<span>` do mapa, o estado `.admin-nav-item.is-soon`, a etiqueta
+  `.admin-nav-soon` e as regras de colapso e peek no CSS. A barra ficou em **15 linhas em 6 camadas**, todas
+  link de rota que existe.
+- **Vermelho antes da correção.** `apps/web/src/test/menu-sem-pagina-vazia.test.tsx` (6 casos) foi escrito
+  contra a árvore antiga e falhou: o vocabulário "em breve" ainda estava no arquivo e a barra montada tinha
+  linha sem `<a>`. Verde final: web **8 arquivos / 52 testes**. Cada destino do menu é conferido contra o
+  `<Route>` do `App.tsx`, contra o arquivo da página, contra o `page-title` que ela renderiza e contra um
+  filtro de copy de obra ("em breve", "ainda em construção", "página vazia").
+- **A prova de navegador agora clica em tudo.** `tools/verify-sidebar.cjs` passou de 88 para **102 checagens,
+  0 falhas**: as três asserções de "em breve" viraram três asserções de destino (nenhuma linha sem destino,
+  toda linha é link de rota do painel, a barra não escreve "em breve" em lugar nenhum) e um bloco novo recarrega
+  a 1440×900, confere as quinze linhas e clica uma por uma, exigindo `location.pathname` igual ao href e o título
+  da tela sem página de erro. `tools/verify-cms.cjs` (116) e `tools/verify-parcelamento.cjs` (55) seguem verdes
+  com o menu novo.
+- **A vitrine parou de descrever o menu antigo.** O texto do "Sobre" dizia que as linhas sem módulo apareciam
+  marcadas "em construção" no menu — hoje ele diz que nenhuma dessas telas está no painel, que é o que é
+  verdade. As duas telas de Vendas e Financeiro da galeria saíram para as duas capturas do parcelamento, que
+  mostram as mesmas telas com a barra de hoje, e as famílias ainda antigas estão declaradas na nota da galeria
+  (N29 e N30 em `docs/AUDITORIA.md`).
+- **Uma prova consertada no caminho.** `tools/verify-rotinas.cjs` procurava a trilha do "executar agora" pelo
+  `companyId` da sessão e, desde a F2, evento de plataforma não tem `companyId`: 35/37 viraram **37/37** com a
+  busca pelo escopo e pela janela da corrida (N31). As famílias `21-*`, `22-*` e `23-*` foram recapturadas com a
+  barra nova.
+
 ### O rodapé deixou de repetir o nome do produto e de mostrar versão (2026-10-13)
 
 - **Decisão do dono, aplicada nas três telas de uma vez.** O rótulo "Nexus Business Manager" ao lado do símbolo

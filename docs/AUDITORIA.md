@@ -1311,3 +1311,71 @@ endurecimento antes da F9.
   devolvido ao estado anterior (rotina restaurada, 2 eventos da prova removidos, STAFF de prova apagado). A prova
   não deixa captura no repositório, e o motivo está escrito no cabeçalho do arquivo: a trilha mostra nomes reais
   de empresa do banco de desenvolvimento.
+
+---
+
+## Adenda da execução — F3.1 (menu lateral sem página vazia) encerrada — 2026-10-13
+
+Os dois itens `emBreve` que restavam em `AdminShell.tsx` saíram do menu e o tipo `NavItem` passou a exigir
+`to: string`: linha sem destino não compila mais. Saíram também o ramo `<span>` do mapa, o estado
+`.admin-nav-item.is-soon`, a etiqueta `.admin-nav-soon` e as regras de colapso e peek do CSS. A barra ficou
+com **15 linhas em 6 camadas**, todas link de rota existente. Guarda:
+`apps/web/src/test/menu-sem-pagina-vazia.test.tsx` (6 casos, vermelho primeiro — com as duas linhas ainda na
+árvore, o caso do vocabulário falha e o da barra montada quebra no seletor do item apagado) e
+`tools/verify-sidebar.cjs` reescrita para o contrato novo: **102 checagens, 0 falhas**, clicando as quinze
+linhas uma a uma e conferindo `location.pathname` e o título de cada tela. Nenhuma página nova foi criada:
+construir Ordens de Serviço e Gateways sem o anexo do PROMPT_IDE seria inventar funcionalidade (§1), então a
+F3.2 fica parada pedindo o reanexo.
+
+### N29 — fora do escopo, relatado em vez de corrigido em silêncio: nove ferramentas de captura não acompanham a interface de hoje
+
+Para recapturar o painel inteiro com a barra nova seria preciso rodar `tools/shoot-clientes.cjs`,
+`shoot-products.cjs`, `shoot-sales.cjs`, `shoot-purchases.cjs`, `shoot-financeiro.cjs`, `shoot-crm.cjs`,
+`shoot-modals.cjs`, `shoot-agenda.cjs` e `shoot-tabs.cjs`. Duas param sozinhas: `tools/shoot-sales.cjs:104` e
+`tools/shoot-financeiro.cjs:102` esperam o seletor `.nx-dialog .input`, que não existe mais — o diálogo foi
+refeito e a ferramenta não foi junto. `tools/shoot-tabs.cjs` roda até o fim, mas fecha com **353 checagens e
+10 falhas** (a tabela deste repositório ainda anuncia 447), todas dependentes de dado: a conta com que ela
+entra não tem clientes, produtos, fornecedores nem leads no banco de hoje, e as colunas `.col-acao` /
+`.col-quando` do histórico não são mais as mesmas. Rodá-las agora produziria captura com "Nenhum cliente
+encontrado" no lugar da tela que a família prova — foi exatamente o que aconteceu com as dezoito linhas de
+`18-tabs-*.png` nesta rodada, que voltaram para o estado commitado antes do push (`git restore --source=HEAD`,
+sem operação proibida). Consertar as nove ferramentas é rodada própria, junto do N13.
+
+### N30 — fora do escopo, relatado: 48 arquivos de captura ainda mostram a barra lateral de antes da F3.1
+
+As famílias `07-*`, `10-*`, `11-*`, `12-*`, `13-*`, `14-*`, `15-*`, `17-*` e `18-*` somam 48 PNGs no
+repositório e continuam registrados com as duas linhas apagadas de "Ordens de Serviço" e "Gateways &
+Cobranças" — consequência direta do N29. O que elas provam é a tela do módulo, não o menu, e o README declara
+isso na nota da galeria. As famílias do painel cuja ferramenta roda limpa foram recapturadas nesta rodada
+(`16-*`, `21-*`, `22-*`, `23-*`, `03-*`, `04-*`, `05-*`), e as duas telas de Vendas e Financeiro que estavam na
+galeria saíram dela: entraram no lugar as duas capturas de `tools/verify-parcelamento.cjs`, que mostram as
+mesmas telas com a barra de hoje. Passada completa na F9.
+
+### N31 — corrigido nesta rodada porque a recaptura esbarrou nele: `verify-rotinas.cjs` procurava a trilha de plataforma pelo `companyId` da sessão
+
+A F2 (ADR-0007) mudou onde a trilha da plataforma mora: evento com `scope = platform` perde o `companyId`.
+`tools/verify-rotinas.cjs:330` continuou filtrando por `companyId: empresa.id` e as duas checagens de auditoria
+passaram a devolver zero — a prova fechava 35/37. Lido no banco, o evento está lá e está certo:
+`cron.job.run` de 2026-10-13 com empresa nula e escopo `platform`. A busca passou a ser pelo escopo, limitada à
+janela da corrida, e a prova voltou a fechar **37 checagens, 0 falhas**. O que a F2 não rodou foi esta família
+de prova de navegador — argumento a mais para o `npm run verify` único que a F5 promete.
+
+### N32 — fora do escopo, relatado: o cabeçalho das capturas do painel mudou de empresa porque o `pickMembership` escolhe a primeira empresa ativa que o banco entrega
+
+A casa da vitrine nas capturas de painel era "Nexus Demo". Depois do `admin:criar` da F1.4, o administrador
+da plataforma passou a ter vínculo de `OWNER` nas 37 empresas do banco de desenvolvimento — 33 delas criadas
+por suíte de teste com nome gerado — e `pickMembership` (`auth.service.ts:71-81`), sem empresa pedida, devolve
+a **primeira** ativa na ordem que o banco entrega. O login das provas não pede empresa, então o cabeçalho saiu
+com `Empresa-<marca-de-tempo>`. Não é dado de cliente: é casa de teste criada pela própria suíte. Não foi
+corrigido aqui porque a escolha é do dono entre (a) pedir a empresa de demonstração no login das provas,
+(b) dar à casa demo o vínculo mais antigo do banco de desenvolvimento, ou (c) aceitar o cabeçalho como está.
+Vai para a mesma passada da F9 que fecha o N13.
+
+### O que foi verificado e não é achado
+
+- `tools/verify-cms.cjs` ainda consulta `.admin-nav-item.is-soon` para afirmar que a linha do CMS saiu do
+  menu: com o estado extinto, a consulta devolve lista vazia e a asserção continua valendo pelo motivo certo.
+- `apps/web/src/test/auditoria-duas-trilhas.test.tsx:213` proíbe `emBreve` na linha do menu que ele lê —
+  guarda antiga que o contrato novo só reforça.
+- O filtro `.filter((grupo) => grupo.items.length > 0)` continua no `AdminShell`: sem as linhas apagadas, uma
+  camada cujo acesso for revogado some inteira, em vez de deixar um título órfão.

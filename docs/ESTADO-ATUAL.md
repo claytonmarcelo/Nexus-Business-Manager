@@ -356,7 +356,7 @@ Cinco estados possíveis: **Implementado e testado**, **Implementado sem teste**
 | Upload de arquivo (logo, anexos) | **Não iniciado** | nenhum parser `multipart` na API; `logoUrl` é `VarChar(255)` de URL |
 | SaaS: planos, assinaturas, faturas | **Não iniciado** | sem tabela, sem rota |
 | Backup e restauração | **Não iniciado** | sem código |
-| Ordens de serviço / campo | **Não iniciado** | só a linha "em breve" do menu |
+| Ordens de serviço / campo | **Não iniciado** | sem tabela, sem rota e sem linha no menu desde a F3.1 |
 | CI / quality gate | **Não iniciado** | não existe `.github/` nem script de lint |
 
 ---
@@ -384,10 +384,18 @@ a biblioteca de campos `Fields.tsx`.
 
 O que é apenas visual hoje: (a) o seletor de tema do painel escreve o atributo no
 elemento, mas o AdminLTE 4 olha `data-bs-theme` — divergência registrada como N7
-em `docs/AUDITORIA.md`, à espera de decisão; (b) a linha "Ordens de serviço" do
-menu é rotulada "em breve" e não leva a nada; (c) as abas Gateways e Modelos de
+em `docs/AUDITORIA.md`, à espera de decisão; (b) as abas Gateways e Modelos de
 e-mail não existem como funcionalidade — o que aparece na tela é o que a API
 realmente devolve.
+
+Desde a F3.1 não existe linha de menu apenas visual: o tipo `NavItem` exige
+`to: string`, então linha sem rota não compila. A barra ficou com 15 itens em
+6 camadas, todos link de página que existe, e quem garante isso é
+`apps/web/src/test/menu-sem-pagina-vazia.test.tsx` (6 casos: destino obrigatório,
+vocabulário "em breve" extinto do arquivo, cada destino com `<Route>` e arquivo de
+página com título e sem copy de obra, CSS sem o estado apagado, barra montada só com
+`<a>` com href e o filtro de camada vazia ainda no lugar) mais as 102 checagens de
+`tools/verify-sidebar.cjs`, que clica as quinze linhas uma por uma.
 
 Bundle medido no `npm run build` desta rodada: `index.js` **880,92 kB** (gzip
 262,33 kB) e `index.css` **386,28 kB** (gzip 59,06 kB) num único chunk — o Vite

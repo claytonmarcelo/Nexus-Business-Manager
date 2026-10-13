@@ -46,8 +46,9 @@
 Capturas do sistema rodando (Fastify + Prisma sobre MySQL no backend, React + AdminLTE 4 no frontend),
 todas no quadro de **1440×900**, duas por linha e na mesma escala de exibição. Cada imagem é um link: o
 clique abre o arquivo no tamanho capturado. As seis abaixo são o caminho mais curto pelo produto: a
-vitrine pública, a entrada, o painel com os números da empresa ativa, as vendas, o financeiro e o editor
-que monta a vitrine. O resto das capturas continua no repositório — saiu da galeria, não do disco.
+vitrine pública, a entrada, o painel com os números da empresa ativa, a venda parcelada saindo do
+formulário, o financeiro que a recebe em cotas exatas e o editor que monta a vitrine. O resto das
+capturas continua no repositório — saiu da galeria, não do disco.
 
 Os números que aparecem nas telas saíram do banco local de desenvolvimento no dia das capturas. O `seed`
 cria a empresa `nexus-demo` **vazia** — não há dados de fachada no código; os registros que os indicadores
@@ -59,13 +60,13 @@ contam vieram das provas automatizadas e dos testes de integração, que escreve
 | :--: | :--: |
 | <a href="docs/screenshots/01-landing.png"><img src="docs/screenshots/01-landing.png" alt="Página pública de boas-vindas em tema escuro, com a marca animada no palco, título, subtítulo e o switch de tema" width="360"></a> | <a href="docs/screenshots/02-login.png"><img src="docs/screenshots/02-login.png" alt="Tela de login com e-mail, senha com botão de revelar, lembrar de mim e link de recuperação, em relevo neumórfico no tema escuro" width="360"></a> |
 
-| Painel (Dashboard) | Vendas |
+| Painel (Dashboard) | Venda parcelada, no formulário |
 | :--: | :--: |
-| <a href="docs/screenshots/03-dashboard.png"><img src="docs/screenshots/03-dashboard.png" alt="Painel em tema escuro com os cartões de indicadores contados no banco da empresa ativa, abas de Metas e Alertas" width="360"></a> | <a href="docs/screenshots/11-vendas.png"><img src="docs/screenshots/11-vendas.png" alt="Tela de Vendas com a lista de pedidos, pílulas de situação e as ações de confirmar e cancelar" width="360"></a> |
+| <a href="docs/screenshots/03-dashboard.png"><img src="docs/screenshots/03-dashboard.png" alt="Painel em tema escuro com os cartões de indicadores contados no banco da empresa ativa, abas de Metas e Alertas" width="360"></a> | <a href="docs/screenshots/24-parcelamento-formulario.png"><img src="docs/screenshots/24-parcelamento-formulario.png" alt="Aba Nova Venda em tema escuro: cliente, item com quantidade e preço unitário, o seletor de 3 parcelas com a nota de que a última fecha o centavo, observações e o total de R$ 2.581,00 no rodapé" width="360"></a> |
 
-| Financeiro | Editor da vitrine · tema escuro |
+| Financeiro recebendo as parcelas | Editor da vitrine · tema escuro |
 | :--: | :--: |
-| <a href="docs/screenshots/13-financeiro.png"><img src="docs/screenshots/13-financeiro.png" alt="Tela do Financeiro com os KPIs do mês, lançamentos a pagar e receber e a central de categorias" width="360"></a> | <a href="docs/screenshots/20-cms-conteudo-dark.png"><img src="docs/screenshots/20-cms-conteudo-dark.png" alt="Editor do site público na aba Conteúdo, tema escuro: textos do topo, as sete cores da vitrine com quadrado e hexadecimal, herói, WhatsApp, contato e redes, cada bloco com o seu botão de gravar" width="360"></a> |
+| <a href="docs/screenshots/24-parcelamento-financeiro.png"><img src="docs/screenshots/24-parcelamento-financeiro.png" alt="Aba Contas a Pagar / Receber do Financeiro em tema escuro: os cartões de a receber, a pagar e vencidos, o resumo do mês e as três parcelas da mesma venda com valor, vencimento e situação pendente" width="360"></a> | <a href="docs/screenshots/20-cms-conteudo-dark.png"><img src="docs/screenshots/20-cms-conteudo-dark.png" alt="Editor do site público na aba Conteúdo, tema escuro: textos do topo, as sete cores da vitrine com quadrado e hexadecimal, herói, WhatsApp, contato e redes, cada bloco com o seu botão de gravar" width="360"></a> |
 
 </div>
 
@@ -80,6 +81,14 @@ conteúdo que a própria prova cadastra é texto de produto — módulo que est�
 repositório, pergunta de quem chega — e ele volta ao padrão da casa no último passo: `01-landing.png` é a
 vitrine com o banco do jeito que ele está hoje, e nenhuma corrida termina deixando cartão de desenvolvedor
 na página de quem chega.
+
+Depois da F3.1, nove famílias de captura ainda mostram a barra lateral de antes — com as duas linhas
+apagadas de "Ordens de Serviço" e "Gateways & Cobranças": `07-*`, `10-*`, `11-*`, `12-*`, `13-*`, `14-*`,
+`15-*`, `17-*` e `18-*`. O que elas provam é a tela do módulo, não o menu, e elas não foram recapturadas
+nesta rodada porque a ferramenta que as produz está desalinhada da interface de hoje. Os dois pontos estão
+escritos em `docs/AUDITORIA.md` (N29 e N30), com a passada completa marcada para a F9 junto do N13. As
+demais famílias do painel (`16-*`, `21-*`, `22-*`, `23-*`, `03-*`, `04-*`, `05-*`) foram recapturadas com a
+barra de 15 linhas.
 
 ---
 
@@ -455,11 +464,12 @@ se o site está aberto ou em manutenção. A vitrine é única para toda a plata
 | Modelos de e-mail | ✅ | 🚧 | 🚧 | tabela `email_templates` criada; SMTP ainda não existe |
 | Rotinas agendadas (cron) | ✅ | ✅ 3 rotas | ✅ | no ar: `/app/rotinas` com as três varreduras do relógio — contas vencidas, estoque baixo e relatório diário —, liga/pausa e "Executar agora" |
 | Gateways e cobranças | ✅ | 🚧 | 🚧 | tabelas com provedores (`MERCADO_PAGO`, `EFI`, `STRIPE`) e ambiente; **nenhuma integração inventada** enquanto não houver credencial real |
-| Ordens de serviço / atendimento em campo | 🚧 | 🚧 | 🚧 | só a linha "em breve" no menu — sem tabela, sem rota, sem botão morto |
+| Ordens de serviço / atendimento em campo | 🚧 | 🚧 | 🚧 | sem tabela, sem rota e sem linha no menu: existe só como linha desta tabela |
 | SaaS: planos, assinaturas e faturas | 🚧 | 🚧 | 🚧 | a caminho |
 | Backup e restauração | 🚧 | 🚧 | 🚧 | a caminho |
 
-Legenda: ✅ existe e é usado · 🚧 falta. Nenhuma linha do menu aponta para rota inexistente.
+Legenda: ✅ existe e é usado · 🚧 falta. Toda linha do menu abre uma página que existe — o que não existe fica
+marcado aqui, não na barra lateral.
 
 ---
 
@@ -846,13 +856,13 @@ capturas desta página como subproduto:
 | Prova | Checagens |
 |---|---|
 | `tools/verify-notificacoes.cjs` | 85 — o sino e a tela de avisos sobre dado fabricado pela própria prova: número conferido com a API, painel com os seis recentes, marcar lida no banco seguindo para o Financeiro, as três abas com badge, paginação medida contra `meta.total` do servidor, filtro por tipo, CRM sem aviso do tipo, marcar todos até o vazio, preferências gravadas, lidas de novo após reload e devolvidas ao padrão, tema claro e os 390px |
-| `tools/verify-cms.cjs` | 115 — o editor `/app/cms` aba por aba: cada gravação conferida no payload público e na vitrine renderizada, item criado/escondido/editado/excluído pelo modal, texto legal saindo do 404 para a página, nota de SEO igual na tela e na API, o site fechado em 503 com mensagem e relógio, o código de pulso gerado e usado, tudo devolvido ao padrão, os dois temas e os 390px |
-| `tools/verify-landing-cms.cjs` | 120 — a vitrine montada pelo banco: texto, a paleta cadastrada vestindo só o tema a que pertence (escuro pinta, claro devolve os tokens ao produto, com o contraste das duas leituras medido), o toque a 6 px do desenho do alternador trocando o tema nos 54×45, o cabeçalho só com marca, tema e acesso, itens, contato, WhatsApp, cookies, SEO, páginas legais, o "Sobre" em duas colunas encostado na linha de 1200px, três larguras sem arrasto e a manutenção de ponta a ponta (contagem, pulso, IP e o código na sessão) |
+| `tools/verify-cms.cjs` | 116 — o editor `/app/cms` aba por aba: cada gravação conferida no payload público e na vitrine renderizada, item criado/escondido/editado/excluído pelo modal, texto legal saindo do 404 para a página, nota de SEO igual na tela e na API, o site fechado em 503 com mensagem e relógio, o código de pulso gerado e usado, tudo devolvido ao padrão, os dois temas e os 390px |
+| `tools/verify-landing-cms.cjs` | 123 — a vitrine montada pelo banco: texto, a paleta cadastrada vestindo só o tema a que pertence (escuro pinta, claro devolve os tokens ao produto, com o contraste das duas leituras medido), o toque a 6 px do desenho do alternador trocando o tema nos 54×45, o cabeçalho só com marca, tema e acesso, itens, contato, WhatsApp, cookies, SEO, páginas legais, o "Sobre" em duas colunas encostado na linha de 1200px, três larguras sem arrasto e a manutenção de ponta a ponta (contagem, pulso, IP e o código na sessão) |
 | `tools/verify-configuracoes.cjs` | 127 — as quatro abas do `/app/configuracoes` gravando de verdade: telefone e CNPJ conferidos na tela e na API, um bloco salvo sem tocar nos outros (agora são sete blocos na aba Empresa, cada um mandando só as chaves que são suas), CEP/UF/cidade, moeda que chega à sessão e ao painel, meta que vira régua, as duas políticas por empresa, o STAFF lendo tudo sem botão de gravar, troca de senha que não despeja a pessoa, os dois temas e os 390px — com empresa e conta devolvidas ao estado de antes |
 | `tools/verify-parcelamento.cjs` | 55 — a venda parcelada de ponta a ponta na tela, sobre uma empresa de prova criada e apagada pela própria volta: o seletor de doze parcelas, o preço digitado "1.290,50" valendo R$ 1.290,50 na linha e no rodapé, nota pendente que não escreve caixa nenhum, confirmar que escreve as três parcelas exatas no financeiro, o cancelamento que esvazia o caixa e devolve o estoque, e a compra recebida em 2× caindo como despesa na categoria Compras |
 | `tools/verify-rotinas.cjs` | 37 — a tela `/app/rotinas` com as três varreduras, agenda traduzida e próxima execução conferidas contra a API; "Executar agora" que grava o aviso no banco e mostra no toast a mensagem da rotina; pausar pelo diálogo de confirmação e retomar; o atendente sem permissão; o tema claro e os 390px — jobs, avisos e usuário de prova devolvidos ao estado de antes |
 | `tools/verify-logout.cjs` | 22 — as cinco portas de saída da sessão, cada uma pelo caminho de verdade: o botão "Sair" do painel, o 401 de uma chamada de negócio sem refresh token em disco (com o aviso de Toastr medido na tela), o logout feito na segunda aba aberta nesta prova, a renovação recusada pelo servidor no reload e — para não confundir as duas coisas — quem abre `/app` sem sessão nenhuma, que continua indo ao login. Junto: o tema claro atravessando entrar e sair, o refresh que sai do disco, o "voltar" do navegador batendo em tela sem painel e nenhum `alert()` no caminho |
-| `tools/verify-sidebar.cjs` | 88 — ordem e tipografia das seis camadas, itens por permissão, modo trilha, peek, linhas "em breve", o cabeçalho sem repetir a marca e o tema claro |
+| `tools/verify-sidebar.cjs` | 102 — ordem e tipografia das seis camadas, itens por permissão, modo trilha, peek e o cabeçalho sem repetir a marca, tudo com o contrato novo da F3.1: nenhuma linha da barra larga está sem destino, toda linha é link de uma rota que existe no painel, a barra não escreve "em breve" em lugar nenhum, e as quinze linhas são clicadas uma a uma com o endereço e o título da tela conferidos depois de cada clique |
 | `tools/verify-acoes-confirm.cjs` | 88 — coluna de ações de nove tabelas, anatomia do diálogo, trava de duplo clique, Esc durante a requisição, tema claro e celular |
 | `tools/shoot-tabs.cjs` | 447 — abas, paginação, respiro medido e legibilidade do histórico em 9 páginas, desktop e celular |
 | `tools/shoot-crm.cjs` | 42 — funil, KPIs, filtros, mudança de estágio, conversão conferida na tela de Clientes e celular sem overflow |
