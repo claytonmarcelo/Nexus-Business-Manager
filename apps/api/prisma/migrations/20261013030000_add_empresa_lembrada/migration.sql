@@ -1,0 +1,17 @@
+-- N32 (decisão D5 do dono, tarefa T2): a conta passa a lembrar a última empresa
+-- em que a pessoa trabalhou. Antes desta coluna o login sem `companyId` chamado
+-- resolvia "qual empresa?" com a primeira empresa ativa na ordem que o MySQL
+-- entrega — o `include` do Prisma não tem `orderBy`, e o índice único
+-- `(user_id, company_id)` devolve os vínculos em ordem de uuid. Para quem tem
+-- uma casa só é invisível; para quem tem três é trocar de empresa a cada login,
+-- e foi assim que o cabeçalho das capturas do painel mudou de casa sozinho.
+--
+-- Sem chave estrangeira de propósito, pelo mesmo motivo da coluna `company_id`
+-- do refresh token: isto é uma preferência, não um vínculo. A empresa pode
+-- adormecer ou ser excluída, e a conta continua entrando — a camada de auth
+-- confere o vínculo ativo antes de usar a lembrança, e sem conferência válida
+-- cai para o vínculo mais antigo. Uma FK aqui barraria a exclusão de uma empresa
+-- por causa de uma memória de sessão.
+--
+-- Reversão: ALTER TABLE `users` DROP COLUMN `last_company_id`;
+ALTER TABLE `users` ADD COLUMN `last_company_id` VARCHAR(36) NULL;

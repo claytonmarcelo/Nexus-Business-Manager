@@ -61,37 +61,73 @@ async function issueTokens(
 }
 
 // O vínculo tal como vem do `include` usado em login/refresh: a empresa inteira
-// acompanha, porque a sessão carrega moeda, fuso e idioma dela.
+// acompanha, porque a sessão carrega moeda, fuso e idioma dela. O `id` e o
+// `createdAt` também servem: são os dois degraus do desempate da N32.
 type VinculoComEmpresa = {
+  id: string;
   companyId: string;
   role: string;
+  createdAt: Date;
   company: { active: boolean; name: string; currency: string; timezone: string; language: string };
 };
 
-function pickMembership(memberships: VinculoComEmpresa[], requestedCompanyId?: string) {
-  if (requestedCompanyId) {
-    const found = memberships.find((m) => m.companyId === requestedCompanyId);
+// N32 (decisão D5): quando ninguém pede empresa, a escolha deixa de ser "a
+// primeira que o banco entrega". O `include` do Prisma não tem `orderBy`, então o
+// MySQL varre o índice único `(user_id, company_id)` e devolve os vínculos em
+// ordem de uuid — que para uma pessoa com três casas significa "qualquer uma", e
+// para as capturas do painel significou trocar de cabeçalho sozinhas. A ordem
+// agora é escrita: vínculo mais antigo, e empate resolvido pelo id do vínculo
+// (comparação por código, que para uuids em minúsculas é a mesma ordem do banco).
+function vinculoMaisAntigo(memberships: VinculoComEmpresa[]): VinculoComEmpresa | undefined {
+  const ativas = memberships.filter((m) => m.company.active);
+  if (ativas.length === 0) return undefined;
+  return ativas.slice().sort((a, b) => {
+    const delta = a.createdAt.getTime() - b.createdAt.getTime();
+    if (delta !== 0) return delta;
+    if (a.id === b.id) return 0;
+    return a.id < b.id ? -1 : 1;
+  })[0];
+}
+
+function pickMembership(
+  memberships: VinculoComEmpresa[],
+  opcoes: { pedida?: string; lembrada?: string | null } = {},
+) {
+  if (opcoes.pedida) {
+    const found = memberships.find((m) => m.companyId === opcoes.pedida);
     if (!found) throw forbidden("Você não pertence a esta empresa");
     if (!found.company.active) throw conflict("Empresa inativa");
     return found;
   }
-  const active = memberships.find((m) => m.company.active);
-  if (!active) throw forbidden("Nenhuma empresa ativa vinculada ao usuário");
-  return active;
+  // A casa que a pessoa escolheu por último em `switch-company` volta primeiro:
+  // é a resposta para "onde eu estava trabalhando". Se o vínculo caiu ou a casa
+  // adormeceu, a lembrança não segura ninguém do lado errado de uma empresa morta
+  // — cai para a regra determinística abaixo, sem avisar e sem derrubar a sessão.
+  const lembrada = opcoes.lembrada
+    ? memberships.find((m) => m.companyId === opcoes.lembrada && m.company.active)
+    : undefined;
+  if (lembrada) return lembrada;
+  const padrao = vinculoMaisAntigo(memberships);
+  if (!padrao) throw forbidden("Nenhuma empresa ativa vinculada ao usuário");
+  return padrao;
 }
 
 // A4: a renovação devolve a empresa em que o token de refresh foi emitido. Se o
 // vínculo com ela caiu ou a empresa adormeceu enquanto o token estava na
 // carteira da pessoa, ela não é derrubada no meio do trabalho nem deixada
-// gravando na empresa errada em silêncio: volta para a primeira empresa ainda
-// ativa. Sem empresa ativa nenhuma, o `pickMembership` responde 403 e o app
-// manda fazer login de novo. Token antigo (sem empresa gravada) mantém o
-// comportamento histórico de escolher a primeira ativa.
-function renovacaoDaEmpresa(memberships: VinculoComEmpresa[], companyId: string | null) {
-  if (!companyId) return pickMembership(memberships);
+// gravando na empresa errada em silêncio: volta para a casa lembrada da conta,
+// e sem lembrança para o vínculo mais ativo ainda vivo. Sem empresa ativa
+// nenhuma, o `pickMembership` responde 403 e o app manda fazer login de novo.
+// Token antigo (sem empresa gravada) usa direto a lembrança da conta.
+function renovacaoDaEmpresa(
+  memberships: VinculoComEmpresa[],
+  companyId: string | null,
+  lembrada?: string | null,
+) {
+  if (!companyId) return pickMembership(memberships, { lembrada });
   const daquelaEmpresa = memberships.find((m) => m.companyId === companyId);
   if (daquelaEmpresa?.company.active) return daquelaEmpresa;
-  return pickMembership(memberships);
+  return pickMembership(memberships, { lembrada });
 }
 
 export async function login(
@@ -120,7 +156,10 @@ export async function login(
     throw forbidden("Usuário sem vínculo com empresa");
   }
 
-  const membership = pickMembership(user.memberships, requestedCompanyId);
+  const membership = pickMembership(user.memberships, {
+    pedida: requestedCompanyId,
+    lembrada: user.lastCompanyId,
+  });
   const tokens = await issueTokens(app, user.id, membership.companyId, membership.role, ip);
   await audit({ userId: user.id, companyId: membership.companyId, action: "auth.login", entity: "user", entityId: user.id, ip });
 
@@ -162,7 +201,7 @@ export async function refresh(
   }
   if (record.revokedAt) throw unauthorized("Sessão expirada");
   if (!record.user.active) throw forbidden("Usuário inativo");
-  const membership = renovacaoDaEmpresa(record.user.memberships, record.companyId);
+  const membership = renovacaoDaEmpresa(record.user.memberships, record.companyId, record.user.lastCompanyId);
 
   // Rotação: revoga o token usado antes de emitir um novo — usado E revogado,
   // para que a reapresentação dele seja reconhecível como reuso.
@@ -202,6 +241,12 @@ export async function switchCompany(
   });
   if (!membership) throw forbidden("Você não pertence a esta empresa");
   if (!membership.company.active) throw conflict("Empresa inativa");
+  // N32 (decisão D5): a escolha vira memória da conta, não só da aba. Sem esta
+  // linha, quem trocava para a B e fechava o navegador voltava no login
+  // seguinte para a casa que o índice do banco quisesse — a troca durava o
+  // tempo de uma sessão. Grava antes de emitir, para o token novo nunca nascer
+  // de uma escolha que o banco ainda não conhece.
+  await prisma.user.update({ where: { id: userId }, data: { lastCompanyId: companyId } });
   return issueTokens(app, userId, companyId, membership.role, ip);
 }
 

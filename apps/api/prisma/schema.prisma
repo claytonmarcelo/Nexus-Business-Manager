@@ -35,6 +35,14 @@ model User {
   passwordHash   String               @map("password_hash")
   active         Boolean              @default(true)
   platformRole   PlatformRole?        @map("platform_role")
+  // N32 (decisão D5): a última empresa que a pessoa escolheu em `switch-company`.
+  // Sem ela, o login sem empresa pedida não tinha resposta determinística: a
+  // escolha caía na primeira empresa ativa na ordem que o índice do banco
+  // entrega, e quem tem mais de uma casa acordava numa diferente a cada login.
+  // Nullable e sem chave estrangeira de propósito: é preferência, não vínculo.
+  // A casa pode ser excluída ou adormecer, e a conta continua entrando — a
+  // camada de auth confere o vínculo ativo antes de usar a lembrança.
+  lastCompanyId  String?              @map("last_company_id") @db.VarChar(36)
   createdAt      DateTime             @default(now()) @map("created_at")
   updatedAt      DateTime             @updatedAt @map("updated_at")
   memberships    CompanyUser[]
