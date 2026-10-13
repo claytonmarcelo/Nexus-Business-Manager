@@ -30,7 +30,12 @@ const FORMADO_DOMINIO_PESSOAL = /@gmail\.com/i;
 // das chaves mora num vetor e as aspas do padrão saem de String.fromCharCode,
 // porque uma linha que escrevesse o literal
 // seria a primeira violação capturada pela própria varredura.
-const CHAVES_DE_CREDENCIAL = ["SEED_ADMIN_PASSWORD", "SEED_DEV_PASSWORD", "NEXUS_CAPTURA_SENHA"];
+const CHAVES_DE_CREDENCIAL = [
+  "SEED_ADMIN_PASSWORD",
+  "SEED_DEV_PASSWORD",
+  "NEXUS_CAPTURA_SENHA",
+  "ADMIN_CRIAR_SENHA",
+];
 const ASPAS = String.fromCharCode(34, 39, 96);
 const LITERAL_APOS_CHAVE = new RegExp(
   `(${CHAVES_DE_CREDENCIAL.join("|")})[^A-Za-z0-9_]{0,3}[:=]{1,2}\\s*[${ASPAS}][^${ASPAS}\\s]{4,}[${ASPAS}]`,

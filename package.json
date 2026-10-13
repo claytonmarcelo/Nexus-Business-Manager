@@ -22,7 +22,8 @@
     "test:web": "npm run test --workspace @nexus/web",
     "test:coverage": "npm run test:coverage --workspace @nexus/api",
     "db:migrate": "npm run prisma:migrate --workspace @nexus/api",
-    "db:seed": "npm run prisma:seed --workspace @nexus/api"
+    "db:seed": "npm run prisma:seed --workspace @nexus/api",
+    "admin:criar": "npm run admin:criar --workspace @nexus/api"
   },
   "devDependencies": {
     "puppeteer-core": "^25.13.0"

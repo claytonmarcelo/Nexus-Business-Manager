@@ -1181,3 +1181,39 @@ Tests  1 failed | 3 passed (4)
   novo e o ADR-0005), 290 de texto — BOM 0, CRLF 0, sem quebra final 0, e 0 ocorrências de alfabeto não latino
   no fonte novo, no teste, no ADR, nas mensagens de commit e no patch `origin/main..HEAD`.
 
+### F1.4 encerrada: o administrador da produção ganhou porta própria, e ela não abre sozinha — 2026-10-12
+
+- **N24 — sem a régua de ambiente, o bootstrap virou chave-mestra do banco.** O vermelho desta fase não foi
+  escrito de propósito para perder: a primeira versão do script é a que qualquer um escreveria ("só cria o
+  administrador se ele não existir", um `upsert` com `passwordHash` vindo do ambiente). Chamada pelo teste com
+  `{ NODE_ENV: "production", SUPER_ADMIN_EMAIL: ... }` e **sem** `ADMIN_CRIAR_SENHA`, ela não recusou nada —
+  resolveu o `promise` e devolveu `{ acao: 'upsert', email: 'administrador@exemplo.test', empresasComoOwner: 37 }`:
+  criou o usuário com hash de senha vazia, deu-lhe `platformRole SUPER_ADMIN` e `OWNER` das 37 empresas do banco
+  do desenvolvedor. Uma senha ausente virou credencial válida, e o script que deveria instalar um administrador
+  instalou uma porta. A suíte inteira dessa versão ingênua deu `15 failed (15)`. O desenho correto ficou em
+  `docs/adr/0006-bootstrap-do-administrador-da-plataforma.md`: recusa de ambiente **antes** da primeira consulta,
+  régua de acesso na senha, e três consentimentos escritos porque reescrever credencial, promover conta alheia e
+  reativar acesso são três efeitos diferentes.
+- **N25 — fora do escopo, relatado em vez de corrigido em silêncio:** a "regra definitiva de acesso" do dono
+  (mínimo 8, uma maiúscula, um especial) está implementada em `passwordPolicy.ts` como
+  `length >= 8 && length <= 128 && /[A-Z]/ && /[^A-Za-z0-9]/`. O último teste aceita **qualquer** caractere
+  não alfanumérico — underline, hífen e **espaço** contam como especial. Dois dados de teste desta fase caíram
+  por isso: `SEM_CARACTER_ESPECIAL` passa (o underline é especial) e `todasminusculas1!` foi escrito com "L"
+  maiúsculo sem querer. Nada foi alterado: a régua é decisão do dono, e mudar o que conta como especial agora
+  quebraria senhas já aceitas em desenvolvimento. Se a intenção for exigir pontuação de verdade (ou excluir
+  espaço), é linha nova em `docs/decisoes/`, não correção silenciosa.
+- **Prova de CLI, medida na máquina com conta fictícia (`bootstrap@exemplo.test`), e desfeita depois:**
+  senha ausente → `Bootstrap recusado — ADMIN_CRIAR_SENHA não está definida — ...`, código de saída `1`;
+  senha `fraca` → `... não atende à regra de acesso do projeto — A senha deve ter no mínimo 8 caracteres,
+  incluindo uma letra maiúscula e um caractere especial`, código `1`; senha forte → `acao: 'criar'`,
+  `senha: 'definida agora'`, `empresasComoOwner: 37`, nenhum valor de senha no console. Conferido no banco:
+  `platformRole SUPER_ADMIN`, `active: true`, 37 vínculos `OWNER`, hash `$2a$12$` de 60 caracteres com
+  `compareSync` verdadeiro. Segunda rodada com a mesma senha → `acao: 'confirmar-papel'`,
+  `senha: 'preservada'` e a mesma hash — rodar duas vezes não troca credencial. Rodada apontando o endereço para
+  uma conta de cliente existente → `Bootstrap recusado — já existe uma conta com este endereço e ela não é
+  administradora da plataforma ... declare ADMIN_CRIAR_PROMOVER=1`, e a conta continuou com
+  `platformRole: null`, `active: true`. A conta fictícia foi apagada em seguida com os 37 vínculos; o banco
+  voltou exatamente à medida anterior: **359 usuários, 37 empresas, 41 vínculos**.
+- **A guarda estrutural da F1.3 passou a cobrir a chave nova:** `ADMIN_CRIAR_SENHA` entrou no vetor de chaves de
+  `identificadores-fora-do-codigo.test.ts`, então nenhum arquivo rastreado pode atribuir valor literal a ela — e
+  o placeholder do `.env.example` é fraco de propósito, conferido em teste: copiá-lo não instala conta nenhuma.

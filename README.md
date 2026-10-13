@@ -632,7 +632,8 @@ Comandos:
 ```bash
 npm run db:migrate                              # prisma migrate dev (aplica o que falta)
 npm run prisma:migrate -w @nexus/api -- --name add_foo   # cria uma migration nova
-npm run db:seed                                 # admin global + admin@nexus.local + empresa nexus-demo
+npm run db:seed                                 # desenvolvimento: admin global + admin@nexus.local + empresa nexus-demo
+npm run admin:criar -w @nexus/api               # produção: só o administrador da plataforma, sem demonstração
 npm run prisma:deploy -w @nexus/api             # sem prompt, para ambiente de máquina
 npm run prisma:generate -w @nexus/api           # regera o client depois de mexer no schema
 ```
@@ -658,7 +659,9 @@ cp apps/api/.env.example apps/api/.env
 # SEED_ADMIN_PASSWORD com a senha dele e SEED_DEV_PASSWORD com a senha da conta dev
 
 npm run db:migrate            # aplica as 17 migrations
-npm run db:seed               # admin global + admin@nexus.local + empresa nexus-demo (vazia)
+npm run db:seed               # desenvolvimento: admin global + admin@nexus.local + empresa nexus-demo (vazia)
+# produção não usa o seed para criar o administrador: npm run admin:criar -w @nexus/api
+# (docs/PRODUCAO.md traz a ordem inteira de subida)
 ```
 
 ### Atalhos da raiz
@@ -672,6 +675,7 @@ npm run db:seed               # admin global + admin@nexus.local + empresa nexus
 | `npm run test:coverage` | a mesma suíte medindo a própria cobertura (instruções, ramificações, funções, linhas) |
 | `npm run build` | `tsc` da API + `vite build` do painel |
 | `npm run db:migrate` / `db:seed` | Prisma no workspace da API |
+| `npm run admin:criar` | bootstrap do administrador da plataforma — endereço de `SUPER_ADMIN_EMAIL`, senha de `ADMIN_CRIAR_SENHA`, nada de demonstração |
 
 ### Produção
 
@@ -692,8 +696,19 @@ definido, e nada da demonstração entra num banco de produção — nem a conta
 (`SEED_DEV_ACCOUNT=1`), nem a empresa `nexus-demo` (`SEED_DEMO_COMPANY=1`). As duas escritas são declaradas uma
 a uma porque liberar o seed não equivale a querer vitrine de teste no banco de um cliente; o que sobra em
 produção é o administrador da plataforma e as rotinas. A decisão está em
-`docs/adr/0005-semente-sem-demonstracao-em-producao.md`. Não há `Dockerfile` nem pipeline de CI no repositório —
-estão no roadmap, e as decisões de hospedagem estão em `docs/decisoes/G5-hospedagem-e-backup.md`.
+`docs/adr/0005-semente-sem-demonstracao-em-producao.md`.
+
+O administrador de uma instalação de produção nasce por um caminho próprio, que não precisa de
+`ALLOW_DEV_SEED` e não conhece demonstração nenhuma: `npm run admin:criar -w @nexus/api` lê o endereço de
+`SUPER_ADMIN_EMAIL` e a senha de `ADMIN_CRIAR_SENHA`, as duas do ambiente de quem instala, aplica a regra de
+acesso do projeto e imprime só o que aconteceu — endereço, nome, ação, se a senha foi definida agora ou ficou
+preservada, e quantas empresas ficaram com `OWNER`. Rodar duas vezes não troca a credencial de ninguém:
+reescrever senha de administrador existente, promover uma conta de cliente que por acaso tenha o endereço ou
+reativar uma conta desativada exigem, cada um, o seu consentimento escrito (`ADMIN_CRIAR_RENOVAR_SENHA=1`,
+`ADMIN_CRIAR_PROMOVER=1`, `ADMIN_CRIAR_REATIVAR=1`). A ordem completa de subida está em `docs/PRODUCAO.md` e a
+decisão em `docs/adr/0006-bootstrap-do-administrador-da-plataforma.md`. Não há `Dockerfile` nem pipeline de CI
+no repositório — estão no roadmap (F6 e F8), e as decisões de hospedagem estão em
+`docs/decisoes/G5-hospedagem-e-backup.md`.
 
 ### Contas e acesso
 
@@ -701,7 +716,8 @@ estão no roadmap, e as decisões de hospedagem estão em `docs/decisoes/G5-hosp
   (no `.env` da máquina; sem ele a API não sobe em produção), `OWNER` em todas as empresas,
   protegido contra remoção e rebaixamento no backend e no seed. A senha fica apenas no `CREDENCIAIS.md` da
   sua máquina (arquivo local, ignorado pelo git) e é lida de `SEED_ADMIN_PASSWORD` na hora do seed — nada de
-  credencial no repositório ou no histórico.
+  credencial no repositório ou no histórico. Em produção a conta existe pelo `npm run admin:criar`, que lê a
+  senha de `ADMIN_CRIAR_SENHA` e nunca a imprime.
 - **Conta de desenvolvimento** — `admin@nexus.local`, `OWNER` da empresa `nexus-demo`; é a conta usada pela
   suíte de testes e pelas provas de navegador. A senha não mora no código: vem de `SEED_DEV_PASSWORD`, e o
   seed para com aviso se a variável estiver ausente. Fora de produção ela nasce sempre; em produção só nasce
@@ -737,6 +753,10 @@ processo com a mensagem do caminho exato, em vez de deixar o serviço subir queb
 | `AUTH_EXPOSE_RESET_TOKEN` | `0` | `1` devolve o código de recuperação na resposta — só para desenvolvimento; em produção o valor `1` derruba a subida |
 | `SEED_ADMIN_PASSWORD` | — | senha do administrador global, lida só pelo `seed.ts`, que para com aviso se estiver ausente |
 | `SEED_DEV_PASSWORD` | — | senha da conta de desenvolvimento `admin@nexus.local`; também só no `seed.ts`, e o seed para se ela faltar |
+| `ADMIN_CRIAR_SENHA` | — | senha lida pelo `admin:criar`; sem ela nenhuma conta nasce, o valor nunca sai no console e o placeholder do `.env.example` é fraco de propósito para não instalar nada |
+| `ADMIN_CRIAR_PROMOVER` | `0` | `1` é a decisão escrita de promover ao papel da plataforma uma conta que já existe e não é administradora — a senha é reescrita junto |
+| `ADMIN_CRIAR_RENOVAR_SENHA` | `0` | `1` consente reescrever a senha de um administrador que já existe; sem isso a segunda rodada do script preservou a credencial (medido na CLI) |
+| `ADMIN_CRIAR_REATIVAR` | `0` | `1` consente devolver o acesso a uma conta desativada; sem isso o script recusa com código `1` e não escreve nada |
 | `SEED_DEV_ACCOUNT` | `0` | `1` força a conta de desenvolvimento mesmo em produção (homologação explícita); pede `SEED_DEMO_COMPANY=1` junto |
 | `SEED_DEMO_COMPANY` | `0` | `1` libera a empresa de demonstração `nexus-demo` em produção; fora de produção ela é criada sempre |
 | `ALLOW_DEV_SEED` | `0` | única maneira de o seed rodar em `NODE_ENV=production`; sem ele o seed aborta antes da primeira consulta, e liberá-lo não libera as duas peças acima |
@@ -798,6 +818,7 @@ npm run build              # produção (tsc + vite build)
 | `validador-de-producao.test.ts` | a régua de produção como função pura: segredo abaixo de 32 caracteres, os dois iguais ou com marca de exemplo, CORS de localhost/IP local/coringa, banco `root` sem senha e `AUTH_EXPOSE_RESET_TOKEN=1` cada um recusado; `TRUST_PROXY` aceitando só 0 a 31; e o `env.ts` que derruba o processo em vez de subir quebrado |
 | `seed-seguro.test.ts` | o seed abortando em produção sem `ALLOW_DEV_SEED` sem escrever usuário nenhum, o motivo dito inteiro, a ausência de `SEED_ADMIN_PASSWORD` parando qualquer ambiente, e a prova de que nenhuma senha de conta de desenvolvimento mora no código |
 | `garantias-conta-de-demonstracao.test.ts` | o plano de escrita do seed em produção, medido com um cliente que só anota: nem a conta de desenvolvimento nem a `nexus-demo` são pedidas, o administrador da plataforma e as rotinas continuam, a conta dev sem casa de demonstração é recusa, nenhuma senha sai no log, e a recusa sem `ALLOW_DEV_SEED` não escreve usuário nem empresa no banco real |
+| `administrador-da-plataforma.test.ts` | o bootstrap do administrador de produção recusando antes da primeira consulta quando falta o endereço ou a senha, a senha fraca barrada pela regra de acesso, o administrador que já existe tendo o papel confirmado com a senha preservada, a conta de cliente que não é promovida sem consentimento escrito, a conta desativada que não volta sozinha, o `OWNER` dado a toda empresa que já existe sem criar empresa nenhuma, nenhum segredo no log e a recusa medida no banco real |
 | `estoque-politica.test.ts` | a saída barrada enquanto a empresa não autorizou, o negativo visível depois de ligar a chave, e a política lida por empresa nas três portas de saída |
 | `fuso-dia.test.ts` | meia-noite de São Paulo, Tóquio e Calcutá calculadas à mão, borda de calendário contra borda de instante, série diária e contas vencidas no dia da empresa, e o fuso quebrado que não derruba painel nem sino |
 | `dinheiro-decimal.test.ts` | meio centavo que sobe na base 10, a armadilha do `round` do decimal embutido no Prisma, 2026 parcelas de R$ 0,10 fechando em 20 260 centavos, a porta nos três formatos de digitação e a invariante total = soma das linhas em nota real |

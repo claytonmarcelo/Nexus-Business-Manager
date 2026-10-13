@@ -5,6 +5,34 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/), 
 
 ## [Não lançado]
 
+### O administrador da plataforma de produção ganhou porta própria, e ela não abre sozinha (2026-10-12)
+
+- **`npm run admin:criar -w @nexus/api`.** `apps/api/prisma/administrador-da-plataforma.ts` cria o
+  administrador da plataforma sem passar pela semente: o endereço vem de `SUPER_ADMIN_EMAIL`, a senha de
+  `ADMIN_CRIAR_SENHA`, as duas do ambiente de quem instala, e a conta nasce como `SUPER_ADMIN` com `OWNER` em
+  toda empresa que já existe no banco. Nada do caminho conhece `admin@nexus.local` nem `nexus-demo`.
+- **Senha com a régua do projeto e fora do console.** A mesma `isStrongPassword` que vale para toda senha do
+  sistema barra o valor fraco, o placeholder do `.env.example` é fraco de propósito (copiar a linha não
+  instala conta), e a saída traz só endereço, nome, ação, estado da senha e contagem de empresas — medido na
+  CLI com uma conta fictícia.
+- **Três efeitos, três consentimentos.** Segunda rodada do script sobre um administrador que já existe
+  preservou a senha (`ADMIN_CRIAR_RENOVAR_SENHA=1` é o que troca); conta comum com o mesmo endereço não é
+  promovida sozinha (`ADMIN_CRIAR_PROMOVER=1`, e a senha é reescrita junto porque a plataforma não pode
+  depender de uma credencial que o script não acabou de definir); conta desativada não volta sem
+  `ADMIN_CRIAR_REATIVAR=1`.
+- **Recusa antes da primeira consulta.** `errosDoBootstrap` e `decisaoDoBootstrap` são funções puras, e o
+  banco só é consultado depois: código de saída `1`, o nome da chave que falta na mensagem, nenhum valor
+  impresso. O vermelho medido desta fase foi literal — a versão ingênua do script, chamada sem senha,
+  criou o usuário e virou `OWNER` das 37 empresas do banco do desenvolvedor (achado N24 em
+  `docs/AUDITORIA.md`); a conta fictícia foi desfeita e as contagens voltaram a 359 / 37 / 41.
+- **Prova.** `apps/api/test/administrador-da-plataforma.test.ts` (16 casos) com o cliente que anota o plano
+  de escrita, mais a recusa contada no banco real; `ADMIN_CRIAR_SENHA` entrou na varredura estrutural de
+  `identificadores-fora-do-codigo.test.ts`, que proíbe valor literal atribuído a chave de credencial em
+  arquivo rastreado.
+- **Documentado.** `docs/PRODUCAO.md` nasce com a ordem de subida de produção e a tabela de estados do
+  bootstrap; a decisão está em `docs/adr/0006-bootstrap-do-administrador-da-plataforma.md`; README traz o
+  comando, as quatro chaves e a linha do teste no inventário.
+
 ### A demonstração deixou de caber num banco de produção (2026-10-12)
 
 - **Cada peça da vitrine pede a própria senha de ambiente.** `ALLOW_DEV_SEED=1` passa a liberar apenas a subida
