@@ -15,14 +15,15 @@ const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     "client:*",
     "product:*",
     "sale:*",
+    "service_order:*",
     "supplier:*",
     "purchase:*",
     "finance:*",
     "crm:*",
     "agenda:*",
   ],
-  MANAGER: ["user:read", "company:read", "audit:read", "client:read", "client:write", "product:read", "product:write", "sale:read", "sale:write", "supplier:read", "supplier:write", "purchase:read", "purchase:write", "finance:read", "finance:write", "crm:read", "crm:write", "agenda:read", "agenda:write"],
-  STAFF: ["company:read", "client:read", "product:read", "sale:read", "supplier:read", "purchase:read", "finance:read", "crm:read", "agenda:read"],
+  MANAGER: ["user:read", "company:read", "audit:read", "client:read", "client:write", "product:read", "product:write", "sale:read", "sale:write", "service_order:read", "service_order:write", "supplier:read", "supplier:write", "purchase:read", "purchase:write", "finance:read", "finance:write", "crm:read", "crm:write", "agenda:read", "agenda:write"],
+  STAFF: ["company:read", "client:read", "product:read", "sale:read", "service_order:read", "supplier:read", "purchase:read", "finance:read", "crm:read", "agenda:read"],
 };
 
 export function rolePermissions(role: Role): Permission[] {
@@ -167,6 +168,7 @@ const RECURSOS: { recurso: string; rotulo: string }[] = [
   { recurso: "client", rotulo: "Clientes" },
   { recurso: "product", rotulo: "Produtos e estoque" },
   { recurso: "sale", rotulo: "Vendas" },
+  { recurso: "service_order", rotulo: "Ordens de serviço" },
   { recurso: "supplier", rotulo: "Fornecedores" },
   { recurso: "purchase", rotulo: "Compras" },
   { recurso: "finance", rotulo: "Financeiro" },

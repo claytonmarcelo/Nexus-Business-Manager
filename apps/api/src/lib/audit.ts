@@ -72,6 +72,7 @@ export function sensivelWhere() {
         action: {
           in: [
             "sale.cancelled",
+            "service_order.cancelled",
             "purchase.cancelled",
             "finance.cancelled",
             "finance.paid",

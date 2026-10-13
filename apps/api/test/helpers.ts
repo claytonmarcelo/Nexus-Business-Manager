@@ -80,7 +80,7 @@ export async function cleanup(ids: { userIds?: string[]; companyIds?: string[] }
       );
     }
     const proprias = [
-      "stock_movements", "finance_entries", "agenda_events", "leads", "sales", "purchases",
+      "service_orders", "stock_movements", "finance_entries", "agenda_events", "leads", "sales", "purchases",
       "clients", "products", "product_categories", "suppliers", "finance_categories",
       "notifications", "notification_preferences", "payment_gateways", "company_users",
     ];

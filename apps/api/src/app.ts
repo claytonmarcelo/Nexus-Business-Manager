@@ -13,6 +13,7 @@ import { auditRoutes } from "./modules/audit/audit.routes";
 import { clientsRoutes } from "./modules/clients/clients.routes";
 import { productsRoutes } from "./modules/products/products.routes";
 import { salesRoutes } from "./modules/sales/sales.routes";
+import { serviceOrdersRoutes } from "./modules/service-orders/service-orders.routes";
 import { purchasesRoutes } from "./modules/purchases/purchases.routes";
 import { financeRoutes } from "./modules/finance/finance.routes";
 import { crmRoutes } from "./modules/crm/crm.routes";
@@ -121,6 +122,7 @@ export function buildApp(): FastifyInstance {
   void app.register(clientsRoutes, { prefix: "/api" });
   void app.register(productsRoutes, { prefix: "/api" });
   void app.register(salesRoutes, { prefix: "/api" });
+  void app.register(serviceOrdersRoutes, { prefix: "/api" });
   void app.register(purchasesRoutes, { prefix: "/api" });
   void app.register(financeRoutes, { prefix: "/api" });
   void app.register(crmRoutes, { prefix: "/api" });

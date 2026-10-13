@@ -14,6 +14,22 @@ import { prisma } from "./prisma";
 
 const TENTATIVAS = 3;
 
+/**
+ * Conflito de transação chega ao MySQL por duas portas. O wrapper do Prisma
+ * reconhece o deadlock e devolve P2034/P2037; já um `SELECT ... FOR UPDATE`
+ * escrito à mão morre em P2010, carregando o código nativo do servidor na
+ * mensagem — 1213 (deadlock) ou 1205 (lock wait timeout). Para quem chama as
+ * duas são a mesma situação: a transação foi desfeita por inteira, e a resposta
+ * honesta é tentar de novo. Sem tratar as duas, uma numeração lida em SQL bruto
+ * devolvia 500 ao usuário onde havia apenas duas requisições disputando a mesma
+ * fila.
+ */
+export function eConflitoDeTransacao(e: unknown): boolean {
+  if (!(e instanceof Prisma.PrismaClientKnownRequestError)) return false;
+  if (e.code === "P2034" || e.code === "P2037") return true;
+  return e.code === "P2010" && /\b(?:1213|1205)\b/.test(String(e.message));
+}
+
 export async function transacaoEstoque<T>(
   fn: (tx: Prisma.TransactionClient) => Promise<T>,
 ): Promise<T> {
@@ -21,10 +37,7 @@ export async function transacaoEstoque<T>(
     try {
       return await prisma.$transaction(fn);
     } catch (e) {
-      const deadlock =
-        e instanceof Prisma.PrismaClientKnownRequestError &&
-        (e.code === "P2034" || e.code === "P2037");
-      if (!deadlock || tentativa >= TENTATIVAS) throw e;
+      if (!eConflitoDeTransacao(e) || tentativa >= TENTATIVAS) throw e;
       // Recuo curto e progressivo: dá ao vencedor espaço para commitar antes
       // de a transação derrotada brigar pelo mesmo lock de novo.
       await new Promise((r) => setTimeout(r, 25 * tentativa));

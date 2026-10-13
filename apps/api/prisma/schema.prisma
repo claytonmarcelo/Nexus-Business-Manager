@@ -46,6 +46,12 @@ model User {
   financeEntries FinanceEntry[]
   leads          Lead[]
   agendaEvents   AgendaEvent[]
+  // Ordens de serviço (F3.2 Parte 1): três relações com User porque são três
+  // perguntas diferentes — quem atende, quem abriu o chamado e quem mudou o
+  // status. Uma só relação não responderia nenhuma delas com clareza.
+  serviceOrdersAssigned ServiceOrder[] @relation("ServiceOrderAssigned")
+  serviceOrdersCreated  ServiceOrder[] @relation("ServiceOrderCreated")
+  serviceOrderHistory   ServiceOrderHistory[] @relation("ServiceOrderHistory")
 
   notifications           Notification[]
   notificationPreferences NotificationPreference[]
@@ -108,6 +114,7 @@ model Company {
   notificationPreferences NotificationPreference[]
   notifications           Notification[]
   paymentGateways         PaymentGateway[]
+  serviceOrders           ServiceOrder[]
 
   @@map("companies")
 }
@@ -236,6 +243,7 @@ model Client {
   financeEntries FinanceEntry[]
   leads          Lead[]
   agendaEvents   AgendaEvent[]
+  serviceOrders  ServiceOrder[]
 
   @@unique([companyId, document])
   @@index([companyId, name])
@@ -288,8 +296,9 @@ model Product {
   company       Company          @relation(fields: [companyId], references: [id], onDelete: Cascade)
   category      ProductCategory? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
   movements     StockMovement[]
-  saleItems     SaleItem[]
-  purchaseItems PurchaseItem[]
+  saleItems         SaleItem[]
+  purchaseItems     PurchaseItem[]
+  serviceOrderItems ServiceOrderItem[]
 
   @@unique([companyId, sku])
   @@index([companyId, name])
@@ -717,4 +726,123 @@ model PaymentGateway {
   @@unique([companyId, provider, environment])
   @@index([companyId])
   @@map("payment_gateways")
+}
+
+// ===== Ordens de serviço (F3.2 Parte 1) =====
+//
+// A ordem de serviço é o documento do serviço prestado: o cliente chega com um
+// equipamento com defeito, a empresa abre a ordem, atribui quem vai atender,
+// anota o que descobriu, cobra mão de obra e peças, e só então baixa o estoque.
+// Ela resolve o que a venda não resolve: na venda a mercadoria sai no momento
+// em que a nota é confirmada, mas um conserto vive dias — a peça pode faltar, o
+// cliente pode sumir, e o serviço pode ser cobrado sem que nada tenha saído do
+// depósito. Por isso o estoque da OS baixa na CONCLUSÃO, nunca na abertura, e
+// por isso existe um histórico: quem lê a OS seis meses depois precisa saber quem
+// mudou o quê, e quando.
+//
+// O número é sequencial POR EMPRESA (a OS 0001 da padaria não é a OS 0001 da
+// assistência técnica), e o UNIQUE abaixo é a única coisa que impede duas OS
+// simultâneas de nascerem com o mesmo número — o serviço tenta, e em caso de
+// conflito recomeça a conta numa transação nova.
+
+enum ServiceOrderStatus {
+  OPEN
+  IN_PROGRESS
+  WAITING
+  COMPLETED
+  CANCELLED
+}
+
+enum ServiceOrderPriority {
+  LOW
+  NORMAL
+  HIGH
+  URGENT
+}
+
+enum ServiceOrderItemKind {
+  SERVICE
+  PART
+}
+
+model ServiceOrder {
+  id             String               @id @default(uuid()) @db.VarChar(36)
+  companyId      String               @map("company_id") @db.VarChar(36)
+  // Sequencial por empresa. Não é o id: o id serve para a máquina, o número
+  // serve para o balcão e para a conversa com o cliente.
+  number         Int
+  clientId       String               @map("client_id") @db.VarChar(36)
+  assignedUserId String?              @map("assigned_user_id") @db.VarChar(36)
+  status         ServiceOrderStatus   @default(OPEN)
+  priority       ServiceOrderPriority @default(NORMAL)
+  title          String               @db.VarChar(160)
+  description    String?              @db.Text
+  diagnosis      String?              @db.Text
+  scheduledAt    DateTime?            @map("scheduled_at")
+  startedAt      DateTime?            @map("started_at")
+  completedAt    DateTime?            @map("completed_at")
+  // O desconto é gravado junto da OS, mas o total nunca vem da tela: ele é a
+  // soma das linhas em centavo menos o desconto, calculada no servidor (Fase 3d
+  // — dinheiro anda em Decimal, não em vírgula flutuante).
+  discount       Decimal              @default(0) @db.Decimal(14, 2)
+  total          Decimal              @db.Decimal(14, 2)
+  notes          String?              @db.VarChar(500)
+  createdBy      String?              @map("created_by") @db.VarChar(36)
+  createdAt      DateTime             @default(now()) @map("created_at")
+  updatedAt      DateTime             @updatedAt @map("updated_at")
+  company        Company              @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  // Restrict nos dois lados do cadastro: cliente com ordem de serviço não se
+  // apaga, e peça que já saiu numa OS concluída também não. Histórico é a
+  // memória da empresa — não se apaga memória para liberar um formulário.
+  client         Client               @relation(fields: [clientId], references: [id], onDelete: Restrict)
+  assignedUser   User?                @relation("ServiceOrderAssigned", fields: [assignedUserId], references: [id], onDelete: SetNull)
+  creator        User?                @relation("ServiceOrderCreated", fields: [createdBy], references: [id], onDelete: SetNull)
+  items          ServiceOrderItem[]
+  history        ServiceOrderHistory[]
+
+  @@unique([companyId, number])
+  @@index([companyId, status, createdAt])
+  @@index([companyId, assignedUserId])
+  @@map("service_orders")
+}
+
+// Linha da OS: mão de obra (SERVICE, descrita em texto) ou peça (PART, apontada
+// para o produto). As duas coexistem no mesmo documento porque é assim que o
+// serviço é cobrado no balcão.
+model ServiceOrderItem {
+  id             String               @id @default(uuid()) @db.VarChar(36)
+  serviceOrderId String               @map("service_order_id") @db.VarChar(36)
+  // A linha digitada primeiro é a linha que aparece primeiro no documento e no
+  // impresso. Sem esta coluna o banco devolveria as linhas pela ordem do uuid.
+  lineNumber     Int                  @map("line_number")
+  kind           ServiceOrderItemKind
+  productId      String?              @map("product_id") @db.VarChar(36)
+  description    String?              @db.VarChar(200)
+  quantity       Decimal              @db.Decimal(12, 3)
+  unitPrice      Decimal              @map("unit_price") @db.Decimal(12, 2)
+  lineTotal      Decimal              @map("line_total") @db.Decimal(14, 2)
+  serviceOrder   ServiceOrder         @relation(fields: [serviceOrderId], references: [id], onDelete: Cascade)
+  product        Product?             @relation(fields: [productId], references: [id], onDelete: Restrict)
+
+  @@index([serviceOrderId])
+  @@index([productId])
+  @@map("service_order_items")
+}
+
+// Trilha imutável de mudança de status. Não se edita nem se apaga linha aqui:
+// ela é a prova de quem tomou cada decisão, incluída a de estornar uma OS
+// concluída — que só ADMIN/OWNER fazem.
+model ServiceOrderHistory {
+  id             String               @id @default(uuid()) @db.VarChar(36)
+  serviceOrderId String               @map("service_order_id") @db.VarChar(36)
+  fromStatus     ServiceOrderStatus?  @map("from_status")
+  toStatus       ServiceOrderStatus   @map("to_status")
+  userId         String?              @map("user_id") @db.VarChar(36)
+  note           String?              @db.VarChar(500)
+  createdAt      DateTime             @default(now()) @map("created_at")
+  serviceOrder   ServiceOrder         @relation(fields: [serviceOrderId], references: [id], onDelete: Cascade)
+  user           User?                @relation("ServiceOrderHistory", fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([serviceOrderId, createdAt])
+  @@map("service_order_histories")
 }
