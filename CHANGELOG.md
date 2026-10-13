@@ -1,5 +1,76 @@
 ## [Não lançado]
 
+### A cobrança nasceu no banco, no caixa e na matriz de permissões (2026-10-13)
+
+- **O carnê do balcão virou tela.** Entre o serviço concluído e o dinheiro no caixa não havia documento:
+  quem cobrava usava papel, e o Financeiro só ficava sabendo quando alguém lançava. Entraram a tabela
+  `charges` (migração aditiva `20261013020000_add_cobrancas_manuais`), o recurso `charge` na matriz de
+  permissões, seis rotas de cobrança mais o catálogo e a configuração de gateway, e a tela `/app/cobrancas`
+  com três abas — o carnê, a nova cobrança e os gateways. A barra lateral passou de 16 para **17 linhas**, com
+  `Cobranças` na camada Financeiro, e nenhuma linha nova foi criada para o provedor: gateway é aba do carnê,
+  não página vazia no menu.
+- **Cobrar hoje sem esperar o provedor de amanhã.** O adaptador que existe é o `MANUAL`: a chave PIX é a chave
+  da empresa, o boleto e a transferência saem com as instruções de quem emite, e **quem registra o recebimento
+  é uma pessoa**. MERCADO_PAGO, EFI e STRIPE aparecem no catálogo com `available: false` e o motivo por
+  escrito, e param antes do banco — sem rota de webhook, sem credencial preenchida, sem estado
+  meio-cadastrado. A porta entre a cobrança e o provedor é um arquivo (`charge-adapters.ts`): um provedor novo
+  entra como mais um arquivo, e nenhuma linha do serviço muda. Nada foi inventado: o G2
+  (`docs/decisoes/G2-cobranca-e-assinatura.md`) continua bloqueado por decisão do dono.
+- **Uma receita por cobrança, medida em corrida.** O pagamento é a reivindicação condicional do estado
+  (`updateMany` com o `status` lido no `where`) dentro da mesma transação que escreve o lançamento de receita,
+  e a coluna `finance_entry_id` é `UNIQUE`. Dois cliques no mesmo botão, duas abas, o mesmo pagamento: um
+  lançamento no caixa e um 409 para quem chegou depois — a prova dispara as duas requisições juntas e confere
+  o banco no fim. O lançamento nasce na categoria "Cobranças" por `upsert`, no dia em que a cobrança venceu,
+  com o instante do registro em `paidAt` e o nome de quem recebeu no recibo.
+- **"Vencida" é lida, nunca gravada.** Não existe cron que venda cobrança: a régua é o dia de calendário do
+  fuso da empresa, calculada em cada leitura, e o filtro de vencidas pergunta ao servidor. O `dueDateLabel`
+  chega nu (`AAAA-MM-DD`) para não escolher fuso por conta própria, e a tela converte por recorte de string —
+  porque `new Date("2026-10-20")` em `America/Sao_Paulo` ainda é dia 19, e ninguém aceita ver a própria conta
+  vencer antes do combinado (N40).
+- **O dia do dinheiro é dito por quem recebeu, não presumido pelo servidor.** O anexo da fase (linha 133)
+  manda o diálogo "Marcar como paga" pedir data, forma e observação; a tela pedia forma e observação e o
+  serviço gravava `paidAt = agora` (N52). Entrou o campo `#pg-data` com teto no dia da empresa, o schema aceita
+  `AAAA-MM-DD` e o serviço converte para a meia-noite do fuso da empresa — recusando 400 dia inexistente e dia
+  que ainda não chegou. Retroagir o recebimento não move o vencimento do lançamento: a prova grava um dia antes
+  de hoje e confere `2026-10-12` na cobrança, no caixa e no recibo, com o vencimento parado em `2026-10-16`.
+- **Uma cobrança pendente por venda ou por ordem de serviço.** A trava é sobre a pendência, não sobre o
+  documento: pagar ou cancelar libera a linha seguinte, então o balcão corrige um valor digitado errado sem
+  apagar o histórico da primeira cobrança. Cancelar exige motivo escrito, e `PAID` não cancela — estorno é
+  movimento do caixa e o produto ainda não tem (N46).
+- **O atendente lê o carnê e não escreve nada.** `charge:write` não é do `STAFF`: a prova mede os 403 nas três
+  portas de escrita com a sessão dele, a aba de criação que não aparece, a aba de gateways que ele não vê, o
+  botão de mexer no dinheiro que não existe na lista dele e a palavra "credencial" que não aparece para quem
+  não configura o recebimento.
+- **Vermelho antes, verde depois, nas três camadas.** 24 casos em `apps/api/test/cobrancas.test.ts`
+  (isolamento entre empresas, vínculo de outra empresa recusado, PIX sem chave, corrida de dois pagamentos,
+  cancelamento sem motivo, `paidMethod` diferente da forma emitida, recebimento retroagido e dia futuro), 15 em
+  `apps/web/src/test/cobrancas.test.tsx` e a prova de navegador nova, `tools/verify-cobrancas.cjs`, fechando com
+  **137 verificações e 0 falhas** em duas corridas seguidas: os oito indicadores batidos contra o resumo, o
+  recebimento conferido na linha, no estado e no lançamento que nasceu no caixa, o documento e o recibo com
+  `window.print` interceptado, a tabela que vira cartão em 390 px e o banco devolvido no `finally`.
+- **A prova acusou a si mesma três vezes, e as três eram dela.** O texto agregado do diálogo saiu com espaço
+  entre as letras enquanto a tela estava certa (N42 — a asserção passou a ler o parágrafo do motivo), e a
+  limpeza do campo de busca pelo teclado deixou um caractere no filtro, derrubando a asserção de ordenação
+  (N43 — agora `escrevaEm` com o setter nativo, e a espera de a lista voltar). A terceira não era da prova: o
+  filtro de situação mostrou a lista inteira na tela, e a raiz estava no `carregar()` da Cobranças, que pintava
+  a resposta atrasada de uma busca antiga por cima da busca nova (N51). Reproduzido em jsdom com dois tempos de
+  resposta, corrigido com a sequência da última lista pedida. Também saiu corrigida a coluna "Recebimento", que
+  mostrava a forma combinada mesmo depois de o dinheiro ter entrado por outra (N41) — e o conserto revelou que a
+  API devolvia `paidMethod` sem nenhum teste conferir o campo.
+- **Oito capturas novas, todas de banco de demonstração.** `26-cobrancas-lista`, `-pagamento`, `-documento`,
+  `-gateways`, `-formulario`, `-claro`, `-celular` e `-atendente`, mais as seis da barra lateral (17 linhas,
+  104 checagens) e as seis das ordens de serviço, recapturadas porque o modal de detalhe ganhou o botão
+  "Gerar cobrança" — e a barra das OS passou de 102 checagens com 8 falhas para **103 com 0** quando a contagem
+  de linhas mudou antes de as capturas serem refeitas (N50).
+- **Achados que a rodada deixou abertos, relatados em vez de consertados escondido.** N44: o Financeiro ainda
+  formata coluna de dia com objeto `Date` (`Finance.tsx:40`), a mesma classe de risco do N40, e é outra tela.
+  N45: empresa com receita automática na venda não deve cobrar no papel a mesma venda, sob pena de o lançamento
+  entrar duas vezes. N46: sem pagamento parcial, sem juros e sem estorno. N48: a corrida de cobranças deixava a
+  ordem de serviço de apoio no banco e contaminava a prova vizinha — agora cada prova devolve o banco como o
+  encontrou. N49: o anexo pedia `docs/decisoes/`, e a decisão foi para `docs/adr/0009-...` para não rachar a
+  série existente. N51: a guarda contra resposta atrasada hoje está em Cobranças, Vendas, Compras, Ordens de
+  serviço e Auditoria; Clientes, Produtos, Financeiro, CRM e Usuários seguem sem ela, e a passada é da F5.
+
 ### A ordem de serviço desceu do caderno do balcão para o estoque (2026-10-13)
 
 - **O atendimento ganhou casa.** Entre a nota (Vendas) e o caixa (Financeiro) não havia nada para quem

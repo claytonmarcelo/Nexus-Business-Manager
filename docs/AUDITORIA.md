@@ -1477,3 +1477,162 @@ passada completa das ferramentas de captura na F9, junto do N13.
   number)` continua sendo a palavra final: a tela não escolhe número e não pode repetir.
 - O piso do teste do menu subiu de 15 para 16 linhas e continua piso, não teto: um item a menos por
   permissão revogada é o comportamento que a outra metade do mesmo teste protege.
+
+## Adenda da execução — F3.2 Parte 2 (Cobranças manuais) encerrada — 2026-10-13
+
+A segunda metade do anexo `PROMPT_IDE_ORDENS_E_COBRANCAS.md` foi aberta pelo dono com um "pode seguir" e está
+entregue nas duas pontas. O backend saiu no commit `9f1dd88` (migração aditiva
+`20261013020000_add_cobrancas_manuais`, tabela `charges`, recurso `charge` na matriz de permissões, seis
+rotas de cobrança mais o catálogo e a configuração de gateway, e o adaptador `MANUAL` atrás de uma porta que
+um provedor de mercado implementa sem tocar no serviço), com 22 casos em `apps/api/test/cobrancas.test.ts`. A
+tela sai neste lote: `/app/cobrancas` com três abas — o carnê, a nova cobrança e os gateways —, oito
+indicadores conferidos contra o resumo do servidor, busca, filtros, ordenação e paginação no servidor,
+documento e recibo para imprimir, "Gerar cobrança" dentro da venda e da ordem de serviço, e o menu lateral
+que voltou a ter **17 linhas**. Guarda, já com o que a própria rodada acrescentou: **24 casos** em
+`apps/api/test/cobrancas.test.ts`, **15** em `apps/web/src/test/cobrancas.test.tsx` e
+`tools/verify-cobrancas.cjs` com **137 verificações, 0 falhas** em duas corridas seguidas — o recebimento é
+conferido na linha, no estado e no lançamento que nasceu no caixa; a corrida de dois cliques no mesmo
+pagamento é medida com duas requisições simultâneas e um único lançamento no banco; a sessão de um atendente
+de prova bate nas três portas de escrita e recebe 403; e o banco é devolvido no `finally`. Decisão de produto
+registrada em `docs/adr/0009-cobranca-manual-receita-unica-e-vencida-lida.md`.
+
+### N40 — corrigido nesta rodada porque a prova denunciou: a tabela mostrava o dia nu do servidor
+
+A primeira corrida da tela leu `2026-10-20` na coluna Vencimento. O contrato não está errado — o servidor
+devolve `dueDateLabel` como dia de calendário justamente para não escolher um fuso por conta própria — mas a
+tela também não pode empurrar a decisão para quem lê. A conversão foi feita **sem objeto `Date`**:
+`diaLegivel()` recorta `AAAA-MM-DD` e devolve `DD/MM/AAAA`. O motivo é o mesmo que a Fase 3c ensinou:
+`new Date("2026-10-20")` é meia-noite UTC, e em `America/Sao_Paulo` isso ainda é dia 19 — um carnê que faz a
+própria conta vencer um dia antes do combinado não é exibição, é defeito. A asserção entrou nos dois lados: o
+teste unitário confere a célula da linha, e a prova de navegador compara a tabela com o mesmo recorte que o
+servidor mede.
+
+### N41 — corrigido nesta rodada: a coluna "Recebimento" mentia depois do pagamento
+
+A linha dizia `PIX` — a forma combinada na emissão — mesmo depois de o dinheiro ter entrado em dinheiro, na
+maquininha ou em transferência. É a coluna que o caixa usa para conferir o dia, e ela estava descrevendo a
+intenção de quem emitiu em vez do fato de quem recebeu. `rotuloDoRecebimento()` passou a mostrar
+`paidMethod` quando existe `paidAt`, e a forma da emissão continua no documento impresso, onde as duas
+coisas aparecem separadas: "Forma combinada" e "Recibo de pagamento · Forma".
+
+O conserto expôs uma lacuna do outro lado: a API devolvia `paidMethod` desde o primeiro dia e **nenhum teste
+conferia esse campo** — a resposta estava certa por acaso. O caso de pagamento em
+`apps/api/test/cobrancas.test.ts` agora emite por `BOLETO` e recebe por `DINHEIRO`, e assere as duas formas
+na mesma resposta. Teste vermelho primeiro: antes da correção da tela, a asserção da linha falhou com
+`expected "Dinheiro" / received "PIX"`.
+
+### N42 — armadilha de medição, causa NÃO VERIFICADA: o texto agregado do diálogo saiu com espaço entre letras
+
+Em duas corridas seguidas, a leitura de `document.querySelector('[role="dialog"]').textContent` do documento
+cancelado devolveu o texto com um espaço entre cada caractere (`C o b r a n ç a  # 1 ...`), e a asserção do
+motivo falhou. A mesma frase lida no elemento específico — `.nx-cb-motivo` — saiu limpa nas duas vezes, e uma
+sonda de bancada confirmou que na tela o parágrafo estava lá, com o motivo, um único diálogo aberto e o
+documento inteiro visível. Ou seja: **a página estava certa e a medição é que estava errada**, e o porquê não
+foi determinado — não há explicação verificada para o agregado sair espaçado e o elemento não.
+
+O que mudou foi a régua, não a tela: a asserção passou a ler o parágrafo que carrega o motivo, que é exatamente
+a coisa que se quer provar, e a prova imprime `alvos=`, `motivo=`, `situacao=` e `doc=` na própria linha do
+resultado. Se voltar a falhar, a próxima corrida já chega com o diagnóstico na saída.
+
+### N43 — flaky da própria prova corrigido: limpar a busca pelo teclado deixava um caractere no campo
+
+A asserção de ordenação limpava o campo de busca com `focus()` + `select()` + `Backspace`. Em uma corrida o
+`select()` não pegou o texto inteiro, sobrou um caractere no filtro, a lista chegou ordenada com uma linha só,
+e a prova — certa sobre a tela, errada sobre si mesma — acusou o produto. Agora a limpeza usa
+`escrevaEm(pagina, seletor, "")`, que escreve pelo setter nativo e dispara `input`/`change` (o rastreador do
+React precisa ver o evento), e a prova espera o campo vazio **e** a lista voltar a ter mais de uma linha antes
+de tocar no ordenar. A ordem decrescente passou a ser medida com a saída na linha: `350 > 250 > 180 > 90`.
+
+### N44 — fora do escopo, relatado em vez de corrigido em silêncio: o Financeiro ainda formata dia com objeto `Date`
+
+`fmtData` em `apps/web/src/pages/Finance.tsx:40` faz `new Date(iso).toLocaleDateString("pt-BR")`. É a mesma
+classe de risco do N40: um `YYYY-MM-DD` lido como UTC pode aparecer um dia antes no fuso do Brasil. Não foi
+mexido aqui porque é outra tela, e a regra da casa é reportar achado fora do escopo em vez de consertar por
+trás. Fica como pendência de formatação de data a fechar numa rodada própria do Financeiro.
+
+### N45 — limitação de uso declarada: venda automática + cobrança da mesma venda escrevem a receita duas vezes
+
+Uma empresa com a política `autoFinanceSales` ligada já ganha lançamento de receita quando a venda é fechada.
+Se o balcão criar uma cobrança pendente para essa mesma venda e registrá-la como recebida, entra **um segundo
+lançamento** na categoria "Cobranças". A guarda de pendência única é por documento, não por dinheiro: ela
+impede duas cobranças pendentes para a mesma venda, e não pode impedir o que vem de duas portas diferentes.
+Relatado aqui e no ADR como regra de operação — quem tem receita automática não cobra no papel o que o caixa
+já recebeu — e não consertado em silêncio, porque "qual dos dois é o lançamento verdadeiro" é decisão do dono.
+
+### N46 — o que o carnê de hoje não faz, por decisão e não por descuido
+
+Sem pagamento parcial: o valor recebido é o valor da cobrança, porque meio pagamento deixaria duas verdades no
+mesmo papel. Sem juros, multa ou desconto por atraso: a régua de "vencida" é o calendário, e cobrar mais pelo
+atraso é política que ainda não foi escrita em lugar nenhum. E `PAID` não cancela — o 409 está na porta, porque
+cancelar um recebimento é estorno, e estorno é um movimento do caixa que o produto ainda não tem. As três
+limitações estão escritas na tela onde elas importam (o documento mostra a forma recebida, o rodapé conta o
+que existe) e não dependem de alguém lembrar deste arquivo.
+
+### N47 — consequência prevista: a 17ª linha da barra e as capturas que ficaram uma linha mais velhas
+
+`Cobranças` entrou na camada Financeiro, logo depois de `Financeiro`, e a barra larga passou de 16 para 17
+linhas. `tools/verify-sidebar.cjs` foi atualizado antes da recaptura (contagem, comentário e a lista das
+rotas), rodou com **104 checagens e 0 falhas**, e as seis capturas da barra saíram de novo. As seis capturas
+das ordens de serviço também: o modal de detalhe ganhou o botão "Gerar cobrança", e uma captura que não mostra
+o botão que existe é uma captura de um produto que não existe mais.
+
+### N48 — provas que deixam rastro contaminam a prova vizinha
+
+A corrida de cobranças cria uma ordem de serviço de apoio para provar o "Gerar cobrança" a partir do
+atendimento, e desfazia o rastro apenas no **começo** da corrida seguinte. A prova das ordens de serviço busca
+um cliente pelo nome e espera uma linha; na primeira execução depois das cobranças ela acordou com duas e
+falhou — falha de vizinhança, não do produto. A corrida de cobranças passou a chamar a própria limpeza no
+`finally`, como a vizinha já fazia: cada prova devolve o banco como o encontrou, e a ordem em que elas rodam
+deixa de importar.
+
+### N49 — divergência de caminho entre o anexo e a casa: o ADR foi para `docs/adr/`
+
+O anexo pede o registro da decisão em `docs/decisoes/`. Nessa pasta moram, desde a Fase 4c, as **lacunas
+bloqueadas por decisão do dono** (G1 a G8), numeradas por lacuna e não por data; as decisões de arquitetura
+tomadas por quem escreveu o código estão em `docs/adr/`, na série numerada 0001 a 0008. O ADR da cobrança
+manual é uma decisão de arquitetura — tabela, porta de adaptador, transação de pagamento — e por isso virou
+`docs/adr/0009-...`. A divergência é de caminho, não de conteúdo: o que o anexo queria dizer ("escreva a
+decisão em arquivo, não no commit") foi cumprido, e a série existente foi preservada em vez de rachada.
+
+### N50 — corrigido nesta rodada: os oito indicadores das ordens de serviço eram medidos antes de nascerem
+
+Depois que a prova de cobranças passou a devolver o banco no `finally`, a vizinha das ordens de serviço voltou
+a correr verde — e acordou vermelha em oito cartões: `kpiDaTela["Abertas"]` valia `undefined` contra o número
+certo da API. A tela não está errada: os oito `CartaoKpi` são montados atrás do `sumario ? ... : null`, e a
+tabela não espera por eles. A medição é que chegava cedo — `waitForSelector` na tabela, leitura dos cartões na
+linha seguinte, e o `GET /service-orders/summary` ainda em voo. A prova agora espera os oito cartões existirem
+antes de ler qualquer um, e a espera virou asserção ("os oito cartoes do resumo chegaram antes da leitura"),
+para que a próxima pessoa que encurtar a corrida veja o motivo. Saída: 102 checagens com 8 falhas → **103
+checagens, 0 falhas**. A mesma armadilha estava escrita no comentário do N43; ela só mudou de tela.
+
+### N51 — corrigido nesta rodada: a resposta atrasada de um filtro antigo pintava por cima da lista
+
+A corrida de cobranças falhou uma vez em "o filtro de situacao deixa so pagas" com a lista inteira na tela
+(`Paga | Paga | Pendente | Cancelada`), e passou nas outras quatro. Não foi flaky da medição: a prova limpa o
+filtro de vencimento e escolhe a situação no mesmo `evaluate`, dois pedidos saem juntos, e a rede responde na
+ordem que quiser. `carregar()` em `Cobrancas.tsx` escrevia `setRows` em qualquer resposta que chegasse — o
+pedido da lista cheia, mais lento, chegava por último e apagava o filtro que a pessoa tinha acabado de
+escolher. Vermelho primeiro: o caso novo da tela (`a resposta atrasada de um filtro antigo não pinta por cima
+da tela`) responde a lista cheia em 90 ms e a filtrada em 5 ms, e acusou `expected <td data-rotulo="Número"
+…> to be null` com a linha `#12` de volta. A guarda é um número de pedido em `useRef`: só o mais novo toca
+`rows`, `erro` e o spinner. **O mesmo padrão falta em telas que já existiam.** Medido nesta rodada, na página
+de procura: `Clients.tsx`, `Products.tsx`, `Finance.tsx`, `CRM.tsx` e `Users.tsx` escrevem `setRows(data)` sem
+nenhuma referência a `vivo` ou a número de sequência no arquivo — qualquer um dos pedidos deles pode chegar
+fora de ordem; `Sales.tsx`, `Purchases.tsx`, `OrdensDeServico.tsx` e `Audit.tsx` têm guarda `vivo` em pelo
+menos um dos pedidos, e conferir um por um é trabalho da F5 (robustez do frontend). Não foram mexidas aqui
+porque são fora do escopo desta fase, e a passada nelas fica registrada aqui para não virar caça ao tesouro de
+outra rodada.
+
+### N52 — lacuna de escopo fechada na própria rodada: o modal de recebimento não pedia a data
+
+A linha 133 do anexo manda "Marcar como paga (modal pede **data**, forma e observação)". A tela pedia forma e
+observação, e o serviço gravava `paidAt = new Date()` — o instante em que alguém abriu o sistema, não o dia em
+que o dinheiro entrou. Numa loja que atende sexta e digita segunda, isso empurra receita para o dia errado do
+caixa e do relatório. Fechado com teste vermelho antes (`expected '2026-10-13' to be '2026-10-12'` na API,
+`Unable to find a label with the text of: Data do recebimento` na tela): `paidAt` é dia de calendário opcional
+no `payChargeSchema`; o serviço converte com `meiaNoiteDoDia` no fuso da empresa, recusa com 400 dia que não
+existe no calendário e dia que ainda não chegou, grava o mesmo instante na cobrança e no lançamento, e mantém
+o `dueDate` do lançamento no dia combinado. O campo nasce com o dia da empresa — lido no fuso cadastrado, não
+no relógio do navegador — com esse dia como teto, e o recibo impresso passou a mostrar o **dia** (a hora de um
+retroagido sairia "00:00" e seria lida como relógio quebrado). A prova de navegador mede as três pontas: o
+padrão do campo, o teto dele e o dia que volta do banco.
