@@ -74,7 +74,7 @@ prova vermelha      com o teste escrito antes de qualquer mudança no seed: Test
                     "TypeError: empresaDeDemonstracao is not a function" e
                     "AssertionError: expected [ 'nexus-demo' ] to deeply equal []" — o seed de produção pedia a
                     casa de demonstração. Verde final do arquivo: 9 passed (9)
-codificação         398 arquivos rastreados, 288 de texto: BOM 0, CRLF 0, sem quebra final 0
+codificação         400 arquivos rastreados (398 + os dois novos), 290 de texto: BOM 0, CRLF 0, sem quebra final 0
 caracteres          0 ocorrências de alfabeto não latino no fonte, no teste, no ADR e nas mensagens de commit
                     (guarda permanente test/caracteres-permitidos.test.ts na suíte da API)
 seed real           a recusa de produção continua antes da primeira consulta: contagem de usuários e de

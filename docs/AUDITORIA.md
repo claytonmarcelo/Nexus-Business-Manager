@@ -1177,6 +1177,7 @@ Tests  1 failed | 3 passed (4)
   `32 passed (32) / 260 passed (260)` na API com `6 passed (6) / 39 passed (39)` no web. O teste que injeta um
   cliente que só anota é o que permite provar o plano de escrita sem encostar no banco do desenvolvedor; a
   recusa sem `ALLOW_DEV_SEED` continua medida no banco real, contando usuários e empresas antes e depois.
-- **Codificação medida:** 398 arquivos rastreados, 288 de texto — BOM 0, CRLF 0, sem quebra final 0, e 0
-  ocorrências de alfabeto não latino no fonte novo, no teste, no ADR-0005 e nas mensagens de commit.
+- **Codificação medida, já no estado commitado:** 400 arquivos rastreados (os 398 de antes mais o teste
+  novo e o ADR-0005), 290 de texto — BOM 0, CRLF 0, sem quebra final 0, e 0 ocorrências de alfabeto não latino
+  no fonte novo, no teste, no ADR, nas mensagens de commit e no patch `origin/main..HEAD`.
 
