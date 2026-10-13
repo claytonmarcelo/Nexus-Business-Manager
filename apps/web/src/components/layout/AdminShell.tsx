@@ -4,7 +4,7 @@ import { Logo } from "../Logo";
 import { ThemeToggle } from "../ThemeToggle";
 import { NotificationBell } from "./NotificationBell";
 import { useAuth } from "../../context/AuthContext";
-import { currentYear } from "../../lib/format";
+import { AppFooter } from "./AppFooter";
 
 interface NavItem {
   label: string;
@@ -365,10 +365,7 @@ export function AdminShell() {
           <Outlet />
         </main>
 
-        <footer className="admin-footer">
-          <span>© {currentYear()} Nexus Business Manager</span>
-          <span className="admin-footer-dev">Desenvolvido por Clayton Marcelo</span>
-        </footer>
+        <AppFooter legais={[]} contexto="painel" />
       </div>
     </div>
   );

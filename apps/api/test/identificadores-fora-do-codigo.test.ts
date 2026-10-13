@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { execFileSync } from "node:child_process";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 
 // R2 do prompt de segurança: o endereço pessoal do administrador global e a
@@ -26,7 +26,14 @@ const FORMADO_DOMINIO_PESSOAL = /@gmail\.com/i;
 
 function arquivosRastreados(): string[] {
   const saida = execFileSync("git", ["-C", RAIZ, "ls-files", "-z"], { maxBuffer: 64e6 });
-  return saida.toString("utf8").split("\0").filter(Boolean);
+  // Arquivo que o git ainda lista mas o disco já não tem: é o intervalo entre
+  // apagar um componente e indexar a apagada. O que sumiu do disco não carrega
+  // dado nenhum, e o histórico continua coberto pela varredura de patch.
+  return saida
+    .toString("utf8")
+    .split("\0")
+    .filter(Boolean)
+    .filter((arquivo) => existsSync(resolve(RAIZ, arquivo)));
 }
 
 function textoDe(arquivo: string): string {

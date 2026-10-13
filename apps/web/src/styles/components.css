@@ -567,16 +567,6 @@
 .admin-user-name { font-weight: 700; font-size: 0.88rem; }
 .admin-user-company { color: var(--text-3); font-size: 0.75rem; }
 .admin-content { padding: 1.5rem; flex: 1; }
-.admin-footer {
-  padding: 0.5rem 1.5rem;
-  border-top: 1px solid var(--border);
-  color: var(--text-3);
-  font-size: 0.8rem;
-  display: flex;
-  justify-content: space-between;
-  gap: 1rem;
-  flex-wrap: wrap;
-}
 
 .admin-scrim {
   display: none;
@@ -661,17 +651,54 @@
 }
 .feature-card h3 { font-size: 1rem; margin-bottom: 0.4rem; }
 .feature-card p { color: var(--text-3); font-size: 0.88rem; line-height: 1.55; }
-.landing-footer {
-  padding: 0.6rem clamp(1.25rem, 5vw, 4rem);
-  border-top: 1px solid var(--border);
-  color: var(--text-3);
-  font-size: 0.82rem;
+/* Rodapé único da vitrine e do painel (F1.2). O prefixo nexus- não é preciosismo: o
+   AdminLTE 4, que o projeto importa em main.tsx, já tem um componente .app-footer
+   com fundo branco e padding próprios, e ele pintava uma faixa clara no pé da página.
+   A cor vem só de token, então os dois
+   temas trocam de paleta sem o componente saber. O texto usa --text-2 porque o
+   --text-3 do rodapé antigo não alcançava 4,5:1 em nenhum dos temas — medição
+   registrada em docs/AUDITORIA.md. */
+.nexus-footer {
   display: flex;
   align-items: center;
-  gap: 0.8rem;
   flex-wrap: wrap;
+  gap: 0.45rem 1.1rem;
+  padding: 0.75rem clamp(1.25rem, 5vw, 4rem);
+  border-top: 1px solid var(--border);
+  color: var(--text-2);
+  font-size: 0.8rem;
+  line-height: 1.5;
 }
-.landing-footer-dev { margin-left: auto; }
+.nexus-footer--painel { padding: 0.6rem 1.5rem; }
+.nexus-footer-marca { display: inline-flex; align-items: center; gap: 0.5rem; }
+.nexus-footer-nome { color: var(--text-2); font-weight: 700; letter-spacing: 0.02em; }
+.nexus-footer-versao {
+  padding: 0.1rem 0.5rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface-2);
+  color: var(--text-2);
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+}
+.nexus-footer-direitos { color: var(--text-2); }
+.nexus-footer-legais { display: inline-flex; flex-wrap: wrap; gap: 0.9rem; }
+.nexus-footer-legais a { color: var(--text-2); text-decoration: none; }
+.nexus-footer-legais a:hover,
+.nexus-footer-legais a:focus-visible { color: var(--text); text-decoration: underline; }
+.nexus-footer-direita { display: inline-flex; align-items: center; gap: 1rem; margin-left: auto; }
+.nexus-footer-status { display: inline-flex; align-items: center; gap: 0.45rem; color: var(--text-2); }
+.nexus-footer-status-ponto { width: 7px; height: 7px; border-radius: 999px; background: var(--success); }
+.nexus-footer-status[data-estado="instavel"] .nexus-footer-status-ponto { background: var(--warning); }
+.nexus-footer-autor { color: var(--text-2); text-decoration: none; }
+a.nexus-footer-autor:hover,
+a.nexus-footer-autor:focus-visible { color: var(--text); text-decoration: underline; }
+.nexus-footer a:focus-visible { outline: 2px solid var(--ring); outline-offset: 3px; }
+@media (max-width: 720px) {
+  .nexus-footer { flex-direction: column; align-items: flex-start; gap: 0.4rem; }
+  .nexus-footer-direita { margin-left: 0; flex-wrap: wrap; }
+}
+
 
 /* Login */
 .login-page { position: relative; min-height: 100vh; min-height: 100dvh; display: grid; place-items: center; padding: 1.5rem; }
@@ -772,7 +799,6 @@
   .admin-content { padding: 2rem clamp(2rem, 4vw, 4rem); }
 }
 
-.admin-footer-dev { margin-left: auto; color: var(--text-3); }
 
 /* ===== Telas de autenticacao (Embossed / Neumorphism) ===== */
 .auth-page { position: relative; min-height: 100vh; min-height: 100dvh; display: grid; place-items: center; padding: 1.5rem; }

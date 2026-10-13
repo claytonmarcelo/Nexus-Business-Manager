@@ -20,13 +20,13 @@ válidas como histórico do que já foi comprovado.
 | Tarefa | Situação | Prova |
 |---|---|---|
 | F0. Retomar e publicar os commits da rodada de segurança | FEITO | Portão de avanço direto reaberto por decisão do dono: `git merge origin/main` (commit `772cc77`, sem force, sem rebase, sem reescrever histórico) com o `README.md` da árvore local vencendo o conteúdo — o do GitHub trazia o e-mail pessoal de volta na linha 633. Depois do merge: 917 linhas, zero marca de conflito, nenhuma ocorrência de domínio pessoal. Push `2cfa2e9..772cc77` e prova `git ls-remote origin HEAD` = `772cc77559bf9f21a1373af5fc9a2f7cfb282ecc` = `git rev-parse HEAD`. Com o MySQL religado pelo dono, a suíte volta a ser medida: API 31 arquivos / 250 casos e web 5 / 27, zero falha. || F1.1. Eliminar caracteres não latinos e instalar a guarda permanente | FEITO | Varredura em quatro escopos (284 arquivos de texto, histórico inteiro de mensagens de commit, patch dos commits pendentes, README do `origin/main`): único achado foram 4 ocorrências de U+03A3 em `docs/AUDITORIA.md:462`, `:473` e `:527`, reescritas como "soma das linhas", "soma das parcelas" e `soma(ENTRADAS) − soma(SAIDAS)`. Guarda: `apps/api/test/caracteres-permitidos.test.ts` (4 casos, 35 scripts por propriedade Unicode, varre `--cached --others --exclude-standard` e confere a mensagem do `HEAD`). Vermelho mostrado duas vezes — com o sigma na árvore (`Array(4)`) e com arquivo temporário de prova (`docs/_prova-caractere-proibido.md:3 U+4E00`, apagado em seguida) — e verde final `4 passed (4)`. |
-| F1.2. Rodapé único (`AppFooter` + `brand.ts`) | PENDENTE | O crédito hoje está em `apps/web/src/components/layout/AdminShell.tsx:364` e repetido na vitrine. |
+| F1.2. Rodapé único (`AppFooter` + `brand.ts`) | FEITO | Um só rodapé na vitrine, na página legal e no painel; `LandingFooter.tsx` apagado e o `<footer className="admin-footer">` do `AdminShell` junto. Marca em `apps/web/src/lib/brand.ts`; versão `v0.1.0` injetada no build a partir do `package.json` (conferida no `dist`); ano dinâmico; crédito do dono como texto, com link seguro só quando `urlDoAutor` for preenchida; Termos/Privacidade/LGPD apenas quando publicados; indicador de serviço vindo do `GET /api/health` real. Texto saiu de `--text-3` (4,02:1 / 3,14:1) para `--text-2` (8,64:1 / 5,50:1). Colisão com o `.app-footer` do AdminLTE registrada em N19; guarda R2 endurecido em N20. Prova: 12 casos em `apps/web/src/test/rodape-unico.test.tsx`, vermelho primeiro, e captura em 1440x900 dos dois temas no navegador. |
 | F1.3. Garantias da conta de demonstração | PENDENTE | `test/seed-seguro.test.ts` já cobre parte; falta o pacote da fase. |
 | F1.4. Bootstrap do administrador da plataforma (`admin:criar`) | PENDENTE | Não existe o script na raiz nem em `@nexus/api`. |
 | F2. Matriz de rotas, G8 opção D (N14) e superfície de ataque | PENDENTE | `isolamento-rotas.test.ts` não existe. |
 | F3. Menu sem "em breve" + Ordens de Serviço e Gateways & Cobranças | PENDENTE — e falta anexo | Restam exatamente os dois itens `emBreve` em `AdminShell.tsx:57` e `:65`. O `PROMPT_IDE_ORDENS_E_COBRANCAS.md` não está no contexto desta sessão: pedir reanexo antes de executar a F3.2. |
 | F4. Autenticação reforçada (SMTP, verificação, bloqueio por conta, 2FA) | PENDENTE | — |
-| F5. Robustez do frontend (Problema C, N7, `ErrorBoundary`, `npm run verify`, code splitting) | PENDENTE | Bundle medido novamente nesta rodada: 881,04 kB / 262,35 kB gzip, com o aviso de chunk acima de 500 kB. |
+| F5. Robustez do frontend (Problema C, N7, `ErrorBoundary`, `npm run verify`, code splitting) | PENDENTE | Bundle medido na F1.2: 882,31 kB / 262,77 kB gzip, com o aviso de chunk acima de 500 kB. |
 | F6. Docker, compose com 3306 fechado e `docs/PRODUCAO.md` | PENDENTE | Nenhum `Dockerfile` versionado. |
 | F7. LGPD, `SECURITY.md` e licença (só relatar) | PENDENTE | — |
 | F8. CI, dependabot, `postinstall` do Prisma (N9), clone limpo, `npm audit`, cobertura, lint, galeria (N13) | PENDENTE | `package-lock.json` não está entre os 393 arquivos rastreados — reproduzibilidade de clone depende de resolver isso nesta fase. |
@@ -45,6 +45,21 @@ BOM                 nenhum arquivo com BOM
 CRLF                nenhum arquivo com CRLF
 avanço direto       SIM depois do merge 772cc77 — push 2cfa2e9..772cc77 publicado e conferido no ls-remote
 ```
+
+### Portões medidos na F1.2 (2026-10-12, rodapé único)
+
+```
+npm run typecheck   ok (api + web, sem saída)
+npm run build       ok (882,31 kB / 262,77 kB gzip de JS e 387,27 kB / 59,26 kB de CSS; aviso de chunk >500 kB continua, é trabalho da F5)
+npm test            API 31 arquivos / 250 casos e web 6 / 39 — zero falha, zero skip
+                    (web era 5 / 27 antes da fase; os 12 casos novos são os do rodapé)
+prova vermelha      Failed to resolve import "../components/layout/AppFooter" (antes de o componente existir)
+navegador           vitrine 1440x900 nos dois temas e painel logado pela conta fictícia de captura: texto,
+                    links, fundo transparente e "Serviço operacional" vindo do GET /api/health real
+contraste medido    --text-2: 8,64:1 (noite) e 5,50:1 (dia) sobre --bg; selo sobre --surface-2: 7,00:1 / 5,26:1
+                    --text-3, do rodapé antigo: 4,02:1 / 3,14:1 — reprovado nos dois temas
+```
+
 
 ## Bloco A — segurança e isolamento
 

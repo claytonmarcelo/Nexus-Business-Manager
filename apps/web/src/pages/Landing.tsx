@@ -7,7 +7,7 @@ import { CookieBanner } from "../components/landing/CookieBanner";
 import { FaqAccordion } from "../components/landing/FaqAccordion";
 import { FeatureCard, type CapacidadeView } from "../components/landing/FeatureCard";
 import { Hero } from "../components/landing/Hero";
-import { LandingFooter } from "../components/landing/LandingFooter";
+import { AppFooter } from "../components/layout/AppFooter";
 import { LandingHeader } from "../components/landing/LandingHeader";
 import { LANDING_COPY } from "../components/landing/copy";
 import { Maintenance } from "../components/landing/Maintenance";
@@ -97,7 +97,7 @@ export function Landing() {
             <Skeleton rows={5} />
           )}
         </main>
-        <LandingFooter legais={[]} />
+        <AppFooter legais={[]} />
       </div>
     );
   }
@@ -125,7 +125,7 @@ export function Landing() {
         <FaqAccordion faqs={dado.faqs} />
         <ContactSection contato={dado.contact} social={dado.social} />
       </main>
-      <LandingFooter legais={dado.legais} />
+      <AppFooter legais={dado.legais} contexto="vitrine" />
       <WhatsappWidget whatsapp={dado.whatsapp} />
       <CookieBanner legalPublicado={dado.legais.some((doc) => doc.kind === "PRIVACY" && doc.published)} />
     </div>

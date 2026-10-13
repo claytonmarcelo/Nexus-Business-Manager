@@ -5,6 +5,38 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/), 
 
 ## [Não lançado]
 
+### O rodapé do produto deixou de ser dois: vitrine e painel agora usam um só componente (2026-10-12)
+
+- **Um componente, um arquivo de marca.** `AppFooter` (`apps/web/src/components/layout/AppFooter.tsx`) passou a ser
+  o rodapé da vitrine, da página de documento legal e do painel. `LandingFooter` foi apagado e o
+  `<footer className="admin-footer">` do `AdminShell` saiu de cena junto com as regras CSS dos dois. Nome do
+  produto, autor, crédito e rótulos institucionais moram em `apps/web/src/lib/brand.ts`.
+- **Versão que ninguém digita.** O selo `v0.1.0` vem do `package.json`, injetado no build por `define` em
+  `apps/web/vite.config.ts` (e no `vitest.config.ts`, para o teste ver o mesmo dado). O `dist` gerado foi aberto e
+  conferido: a string da versão está no bundle.
+- **Crédito personalizado, sem link inventado.** "Desenvolvido por Clayton Marcelo" continua no rodapé, como
+  decidiu o dono. Vira âncora apenas quando `urlDoAutor` estiver preenchida — e aí com `target="_blank"` e
+  `rel="noopener noreferrer"`.
+- **Documento legal só aparece publicado.** Termos de uso, Política de privacidade e Adequação à LGPD entram no
+  rodapé quando o CMS diz `published`; documento publicado sem título cai no rótulo institucional do arquivo de
+  marca; nenhum link sai vazio ou com `#`.
+- **Estado do serviço com dado real.** `apps/web/src/lib/statusServico.ts` lê `GET /api/health` e confere campo a
+  campo (`status` em ok/degraded, `db` em up/down). Sem resposta válida, o indicador não existe na tela. Medido no
+  navegador com a API de pé: "Serviço operacional".
+- **Contraste medido, não prometido.** O texto do rodapé saiu de `--text-3` (4,02:1 no escuro e 3,14:1 no claro —
+  reprovado nos dois) para `--text-2` (8,64:1 e 5,50:1). Cor vem só de token, então os dois temas vestem o mesmo
+  componente.
+- **A armadilha que o nome escondia.** O AdminLTE 4 já define `.app-footer` com `background-color:
+  var(--bs-body-bg)`, padding e altura próprios. A primeira captura mostrou uma faixa branca no pé da vitrine — o
+  rodapé do projeto passou a `.nexus-footer`, e a faixa sumiu (fundo medido: `rgba(0, 0, 0, 0)`).
+- **Portões da rodada:** typecheck limpo; build 882,31 kB de JS (262,77 kB gzip) e 387,27 kB de CSS (59,26 kB gzip); API 31 arquivos / 250 casos; web 6
+  arquivos / 39 casos. Os 12 casos novos estão em `apps/web/src/test/rodape-unico.test.tsx`, escritos antes do
+  componente, com o vermelho na tela: `Failed to resolve import "../components/layout/AppFooter"`.
+- **Também nesta rodada:** o guarda `identificadores-fora-do-codigo.test.ts` parou de quebrar diante de arquivo que
+  ainda está no índice do git mas já foi apagado do disco — foram 3 falhas `ENOENT` provocadas pela apagada do
+  `LandingFooter` antes do `git add`. A varredura continua cobrindo tudo o que existe nos dois lugares, e o
+  histórico publicado segue coberto pela varredura de patch.
+
 ### A ponta pública do repositório parou de ter dado sensível: a limpeza da rodada de segurança foi publicada (2026-10-12)
 
 - **O que estava em jogo, medido ref por ref:** o `origin/main` tinha 30 ocorrências em 36 linhas — o e-mail

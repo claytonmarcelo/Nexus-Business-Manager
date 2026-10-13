@@ -35,10 +35,6 @@ export const LANDING_COPY = {
       text: "Interface Premium Gourmet com temas claro e escuro, fluida de smartphones a monitores 5K.",
     },
   ],
-  footer: {
-    rights: "Nexus Business Manager",
-    dev: "Desenvolvido por Clayton Marcelo",
-  },
 } as const;
 
 // A seção "Sobre" é honesta: fala do que está no ar e nomeia o que falta, sem

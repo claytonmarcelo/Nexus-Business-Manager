@@ -1093,3 +1093,40 @@ Tests  1 failed | 3 passed (4)
   justamente como um caractere desses entraria. Símbolos de `Script=Common` (travessão, seta, moeda, º) ficam
   fora de propósito: não são alfabeto. Grego e copta entram.
 
+### F1.2 encerrada: rodapé único, versão lida do pacote e uma colisão de classe com o AdminLTE
+
+- **O que a fase pediu e o que foi entregue.** Um só rodapé para vitrine e painel (`AppFooter`), alimentado por um
+  arquivo de marca (`brand.ts`), com versão lida do `package.json` no build, ano dinâmico, crédito do dono, links
+  legais condicionados à publicação e indicador de estado do serviço só com dado real. Os dois rodapés antigos
+  (`LandingFooter.tsx` e o `<footer className="admin-footer">` do `AdminShell`) saíram de cena, junto com as regras
+  CSS e com a chave `footer` do `copy.ts`, que ficou órfã.
+- **N19 — MÉDIO (estilo, resolvido dentro da própria fase): o AdminLTE 4 já é dono da classe `.app-footer`.**
+  `node_modules/admin-lte/dist/css/adminlte.css:14034` define `.app-footer { padding: 1rem; min-height: 3rem;
+  color: var(--bs-secondary-color); background-color: var(--bs-body-bg); border-top: 1px solid
+  var(--bs-border-color); }`, e o `main.tsx` importa essa folha. O nome escolhido para o rodapé único colidiu: a
+  primeira captura em 1440x900 mostrou uma faixa branca no pé da vitrine, contra o creme `#f5f1ea` do tema dia.
+  Medido no navegador antes da correção: `backgroundColor` resolvido em `rgb(255, 255, 255)` sem nenhuma regra do
+  projeto definindo fundo. Depois da renomeada para `.nexus-footer`: `rgba(0, 0, 0, 0)`, com a cor vindo do
+  `--bg`/`--surface` de cada tema. **Fica a lição de escopo:** antes de batizar classe nova neste projeto, conferir
+  o CSS do AdminLTE — a colisão não quebra nada visualmente óbvio no painel, onde o shell já é do framework.
+- **N20 — BAIXO (ferramenta de teste, resolvido na hora): o guarda R2 não sobrevivia a apagada ainda não
+  indexada.** `apps/api/test/identificadores-fora-do-codigo.test.ts` varre `git ls-files -z` e lê cada arquivo.
+  Apagar `LandingFooter.tsx` sem indexar a apagada deixou o arquivo na lista do índice e ausente no disco: três
+  casos falharam com `ENOENT`. O guarda foi endurecido com o mesmo critério que a F1.1 já usava — filtra por
+  `existsSync` e segue varrendo o que existe; o que saiu do disco não carrega dado nenhum, e o histórico publicado
+  continua coberto pela varredura de patch (`git log -p`). Verde: `6 passed (6)`.
+- **Contraste, medido e não estimado.** Texto do rodapé `--text-2`: 8,64:1 sobre `--bg` e 7,67:1 sobre
+  `--surface` no tema noite; 5,50:1 e 5,84:1 no tema dia. O `--text-3` que estava lá reprova nos dois (4,02:1 e
+  3,14:1). O selo de versão vive sobre `--surface-2`: 7,00:1 no tema noite e 5,26:1 no dia, medidos com a mesma fórmula. O ponto verde/âmbar do indicador de serviço
+  é decorativo (`aria-hidden`), porque o texto acompanha o estado — cor não é a única portadora da informação.
+- **Prova vermelha e verde, na ordem.** Vermelho 1 (antes de qualquer componente): `Failed to resolve import
+  "../components/layout/AppFooter"`. Vermelho 2 (colisão do AdminLTE capturada na prova de navegador): faixa
+  branca no rodapé, `rgb(255, 255, 255)` medido. Verde final: `Test Files 6 passed (6) / Tests 39 passed (39)` no
+  web e `31 passed (31) / 250 passed (250)` na API, com os 12 casos novos cobrindo os dois temas, ano dinâmico,
+  versão igual à do `package.json`, links legais ausentes quando não publicados e presentes quando publicados,
+  crédito como texto sem endereço configurado, link seguro com endereço, e nenhum link vazio.
+- **Prova de navegador (Temp, não publicada):** vitrine em 1440x900 nos dois temas e painel logado pela conta
+  fictícia de captura, conferindo texto, links, fundo transparente e o indicador vindo do `GET /api/health` real
+  (`{"status":"ok","db":"up"}`). Nenhuma imagem nova com dado real entrou no repositório; as capturas publicadas do
+  README são de topo de tela e não mostram rodapé, então não houve recaptura obrigatória.
+

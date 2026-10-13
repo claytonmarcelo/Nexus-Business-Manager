@@ -617,9 +617,9 @@ async function limparItensDeProva(momento) {
     ok("voltando sem imagem, o emblema volta", (await page.$(".landing-logo")) !== null);
 
     console.log("== 9) Documento legal publicado ==");
-    const linkTermos = await page.$('.landing-footer-legais a[href="/legal/termos"]');
+    const linkTermos = await page.$('.nexus-footer-legais a[href="/legal/termos"]');
     ok("rodapé lista o termo publicado", linkTermos !== null);
-    await page.click('.landing-footer-legais a[href="/legal/termos"]');
+    await page.click('.nexus-footer-legais a[href="/legal/termos"]');
     await page.waitForSelector(".landing-legal article", { timeout: 12000 });
     await espera(700);
     const legal = await page.evaluate(() => ({

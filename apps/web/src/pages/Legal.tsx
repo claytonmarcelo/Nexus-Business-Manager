@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { LandingFooter } from "../components/landing/LandingFooter";
+import { AppFooter } from "../components/layout/AppFooter";
 import { LandingHeader } from "../components/landing/LandingHeader";
 import { ErrorState, Skeleton } from "../components/StateView";
 import { extractErrorMessage } from "../lib/api";
@@ -60,7 +60,7 @@ export function Legal() {
           )}
         </article>
       </main>
-      <LandingFooter legais={doc ? [{ kind: doc.kind, title: doc.title, published: true }] : []} />
+      <AppFooter legais={doc ? [{ kind: doc.kind, title: doc.title, published: true }] : []} contexto="vitrine" />
     </div>
   );
 }
