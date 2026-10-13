@@ -459,7 +459,7 @@ A sub-fase 3d fecha o [ALTO] "Dinheiro em `Number()` no JS" da seção E: entre 
 - CRM compara "mudou o valor?" em centavo antes de escrever o registro de alteração do lead. `lib/stock.ts` aceitou o texto de duas casas no campo `custo`, que o Prisma escreve direto em DECIMAL.
 - Decidido e declarado, não mexido: quantidades continuam números (coluna de medida); `cron.handlers.ts:118` (`Number(vendas._sum.total ?? 0)`) e `pipeline()` do CRM (`num(_sum.value)`) são conversões ÚNICAS de um `_sum` já calculado pelo banco na borda do JSON — é o padrão que a regra permite, não um acumulado.
 - Achado fora do escopo, não corrigido aqui: o painel pré-converte o texto do formulário com `parseFloat(valor.replace(",", "."))` em `Sales.tsx`, `Purchases.tsx` e `Finance.tsx` (~12 ocorrências), e o `replace` só troca a primeira vírgula — "1.290,50" vira 1,29 ANTES de sair do navegador, e nenhuma porta da API pode consertar o que chegou mastigado. Precisa de um parse compartilhado (seção 63 do plano proíbe a cópia campo a campo) e a tela de venda vai ser reescrita na 3e de qualquer forma: levado como item da sub-fase 3e.
-- `test/dinheiro-decimal.test.ts` (10): base 10 meio-centavo, armadilha do `round`, 2026×R$0,10 em centavo, percentual/variação/média, porta nos três formatos e recusa de vazio/texto/negativo/teto, e as portas HTTP de produto, venda, compra, fluxo de caixa e meta do Dashboard — com a invariante total = Σ linhas amarrada em nota real.
+- `test/dinheiro-decimal.test.ts` (10): base 10 meio-centavo, armadilha do `round`, 2026×R$0,10 em centavo, percentual/variação/média, porta nos três formatos e recusa de vazio/texto/negativo/teto, e as portas HTTP de produto, venda, compra, fluxo de caixa e meta do Dashboard — com a invariante total = soma das linhas amarrada em nota real.
 
 Pendências declaradas da Fase 3: 3e vínculo venda↔financeiro com parcelamento (e o parse de dinheiro do painel, achado acima), e a recorrência da Agenda no fuso da empresa (3c).
 
@@ -470,7 +470,7 @@ Validação da sub-fase: typecheck da API e do painel limpos, build Vite OK; su�
 A sub-fase 3e fecha os dois últimos [ALTO] da seção E que restavam da Fase 3: "Venda não conversa com financeiro" e "Parcelamento não existe" — a linha que a auditoria escreveu dentro do achado do dinheiro, já resolvido na 3d.
 - `installments` em `sales` e `purchases` (`INTEGER NOT NULL DEFAULT 1`), `auto_finance_sales`/`auto_finance_purchases` em `companies` (`false` nas duas pontas) e `sale_id`/`purchase_id` em `finance_entries` com índice e FK `SET NULL`, na migration `20261011230000_add_documento_vinculo_financeiro` — reversível, com o `-- Revert:` no próprio arquivo, e aplicada sem editar migration anterior.
 - `apps/api/src/lib/installments.ts` (novo) é a casa única: `gerarParcelasDoDocumento` e `removerParcelasDoDocumento` chamados só por vendas e compras. Gera no CONFIRMAR/RECEBER, dentro da MESMA transação que baixou o estoque — não existe nota confirmada com metade do carnê no caixa, e rascunho não inflige receita que não aconteceu.
-- Divisão em centavo com a ÚLTIMA parcela fechando a conta: `dividirCentavos` (novo em `lib/money.ts`). R$ 100,00 em 3 = 33,33 + 33,33 + 33,34, e a igualdade Σ parcelas = total da nota é o que o teste amarra — três valores de 33,3333 truncariam em R$ 99,99 e o cliente cobraria a diferença do caixa.
+- Divisão em centavo com a ÚLTIMA parcela fechando a conta: `dividirCentavos` (novo em `lib/money.ts`). R$ 100,00 em 3 = 33,33 + 33,33 + 33,34, e a igualdade soma das parcelas = total da nota é o que o teste amarra — três valores de 33,3333 truncariam em R$ 99,99 e o cliente cobraria a diferença do caixa.
 - Vencimento é calendário, não soma de trinta dias: `mesesDepoisNoCalendario` (novo em `lib/time.ts`) anda meses a partir do dia da empresa (Fase 3c) e clampa no último dia do mês-alvo. Dia 31 parcela em 28/29 de fevereiro, 31 de março, 30 de abril; `Date.UTC(y, m+3, 31)` inventaria um dia 3 de março.
 - Política por empresa e desligada por padrão nas duas pontas, com as duas chaves separadas porque o hábito é diferente em cada lado; `SET NULL` e não `Cascade` na procedência porque lançamento é escrituração — o pedido sai do sistema, a despesa já paga não sai junto.
 - Cancelar apaga apenas `PENDING` geradas, e a limpeza NÃO é condicionada à política continuar ligada: quem desligou a chave depois de gerar ainda vê o carnê da nota anulada sair do caixa. Parcela paga ou cancelada fica — apagar em silêncio seria o sistema inventando um passado diferente do que aconteceu.
@@ -524,7 +524,7 @@ Abaixo, o que este documento de auditoria precisa registrar como mudado.
   ser produção — agora exige a flag explícita **e** ambiente não-produtivo.
 - **Seção E (integridade).** A3 recebeu as duas provas que faltavam: nota com o mesmo produto em duas linhas
   (6+6 sobre saldo 10 → 400, saldo intocado, zero movimentação, nenhuma venda criada) e a invariante de que o
-  saldo final é exatamente `Σ IN − Σ OUT` do razão. ADJUST fica fora da soma por desenho — é declaração de
+  saldo final é exatamente `soma(ENTRADAS) − soma(SAIDAS)` do razão. ADJUST fica fora da soma por desenho — é declaração de
   inventário, não movimento.
 - **Seção F (testes e codificação).** A10: varredura do repositório inteiro por regex sem a barra invertida
   (`/s+ /d+ /w+ /b`) não achou nenhum outro caso além da linha do CHANGELOG que documenta o defeito original.
@@ -984,3 +984,90 @@ linha, estão em `docs/decisoes/G8-administrador-da-plataforma.md`. Resumo do qu
 - **Divergência do próprio prompt, registrada:** a tabela de blocos diz "Bloco 1 = R1 a R4", e a seção 7 manda
   executar "o Bloco 1 (R1 a R3)" e parar na PARADA 1. Fui pela seção 7, que é a ordem explícita de execução e
   a que define o ponto de parada — a R4 (privacidade do login) ficou de fora desta parada de propósito.
+
+
+---
+
+## Adenda da execução — PROMPT MESTRE: F0 (retomada) e F1.1 (caracteres) encerradas — 2026-10-12
+
+### N16 — CRÍTICO (estado do remoto, não é falha de código): o `origin/main` ainda publica o que a árvore local já não tem
+
+Medido na retomada, comparando ref por ref com o valor lido do `.env` local — nenhum valor foi impresso em
+nenhuma etapa, só arquivo, linha e contagem:
+
+| ref | ocorrências do e-mail pessoal + da senha de desenvolvimento | linhas |
+|---|---|---|
+| `origin/main` (`2cfa2e9`) | 30 | 36 |
+| `HEAD` local (`65e97f5`) | 0 | 0 |
+
+O que está exposto lá e já não existe aqui:
+
+- **E-mail pessoal do administrador global** em 27 arquivos (README, CHANGELOG, `.env.example`, `prisma/seed.ts`,
+  `lib/passwordPolicy.ts`, `test/seed-seguro.test.ts`, `docs/AUDITORIA.md` e 16 ferramentas de `tools/`);
+- **senha de desenvolvimento** em três: `apps/api/.env.example:37`, `apps/api/test/seed-seguro.test.ts:56` e
+  `tools/shoot-clients.cjs:17`;
+- **9 capturas** com dado real (`git diff --name-only HEAD origin/main -- '*.png'` conta nove; ao todo 46
+  arquivos diferem entre os dois refs).
+
+A correção já está commitada localmente (`bedf661` e `ecb3f28`) e é exatamente o que a F0 manda publicar. Ela
+não foi publicada porque o portão de avanço direto falhou — ver N17.
+
+### N17 — BLOQUEIO DE PUBLICAÇÃO: o dono escreveu no GitHub em cima do README antigo
+
+`git fetch origin` nesta retomada trouxe três commits do próprio dono (`7a34167`, `150581f`, `2cfa2e9`, todos
+"Update README.md", 2026-10-12 entre 13:16 e 13:21, só `README.md`). O estado medido:
+
+```
+## main...origin/main [ahead 3, behind 3]
+--- avanço direto? ---
+NÃO
+```
+
+O README que chegou tem 888 linhas; o local, 917. A edição foi feita a partir da versão **anterior** à R2, e por
+isso a linha 633 do README remoto traz de volta o endereço pessoal do administrador — o mesmo que o teste
+`apps/api/test/identificadores-fora-do-codigo.test.ts` proíbe. Nada foi resolvido por conta própria: o item 4 do
+PROMPT MESTRE veda pull, merge, rebase e force quando um portão falha, e a decisão de qual README vale é do dono.
+
+### N18 — NÃO VERIFICADO (ambiente): o MySQL do WAMP parou no meio da fase
+
+O portão `npm test` não pôde ser corrido nesta rodada. A saída medida:
+
+```
+Can't reach database server at `localhost:3306`
+```
+
+Tentativa de subir o serviço por conta própria falhou por permissão do próprio disco do WAMP
+(`mysqld: Can't sync file '.\binlog.index' to disk (OS errno 13 - Permission denied)`), e não há serviço do
+Windows instalado para isso. A suíte da API (30 arquivos / 246 casos) depende do banco real por contrato, então
+o estado dela nesta rodada é **NÃO VERIFICADO — banco parado**, e nada foi dado por aprovado. Typecheck e build
+foram corridos e passaram. O guarda novo da F1.1 não usa banco e foi validado isoladamente.
+
+### F1.1 encerrada: varredura, correção e guarda permanente
+
+- **Varredura** (`apps/api/test/caracteres-permitidos.test.ts`, 4 casos): 284 arquivos de texto — os 283 que o
+  git já acompanha mais o próprio guarda, que ainda não está indexado —, além das mensagens de commit de todo o
+  histórico (`git log --format=%B`), do patch dos três commits pendentes e do `README.md` que está no
+  `origin/main`. Na árvore já corrigida, o resultado é **zero caractere de script não latino** nos quatro
+  escopos; o que a primeira passada achou está no item seguinte.
+- **Único achado**: quatro ocorrências de U+03A3 (sigma grego) em `docs/AUDITORIA.md:462`, `:473` e `:527`
+  (duas), usadas como símbolo de somatória. Reescritas em português: "soma das linhas", "soma das parcelas =
+  total da nota" e `soma(ENTRADAS) − soma(SAIDAS)`. O sentido matemático não mudou; a notação passou a ser
+  texto latino, que é a regra do projeto.
+- **Prova vermelha e verde**, na ordem exigida: com o guarda instalado e a árvore ainda com o sigma, o teste
+  falhou assim —
+
+```
+AssertionError: docs/AUDITORIA.md:462 U+03A3 | docs/AUDITORIA.md:473 U+03A3 | docs/AUDITORIA.md:527 U+03A3 | docs/AUDITORIA.md:527 U+03A3: expected [ Array(4) ] to deeply equal []
+Tests  1 failed | 3 passed (4)
+```
+
+  — depois, com um arquivo temporário criado só para provar o detector (`docs/_prova-caractere-proibido.md`,
+  montado por code point, nunca por literal), a falha foi `docs/_prova-caractere-proibido.md:3 U+4E00`, e o
+  arquivo foi apagado. Verde final: `Test Files 1 passed (1) / Tests 4 passed (4)`.
+- **Como o guarda se mantém honesto**: a lista cobre 35 scripts não latinos e é escrita com propriedades Unicode
+  (`\p{Script=Han}`, `\p{Script=Cyrillic}` e mais 33), então o próprio teste não carrega caractere proibido; o
+  quarto caso lê o fonte do guarda e falha se ele passar a carregar. A varredura usa
+  `git ls-files --cached --others --exclude-standard` — pega inclusive arquivo novo ainda não indexado, que é
+  justamente como um caractere desses entraria. Símbolos de `Script=Common` (travessão, seta, moeda, º) ficam
+  fora de propósito: não são alfabeto. Grego e copta entram.
+
