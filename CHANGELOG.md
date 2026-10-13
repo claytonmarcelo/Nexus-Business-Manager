@@ -1,5 +1,21 @@
 ## [Não lançado]
 
+### O rodapé deixou de repetir o nome do produto e de mostrar versão (2026-10-13)
+
+- **Decisão do dono, aplicada nas três telas de uma vez.** O rótulo "Nexus Business Manager" ao lado do símbolo
+  e o selo `v0.1.0` saíram do rodapé — como vitrine, página de documento legal e painel montam o mesmo
+  `AppFooter`, a mudança aparece nos três lugares sem edição separada. Ficam a marca gráfica, a linha
+  `© 2026 Nexus Business Manager` (é ali que o produto continua sendo nomeado), os links legais publicados, o
+  indicador de serviço e o crédito "Desenvolvido por Clayton Marcelo".
+- **A injeção de versão saiu junto.** `define: { __APP_VERSION__ }` no `vite.config.ts` existia só para
+  alimentar aquele selo. Sem selo na tela, `brand.ts` perde o campo, `vite.config.ts` e `vitest.config.ts`
+  perdem a leitura do `package.json`, `src/vite-env.d.ts` perde a declaração global e `components.css` perde as
+  duas regras — o pacote não fica carregando número que ninguém mostra.
+- **Teste antes da tela.** `apps/web/src/test/rodape-unico.test.tsx` passou a proibir os dois elementos e a
+  conferir que a injeção não volta: vermelho em `1 failed | 11 passed (12)`, verde em `7 files / 46 tests`.
+  Prova no navegador nas três telas e nos dois temas, com login de verdade no painel: 31 verificações, zero
+  falha. A decisão está registrada em `docs/adr/0004-rodape-unico-e-arquivo-de-marca.md`.
+
 ### A auditoria da plataforma deixou de morar no log do cliente (2026-10-13)
 
 - **A matriz de rotas passou a ser lida do próprio Fastify.** `apps/api/test/isolamento-rotas.test.ts` (9 regras)

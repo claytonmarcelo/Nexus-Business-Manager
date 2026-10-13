@@ -23,6 +23,13 @@
   6. **Nomes de classe evitam o framework.** O prefixo é `nexus-` porque o AdminLTE 4, importado em
      `main.tsx`, já define `.app-footer` com fundo branco, padding e altura próprios (ver N19 em
      `docs/AUDITORIA.md`).
+- Atualização (2026-10-13): por decisão do dono, o rodapé deixou de mostrar o rótulo com o nome do produto ao
+  lado do símbolo e o selo de versão. A decisão 3 acima está superada — não porque o número estivesse errado,
+  mas porque número de pacote não é informação para quem usa o sistema. Com o selo fora da tela, a injeção
+  `__APP_VERSION__` foi desmontada junto (o `define` do `vite.config.ts` e do `vitest.config.ts`, a declaração
+  em `src/vite-env.d.ts` e o campo no arquivo de marca), para o pacote não carregar dado que nenhuma tela
+  mostra. As decisões 1, 2, 4, 5 e 6 continuam valendo, e o nome do produto segue aparecendo — na linha de
+  direitos autorais, que é onde ele pertence.
 - Consequências: Rodapé coerente entre vitrine e painel; correção de marca em um arquivo; nada de link morto ou
   estado inventado; texto acima de 4,5:1 nos dois temas (`--text-2`: 8,64:1 noite, 5,50:1 dia sobre `--bg`). O
   custo é uma requisição pública a mais por montagem de tela, ao `/api/health` — rota aberta de propósito, sem
