@@ -52,6 +52,7 @@ const NAV_GROUPS: NavGroup[] = [
   {
     title: "Serviços & Atendimentos",
     items: [
+      { to: "/app/ordens-de-servico", label: "Ordens de serviço", icon: "▧", permission: "service_order:read" },
       { to: "/app/agenda", label: "Agenda", icon: "▤", permission: "agenda:read" },
     ],
   },

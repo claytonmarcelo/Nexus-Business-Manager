@@ -10,6 +10,7 @@ import { Users } from "./pages/Users";
 import { Clients } from "./pages/Clients";
 import { Products } from "./pages/Products";
 import { Sales } from "./pages/Sales";
+import { OrdensDeServico } from "./pages/OrdensDeServico";
 import { Purchases } from "./pages/Purchases";
 import { Finance } from "./pages/Finance";
 import { CRM } from "./pages/CRM";
@@ -46,6 +47,7 @@ export function App() {
           <Route path="clientes" element={<Clients />} />
           <Route path="produtos" element={<Products />} />
           <Route path="vendas" element={<Sales />} />
+          <Route path="ordens-de-servico" element={<OrdensDeServico />} />
           <Route path="compras" element={<Purchases />} />
           <Route path="financeiro" element={<Finance />} />
           <Route path="crm" element={<CRM />} />

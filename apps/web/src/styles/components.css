@@ -1766,3 +1766,157 @@ a.nexus-footer-autor:focus-visible { color: var(--text); text-decoration: underl
     transition: border-color 0.15s ease;
   }
 }
+
+
+/* ============================================================
+   ORDENS DE SERVIÇO (F3.2): as cores dos cinco estados, a tabela
+   que vira cartão no celular e o documento que vai ao papel
+   ============================================================ */
+
+.status-pill.is-os-open { background: color-mix(in srgb, var(--info) 14%, transparent); color: var(--info); }
+.status-pill.is-os-progress { background: color-mix(in srgb, var(--accent) 16%, transparent); color: var(--accent); }
+.status-pill.is-os-waiting { background: color-mix(in srgb, var(--warning) 16%, transparent); color: var(--warning); }
+.status-pill.is-os-done { background: color-mix(in srgb, var(--success) 14%, transparent); color: var(--success); }
+.status-pill.is-os-cancelled { background: color-mix(in srgb, var(--danger) 14%, transparent); color: var(--danger); }
+
+/* O título da ordem é o link do detalhe: sem casinha de botão, sem desvio. */
+.nx-os-abrir { padding: 0; height: auto; text-align: left; }
+.nx-os-perigo { color: var(--danger); }
+
+/* Nove colunas e ate tres botoes por linha: a tabela de ordens e a mais larga
+   do painel. Ela respira mais apertada que as irmas para caber na janela de
+   trabalho sem cortar a coluna de acoes: o dinheiro e a data ficam em uma linha
+   so, o titulo comprime a palavra longa, e o que ainda assim nao couber rola na
+   horizontal em vez de desaparecer atras da borda. */
+.nx-os-scroll { overflow-x: auto; }
+.nx-os-tabela { min-width: 1080px; }
+.nx-os-tabela thead th { font-size: 0.7rem; letter-spacing: 0.04em; }
+.nx-os-tabela thead th,
+.nx-os-tabela tbody td { padding: 0.72rem 0.5rem; overflow-wrap: anywhere; }
+.nx-os-tabela tbody td.mono { overflow-wrap: normal; white-space: nowrap; }
+.nx-os-tabela .nx-os-abrir { overflow-wrap: anywhere; }
+/* A pílula quebra no espaco, nunca no meio da palavra. */
+.nx-os-tabela .status-pill { padding-inline: 0.45rem; overflow-wrap: normal; }
+.nx-os-tabela .row-actions { gap: 0.3rem; }
+.nx-os-tabela .row-actions .btn { padding: 0.22rem 0.42rem; font-size: 0.74rem; }
+
+/* Campos do formulário em trilhos: a grade se desfaz sozinha no celular. */
+.nx-os-grade {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 0.8rem;
+  margin-bottom: 0.9rem;
+}
+.nx-os-linha-campo {
+  display: grid;
+  grid-template-columns: 132px minmax(0, 1.6fr) 78px 96px 92px 30px;
+  gap: 0.5rem;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+.nx-os-linha-total { font-size: 0.78rem; }
+.nx-os-saldo { grid-column: 1 / -1; margin: -0.3rem 0 0.4rem; }
+/* O formulário da edição mora dentro do modal: sem card dentro de card. */
+.nx-os-form-modal { border: 0; padding: 0; background: transparent; box-shadow: none; animation: none; }
+
+@media (max-width: 820px) {
+  .nx-os-linha-campo { grid-template-columns: 1fr 1fr; }
+  .nx-os-linha-total { grid-column: 1 / -1; }
+}
+
+/* No celular a tabela deixa de ser tabela: cada ordem vira um cartão com o
+   próprio rótulo, lido do data-rotulo que a linha já carrega. */
+@media (max-width: 820px) {
+  .nx-os-scroll { overflow-x: visible; }
+  .nx-os-tabela { min-width: 0; }
+  .nx-os-tabela thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+  .nx-os-tabela tbody { display: grid; gap: 0.6rem; padding: 0.7rem; }
+  .nx-os-tabela tr {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0.15rem;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 0.75rem 0.85rem;
+    background: var(--surface-2);
+  }
+  .nx-os-tabela td {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 0.8rem;
+    border: 0;
+    padding: 0.15rem 0;
+  }
+  .nx-os-tabela td::before {
+    content: attr(data-rotulo);
+    color: var(--text-3);
+    font-size: 0.74rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .nx-os-tabela .col-acoes { min-width: 0; }
+  .nx-os-tabela .row-actions { justify-content: flex-end; flex-wrap: wrap; }
+}
+
+/* O documento da ordem: o mesmo bloco que a tela mostra e que o papel recebe. */
+.nx-os-doc {
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 1rem 1.1rem;
+  background: var(--surface-2);
+}
+.nx-os-doc-cabeca { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; }
+.nx-os-empresa { margin: 0; color: var(--text-3); font-size: 0.76rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; }
+.nx-os-numero { margin: 0.2rem 0 0; font-size: 1.05rem; }
+.nx-os-prioridade { margin: 0; font-size: 0.8rem; color: var(--text-2); }
+.nx-os-titulo-secao { margin: 1rem 0 0.4rem; font-size: 0.95rem; }
+.nx-os-itens { font-size: 0.86rem; }
+.nx-os-conta { margin: 0.35rem 0 0; text-align: right; font-size: 0.9rem; }
+.nx-os-assinatura { margin: 0.9rem 0 0; color: var(--text-3); font-size: 0.82rem; }
+.nx-os-quem { margin-left: 0.5rem; color: var(--text-2); font-size: 0.82rem; }
+.nx-os-quando { margin-left: auto; color: var(--text-3); font-size: 0.78rem; }
+.nx-os-motivo { margin: 0.25rem 0 0; color: var(--text-2); font-size: 0.82rem; }
+
+/* Papel: só o documento existe. O resto da tela perde o visível, o modal perde
+   a caixa escura, e a impressão sai preta sobre branco em qualquer tema. */
+@media print {
+  @page { margin: 14mm; }
+  body * { visibility: hidden; }
+  .nx-os-doc, .nx-os-doc * { visibility: visible; }
+  .nx-modal-overlay {
+    position: absolute !important;
+    inset: 0 auto auto 0 !important;
+    display: block !important;
+    padding: 0 !important;
+    background: #fff !important;
+    backdrop-filter: none !important;
+  }
+  .nx-modal {
+    position: static !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    max-height: none !important;
+    overflow: visible !important;
+    border: 0 !important;
+    box-shadow: none !important;
+    background: #fff !important;
+    animation: none !important;
+  }
+  .nx-modal-head, .nx-modal-foot { display: none !important; }
+  .nx-os-doc { position: static !important; border: 0 !important; background: #fff !important; padding: 0 !important; }
+  .nx-os-doc, .nx-os-doc * { color: #111 !important; }
+  .nx-os-doc .nx-os-empresa, .nx-os-doc .nx-os-assinatura, .nx-os-doc .nx-os-quando, .nx-os-doc .nx-os-quem, .nx-os-doc dt { color: #555 !important; }
+  .nx-os-doc .status-pill { background: transparent !important; border: 1px solid #999 !important; }
+}

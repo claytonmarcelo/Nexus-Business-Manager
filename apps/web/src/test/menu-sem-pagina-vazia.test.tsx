@@ -14,8 +14,9 @@ import { monteAdaptador, rotasDeSessao, type Rota } from "./fabrica-api";
 // Decisão §0.5 do PROMPT MESTRE, executada na F3.1: a barra lateral não anuncia
 // módulo que ainda não existe. Quem abre o painel vê apenas o que abre de
 // verdade — nada de linha apagada, nada de etiqueta "em breve", nada de página
-// vazia. Ordens de Serviço e Gateways & Cobranças saíram da barra nesta rodada e
-// voltam na F3.2, quando as duas telas existirem com rota, API e dados próprios.
+// vazia. Ordens de Serviço e Gateways & Cobranças saíram da barra nesta rodada; as
+// Ordens de Serviço voltaram na F3.2 Parte 1, com rota, API e dados próprios, e
+// Gateways & Cobranças volta na Parte 2 pelo mesmo caminho.
 //
 // Este arquivo é a guarda: ele não deixa nenhum item entrar no menu sem destino,
 // não deixa o roteador prometer uma rota que nenhuma página atende, e não deixa
@@ -118,7 +119,7 @@ afterEach(() => {
 describe("Menu lateral sem página vazia e sem 'em breve' (F3.1)", () => {
   it("todo item da tabela do menu tem rota", () => {
     const itens = linhasDeItem();
-    expect(itens.length).toBeGreaterThanOrEqual(15);
+    expect(itens.length).toBeGreaterThanOrEqual(16);
     for (const item of itens) {
       expect(item, item).toContain("to:");
     }
@@ -178,7 +179,7 @@ describe("Menu lateral sem página vazia e sem 'em breve' (F3.1)", () => {
     await waitFor(() => expect(document.querySelectorAll(".admin-nav-item").length).toBeGreaterThan(0));
 
     const itens = Array.from(document.querySelectorAll<HTMLElement>(".admin-nav-item"));
-    expect(itens.length).toBeGreaterThanOrEqual(15);
+    expect(itens.length).toBeGreaterThanOrEqual(16);
     for (const item of itens) {
       const rotulo = item.textContent ?? "";
       expect(item.tagName, rotulo).toBe("A");

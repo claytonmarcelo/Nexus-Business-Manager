@@ -168,10 +168,10 @@ function estado() {
   ok("aria-expanded verdadeiro com a barra visivel", e.ariaExpanded === "true");
   ok("aria-controls aponta para a sidebar", e.ariaControls === "admin-sidebar" && Boolean(await page.$("#admin-sidebar")));
   const CAMADAS = ["Visão Geral", "Comercial & CRM", "Estoque & Suprimentos", "Serviços & Atendimentos", "Financeiro", "Administração & Sistema"];
-  // As 15 linhas da barra de um administrador da plataforma, na ordem das camadas.
-  // Ordem de Serviço e Gateways & Cobranças nao estao aqui: sairam do menu na
-  // F3.1 e voltam na F3.2, quando as duas telas existirem de verdade.
-  const ITENS = ["Dashboard", "Notificações", "CRM", "Clientes", "Vendas", "Produtos", "Compras", "Agenda", "Financeiro", "Usuários", "Auditoria", "CMS & Site Público", "Rotinas agendadas", "Auditoria da plataforma", "Configurações"];
+  // As 16 linhas da barra de um administrador da plataforma, na ordem das camadas.
+  // Ordens de servico voltou na F3.2 Parte 1, com tela. Gateways & Cobranças
+  // continua fora: so reentra quando a Parte 2 entregar a pagina.
+  const ITENS = ["Dashboard", "Notificações", "CRM", "Clientes", "Vendas", "Produtos", "Compras", "Ordens de serviço", "Agenda", "Financeiro", "Usuários", "Auditoria", "CMS & Site Público", "Rotinas agendadas", "Auditoria da plataforma", "Configurações"];
   ok("as 6 camadas aparecem na ordem pedida", e.titulosVisiveis.join(" | ") === CAMADAS.join(" | "), e.titulosVisiveis.join(" | "));
   ok("nenhuma camada ficou vazia", e.grupoVazio === false);
   ok("na barra larga quem separa a camada e o titulo, nao o filete", e.temFilete === false);
@@ -337,7 +337,7 @@ function estado() {
         href: a.getAttribute("href"),
       }))
     );
-    ok("a barra larga lista as 15 linhas do produto", linhas.length === 15, String(linhas.length));
+    ok("a barra larga lista as 16 linhas do produto", linhas.length === 16, String(linhas.length));
     for (const linha of linhas) {
       await page.click('.admin-nav-item[aria-label="' + linha.rotulo + '"]');
       await page.waitForFunction(
