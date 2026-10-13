@@ -11,6 +11,42 @@ Situações possíveis: `FEITO` (corrigido e comprovado por teste nesta rodada),
 Atualizada em 2026-10-11, no fim do Bloco A, e de novo na rodada em que o cabeçalho do painel perdeu o texto
 da marca (achados N1 a N5 em `docs/AUDITORIA.md`).
 
+## PROMPT MESTRE — fases F0 a F9 (fonte única de verdade desde 2026-10-12)
+
+Este bloco ordena a execução a partir de 2026-10-12: o PROMPT MESTRE consolidou as rodadas anteriores e manda
+seguir F0 → F9, encerrando cada fase com commit humanizado e push provado. As tabelas de blocos abaixo continuam
+válidas como histórico do que já foi comprovado.
+
+| Tarefa | Situação | Prova |
+|---|---|---|
+| F0. Retomar e publicar os 3 commits pendentes | BLOQUEADO POR DECISÃO | `git fetch origin` trouxe `7a34167`, `150581f`, `2cfa2e9` ("Update README.md", do dono, só `README.md`). Medido: `## main...origin/main [ahead 3, behind 3]` e `git merge-base --is-ancestor origin/main HEAD` → **NÃO**. Sem avanço direto não há push (item 4 do PROMPT MESTRE veda pull, merge, rebase e force). O que está em jogo está em N16: `origin/main` publica 30 ocorrências (36 linhas) de e-mail pessoal e senha de desenvolvimento, mais 9 capturas com dado real, e `HEAD` tem zero. Decisão necessária: qual README vale. |
+| F1.1. Eliminar caracteres não latinos e instalar a guarda permanente | FEITO | Varredura em quatro escopos (284 arquivos de texto, histórico inteiro de mensagens de commit, patch dos commits pendentes, README do `origin/main`): único achado foram 4 ocorrências de U+03A3 em `docs/AUDITORIA.md:462`, `:473` e `:527`, reescritas como "soma das linhas", "soma das parcelas" e `soma(ENTRADAS) − soma(SAIDAS)`. Guarda: `apps/api/test/caracteres-permitidos.test.ts` (4 casos, 35 scripts por propriedade Unicode, varre `--cached --others --exclude-standard` e confere a mensagem do `HEAD`). Vermelho mostrado duas vezes — com o sigma na árvore (`Array(4)`) e com arquivo temporário de prova (`docs/_prova-caractere-proibido.md:3 U+4E00`, apagado em seguida) — e verde final `4 passed (4)`. |
+| F1.2. Rodapé único (`AppFooter` + `brand.ts`) | PENDENTE | O crédito hoje está em `apps/web/src/components/layout/AdminShell.tsx:364` e repetido na vitrine. |
+| F1.3. Garantias da conta de demonstração | PENDENTE | `test/seed-seguro.test.ts` já cobre parte; falta o pacote da fase. |
+| F1.4. Bootstrap do administrador da plataforma (`admin:criar`) | PENDENTE | Não existe o script na raiz nem em `@nexus/api`. |
+| F2. Matriz de rotas, G8 opção D (N14) e superfície de ataque | PENDENTE | `isolamento-rotas.test.ts` não existe. |
+| F3. Menu sem "em breve" + Ordens de Serviço e Gateways & Cobranças | PENDENTE — e falta anexo | Restam exatamente os dois itens `emBreve` em `AdminShell.tsx:57` e `:65`. O `PROMPT_IDE_ORDENS_E_COBRANCAS.md` não está no contexto desta sessão: pedir reanexo antes de executar a F3.2. |
+| F4. Autenticação reforçada (SMTP, verificação, bloqueio por conta, 2FA) | PENDENTE | — |
+| F5. Robustez do frontend (Problema C, N7, `ErrorBoundary`, `npm run verify`, code splitting) | PENDENTE | Bundle medido novamente nesta rodada: 881,04 kB / 262,35 kB gzip, com o aviso de chunk acima de 500 kB. |
+| F6. Docker, compose com 3306 fechado e `docs/PRODUCAO.md` | PENDENTE | Nenhum `Dockerfile` versionado. |
+| F7. LGPD, `SECURITY.md` e licença (só relatar) | PENDENTE | — |
+| F8. CI, dependabot, `postinstall` do Prisma (N9), clone limpo, `npm audit`, cobertura, lint, galeria (N13) | PENDENTE | `package-lock.json` não está entre os 393 arquivos rastreados — reproduzibilidade de clone depende de resolver isso nesta fase. |
+| F9. Prontidão e pacote de revisão | PENDENTE | — |
+
+### Portões medidos nesta rodada (2026-10-12, F0/F1.1)
+
+```
+npm run typecheck   ok (api + web, sem saída)
+npm run build       ok (881,04 kB / 262,35 kB gzip; aviso de chunk >500 kB continua)
+npm test            NÃO VERIFICADO — o MySQL do WAMP parou ("Can't reach database server at localhost:3306");
+                    tentar subir o mysqld do WAMP falhou por permissão de disco (errno 13). Ver N18.
+guarda de caracteres  4 passed (4), sem banco — roda isolada com npx vitest run
+caracteres proibidos  0 em 284 arquivos de texto, 0 em mensagens de commit, 0 no patch pendente, 0 no README remoto
+BOM                 nenhum arquivo com BOM
+CRLF                nenhum arquivo com CRLF
+avanço direto       NÃO (ahead 3, behind 3) — push desta rodada não aconteceu
+```
+
 ## Bloco A — segurança e isolamento
 
 | Tarefa | Situação | Prova |

@@ -5,6 +5,38 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/), 
 
 ## [Não lançado]
 
+### O alfabeto do projeto ganhou porta: varredura de caracteres não latinos e o guarda que não deixa voltar (2026-10-12)
+
+- **O que a regra diz, agora com teste.** O PROMPT MESTRE proíbe caractere de alfabeto não latino em arquivo,
+  mensagem de commit, documentação e relatório. A F1.1 varreu os quatro escopos — 284 arquivos de texto, todas as
+  mensagens do histórico (`git log --format=%B`), o patch dos commits ainda não publicados e o `README.md` que
+  está no `origin/main` — e o único achado foram **quatro ocorrências de U+03A3**, o sigma grego usado como
+  símbolo de somatória em `docs/AUDITORIA.md:462`, `:473` e `:527`. Nenhuma outra, em lugar nenhum.
+- **Reescrito, não apagado.** As três frases continuam dizendo a mesma conta: "total = soma das linhas",
+  "soma das parcelas = total da nota" e `soma(ENTRADAS) − soma(SAIDAS)` do razão. Trocou-se a notação grega pela
+  latina, que é o padrão do projeto, e o sentido de fechamento contábil ficou intacto.
+- **A porta (`apps/api/test/caracteres-permitidos.test.ts`, 4 casos).** Ela caça 35 scripts não latinos por
+  propriedade Unicode — `\p{Script=Han}`, `\p{Script=Cyrillic}` e companhia — porque um guarda que procura
+  caractere proibido não pode escrever o caractere proibido no próprio fonte; o quarto caso lê o fonte do guarda e
+  falha se ele passar a carregar. Varre `git ls-files --cached --others --exclude-standard`, então pega até
+  arquivo novo que ainda nem foi indexado, e confere a mensagem do commit no topo da árvore. Símbolos de
+  `Script=Common` (travessão, seta, moeda, ordinais) ficam fora de propósito: não são alfabeto, e o texto do
+  projeto usa vários.
+- **Vermelho antes de verde, duas vezes.** Com o sigma ainda na árvore, o guarda falhou apontando as quatro
+  ocorrências por arquivo, linha e code point — nunca pelo caractere. Depois, um arquivo temporário montado por
+  `String.fromCodePoint` (não por literal) provocou a falha `docs/_prova-caractere-proibido.md:3 U+4E00`; o
+  arquivo foi apagado em seguida. Verde final: `Test Files 1 passed (1) / Tests 4 passed (4)`.
+- **F0 não publicou, e o motivo é do dono.** `git fetch origin` trouxe três commits do próprio dono no GitHub
+  ("Update README.md", só `README.md`), e a medição é `## main...origin/main [ahead 3, behind 3]` com
+  `git merge-base --is-ancestor origin/main HEAD` respondendo **NÃO**. Sem avanço direto o PROMPT MESTRE veda
+  pull, merge, rebase e force, então nada foi publicado. Importa porque o `origin/main` ainda expõe 30
+  ocorrências em 36 linhas (e-mail pessoal do administrador em 27 arquivos, senha de desenvolvimento em três) e 9
+  capturas com dado real, enquanto o `HEAD` local tem zero: a limpeza está commitada e esperando essa decisão.
+- **Portões desta rodada.** Typecheck ok, build ok (881,04 kB / 262,35 kB gzip, aviso de chunk acima de 500 kB
+  continua de pé e vira trabalho da F5), BOM zero e CRLF zero. A suíte da API está como **NÃO VERIFICADO**: o
+  MySQL do WAMP parou ("Can't reach database server at `localhost:3306`"), e subir o `mysqld` por conta própria
+  esbarra em permissão do disco (errno 13). O guarda novo não usa banco e por isso foi validado isoladamente.
+
 ### Documentada a decisão que estava escondida no cadastro: o administrador da plataforma entra em toda empresa (2026-10-12)
 
 - **O que foi lido, não alterado.** A tarefa R3 da rodada de segurança era relatório, e foi isso que ela foi:
