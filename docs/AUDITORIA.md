@@ -1650,3 +1650,58 @@ numeração. A execução desta rodada usa como identificador a tarefa do prompt
 o achado já registrado nesta casa (`N...`) e a decisão do dono (`D1`..`D14`). Nada de conteúdo foi
 adicionado nem removido por causa disso: quem ler o `docs/STATUS-AJUSTES.md` daqui em diante encontra o
 mesmo contrato, só com numeração diferente.
+
+### N54 — a cadeia versionada de migrations não reergue um banco MySQL vazio (aberto, é trabalho da T7)
+
+Medido nesta rodada, com um schema de descarte criado só para isso e apagado no `finally`:
+`prisma migrate deploy` contra um banco sem nenhuma tabela encontra as **20 migrations**, aplica
+`20261010154418_init_foundation`, e para na segunda com `Error: P3018` — `Database error code: 1826`,
+`Duplicate foreign key constraint name 'company_users_user_id_fkey'`, "check the query number 2 from the
+migration file". O schema fica com 7 tabelas e a cadeia não continua. A causa é contável no repositório:
+**13 das 20 migrations** declaram de novo o mesmo `company_users_company_id_fkey` (e o par com
+`user_id`), no formato `ALTER TABLE ... ADD CONSTRAINT ... FOREIGN KEY`, que é o molde do Prisma para
+banco novo. Em PostgreSQL o nome da constraint é por tabela; em MySQL é **por banco** — então a primeira
+migration já criou a constraint, e a segunda não consegue criar uma com o mesmo nome.
+
+Por que isso importa fora do curiosidade: a F8 exige "clone limpo reproduzível", e o caminho publicado no
+`README.md` é `npm run db:migrate`. Ele não funciona num MySQL zerado hoje. Também é o motivo pelo qual o
+banco de prova da decisão D6 nasceu de `prisma db push --skip-generate` com as vinte migrations marcadas
+como aplicadas (`migrate resolve --applied`) — ver `docs/adr/0010-banco-de-prova-separado.md`, item 5.
+
+O fechamento não foi improvisado aqui por duas razões. A primeira: a §5 do contrato proíbe editar migration
+já aplicada, e qualquer remendo na cadeia existente é exatamente isso. A segunda: a tarefa que pede o clone
+limpo é a T7, e a decisão de *como* reescrever a cadeia (baseline única, migrations idempotentes com
+`DROP FOREIGN KEY` antes de criar, ou caminho de bootstrap separado documentado) merece ADR próprio com a
+medição de antes e depois. Fica registrado aqui para a T7 não descobrir isso no escuro.
+
+### N55 — fechado na T1: as provas de navegador escreviam no banco de desenvolvimento
+
+O §4 do contrato diz que teste e prova nunca usam o banco de desenvolvimento. Medido nesta rodada, no banco
+de desenvolvimento: **45 empresas, das quais 42 com o nome do padrão dos helpers de teste**
+(`Empresa-<epoch>-<n>-<rand>`), duas casas de demonstração (`Nexus Demo`, `Demonstracao (minha empresa)`) e
+uma com nome digitado (`Eliane Eli (minha empresa)`, 2026-10-11) — está feita a investigação de origem que a
+D6 pedia, e nada foi apagado dessas linhas. Somado a isso, a prova de ordens de serviço deixou uma linha
+órfã no banco errado: usuário "Tecnico de Prova", criado às 20:40:09 de 2026-10-13, sem vínculo, sem sessão,
+sem auditoria e sem ordem. Ela apareceu porque a prova abriu o próprio `PrismaClient` lendo o `.env` de
+desenvolvimento enquanto a API já respondia pelo banco de prova, e a escrita falhou com
+`P2003 Foreign key constraint violated on the fields: (company_id)` — ou seja, a linha nasceu de um erro, e
+o erro só existia por causa do endereço errado.
+
+Tratamento, na ordem do contrato: listar antes (`id`, nome, data e as cinco relações conferidas, todas em
+zero), fazer o backup do banco inteiro para fora do repositório antes de qualquer limpeza
+(`mysqldump` em `C:/Users/<usuario>/backups-nexus/`, ~14 MB, nunca no git), apagar a linha única e medir o
+antes e depois (`usuarios antes: 542 | depois: 541`).
+
+Fechamento técnico: `tools/banco-de-prova.cjs` passou a ser a única porta de entrada do banco nas provas —
+`clienteDoBancoDeProva()` para as sete que escrevem direto, `conferirServidorDeProva()` nas trinta que
+escrevem pela API; os dois carregamentos do `.env` de desenvolvimento que existiam nesses arquivos foram
+apagados; `apps/api/vitest.config.ts` injeta o endereço de prova e se recusa a rodar sem ele. Prova de que
+fechou, medida nesta rodada: a suíte inteira e duas provas de navegador (`verify-ordens-de-servico.cjs`,
+103 checagens com 0 falhas, e `verify-notificacoes.cjs`, 85 checagens com 0 falhas) rodaram com o banco de
+desenvolvimento **idêntico tabela por tabela antes e depois** (`diff` das duas medições sem saída), enquanto
+o banco de prova crescia (+5 sessões, +17 linhas de auditoria, +4 movimentações de estoque).
+
+Parte do achado que fica em aberto, registrada em vez de escondida: entre 20:30 e 20:34 o banco de
+desenvolvimento ganhou duas sessões e quatro linhas de auditoria de logins reais da conta
+"Administrador Nexus". **NÃO VERIFICADO** quem foi: as ferramentas rodadas nesta sessão não respondem por
+eles, e a linha não foi tocada.

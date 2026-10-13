@@ -128,6 +128,7 @@ F5.1 a F5.7) não são citáveis. Numeração adotada: tarefa do prompt de conti
 | Tarefa | Situação | Commit | Evidência | Achados |
 |---|---|---|---|---|
 | T0. Retomada: ler o contrato, conferir a árvore, registrar o ponto de partida | FEITA | base publicada `0d80215`; o commit que traz esta linha fecha a T0 | `git status --porcelain` vazio; `git rev-parse HEAD` = `git ls-remote origin HEAD` = `0d802154461cc8ce53018131ea6e3250a24c4986`; tabela F0→F9 lida em `docs/STATUS-AJUSTES.md:32-37` com F4, F5, F6, F7, F8 e F9 em `PENDENTE`; `ls .ia` sem diretório | N53 |
+| T1. Banco de teste separado, com as provas fora do banco de desenvolvimento (D6) | FEITA | dois commits desta rodada; o que traz esta linha fecha a T1 | Vermelho medido antes da mudança: `apps/api/test/banco-de-teste-separado.test.ts` caiu com `expected { users: 542, companies: 46, ... } to deeply equal { users: 541, companies: 45, ... }` — a suíte escrevia no banco de desenvolvimento. Verde depois: suíte inteira no banco de prova, e as duas provas de navegador regravadas (`tools/verify-ordens-de-servico.cjs` 103 checagens / 0 falhas, `tools/verify-notificacoes.cjs` 85 / 0) com `diff` das medições do banco de desenvolvimento **sem saída** e o banco de prova crescendo (+5 sessões, +17 auditorias, +4 movimentações). Conferência vermelha contra servidor de desenvolvimento (HTTP 401 com a instrução do comando), verde contra `npm run dev:api:teste`. Backup do banco de desenvolvimento feito antes de qualquer limpeza, fora do repositório (`mysqldump`, ~14 MB). Investigação de origem pedida pela D6: das 45 empresas do banco de desenvolvimento, 42 com nome do padrão dos helpers, 2 casas de demonstração, 1 com nome digitado; uma linha órfã deixada por prova listada e apagada (`542 → 541`) | N54, N55 |
 
 ### Portões da T0 (2026-10-13)
 
@@ -143,6 +144,38 @@ guarda de caracteres       4 passed (4), rodada isolada
 codificação                325 arquivos de texto: BOM 0, CR 0
 segredos                   0 no patch; as 30 batidas na árvore são os mesmos fixtures de teste
                            já identificados na rodada anterior, linha a linha, sem valor impresso
+```
+
+### Portões da T1 (2026-10-13)
+
+```
+npm run typecheck          falhou primeiro (4 erros no arquivo novo: índice possivelmente
+                           indefinido), verde depois de tipar a contagem — api + web sem saída
+npm run build              ok (api tsc + web vite build, 206 módulos, 10,50 s)
+npm test                   API 38 arquivos / 354 casos em 421,08 s e web 10 / 77 em 11,37 s —
+                           zero falha, zero skip, tudo contra nexusbusinessmanager_teste
+banco de desenvolvimento   medição tabela por tabela antes e depois da rodada inteira
+                           (suíte + duas provas de navegador): `diff` sem saída — 541 usuários,
+                           45 empresas, 49 vínculos, 32 tabelas, 2.186 sessões, 67.722 auditorias
+banco de prova             cresceu no lugar do outro: usuários 9 → 22, empresas 2 → 3,
+                           sessões 8 → 20, auditorias 917 → 2.735, movimentações 6 → 10
+provas de navegador        verify-ordens-de-servico.cjs 103 checagens / 0 falhas;
+                           verify-notificacoes.cjs 85 checagens / 0 falhas; conference vermelha
+                           medida na conta que não existe no banco de prova (HTTP 401 com a
+                           instrução do comando certo)
+cadeia de migrations       medida num schema de descarte criado e apagado pela própria medição:
+                           para na 2ª de 20 com P3018 / erro 1826 (N54)
+node -c tools/*.cjs        30 arquivos, zero erro de sintaxe
+guarda de caracteres       dentro da suíte (apps/api/test/caracteres-permitidos.test.ts): verde
+codificação                arquivos desta rodada: BOM 0, CR 0, UTF-8 sem caractere não latino
+segredos                   varredura das linhas adicionadas + arquivos novos: 6 batidas, todas
+                           referência de variável ou endereço inexistente; nenhum valor impresso.
+                           tools/prova-admin.local.json, tools/conta-de-captura.local.json e
+                           tools/senha-admin.local.cjs confirmados ignorados (git check-ignore)
+capturas                   21-notificacoes-*.png (5) refazem e entram: a casa de demonstração do
+                           banco de prova tem seis avisos, e o banco de desenvolvimento carregava
+                           onze, cinco deles sobra de corrida antiga. 25-ordens-*.png (4) foram
+                           descartados: conteúdo idêntico, só ruído de compressão
 ```
 
 ## Bloco A — segurança e isolamento

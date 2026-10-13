@@ -89,7 +89,7 @@ fonte é o arquivo e o `node --version` executado agora).
 | API | `typescript` | ^5.6.3 |
 | API | `vitest`, `@vitest/coverage-v8` | ^5.0.3 |
 | API | `tsx` | ^4.19.2 |
-| Banco | MySQL do WAMP | 8.4.7, schema `nexusbusinessmanager` |
+| Banco | MySQL do WAMP | 8.4.7, schema `nexusbusinessmanager` (desenvolvimento) e `nexusbusinessmanager_teste` (prova) |
 | Web | `react`, `react-dom` | ^18.3.1 |
 | Web | `vite` | ^7.3.7 |
 | Web | `react-router-dom` | ^7.18.4 |

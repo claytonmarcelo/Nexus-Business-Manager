@@ -1,5 +1,44 @@
 ## [Não lançado]
 
+### As provas ganharam um banco próprio, e o do desenvolvedor voltou a ser só do desenvolvedor (2026-10-13)
+
+- **O que a regra mandava, e o que a medição mostrou.** Teste nenhum podia escrever no banco de
+  desenvolvimento — mas podia, e escrevia. Medido antes de mexer: das **45 empresas** do banco de
+  desenvolvimento, **42 têm o nome do padrão dos helpers de teste** (`Empresa-<epoch>-<n>-<rand>`), e uma
+  prova de ordens de serviço deixou ali um usuário órfão ("Tecnico de Prova", sem vínculo, sem sessão, sem
+  auditoria) porque abriu o próprio `PrismaClient` no `.env` de desenvolvimento enquanto a API já respondia
+  pelo banco de prova. A linha foi listada relação por relação, o banco inteiro foi despejado para fora do
+  repositório antes de qualquer limpeza, e só então a linha única foi apagada (`542 → 541` usuários).
+- **Um nome combinado, duas portas novas.** `nexusbusinessmanager_teste`, declarado em `DATABASE_URL_TESTE`.
+  Faltar a variável, o nome ser outro, ou o `DATABASE_URL` apontar para o mesmo banco: nos três casos a prova
+  para e diz o que falta, sem imprimir credencial. `npm run db:prova` monta e semeia o banco de prova;
+  `npm run dev:api:teste` sobe a API nele.
+- **A prova confere o servidor antes de abrir o navegador.** Toda `tools/verify-*.cjs` e todo
+  `tools/shoot-*.cjs` chama `conferirServidorDeProva()`: entra pela porta de login da API, pega o `id` que a
+  API devolve e exige que esse `id` exista no banco de prova. Servidor no lugar errado é HTTP 401 com a
+  instrução do comando certo — vermelho medido contra o servidor de desenvolvimento antes de verde contra o
+  de prova. O resultado bom fica cinco minutos em cache, porque o login tem limite de dez tentativas por
+  minuto e trinta provas na mesma janela estourariam o próprio limite.
+- **Quem escreve direto no banco usa o cliente de prova.** As sete provas que abriam `PrismaClient` próprio
+  passaram por `clienteDoBancoDeProva()`, e os dois carregamentos do `.env` de desenvolvimento que existiam
+  nelas — um `dotenv.config` em seis e um parser manual na sétima — foram apagados: a prova nem vê mais o
+  endereço errado. A suíte recebeu o mesmo tratamento em `apps/api/vitest.config.ts`, com quatro casos
+  novos que contam tabela por tabela nos dois bancos antes e depois de escrever.
+- **Prova de que fechou.** `tools/verify-ordens-de-servico.cjs` (103 checagens, 0 falhas) e
+  `tools/verify-notificacoes.cjs` (85 checagens, 0 falhas) rodaram com o banco de desenvolvimento
+  **idêntico linha por linha antes e depois** (`diff` das duas medições sem saída), enquanto o banco de prova
+  crescia (+5 sessões, +17 linhas de auditoria, +4 movimentações de estoque). As cinco capturas de
+  notificação mudaram de conteúdo porque a casa de demonstração do banco de prova tem seis avisos, e o banco
+  de desenvolvimento carregava onze, sendo cinco sobras de corridas antigas; as quatro capturas de ordens de
+  serviço foram descartadas por serem as mesmas pixels.
+- **Achado aberto, com número (N54).** A cadeia versionada de vinte migrations não reergue um MySQL zerado:
+  aplicada num schema de descarte, ela para na segunda migration com `P3018` / erro 1826
+  (`Duplicate foreign key constraint name 'company_users_user_id_fkey'`), porque 13 das 20 re-declaram as
+  mesmas chaves estrangeiras e, em MySQL, o nome de uma constraint é único por banco. É o motivo de o banco
+  de prova nascer de `db push` com as vinte migrations marcadas como aplicadas, e é trabalho da F8 consertar
+  o caminho do clone limpo — sem editar migration já aplicada. Registrado em `docs/AUDITORIA.md` (N54, N55) e
+  em `docs/adr/0010-banco-de-prova-separado.md`.
+
 ### A cobrança nasceu no banco, no caixa e na matriz de permissões (2026-10-13)
 
 - **O carnê do balcão virou tela.** Entre o serviço concluído e o dinheiro no caixa não havia documento:

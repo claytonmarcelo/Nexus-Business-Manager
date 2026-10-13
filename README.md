@@ -677,6 +677,14 @@ add_escopo_da_auditoria → add_ordens_de_servico → add_cobrancas_manuais
 As seis migrations que chegaram na execução da auditoria trazem as linhas de reversão escritas no próprio
 SQL; nenhuma migration aplicada foi editada depois de sair — correções chegaram como migration nova.
 
+**Limitação medida, com achado aberto (N54 em `docs/AUDITORIA.md`):** a cadeia acima não reergue um MySQL
+zerado. Aplicada num schema de descarte, ela para na segunda migration
+com `P3018` / erro 1826 (`Duplicate foreign key constraint name 'company_users_user_id_fkey'`): 13 das 20
+declaram de novo as mesmas chaves estrangeiras, e em MySQL o nome de uma constraint é único por banco, não
+por tabela. Enquanto o N54 não fechar, `npm run db:migrate` serve para evoluir um banco que já existe — e o
+banco de prova nasce com `npm run db:prova`, que monta o schema pelo `db push` e marca as vinte migrations
+como aplicadas. O clone limpo de ponta a ponta é trabalho da F8.
+
 Comandos:
 
 ```bash
@@ -697,6 +705,9 @@ npm run prisma:generate -w @nexus/api           # regera o client depois de mexe
 - Node.js 20+ e npm com workspaces
 - MySQL 8 — no desenvolvimento local, o WAMP em `localhost:3306` com o banco `nexusbusinessmanager` já
   criado (o Prisma cria as tabelas, não o banco)
+- Para rodar a suíte e as provas de navegador, um segundo banco: `nexusbusinessmanager_teste`, declarado em
+  `DATABASE_URL_TESTE` no `apps/api/.env`. Teste nenhum escreve no banco que o servidor de desenvolvimento
+  está usando (`docs/adr/0010-banco-de-prova-separado.md`); sem a variável, a suíte para e diz o que falta.
 
 ### Passo a passo
 
@@ -704,12 +715,13 @@ npm run prisma:generate -w @nexus/api           # regera o client depois de mexe
 npm install
 npm run prisma:generate -w @nexus/api   # sem isto, nada compila (docs/AUDITORIA.md N9)
 cp apps/api/.env.example apps/api/.env
-# edite apps/api/.env: DATABASE_URL, JWT_ACCESS_SECRET, JWT_REFRESH_SECRET,
+# edite apps/api/.env: DATABASE_URL, DATABASE_URL_TESTE, JWT_ACCESS_SECRET, JWT_REFRESH_SECRET,
 # SUPER_ADMIN_EMAIL com o e-mail do administrador definitivo (CREDENCIAIS.md),
 # SEED_ADMIN_PASSWORD com a senha dele e SEED_DEV_PASSWORD com a senha da conta dev
 
 npm run db:migrate            # aplica as 20 migrations
 npm run db:seed               # desenvolvimento: admin global + admin@nexus.local + empresa nexus-demo (vazia)
+npm run db:prova              # banco de prova: cria nexusbusinessmanager_teste, semente e conta de prova
 # produção não usa o seed para criar o administrador: npm run admin:criar -w @nexus/api
 # (docs/PRODUCAO.md traz a ordem inteira de subida)
 ```
@@ -718,13 +730,15 @@ npm run db:seed               # desenvolvimento: admin global + admin@nexus.loca
 
 | Comando | O que faz |
 |---|---|
-| `npm run dev:api` | API em `http://localhost:3001` (prefixo `/api`), com `tsx watch` |
+| `npm run dev:api` | API em `http://localhost:3001` (prefixo `/api`), com `tsx watch`, no banco de desenvolvimento |
+| `npm run dev:api:teste` | a mesma API apontada para o banco de prova — é assim que as `tools/verify-*.cjs` sobem |
 | `npm run dev:web` | painel em `http://localhost:5173`, com proxy para `/api` |
 | `npm run typecheck` | `tsc --noEmit` nos dois apps |
-| `npm test` | suíte de integração da API contra o MySQL real |
+| `npm test` | suíte de integração da API contra o MySQL real, **no banco de prova** |
 | `npm run test:coverage` | a mesma suíte medindo a própria cobertura (instruções, ramificações, funções, linhas) |
 | `npm run build` | `tsc` da API + `vite build` do painel |
 | `npm run db:migrate` / `db:seed` | Prisma no workspace da API |
+| `npm run db:prova` | monta e semeia o banco de prova, e grava a conta de prova fora do git |
 | `npm run admin:criar` | bootstrap do administrador da plataforma — endereço de `SUPER_ADMIN_EMAIL`, senha de `ADMIN_CRIAR_SENHA`, nada de demonstração |
 
 ### Produção
