@@ -1,4 +1,48 @@
 import { defineConfig } from "vitest/config";
+import "dotenv/config";
+
+// Decisão D6 do dono, tarefa T1: a suíte não escreve no banco de desenvolvimento.
+//
+// Antes desta linha não havia nada que impedisse: `src/config/env.ts` lê o
+// `apps/api/.env` da máquina, e o `.env` declara o banco de desenvolvimento. Cada
+// `npm test` — 317 segundos, 350 casos, dezenas de contas e casas criadas —
+// deixava o rastro no banco de quem está trabalhando. A contagem medida antes
+// desta mudança (541 usuários / 45 empresas / 49 vínculos, 42 delas com o nome do
+// padrão dos helpers de teste) está no achado N55 de `docs/AUDITORIA.md`.
+//
+// Aqui o endereço do banco de prova vira o `DATABASE_URL` do processo de teste, e
+// a suíte se recusa a subir sem ele: fallback silencioso para o banco de
+// desenvolvimento é exatamente o acidente que se quer evitar. O dotenv não
+// sobrescreve o que já existe no ambiente, então a injeção abaixo chega antes do
+// `src/config/env.ts` rodar.
+const BANCO_DE_PROVA = "nexusbusinessmanager_teste";
+
+function nomeDoBanco(url: string | undefined): string {
+  if (!url) return "";
+  try {
+    return new URL(url).pathname.replace(/^\//, "");
+  } catch {
+    return "";
+  }
+}
+
+const URL_DE_PROVA = (process.env.DATABASE_URL_TESTE ?? "").trim();
+if (!URL_DE_PROVA) {
+  throw new Error(
+    "DATABASE_URL_TESTE não está no apps/api/.env — a suíte se recusa a rodar no banco de desenvolvimento. " +
+      "Declare a variável e rode `npm run db:prova` (decisão D6 do dono, achado N55)."
+  );
+}
+if (nomeDoBanco(URL_DE_PROVA) !== BANCO_DE_PROVA) {
+  throw new Error(
+    `DATABASE_URL_TESTE aponta para "${nomeDoBanco(URL_DE_PROVA)}", e o nome combinado do banco de prova é ${BANCO_DE_PROVA}.`
+  );
+}
+if (nomeDoBanco(process.env.DATABASE_URL) === BANCO_DE_PROVA) {
+  throw new Error(
+    "O DATABASE_URL do .env também aponta para o banco de prova: desenvolvimento e prova não podem ser o mesmo banco (D6)."
+  );
+}
 
 export default defineConfig({
   test: {
@@ -18,7 +62,10 @@ export default defineConfig({
     // de ambiente (dotenv não sobrescreve o que já existe); os rate-limits
     // por rota — login, cadastro, recuperação — continuam nos valores reais,
     // porque é o comportamento deles que os testes de auth provam.
-    env: { RATE_LIMIT_MAX: "100000" },
+    // `DATABASE_URL` é a linha da decisão D6: dentro do teste, o banco é sempre
+    // o de prova, nunca o do servidor de desenvolvimento.
+    env: { RATE_LIMIT_MAX: "100000", DATABASE_URL: URL_DE_PROVA },
+
     testTimeout: 20000,
     hookTimeout: 20000,
     // Medidor de cobertura do prompt de auditoria (A0/C1). O `npm test` comum

@@ -1,6 +1,12 @@
 const puppeteer = require("puppeteer-core");
 const { EMAIL_ADMIN, SENHA_ADMIN } = require("./senha-admin.cjs");
+const { conferirServidorDeProva } = require("./banco-de-prova.cjs");
 (async () => {
+  // D6 (tarefa T1): a prova so escreve no banco de prova. A conferencia entra na API, pega o
+  // id que ela devolve no login da conta de prova e exige que esse id exista em
+  // nexusbusinessmanager_teste - se o servidor atende outro banco, a prova para aqui.
+  await conferirServidorDeProva();
+
   const browser = await puppeteer.launch({
     executablePath: "C:/Program Files/Google/Chrome/Application/chrome.exe",
     headless: "new", args: ["--no-sandbox", "--disable-gpu"],

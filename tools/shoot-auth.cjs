@@ -13,6 +13,7 @@
 //    imagem. Nada e mascarado a mao depois.
 const puppeteer = require("puppeteer-core");
 const path = require("path");
+const { conferirServidorDeProva } = require("./banco-de-prova.cjs");
 
 const BASE = "http://localhost:5173";
 const OUT = path.join(__dirname, "..", "docs", "screenshots");
@@ -22,6 +23,11 @@ const OUT = path.join(__dirname, "..", "docs", "screenshots");
 const EMAIL_SEM_CONTA = "solicitante@exemplo.test";
 
 (async () => {
+  // D6 (tarefa T1): a prova so escreve no banco de prova. A conferencia entra na API, pega o
+  // id que ela devolve no login da conta de prova e exige que esse id exista em
+  // nexusbusinessmanager_teste - se o servidor atende outro banco, a prova para aqui.
+  await conferirServidorDeProva();
+
   const browser = await puppeteer.launch({
     executablePath: "C:/Program Files/Google/Chrome/Application/chrome.exe",
     headless: "new",

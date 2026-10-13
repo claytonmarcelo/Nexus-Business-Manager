@@ -11,6 +11,7 @@
 const puppeteer = require("puppeteer-core");
 const path = require("path");
 const { contaDeCaptura } = require("./conta-de-captura.cjs");
+const { conferirServidorDeProva, clienteDoBancoDeProva } = require("./banco-de-prova.cjs");
 
 const CHROME = "C:/Program Files/Google/Chrome/Application/chrome.exe";
 const BASE = process.env.NEXUS_WEB || "http://localhost:5173";
@@ -206,9 +207,9 @@ async function entrarNoPainel(page, email, senha) {
 // Só o usuário de papel STAFF, criado e apagado por aqui.
 let prisma = null;
 async function abrirBanco() {
-  require("dotenv").config({ path: path.join(__dirname, "..", "apps", "api", ".env") });
-  const { PrismaClient } = require("@prisma/client");
-  prisma = new PrismaClient();
+  // D6 (tarefa T1): o .env de desenvolvimento fica fora desta prova. O cliente vem de
+  // banco-de-prova.cjs, que so aceita DATABASE_URL_TESTE apontando para o banco de prova.
+  prisma = clienteDoBancoDeProva();
 }
 
 async function criarStaff(companyId) {
@@ -268,6 +269,11 @@ function diferencas(antes, depois) {
 
   await abrirBanco();
   const staff = await criarStaff(empresaAntes.id);
+
+  // D6 (tarefa T1): a prova so escreve no banco de prova. A conferencia entra na API, pega o
+  // id que ela devolve no login da conta de prova e exige que esse id exista em
+  // nexusbusinessmanager_teste - se o servidor atende outro banco, a prova para aqui.
+  await conferirServidorDeProva();
 
   const browser = await puppeteer.launch({
     executablePath: CHROME,

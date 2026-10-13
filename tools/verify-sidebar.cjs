@@ -4,6 +4,7 @@
 // off-canvas no tablet/celular (com scrim, Esc e sem overflow horizontal).
 const puppeteer = require("puppeteer-core");
 const { EMAIL_ADMIN, SENHA_ADMIN } = require("./senha-admin.cjs");
+const { conferirServidorDeProva } = require("./banco-de-prova.cjs");
 
 const CHROME = "C:/Program Files/Google/Chrome/Application/chrome.exe";
 const BASE = "http://localhost:5173";
@@ -142,6 +143,11 @@ function estado() {
 }
 
 (async () => {
+  // D6 (tarefa T1): a prova so escreve no banco de prova. A conferencia entra na API, pega o
+  // id que ela devolve no login da conta de prova e exige que esse id exista em
+  // nexusbusinessmanager_teste - se o servidor atende outro banco, a prova para aqui.
+  await conferirServidorDeProva();
+
   const browser = await puppeteer.launch({
     executablePath: CHROME,
     headless: "new",

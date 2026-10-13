@@ -11,8 +11,8 @@
 // Toda comparação de número sai de uma leitura fresca da API, nunca de um valor
 // guardado lá do começo: o sino, a aba e os filtros mudam contagem o tempo todo.
 const puppeteer = require("puppeteer-core");
-const fs = require("fs");
 const { EMAIL_ADMIN, SENHA_ADMIN } = require("./senha-admin.cjs");
+const { conferirServidorDeProva, clienteDoBancoDeProva } = require("./banco-de-prova.cjs");
 
 const CHROME = "C:/Program Files/Google/Chrome/Application/chrome.exe";
 const BASE = process.env.NEXUS_WEB || "http://localhost:5173";
@@ -56,20 +56,11 @@ const contarPeloBanco = () => chame("GET", "/notifications/count");
 // ------------------------------------------------------------------ banco
 // Só para a limpeza do que a própria prova criou.
 function abrirBanco() {
-  const arquivo = "apps/api/.env";
-  if (fs.existsSync(arquivo)) {
-    for (const linha of fs.readFileSync(arquivo, "utf8").split(/\r?\n/)) {
-      const m = /^([A-Z_]+)=(.*)$/.exec(linha);
-      if (!m) continue;
-      let valor = m[2].trim();
-      if ((valor.startsWith('"') && valor.endsWith('"')) || (valor.startsWith("'") && valor.endsWith("'"))) {
-        valor = valor.slice(1, -1);
-      }
-      if (!process.env[m[1]]) process.env[m[1]] = valor;
-    }
-  }
-  const { PrismaClient } = require("@prisma/client");
-  return new PrismaClient();
+  // D6 (tarefa T1): este parser do .env de desenvolvimento foi apagado junto com a
+  // criacao do PrismaClient. A prova nao injeta mais o DATABASE_URL de quem esta
+  // trabalhando no processo: o cliente vem de banco-de-prova.cjs, que so aceita
+  // DATABASE_URL_TESTE apontando para nexusbusinessmanager_teste.
+  return clienteDoBancoDeProva();
 }
 
 async function limpar(prisma, momento) {
@@ -235,6 +226,11 @@ const linhasDaTela = (page) =>
   ok("a lista paginada devolve {data, meta}",
     Array.isArray(seisDaApi.dados.data) && typeof seisDaApi.dados.meta.total === "number",
     "meta " + JSON.stringify(seisDaApi.dados.meta));
+
+  // D6 (tarefa T1): a prova so escreve no banco de prova. A conferencia entra na API, pega o
+  // id que ela devolve no login da conta de prova e exige que esse id exista em
+  // nexusbusinessmanager_teste - se o servidor atende outro banco, a prova para aqui.
+  await conferirServidorDeProva();
 
   const browser = await puppeteer.launch({
     executablePath: CHROME,

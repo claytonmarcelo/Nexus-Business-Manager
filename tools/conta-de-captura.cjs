@@ -19,6 +19,7 @@
 const fs = require("fs");
 const path = require("path");
 const crypto = require("crypto");
+const { conferirServidorDeProva } = require("./banco-de-prova.cjs");
 
 const API = (process.env.NEXUS_API || "http://localhost:3001") + "/api";
 const ARQUIVO_LOCAL = path.join(__dirname, "conta-de-captura.local.json");
@@ -103,7 +104,12 @@ async function chame(metodo, caminho, corpo) {
 
 // Sessao da conta de captura: entra se ela ja existe, cadastra se ainda nao.
 // Devolve os tokens para quem quiser montar o navegador sem digitar nada.
+//
+// O cadastro e uma escrita: a conta nasce no banco que a API estiver usando. Por
+// isso a conferencia da decisao D6 (tarefa T1) vem antes dela — sem o servidor de
+// prova confirmado, a conta de captura sairia no banco de desenvolvimento.
 async function sessaoDaCaptura() {
+  await conferirServidorDeProva(API);
   const { email, nome, senha } = contaDeCaptura();
   const entrada = await chame("POST", "/auth/login", { email, password: senha });
   if (entrada.status === 200) return { email, nome, senha, tokens: entrada.dados };

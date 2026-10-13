@@ -13,6 +13,7 @@
 const puppeteer = require("puppeteer-core");
 const { sessaoDaCaptura } = require("./conta-de-captura.cjs");
 const path = require("path");
+const { conferirServidorDeProva } = require("./banco-de-prova.cjs");
 
 const CHROME = "C:/Program Files/Google/Chrome/Application/chrome.exe";
 const BASE = "http://localhost:5173";
@@ -519,6 +520,11 @@ async function checarPainel(page, okFn, aba) {
 }
 
 (async () => {
+  // D6 (tarefa T1): a prova so escreve no banco de prova. A conferencia entra na API, pega o
+  // id que ela devolve no login da conta de prova e exige que esse id exista em
+  // nexusbusinessmanager_teste - se o servidor atende outro banco, a prova para aqui.
+  await conferirServidorDeProva();
+
   const browser = await puppeteer.launch({
     executablePath: CHROME,
     headless: "new",

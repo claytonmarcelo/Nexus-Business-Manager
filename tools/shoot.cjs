@@ -16,6 +16,7 @@ const fs = require("fs");
 const path = require("path");
 const { EMAIL_ADMIN, SENHA_ADMIN } = require("./senha-admin.cjs");
 const { contaDeCaptura } = require("./conta-de-captura.cjs");
+const { conferirServidorDeProva } = require("./banco-de-prova.cjs");
 
 const OUT = path.join(__dirname, "..", "docs", "screenshots");
 fs.mkdirSync(OUT, { recursive: true });
@@ -118,6 +119,11 @@ const ABERTURAS = {
     console.error("nenhuma tela pedida em NEXUS_PROVA_FOTOS; nomes possiveis: " + TELAS.map((t) => t.foto).join(", "));
     process.exit(2);
   }
+
+  // D6 (tarefa T1): a prova so escreve no banco de prova. A conferencia entra na API, pega o
+  // id que ela devolve no login da conta de prova e exige que esse id exista em
+  // nexusbusinessmanager_teste - se o servidor atende outro banco, a prova para aqui.
+  await conferirServidorDeProva();
 
   const browser = await puppeteer.launch({
     executablePath: "C:/Program Files/Google/Chrome/Application/chrome.exe",

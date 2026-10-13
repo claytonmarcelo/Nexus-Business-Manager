@@ -11,6 +11,7 @@
 // ordem filho → pai, igual ao cleanup dos testes de API.
 const puppeteer = require("puppeteer-core");
 const path = require("path");
+const { conferirServidorDeProva, clienteDoBancoDeProva } = require("./banco-de-prova.cjs");
 
 const CHROME = "C:/Program Files/Google/Chrome/Application/chrome.exe";
 const BASE = process.env.NEXUS_WEB || "http://localhost:5173";
@@ -162,9 +163,9 @@ async function entrarNoPainel(pagina, email, senha) {
 // ------------------------------------------------------------------------ banco
 let prisma = null;
 async function abrirBanco() {
-  require("dotenv").config({ path: path.join(__dirname, "..", "apps", "api", ".env") });
-  const { PrismaClient } = require("@prisma/client");
-  prisma = new PrismaClient();
+  // D6 (tarefa T1): o .env de desenvolvimento fica fora desta prova. O cliente vem de
+  // banco-de-prova.cjs, que so aceita DATABASE_URL_TESTE apontando para o banco de prova.
+  prisma = clienteDoBancoDeProva();
 }
 
 let contador = 0;
@@ -249,6 +250,11 @@ const ultimoDiaDoMes = (iso) => new Date(Date.UTC(Number(iso.slice(0, 4)), Numbe
     ok("produto e fornecedor de prova criados", produto.status === 201 && fornecedor.status === 201,
       produto.status + " / " + fornecedor.status);
     const produtoId = produto.dados.id;
+
+    // D6 (tarefa T1): a prova so escreve no banco de prova. A conferencia entra na API, pega o
+    // id que ela devolve no login da conta de prova e exige que esse id exista em
+    // nexusbusinessmanager_teste - se o servidor atende outro banco, a prova para aqui.
+    await conferirServidorDeProva();
 
     browser = await puppeteer.launch({
       executablePath: CHROME, headless: "new", args: ["--no-sandbox", "--disable-dev-shm-usage"],
