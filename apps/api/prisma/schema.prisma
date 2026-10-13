@@ -52,6 +52,11 @@ model User {
   serviceOrdersAssigned ServiceOrder[] @relation("ServiceOrderAssigned")
   serviceOrdersCreated  ServiceOrder[] @relation("ServiceOrderCreated")
   serviceOrderHistory   ServiceOrderHistory[] @relation("ServiceOrderHistory")
+  // Cobranças (F3.2 Parte 2): as mesmas três perguntas da OS — quem abriu a
+  // cobrança, quem registrou o recebimento e quem cancelou.
+  chargesCreated        Charge[] @relation("ChargeCreated")
+  chargesPaid           Charge[] @relation("ChargePaid")
+  chargesCancelled      Charge[] @relation("ChargeCancelled")
 
   notifications           Notification[]
   notificationPreferences NotificationPreference[]
@@ -115,6 +120,7 @@ model Company {
   notifications           Notification[]
   paymentGateways         PaymentGateway[]
   serviceOrders           ServiceOrder[]
+  charges                 Charge[]
 
   @@map("companies")
 }
@@ -244,6 +250,7 @@ model Client {
   leads          Lead[]
   agendaEvents   AgendaEvent[]
   serviceOrders  ServiceOrder[]
+  charges        Charge[]
 
   @@unique([companyId, document])
   @@index([companyId, name])
@@ -346,6 +353,7 @@ model Sale {
   // Cascade: lançamento é escrituração — a venda pode sair do sistema, o
   // lançamento que já foi pago não sai junto com ela.
   financeEntries FinanceEntry[]
+  charges        Charge[]
 
   @@index([companyId, status, createdAt])
   @@map("sales")
@@ -466,6 +474,9 @@ model FinanceEntry {
   user        User?            @relation(fields: [userId], references: [id], onDelete: SetNull)
   sale        Sale?            @relation(fields: [saleId], references: [id], onDelete: SetNull)
   purchase    Purchase?        @relation(fields: [purchaseId], references: [id], onDelete: SetNull)
+  // F3.2 Parte 2: o lançamento que uma cobrança gerou. O lado dono do vínculo é
+  // `Charge.financeEntryId` (UNIQUE lá), então aqui é só a leitura de volta.
+  charge      Charge?
 
   @@index([companyId, status, dueDate])
   @@index([saleId])
@@ -696,6 +707,11 @@ model CronJob {
 
 // ===== Integradores de pagamento (credenciais por empresa e ambiente) =====
 enum GatewayProvider {
+  // Parte 2 (Cobranças): o MANUAL é o gateway da própria empresa — PIX na chave
+  // cadastrada, boleto ou transferência combinados no balcão, dinheiro ou cartão
+  // na maquininha. Ele existe porque a cobrança acontece antes de qualquer
+  // integração: quem registra o recebimento é uma pessoa, nunca um webhook.
+  MANUAL
   MERCADO_PAGO
   EFI
   STRIPE
@@ -716,6 +732,11 @@ model PaymentGateway {
   credentialCipher String?            @map("credential_cipher") @db.Text
   webhookCipher    String?            @map("webhook_cipher") @db.Text
   active           Boolean            @default(false)
+  // F3.2 Parte 2: a configuração do gateway MANUAL — tipo e valor da chave PIX,
+  // beneficiário, instruções ao cliente e dias de vencimento padrão. É JSON de
+  // exibição, e não credencial: as colunas cifradas acima continuam vazias para
+  // todo provedor deste projeto, inclusive para o MANUAL.
+  chargeSettings   Json?              @map("charge_settings")
   lastCheckAt      DateTime?          @map("last_check_at")
   lastCheckStatus  String?            @map("last_check_status") @db.VarChar(20)
   lastCheckMessage String?            @map("last_check_message") @db.VarChar(400)
@@ -799,6 +820,7 @@ model ServiceOrder {
   creator        User?                @relation("ServiceOrderCreated", fields: [createdBy], references: [id], onDelete: SetNull)
   items          ServiceOrderItem[]
   history        ServiceOrderHistory[]
+  charges        Charge[]
 
   @@unique([companyId, number])
   @@index([companyId, status, createdAt])
@@ -845,4 +867,95 @@ model ServiceOrderHistory {
 
   @@index([serviceOrderId, createdAt])
   @@map("service_order_histories")
+}
+
+// ===== Cobranças (F3.2 Parte 2) =====
+//
+// A cobrança é o papel que a empresa estende ao cliente: "você deve X até tal
+// dia, e aqui está como pagar". Ela nasce da venda, da ordem de serviço ou
+// sozinha, e vive no mundo manual enquanto não há integração — PIX na chave
+// cadastrada, boleto combinado no balcão, transferência, dinheiro ou cartão na
+// maquininha. O que faz dela um documento, e não uma linha do financeiro, é o
+// vínculo dos dois lados: ela aponta para o papel que originou a dívida e, ao
+// ser paga, escreve uma única receita no caixa.
+//
+// A numeração é sequencial POR EMPRESA, igual à da OS: UNIQUE(company_id,
+// number) transforma a corrida entre duas requisições em chave duplicada, e o
+// serviço refaz a conta. O caixa tem a prova estrutural do mesmo jeito:
+// `finance_entry_id` é UNIQUE, então duas pessoas pagando a mesma cobrança ao
+// mesmo tempo não produzem dois lançamentos — a segunda morre antes de escrever.
+//
+// "Vencida" não é coluna: é a leitura de `due_date` contra o calendário da
+// empresa (lib/time.ts). Uma coluna envelheceria sozinha a cada meia-noite e
+// mentiria para quem consulta na véspera; aqui o estado vence ou não vence no
+// instante em que é lido.
+
+enum ChargeMethod {
+  PIX
+  BOLETO
+  TRANSFERENCIA
+  DINHEIRO
+  CARTAO
+  OUTRO
+}
+
+enum ChargeStatus {
+  PENDING
+  PAID
+  CANCELLED
+}
+
+model Charge {
+  id             String          @id @default(uuid()) @db.VarChar(36)
+  companyId      String          @map("company_id") @db.VarChar(36)
+  number         Int
+  // Os três vínculos são opcionais, mas a camada de serviço exige pelo menos um:
+  // cobrança sem destinatário não é cobrança, é desejo. Quando a venda ou a OS
+  // existe, o cliente vem dela — o que a tela aponta é o que vale.
+  clientId       String?         @map("client_id") @db.VarChar(36)
+  saleId         String?         @map("sale_id") @db.VarChar(36)
+  serviceOrderId String?         @map("service_order_id") @db.VarChar(36)
+  title          String          @db.VarChar(160)
+  amount         Decimal         @db.Decimal(14, 2)
+  dueDate        DateTime        @map("due_date") @db.Date
+  method         ChargeMethod
+  // Toda cobrança deste projeto nasce do gateway MANUAL. A coluna existe para o
+  // dia em que um provedor de mercado entrar: o vínculo com a transação externa
+  // será dele, e o histórico das cobranças manuais continuará dizendo a verdade.
+  provider       GatewayProvider @default(MANUAL)
+  pixKeyType     String?         @map("pix_key_type") @db.VarChar(16)
+  pixKey         String?         @map("pix_key") @db.VarChar(255)
+  instructions   String?         @db.VarChar(500)
+  notes          String?         @db.VarChar(500)
+  status         ChargeStatus    @default(PENDING)
+  paidAt         DateTime?       @map("paid_at")
+  paidMethod     ChargeMethod?   @map("paid_method")
+  paidBy         String?         @map("paid_by") @db.VarChar(36)
+  paymentNote    String?         @map("payment_note") @db.VarChar(500)
+  cancelledAt    DateTime?       @map("cancelled_at")
+  cancelReason   String?         @map("cancel_reason") @db.VarChar(500)
+  cancelledBy    String?         @map("cancelled_by") @db.VarChar(36)
+  // O único laço com o caixa, e ele é UNIQUE por construção: uma cobrança gera
+  // no máximo um lançamento, e a corrida de pagamentos morre aqui.
+  financeEntryId String?         @unique @map("finance_entry_id") @db.VarChar(36)
+  createdBy      String?         @map("created_by") @db.VarChar(36)
+  createdAt      DateTime        @default(now()) @map("created_at")
+  updatedAt      DateTime        @updatedAt @map("updated_at")
+  company        Company         @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  // RESTRICT nos documentos: cobrança pendente é dívida escrita, e o cliente, a
+  // venda ou a OS por trás dela não somem por trás dela.
+  client         Client?         @relation(fields: [clientId], references: [id], onDelete: Restrict)
+  sale           Sale?           @relation(fields: [saleId], references: [id], onDelete: Restrict)
+  serviceOrder   ServiceOrder?   @relation(fields: [serviceOrderId], references: [id], onDelete: Restrict)
+  financeEntry   FinanceEntry?   @relation(fields: [financeEntryId], references: [id], onDelete: SetNull)
+  creator        User?           @relation("ChargeCreated", fields: [createdBy], references: [id], onDelete: SetNull)
+  payer          User?           @relation("ChargePaid", fields: [paidBy], references: [id], onDelete: SetNull)
+  canceller      User?           @relation("ChargeCancelled", fields: [cancelledBy], references: [id], onDelete: SetNull)
+
+  @@unique([companyId, number])
+  @@index([companyId, status, dueDate])
+  @@index([companyId, clientId])
+  @@index([saleId])
+  @@index([serviceOrderId])
+  @@map("charges")
 }

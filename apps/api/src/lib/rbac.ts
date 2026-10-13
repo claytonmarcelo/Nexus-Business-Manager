@@ -19,11 +19,12 @@ const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     "supplier:*",
     "purchase:*",
     "finance:*",
+    "charge:*",
     "crm:*",
     "agenda:*",
   ],
-  MANAGER: ["user:read", "company:read", "audit:read", "client:read", "client:write", "product:read", "product:write", "sale:read", "sale:write", "service_order:read", "service_order:write", "supplier:read", "supplier:write", "purchase:read", "purchase:write", "finance:read", "finance:write", "crm:read", "crm:write", "agenda:read", "agenda:write"],
-  STAFF: ["company:read", "client:read", "product:read", "sale:read", "service_order:read", "supplier:read", "purchase:read", "finance:read", "crm:read", "agenda:read"],
+  MANAGER: ["user:read", "company:read", "audit:read", "client:read", "client:write", "product:read", "product:write", "sale:read", "sale:write", "service_order:read", "service_order:write", "supplier:read", "supplier:write", "purchase:read", "purchase:write", "finance:read", "finance:write", "charge:read", "charge:write", "crm:read", "crm:write", "agenda:read", "agenda:write"],
+  STAFF: ["company:read", "client:read", "product:read", "sale:read", "service_order:read", "supplier:read", "purchase:read", "finance:read", "charge:read", "crm:read", "agenda:read"],
 };
 
 export function rolePermissions(role: Role): Permission[] {
@@ -172,6 +173,9 @@ const RECURSOS: { recurso: string; rotulo: string }[] = [
   { recurso: "supplier", rotulo: "Fornecedores" },
   { recurso: "purchase", rotulo: "Compras" },
   { recurso: "finance", rotulo: "Financeiro" },
+  // Cobranças é módulo próprio na matriz: quem opera o caixa lê e cria, mas o
+  // cadastro de como a empresa recebe dinheiro continua em Configurações.
+  { recurso: "charge", rotulo: "Cobranças" },
   { recurso: "crm", rotulo: "CRM e leads" },
   { recurso: "agenda", rotulo: "Agenda" },
   { recurso: "user", rotulo: "Equipe e acessos" },

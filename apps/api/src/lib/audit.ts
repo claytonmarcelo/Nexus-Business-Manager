@@ -76,6 +76,12 @@ export function sensivelWhere() {
             "purchase.cancelled",
             "finance.cancelled",
             "finance.paid",
+            // F3.2 Parte 2: receber uma cobrança mexe no caixa, e cancelar mexe
+            // na expectativa de receita. A configuração do gateway decide por
+            // onde o dinheiro entra — trocar a chave PIX é alteração sensível.
+            "charge.paid",
+            "charge.cancelled",
+            "gateway.update",
             "lead.lost",
             "lead.won",
             "agenda.cancelled",

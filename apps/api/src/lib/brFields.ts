@@ -48,6 +48,21 @@ function digitoVerificador(digits: string, pesos: number[]): number {
   return resto < 2 ? 0 : 11 - resto;
 }
 
+// CPF: 11 dígitos e os dois verificadores batendo, pela mesma conta do CNPJ.
+// Sequência repetida (11111111111) passa na conta e não existe, por isso sai
+// antes. A chave PIX de pessoa física é o caso de uso que mais pede esta função:
+// dígito trocado manda o recebimento para o CPF de outra pessoa.
+export function cpfValido(valor: string): boolean {
+  const d = somenteDigitos(valor);
+  if (d.length !== 11) return false;
+  if (/^(\d)\1{10}$/.test(d)) return false;
+  if (digitoVerificador(d, PESOS_CPF_PRIMEIRO) !== Number(d[9])) return false;
+  return digitoVerificador(d, PESOS_CPF_SEGUNDO) === Number(d[10]);
+}
+
+const PESOS_CPF_PRIMEIRO = [10, 9, 8, 7, 6, 5, 4, 3, 2];
+const PESOS_CPF_SEGUNDO = [11, 10, 9, 8, 7, 6, 5, 4, 3, 2];
+
 // CEP: oito dígitos e não "00000000". A faixa completa dos Correios exigiria
 // tabela de bairro — o que pega cadastro errado aqui é o formato.
 export function cepValido(valor: string): boolean {

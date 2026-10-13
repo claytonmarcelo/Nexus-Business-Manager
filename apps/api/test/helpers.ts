@@ -80,7 +80,9 @@ export async function cleanup(ids: { userIds?: string[]; companyIds?: string[] }
       );
     }
     const proprias = [
-      "service_orders", "stock_movements", "finance_entries", "agenda_events", "leads", "sales", "purchases",
+      // `charges` abre a lista: cobrança aponta cliente, venda, OS e lançamento,
+      // e os três primeiros têm RESTRICT — ela sai antes de todos eles.
+      "charges", "service_orders", "stock_movements", "finance_entries", "agenda_events", "leads", "sales", "purchases",
       "clients", "products", "product_categories", "suppliers", "finance_categories",
       "notifications", "notification_preferences", "payment_gateways", "company_users",
     ];
