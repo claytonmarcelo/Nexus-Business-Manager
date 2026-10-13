@@ -19,8 +19,7 @@ válidas como histórico do que já foi comprovado.
 
 | Tarefa | Situação | Prova |
 |---|---|---|
-| F0. Retomar e publicar os 3 commits pendentes | BLOQUEADO POR DECISÃO | `git fetch origin` trouxe `7a34167`, `150581f`, `2cfa2e9` ("Update README.md", do dono, só `README.md`). Medido: `## main...origin/main [ahead 3, behind 3]` e `git merge-base --is-ancestor origin/main HEAD` → **NÃO**. Sem avanço direto não há push (item 4 do PROMPT MESTRE veda pull, merge, rebase e force). O que está em jogo está em N16: `origin/main` publica 30 ocorrências (36 linhas) de e-mail pessoal e senha de desenvolvimento, mais 9 capturas com dado real, e `HEAD` tem zero. Decisão necessária: qual README vale. |
-| F1.1. Eliminar caracteres não latinos e instalar a guarda permanente | FEITO | Varredura em quatro escopos (284 arquivos de texto, histórico inteiro de mensagens de commit, patch dos commits pendentes, README do `origin/main`): único achado foram 4 ocorrências de U+03A3 em `docs/AUDITORIA.md:462`, `:473` e `:527`, reescritas como "soma das linhas", "soma das parcelas" e `soma(ENTRADAS) − soma(SAIDAS)`. Guarda: `apps/api/test/caracteres-permitidos.test.ts` (4 casos, 35 scripts por propriedade Unicode, varre `--cached --others --exclude-standard` e confere a mensagem do `HEAD`). Vermelho mostrado duas vezes — com o sigma na árvore (`Array(4)`) e com arquivo temporário de prova (`docs/_prova-caractere-proibido.md:3 U+4E00`, apagado em seguida) — e verde final `4 passed (4)`. |
+| F0. Retomar e publicar os commits da rodada de segurança | FEITO | Portão de avanço direto reaberto por decisão do dono: `git merge origin/main` (commit `772cc77`, sem force, sem rebase, sem reescrever histórico) com o `README.md` da árvore local vencendo o conteúdo — o do GitHub trazia o e-mail pessoal de volta na linha 633. Depois do merge: 917 linhas, zero marca de conflito, nenhuma ocorrência de domínio pessoal. Push `2cfa2e9..772cc77` e prova `git ls-remote origin HEAD` = `772cc77559bf9f21a1373af5fc9a2f7cfb282ecc` = `git rev-parse HEAD`. Com o MySQL religado pelo dono, a suíte volta a ser medida: API 31 arquivos / 250 casos e web 5 / 27, zero falha. || F1.1. Eliminar caracteres não latinos e instalar a guarda permanente | FEITO | Varredura em quatro escopos (284 arquivos de texto, histórico inteiro de mensagens de commit, patch dos commits pendentes, README do `origin/main`): único achado foram 4 ocorrências de U+03A3 em `docs/AUDITORIA.md:462`, `:473` e `:527`, reescritas como "soma das linhas", "soma das parcelas" e `soma(ENTRADAS) − soma(SAIDAS)`. Guarda: `apps/api/test/caracteres-permitidos.test.ts` (4 casos, 35 scripts por propriedade Unicode, varre `--cached --others --exclude-standard` e confere a mensagem do `HEAD`). Vermelho mostrado duas vezes — com o sigma na árvore (`Array(4)`) e com arquivo temporário de prova (`docs/_prova-caractere-proibido.md:3 U+4E00`, apagado em seguida) — e verde final `4 passed (4)`. |
 | F1.2. Rodapé único (`AppFooter` + `brand.ts`) | PENDENTE | O crédito hoje está em `apps/web/src/components/layout/AdminShell.tsx:364` e repetido na vitrine. |
 | F1.3. Garantias da conta de demonstração | PENDENTE | `test/seed-seguro.test.ts` já cobre parte; falta o pacote da fase. |
 | F1.4. Bootstrap do administrador da plataforma (`admin:criar`) | PENDENTE | Não existe o script na raiz nem em `@nexus/api`. |
@@ -38,13 +37,13 @@ válidas como histórico do que já foi comprovado.
 ```
 npm run typecheck   ok (api + web, sem saída)
 npm run build       ok (881,04 kB / 262,35 kB gzip; aviso de chunk >500 kB continua)
-npm test            NÃO VERIFICADO — o MySQL do WAMP parou ("Can't reach database server at localhost:3306");
-                    tentar subir o mysqld do WAMP falhou por permissão de disco (errno 13). Ver N18.
+npm test            API 31 arquivos / 250 casos e web 5 / 27 — zero falha, zero skip (com o MySQL religado
+                    pelo dono; antes da F0 fechar, a suíte esteve NÃO VERIFICADO — ver N18)
 guarda de caracteres  4 passed (4), sem banco — roda isolada com npx vitest run
 caracteres proibidos  0 em 284 arquivos de texto, 0 em mensagens de commit, 0 no patch pendente, 0 no README remoto
 BOM                 nenhum arquivo com BOM
 CRLF                nenhum arquivo com CRLF
-avanço direto       NÃO (ahead 3, behind 3) — push desta rodada não aconteceu
+avanço direto       SIM depois do merge 772cc77 — push 2cfa2e9..772cc77 publicado e conferido no ls-remote
 ```
 
 ## Bloco A — segurança e isolamento

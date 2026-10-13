@@ -5,6 +5,25 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/), 
 
 ## [Não lançado]
 
+### A ponta pública do repositório parou de ter dado sensível: a limpeza da rodada de segurança foi publicada (2026-10-12)
+
+- **O que estava em jogo, medido ref por ref:** o `origin/main` tinha 30 ocorrências em 36 linhas — o e-mail
+  pessoal do administrador em 27 arquivos e a senha de desenvolvimento em `apps/api/.env.example:37`,
+  `apps/api/test/seed-seguro.test.ts:56` e `tools/shoot-clients.cjs:17` — mais 9 capturas com dado real. A árvore
+  local tinha zero de tudo isso, esperando um push que o portão de avanço direto não deixava acontecer.
+- **O desfecho, decidido pelo dono:** três commits do próprio dono no GitHub ("Update README.md") tinham
+  revertido o README para a versão anterior à rodada da vitrine. Autorizado o merge com o README local vencendo:
+  `git merge origin/main` → `772cc77`, conflito resolvido com o texto limpo (917 linhas, zero marca de conflito,
+  nenhum domínio pessoal). Push `2cfa2e9..772cc77`, provado por `git ls-remote origin HEAD` igual a
+  `git rev-parse HEAD`. Nada foi forçado, reescrito ou rebaseado.
+- **Portões corrida com o banco religado:** API 31 arquivos / 250 casos, web 5 / 27, typecheck e build limpos,
+  284 arquivos de texto sem BOM e sem CRLF, guarda de caracteres 4/4, e o patch publicado sem nenhuma
+  ocorrência de chave privada, token, credencial literal ou chave de nuvem.
+- **Fica de fora, registrado:** o histórico antigo do GitHub continua com o que foi publicado antes — decisão
+  do dono (item 1 do PROMPT MESTRE) de não rotacionar nem reescrever nada por causa disso — e o README do
+  GitHub tem um "Sumário" de 16 entradas e uma seção "Estado atual" que o texto local não tem.
+
+
 ### O alfabeto do projeto ganhou porta: varredura de caracteres não latinos e o guarda que não deixa voltar (2026-10-12)
 
 - **O que a regra diz, agora com teste.** O PROMPT MESTRE proíbe caractere de alfabeto não latino em arquivo,

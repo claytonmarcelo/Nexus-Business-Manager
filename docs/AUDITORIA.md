@@ -1028,6 +1028,22 @@ isso a linha 633 do README remoto traz de volta o endereço pessoal do administr
 `apps/api/test/identificadores-fora-do-codigo.test.ts` proíbe. Nada foi resolvido por conta própria: o item 4 do
 PROMPT MESTRE veda pull, merge, rebase e force quando um portão falha, e a decisão de qual README vale é do dono.
 
+**Encerrada na mesma rodada, por decisão do dono.** A opção autorizada foi "merge e fico com
+o README local": `git merge origin/main` gerou o commit `772cc77`, o conflito de `README.md`
+foi resolvido com a versão da árvore local, e o portão de avanço direto voltou a existir.
+Medido no arquivo resolvido: 917 linhas, zero marca de conflito, nenhum endereço de domínio
+pessoal (`/@gmail/` não casa), e a conta fictícia `admin@exemplo.test` no lugar. O push
+saiu: `2cfa2e9..772cc77`, com `git ls-remote origin HEAD` devolvendo o mesmo hash do `git
+rev-parse HEAD`. Consequência prática da publicação: a **ponta** do `main` no GitHub deixa
+de ter as 30 ocorrências de N16 e as 9 capturas com dado real. O histórico anterior continua
+com elas, e o dono decidiu (item 1 do PROMPT MESTRE) que não se reescreve histórico nem se
+rotaciona nada por causa disso.
+
+**O que o merge não trouxe, registrado sem corrigir:** o README do GitHub tem um índice
+"Sumário" de 16 entradas e uma seção "Estado atual" que o README local não tem. É conteúdo
+escrito pelo dono, pode voltar a pedido — mas não voltou aqui, porque a decisão foi manter o
+texto da vitrine.
+
 ### N18 — NÃO VERIFICADO (ambiente): o MySQL do WAMP parou no meio da fase
 
 O portão `npm test` não pôde ser corrido nesta rodada. A saída medida:
@@ -1041,6 +1057,12 @@ Tentativa de subir o serviço por conta própria falhou por permissão do própr
 Windows instalado para isso. A suíte da API (30 arquivos / 246 casos) depende do banco real por contrato, então
 o estado dela nesta rodada é **NÃO VERIFICADO — banco parado**, e nada foi dado por aprovado. Typecheck e build
 foram corridos e passaram. O guarda novo da F1.1 não usa banco e foi validado isoladamente.
+
+**Encerrada na mesma rodada.** O dono iniciou o MySQL do WAMP, a porta 3306 voltou a
+escutar, e a suíte foi corrida de ponta a ponta: `npm test -w @nexus/api` → `Test Files 31
+passed (31) / Tests 250 passed (250)`; `npm test` no workspace web → `Test Files 5 passed
+(5) / Tests 27 passed (27)`. O contador da API subiu de 30 arquivos / 246 casos para 31 /
+250 porque o guarda da F1.1 entrou na suíte.
 
 ### F1.1 encerrada: varredura, correção e guarda permanente
 
