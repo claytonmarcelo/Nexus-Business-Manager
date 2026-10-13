@@ -10,7 +10,7 @@ Situações possíveis: `FEITO` (corrigido e comprovado por teste nesta rodada),
 
 Atualizada em 2026-10-11, no fim do Bloco A, de novo na rodada em que o cabeçalho do painel perdeu o texto
 da marca (achados N1 a N5 em `docs/AUDITORIA.md`), e de novo em 2026-10-13, no encerramento da F3.2 Parte 2
-(cobranças manuais — achados N40 a N52).
+(cobranças manuais — achados N40 a N52). A abertura da rodada F4 → F9, no mesmo dia, registrou o achado N53.
 
 ## PROMPT MESTRE — fases F0 a F9 (fonte única de verdade desde 2026-10-12)
 
@@ -114,6 +114,36 @@ caracteres          0 ocorrências de alfabeto não latino no fonte novo, nos te
                     PRODUCAO.md, nas mensagens de commit e no patch publicado
 ```
 
+
+## Rodada F4 → F9 — prompt de continuação de 2026-10-13
+
+O dono mandou executar T0 → T8 de uma vez, sem esperar "pode seguir", e colou na conversa o contrato
+permanente de execução (`REGRAS-DA-IDE.md`). Desta linha para frente os registros seguem o formato da
+seção 7 do contrato: `<ID> | SITUAÇÃO | commit | evidência | achados`.
+
+**Divergência (N53)**: `.ia/` não está no repositório e os subitens do prompt mestre (F4.1 a F4.7,
+F5.1 a F5.7) não são citáveis. Numeração adotada: tarefa do prompt de continuação (`T1`..`T8`) + achado
+(`N...`) + decisão do dono (`D1`..`D14`).
+
+| Tarefa | Situação | Commit | Evidência | Achados |
+|---|---|---|---|---|
+| T0. Retomada: ler o contrato, conferir a árvore, registrar o ponto de partida | FEITA | base publicada `0d80215`; o commit que traz esta linha fecha a T0 | `git status --porcelain` vazio; `git rev-parse HEAD` = `git ls-remote origin HEAD` = `0d802154461cc8ce53018131ea6e3250a24c4986`; tabela F0→F9 lida em `docs/STATUS-AJUSTES.md:32-37` com F4, F5, F6, F7, F8 e F9 em `PENDENTE`; `ls .ia` sem diretório | N53 |
+
+### Portões da T0 (2026-10-13)
+
+```
+git status --porcelain     vazio (nenhum arquivo modificado, nenhum não rastreado)
+rev-parse / ls-remote      ambos 0d802154461cc8ce53018131ea6e3250a24c4986 — nada pendente de push
+npm run typecheck          ok (api + web, sem saída)
+npm run build              ok — 946,30 kB / 278,06 kB gzip de JS e 395,16 kB / 60,53 kB de CSS;
+                           o aviso de chunk acima de 500 kB continua (é trabalho da T4)
+npm test                   API 37 arquivos / 350 casos em 317,28 s e web 10 / 77 em 10,61 s —
+                           zero falha, zero skip
+guarda de caracteres       4 passed (4), rodada isolada
+codificação                325 arquivos de texto: BOM 0, CR 0
+segredos                   0 no patch; as 30 batidas na árvore são os mesmos fixtures de teste
+                           já identificados na rodada anterior, linha a linha, sem valor impresso
+```
 
 ## Bloco A — segurança e isolamento
 

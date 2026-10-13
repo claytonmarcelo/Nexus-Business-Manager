@@ -1636,3 +1636,17 @@ o `dueDate` do lançamento no dia combinado. O campo nasce com o dia da empresa 
 no relógio do navegador — com esse dia como teto, e o recibo impresso passou a mostrar o **dia** (a hora de um
 retroagido sairia "00:00" e seria lida como relógio quebrado). A prova de navegador mede as três pontas: o
 padrão do campo, o teto dele e o dia que volta do banco.
+
+### N53 — fonte de verdade fora do repositório: o diretório `.ia/` não existe
+
+O prompt de continuação manda ler primeiro `.ia/REGRAS-DA-IDE.md` e `.ia/PROMPT_MESTRE_PRONTIDAO_PRODUCAO.md`
+e mede o ponto de partida no commit `0d80215`. Medido agora, o diretório não está no repositório nem em
+`C:/wamp64/www`: `ls .ia` devolve `No such file or directory`, e a busca por `PROMPT_MESTRE` não retorna
+arquivo. Os dois textos chegaram colados na conversa pelo dono, e a rodada neles é numerada por tarefas
+(T0 a T8), não por subitens. Consequência prática, registrada em vez de improvisada: o contrato exige citar
+o número do item do prompt mestre em cada commit e em cada linha de status, e os subitens F4.1 a F4.7,
+F5.1 a F5.7 não podem ser citados porque não há arquivo que os sustente — citá-los seria inventar
+numeração. A execução desta rodada usa como identificador a tarefa do prompt de continuação (`T1`..`T8`),
+o achado já registrado nesta casa (`N...`) e a decisão do dono (`D1`..`D14`). Nada de conteúdo foi
+adicionado nem removido por causa disso: quem ler o `docs/STATUS-AJUSTES.md` daqui em diante encontra o
+mesmo contrato, só com numeração diferente.
