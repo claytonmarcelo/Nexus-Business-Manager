@@ -11,7 +11,9 @@ import { consultarEstadoDoServico, type EstadoDoServico } from "../../lib/status
 // variantes mudam só respiração e endereço de padding, nunca texto.
 //
 // Regras que este arquivo carrega:
-// - versão lida do package.json no build, sem número digitado em componente;
+// - o rodapé não repete o nome do produto ao lado do símbolo, nem mostra
+//   versão: a linha de direitos é onde o produto é nomeado, e número de pacote não
+//   é informação útil para quem usa o sistema;
 // - ano do copyright calculado na tela, nunca congelado em texto;
 // - crédito do autor com link apenas quando houver endereço configurado;
 // - documento legal aparece se, e somente se, estiver publicado;
@@ -42,10 +44,6 @@ export function AppFooter({ legais, contexto = "vitrine", marca = MARCA }: AppFo
     <footer className={"nexus-footer nexus-footer--" + contexto}>
       <span className="nexus-footer-marca">
         <Logo size={22} />
-        <span className="nexus-footer-nome">{marca.nome}</span>
-        {marca.versao ? (
-          <span className="nexus-footer-versao">v{marca.versao}</span>
-        ) : null}
       </span>
 
       <span className="nexus-footer-direitos">{"\u00A9"} {currentYear()} {marca.nome}</span>

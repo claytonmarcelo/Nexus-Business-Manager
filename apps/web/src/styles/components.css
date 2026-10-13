@@ -670,17 +670,7 @@
   line-height: 1.5;
 }
 .nexus-footer--painel { padding: 0.6rem 1.5rem; }
-.nexus-footer-marca { display: inline-flex; align-items: center; gap: 0.5rem; }
-.nexus-footer-nome { color: var(--text-2); font-weight: 700; letter-spacing: 0.02em; }
-.nexus-footer-versao {
-  padding: 0.1rem 0.5rem;
-  border: 1px solid var(--border);
-  border-radius: 999px;
-  background: var(--surface-2);
-  color: var(--text-2);
-  font-family: var(--font-mono);
-  font-size: 0.7rem;
-}
+.nexus-footer-marca { display: inline-flex; align-items: center; }
 .nexus-footer-direitos { color: var(--text-2); }
 .nexus-footer-legais { display: inline-flex; flex-wrap: wrap; gap: 0.9rem; }
 .nexus-footer-legais a { color: var(--text-2); text-decoration: none; }

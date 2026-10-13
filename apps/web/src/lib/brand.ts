@@ -7,14 +7,6 @@ export interface Marca {
   readonly autor: string;
   /** Endereço da página do autor. Vazio significa "não configurado". */
   readonly urlDoAutor: string;
-  readonly versao: string;
-}
-
-// A versão não é digitada em componente: o build injeta a que está no
-// package.json (apps/web/vite.config.ts). Sem esse dado, o rodapé fica sem o
-// selo em vez de mostrar um número que o pacote não tem.
-function versaoDoBuild(): string {
-  return typeof __APP_VERSION__ === "string" ? __APP_VERSION__ : "";
 }
 
 export const MARCA: Marca = {
@@ -24,7 +16,6 @@ export const MARCA: Marca = {
   // houver página configurada - até lá é texto, e o rodapé não aponta para lugar
   // nenhum.
   urlDoAutor: "",
-  versao: versaoDoBuild(),
 };
 
 // Rótulos institucionais dos três documentos que a API conhece (LegalKind).

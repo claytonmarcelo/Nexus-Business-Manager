@@ -8,11 +8,12 @@ import { MARCA, type Marca } from "../lib/brand";
 import type { ResumoLegal } from "../lib/landingTypes";
 
 // F1.2 do PROMPT MESTRE: a vitrine e o painel passam a ter um rodapé só, alimentado
-// por um arquivo de marca. Este arquivo amarra exatamente o que foi prometido: nome
-// do produto, versão lida do package.json no build, ano dinâmico, crédito do autor
-// (link apenas quando houver endereço configurado), documentos legais que aparecem
+// por um arquivo de marca. Este arquivo amarra exatamente o que a tela promete: o
+// símbolo da marca, a linha de direitos com ano dinâmico, o crédito do autor (link
+// apenas quando houver endereço configurado), os documentos legais que aparecem
 // somente depois de publicados, nenhum link vazio e o indicador de serviço que só
-// existe com dado real da API.
+// existe com dado real da API. Em 2026-10-13 o dono tirou do rodapé o rótulo com o
+// nome do produto e o selo de versão, e a suíte passou a proibir os dois.
 //
 // O estado do serviço vem de GET /api/health. Aqui a ponta é um duplo: o que se
 // verifica é a regra de exibição, não a rede.
@@ -75,16 +76,30 @@ describe("Rodapé único da vitrine e do painel (F1.2)", () => {
     expect(fonte("src/styles/landing.css")).not.toMatch(/\.landing-footer-legais\b/);
   });
 
-  it("mostra o nome do produto, a versão do pacote e o ano corrente", () => {
-    expect(MARCA.nome).toBe("Nexus Business Manager");
-    expect(MARCA.versao).toMatch(/^\d+\.\d+\.\d+/);
-    expect(MARCA.versao).toBe(JSON.parse(fonte("package.json")).version);
-
+  it("o rodapé não repete o nome do produto ao lado do símbolo nem mostra selo de versão", () => {
+    // Decisão do dono em 2026-10-13: saem do rodapé o rótulo com o nome do produto
+    // e o selo de versão. Ficam a marca gráfica, a linha de direitos autorais — que é
+    // onde o nome do produto continua sendo dito —, os links legais, o estado do
+    // serviço e o crédito de quem constrói o sistema.
     monte({ legais: TRES_PUBLICADOS });
-    const texto = rodape().textContent ?? "";
+    const el = rodape();
+    const texto = el.textContent ?? "";
+    expect(el.querySelector(".nexus-footer-nome")).toBeNull();
+    expect(el.querySelector(".nexus-footer-versao")).toBeNull();
+    expect(el.querySelector(".nexus-footer-marca svg, .nexus-footer-marca img")).not.toBeNull();
+    expect(texto).not.toMatch(/\d+\.\d+\.\d+/);
     expect(texto).toContain(MARCA.nome);
-    expect(texto).toContain(MARCA.versao);
     expect(texto).toContain(String(new Date().getFullYear()));
+
+    // A injeção de versão no build só existia para alimentar aquele selo. Sem selo,
+    // ela deixa de existir: nada no pacote carrega um dado que nenhuma tela mostra.
+    for (const caminho of ["vite.config.ts", "vitest.config.ts", "src/vite-env.d.ts", "src/lib/brand.ts"]) {
+      expect(fonte(caminho), caminho).not.toContain("__APP_VERSION__");
+    }
+    expect(fonte("src/lib/brand.ts"), "brand.ts").not.toMatch(/versao/i);
+    const css = fonte("src/styles/components.css");
+    expect(css).not.toContain(".nexus-footer-nome");
+    expect(css).not.toContain(".nexus-footer-versao");
   });
 
   it("mantém o crédito como texto enquanto não houver página do autor", () => {
