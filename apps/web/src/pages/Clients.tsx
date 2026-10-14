@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { api, extractErrorMessage } from "../lib/api";
 import { useAuth } from "../context/AuthContext";
 import { notify } from "../lib/notify";
@@ -63,18 +63,29 @@ export function Clients() {
   // dele e feita aqui, com o mesmo componente das tabelas paginadas.
   const ranking = usePaginacaoLocal(report?.top ?? []);
 
+  // N51 (P14, passada da F5): a lista que vale é a da última busca, não a do último
+  // pacote que chegou. Cada recarga recebe um número e só o mais novo toca a tela —
+  // digitar enquanto a lista cheia ainda está em voo dispara dois pedidos, e a rede
+  // não devolve na ordem em que eles saíram.
+  const ultimaLista = useRef(0);
+
   const load = useCallback(async () => {
+    const minhaBusca = ++ultimaLista.current;
     setLoading(true);
     setError(null);
     try {
       const { data } = await api.get<Paged<ClientRow>>("/clients", {
         params: { page, pageSize, search: search || undefined },
       });
+      if (minhaBusca !== ultimaLista.current) return;
       setRows(data);
     } catch (err) {
+      if (minhaBusca !== ultimaLista.current) return;
       setError(extractErrorMessage(err));
     } finally {
-      setLoading(false);
+      // O spin pertence ao pedido mais novo; o perdedor fica mudo, inclusive quanto
+      // ao erro — uma resposta velha não pode abrir aviso na tela.
+      if (minhaBusca === ultimaLista.current) setLoading(false);
     }
   }, [page, pageSize, search]);
 

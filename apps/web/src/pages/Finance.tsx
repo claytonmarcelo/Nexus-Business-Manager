@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { api, extractErrorMessage } from "../lib/api";
 import { useAuth } from "../context/AuthContext";
 import { notify } from "../lib/notify";
@@ -86,7 +86,13 @@ export function Finance() {
   // e feita no navegador com o mesmo componente das tabelas paginadas.
   const fluxo = usePaginacaoLocal(relatorio?.fluxo ?? []);
 
+  // N51 (P14, passada da F5): quatro filtros e um campo de busca na mesma barra —
+  // trocar dois no mesmo segundo dispara dois pedidos. A lista que vale é a do mais
+  // novo, e o resumo viaja junto com ela porque é do mesmo filtro de mês.
+  const ultimaLista = useRef(0);
+
   const loadContas = useCallback(async () => {
+    const minhaBusca = ++ultimaLista.current;
     setLoading(true);
     setError(null);
     try {
@@ -96,12 +102,14 @@ export function Finance() {
         }),
         api.get<Summary>("/finance/summary", { params: { month: month || undefined } }),
       ]);
+      if (minhaBusca !== ultimaLista.current) return;
       setRows(lista.data);
       setSummary(resumo.data);
     } catch (err) {
+      if (minhaBusca !== ultimaLista.current) return;
       setError(extractErrorMessage(err));
     } finally {
-      setLoading(false);
+      if (minhaBusca === ultimaLista.current) setLoading(false);
     }
   }, [page, pageSize, search, type, status, month]);
 
@@ -494,20 +502,28 @@ function EntryModal({ entry, onClose, onSaved }: { entry: EntryRow | "new"; onCl
   const dirty = useDirty(form);
 
   useEffect(() => {
+    // N51/P14: ao trocar o tipo, a resposta antiga das categorias nao pode chegar
+    // depois da nova e encher o seletor com categorias de outro tipo.
+    let vivo = true;
     api.get<CategoryRow[]>("/finance/categories", { params: { type: form.type } })
-      .then((r) => setCategories(r.data))
-      .catch(() => setCategories([]));
+      .then((r) => { if (vivo) setCategories(r.data); })
+      .catch(() => { if (vivo) setCategories([]); });
+    return () => { vivo = false; };
   }, [form.type]);
 
   useEffect(() => {
+    // N51/P14: o modal pode fechar antes de as listas chegarem. Reabri-lo dispara
+    // nova busca, e a resposta de fora nao pode reescrever os seletores de dentro.
+    let vivo = true;
     if (isNew) {
       Promise.all([
         api.get<Paged<Option>>("/clients", { params: { page: 1, pageSize: 100 } }),
         api.get<Paged<Option>>("/suppliers", { params: { page: 1, pageSize: 100, active: "true" } }),
       ])
-        .then(([c, s]) => { setClients(c.data.data); setSuppliers(s.data.data); })
+        .then(([c, s]) => { if (vivo) { setClients(c.data.data); setSuppliers(s.data.data); } })
         .catch(() => { /* selects ficam vazios; erro aparece ao salvar */ });
     }
+    return () => { vivo = false; };
   }, [isNew]);
 
   async function submit() {

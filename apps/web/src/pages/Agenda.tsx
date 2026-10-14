@@ -121,19 +121,25 @@ export function Agenda() {
   // Clientes e leads apenas alimentam os seletores do formulario.
   useEffect(() => {
     if (!podeEscrever) return;
+    // N51/P14: guarda de montagem. A resposta pode chegar depois que a permissao
+    // mudar ou a tela desmontar, e ai os seletores nao podem mais ser reescritos.
+    let vivo = true;
     void (async () => {
       try {
         const [c, l] = await Promise.all([
           api.get<Paged<Opcao>>("/clients", { params: { pageSize: 100 } }),
           api.get<Paged<Opcao>>("/leads", { params: { pageSize: 100, status: "NEW" } }),
         ]);
+        if (!vivo) return;
         setClientes(c.data.data);
         setLeads(l.data.data);
       } catch {
+        if (!vivo) return;
         setClientes([]);
         setLeads([]);
       }
     })();
+    return () => { vivo = false; };
   }, [podeEscrever]);
 
   function aoTrocarPeriodo(arg: DatesSetArg) {

@@ -1,4 +1,4 @@
-import { Fragment, useCallback, useEffect, useState } from "react";
+import { Fragment, useCallback, useEffect, useRef, useState } from "react";
 import { api, extractErrorMessage } from "../lib/api";
 import { useAuth } from "../context/AuthContext";
 import { notify } from "../lib/notify";
@@ -72,18 +72,25 @@ export function Users() {
   // As sessoes vem todas de uma vez: a lista vira pagina no navegador.
   const listaSessoes = usePaginacaoLocal(sessoes?.data ?? []);
 
+  // N51 (P14, passada da F5): busca e virada de página saem do mesmo estado; o
+  // pedido atrasado de uma busca antiga não pode reescrever a tabela.
+  const ultimaLista = useRef(0);
+
   const load = useCallback(async () => {
+    const minhaBusca = ++ultimaLista.current;
     setLoading(true);
     setError(null);
     try {
       const { data } = await api.get<Paged<Member>>("/users", {
         params: { page, pageSize, search: search || undefined },
       });
+      if (minhaBusca !== ultimaLista.current) return;
       setRows(data);
     } catch (err) {
+      if (minhaBusca !== ultimaLista.current) return;
       setError(extractErrorMessage(err));
     } finally {
-      setLoading(false);
+      if (minhaBusca === ultimaLista.current) setLoading(false);
     }
   }, [page, pageSize, search]);
 

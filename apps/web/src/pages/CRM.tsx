@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState, type ChangeEvent } from "react";
+import { useCallback, useEffect, useRef, useState, type ChangeEvent } from "react";
 import { api, extractErrorMessage } from "../lib/api";
 import { useAuth } from "../context/AuthContext";
 import { notify } from "../lib/notify";
@@ -116,18 +116,25 @@ export function CRM() {
     }
   }, []);
 
+  // N51 (P14, passada da F5): o estágio vem do clique no funil e a busca do teclado,
+  // e os dois disparam pedido. Só o número mais novo escreve a lista.
+  const ultimaLista = useRef(0);
+
   const loadLeads = useCallback(async () => {
+    const minhaBusca = ++ultimaLista.current;
     setLoading(true);
     setError(null);
     try {
       const { data } = await api.get<Paged<LeadRow>>("/leads", {
         params: { page, pageSize, search: search || undefined, status: status || undefined },
       });
+      if (minhaBusca !== ultimaLista.current) return;
       setRows(data);
     } catch (err) {
+      if (minhaBusca !== ultimaLista.current) return;
       setError(extractErrorMessage(err));
     } finally {
-      setLoading(false);
+      if (minhaBusca === ultimaLista.current) setLoading(false);
     }
   }, [page, pageSize, search, status]);
 

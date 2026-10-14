@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { api, extractErrorMessage } from "../lib/api";
 import { useAuth } from "../context/AuthContext";
 import { notify } from "../lib/notify";
@@ -79,7 +79,14 @@ export function Products() {
   const [movLoading, setMovLoading] = useState(false);
   const [movError, setMovError] = useState<string | null>(null);
 
+  // N51 (P14, passada da F5): catálogo, resumo e categorias são um pedido só — se a
+  // busca mudou enquanto ele estava em voo, os três vão para o lixo junto. Sem o
+  // número de sequência, a resposta atrasada da lista cheia pintaria por cima do
+  // filtro que a pessoa acabou de escolher.
+  const ultimaLista = useRef(0);
+
   const load = useCallback(async () => {
+    const minhaBusca = ++ultimaLista.current;
     setLoading(true);
     setError(null);
     try {
@@ -90,13 +97,15 @@ export function Products() {
         api.get<Summary>("/products/stock-summary"),
         api.get<Category[]>("/product-categories"),
       ]);
+      if (minhaBusca !== ultimaLista.current) return;
       setRows(lista.data);
       setSummary(resumo.data);
       setCategories(cats.data);
     } catch (err) {
+      if (minhaBusca !== ultimaLista.current) return;
       setError(extractErrorMessage(err));
     } finally {
-      setLoading(false);
+      if (minhaBusca === ultimaLista.current) setLoading(false);
     }
   }, [page, pageSize, search, onlyLow]);
 
@@ -660,9 +669,13 @@ function MovementModal({ product, onClose, onSaved }: { product: ProductRow; onC
 function HistoryModal({ product, onClose }: { product: ProductRow; onClose: () => void }) {
   const [items, setItems] = useState<Paged<Movement> | null>(null);
   useEffect(() => {
+    // N51/P14: o modal de historico pode fechar antes de a pagina chegar; escrever
+    // a lista depois da desmontagem so geraria um aviso no console.
+    let vivo = true;
     api.get<Paged<Movement>>("/products/" + product.id + "/movements", { params: { pageSize: 10 } })
-      .then((r) => setItems(r.data))
-      .catch((e) => notify.error(extractErrorMessage(e)));
+      .then((r) => { if (vivo) setItems(r.data); })
+      .catch((e) => { if (vivo) notify.error(extractErrorMessage(e)); });
+    return () => { vivo = false; };
   }, [product.id]);
   const kindLabel = { IN: "Entrada", OUT: "Saída", ADJUST: "Ajuste" } as const;
   return (
