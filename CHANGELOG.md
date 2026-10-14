@@ -1,5 +1,74 @@
 ## [Não lançado]
 
+### A autenticação deixou de ser só senha: e-mail de verdade, cadastro confirmado, segundo fator e conta que tranca (2026-10-13)
+
+- **O que o dono decidiu (D1, D2 e D3 na rodada de continuação).** Entrega de mensagem por SMTP genérico com
+  console fora de produção e caixa em memória nos testes; cadastro novo do lado de fora do painel até confirmar
+  o e-mail, com a exigência ligada em produção; segundo fator por TOTP com o segredo cifrado em repouso, códigos
+  de recuperação de uso único, obrigatório para quem responde pela plataforma e para o dono de empresa em
+  produção. Nada de fornecedor escolhido às escondidas: o adaptador fala com qualquer servidor SMTP pelas cinco
+  variáveis de sempre, e nenhum valor de segredo é impresso em log, teste ou resposta.
+- **A porta antes do adaptador.** `src/lib/mail/` é o único contrato que os chamadores conhecem (`MailerPort`),
+  com três saídas atrás dela: `smtp.ts` (nodemailer 10.1.0, conferido como folha no `npm ls`), `console.ts` para
+  desenvolvimento e `fake.ts` como caixa da suíte. Os três envios que existem hoje — verificação de cadastro,
+  recuperação de senha e aviso de que o segundo fator foi ligado — passam pela mesma porta, e a resposta HTTP
+  nunca carrega o código: quem testa confere o código na caixa de memória, não no corpo da requisição. O que fica
+  de fora está dito, não escondido: a entrega ainda espera dentro do request (N58), e o sino e o relatório
+  diário continuam sem chamar ninguém (N59).
+- **Confirmar o e-mail sem denunciar quem tem conta.** `REQUIRE_EMAIL_VERIFICATION` decide, a régua de produção
+  exige o valor ligado, e a tela pública `/verificar-e-mail` resgata quem perdeu o link. Link vale uma vez só,
+  tem prazo, e o vencido responde com a mesma frase do que nunca existiu; endereço inexistente recebe a mesma
+  resposta de sempre, e o reenvio tem limite próprio para ninguém martelar caixa de entrada alheia. A auditoria
+  mascara o endereço e nunca carrega o token.
+- **Segundo fator com a chave guardada a sete chaves.** `otpauth` 9.5.2 gera o segredo, que nunca é gravado em
+  claro: sai cifrado em AES-256-GCM (`src/lib/criptografia.ts`, envelope `v1:<iv>:<tag>:<cifrado>`) com a chave
+  `TOTP_ENCRYPTION_KEY` — 64 hexadecimais obrigatórios em produção, recusados por formato, por marca de exemplo
+  e por pouca variedade de caracteres. Sem a chave, as rotas de 2FA dizem que falta a chave, em vez de gravar
+  segredo em claro. O segredo aparece uma única vez na tela; os dez códigos de recuperação aparecem uma única
+  vez, e só o hash de cada um fica no banco. Desligar exige um código válido, não a senha.
+- **Bloqueio que não entrega a lista de endereços.** Cinco senhas erradas em quinze minutos trancam por quinze, a
+  contagem mora em `login_attempts` chaveada pelo endereço em minúsculas, existe linha para endereço que não é
+  de ninguém, e o bcrypt roda com o mesmo custo nos dois casos — a resposta é a mesma e o tempo também. Entrar
+  apaga a contagem, e um `reset-password` bem-sucedido limpa o bloqueio, porque quem tem a caixa de entrada se
+  resolve sem abrir chamado. O preço desse desenho está escrito em N60: quem conhece um endereço pode trancar
+  aquela conta por quinze minutos, e isso vai para o `SECURITY.md` da T6 em vez de viver só na auditoria.
+- **A tela de login agora tem quatro passos**, e o destino depois de entrar é sempre desta casa. Senha →
+  desafio de código → configurar o fator (com os dez códigos no fim) → painel, com "voltar para a senha"
+  descartando a etapa sem deixar nada pendurado. O parâmetro de retorno que aponta para `//dominio.com`,
+  `https://` ou `javascript:` é descartado e a pessoa cai em `/app`. O painel ganhou a aba Segurança com o
+  painel de segundo fator, e a conta que ainda não confirmou o e-mail vê a tela pública de confirmação.
+- **A janela de corrida que reabria porta fechada (N57).** Duas abas renovando quase juntas é legítimo, e a
+  janela de dez segundos existe para isso. O buraco era outro: a revogação por decisão (trocar a senha,
+  recuperar, logout, administrador encerrando sessão) escreve `revokedAt` só nos tokens vivos, e o pai já
+  rotacionado estava revogado pela própria rotação — reapresentá-lo dentro da janela mintava sessão nova. O
+  `settings.test.ts` que diz "trocar a senha derruba todas as sessões abertas" caiu com `expected 200 to be 401`
+  e apontou o caminho. Antes de aceitar pela janela, o `refresh()` conta a linhagem viva; zero filhos significa
+  decisão, e o pedido cai no mesmo ramo do reuso: 401, alarme de `auth.refresh_reuse`, nenhuma sessão em pé.
+  Nenhuma asserção herdada foi enfraquecida — `seguranca.test.ts`, `settings.test.ts` e o arquivo novo de guardas
+  passaram com os mesmos números.
+- **As guardas antigas foram re-aprovadas uma a uma, agora com o reforço em campo** (`guardas-herdadas.test.ts`):
+  ADMIN não cria nem rebaixa OWNER, empresa não fica sem proprietário, o refresh devolve a empresa ativa mesmo
+  no meio da corrida de abas, conta desativada perde o acesso com o segundo fator ligado, a lista de sessões
+  responde só pela empresa ativa, pedir recuperação não derruba sessão nenhuma, aviso de negócio não atravessa
+  empresa e o estoque continua atômico.
+- **Prova de que fechou.** Vermelho antes de verde em cada regra, verde medido na árvore final: **API 46 arquivos
+  / 434 casos** e **web 12 arquivos / 87 casos**, zero falha e zero skip, tudo contra o banco de prova
+  (`nexusbusinessmanager_teste`) — e o banco de desenvolvimento medido antes e depois da rodada inteira, tabela
+  por tabela, com as mesmas contagens de sempre e as três tabelas novas vazias. A superfície foi de 120 para
+  **129 rotas** em 19 arquivos, com **13** públicas, **2** de etapa, **15** de plataforma, **91** de empresa e
+  **8** de conta, e **0** sem cadeado; o banco físico foi de 32 para **35 tabelas** pela migration aditiva
+  `20261013040000_reforco_de_autenticacao`, com o bloco de reversão escrito dentro. Cobertura: API 87,79% de
+  instruções, web 29,67%. `tools/verify-sidebar.cjs` reexecutado: **104 checagens, 0 falhas**, nenhum erro de
+  console, e as seis capturas `16-sidebar-*.png` mudaram de conteúdo com a decisão D5 da rodada passada — o
+  cabeçalho do painel do administrador de prova, que saía "Empresa-1791737996018-21-359870" na ordem do índice
+  de uuid, agora sai "Nexus Demo", o vínculo mais antigo; as seis telas do README, capturadas pela conta fixa de
+  um vínculo só, continuam as mesmas. As três provas que entram pelo login novo repetiram os números da rodada
+  passada na árvore final — ordens **107**, cobranças **137**, rotinas **37**, todas com zero falha —, e as
+  catorze capturas que elas regravaram foram conferidas uma a uma e descartadas: mesma tela. `npm audit` continua com os mesmos 3 high de antes (`deepmerge-ts` dentro do Prisma), e o bundle
+  subiu para 961,19 kB (gzip 282,12 kB) — a separação de chunks é a próxima tarefa, com medição antes e depois.
+  Registrado em `docs/adr/0013-reforco-de-autenticacao-smtp-verificacao-e-totp.md` e nas entradas N57 a N62 de
+  `docs/AUDITORIA.md`.
+
 ### A casa que abre no login deixou de ser sorteio, e cancelar passou a exigir motivo escrito (2026-10-13)
 
 - **O que estava errado (N32 / P11, decisões D5 e D4 do dono).** `pickMembership`, sem empresa pedida no

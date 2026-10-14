@@ -22,7 +22,7 @@
   <img src="https://img.shields.io/badge/Vite-7-646CFF?logo=vite&logoColor=white" alt="Vite 7">
   <img src="https://img.shields.io/badge/AdminLTE-4.10-343a40?logo=laravel&logoColor=white" alt="AdminLTE 4.10">
   <img src="https://img.shields.io/badge/Tailwind-4-06B6D4?logo=tailwindcss&logoColor=white" alt="Tailwind 4">
-  <img src="https://img.shields.io/badge/testes-440%20testes%20em%2049%20arquivos-brightgreen" alt="440 testes em 49 arquivos">
+  <img src="https://img.shields.io/badge/testes-521%20testes%20em%2058%20arquivos-brightgreen" alt="521 testes em 58 arquivos">
 </p>
 
 <p align="center">
@@ -175,8 +175,25 @@ São as telas e regras que existem hoje no repositório. O que ainda não está 
   por isso abrir empresa nova não exige estar dentro de uma empresa ativa
 - Recuperação de acesso em duas etapas (`/recuperar-senha`): código de uso único com 30 minutos de
   validade, e a troca de senha revoga as sessões abertas da conta
-- Rate limit próprio por rota sensível: 10 tentativas/min no login e 5/min em cadastro e recuperação,
+- Verificação de e-mail no cadastro (`REQUIRE_EMAIL_VERIFICATION=1`, obrigatória em produção): quem se cadastra
+  recebe um link na caixa de entrada e fica do lado de fora do painel até confirmar; a tela pública
+  `/verificar-e-mail` resgata quem perdeu o link, o reenvio tem limite próprio, e endereço inexistente ou não
+  confirmado recebem exatamente a mesma resposta
+- Segundo fator por TOTP (`/configuracoes` > aba Segurança): o segredo é cifrado em repouso com AES-256-GCM e
+  mostrado uma única vez, os dez códigos de recuperação valem uma vez cada e só o hash deles fica no banco,
+  desligar exige um código válido (não a senha), e em produção o papel da plataforma e o `OWNER` são obrigados
+  a ligar antes de entrar
+- Bloqueio por conta: cinco senhas erradas em quinze minutos trancam por quinze, com resposta idêntica para
+  endereço que existe e endereço que não existe — inclusive no tempo, porque o bcrypt roda com o mesmo custo
+  nos dois casos
+- E-mail de verdade: `nodemailer` quando há `SMTP_HOST`, `SMTP_PORT` e `MAIL_FROM`; console quando não há;
+  caixa em memória na suíte de testes. Em produção a subida é recusada com entrega desligada, e o código nunca
+  volta na resposta HTTP fora de `AUTH_EXPOSE_RESET_TOKEN=1` em ambiente de desenvolvimento
+- Rate limit próprio por rota sensível: 10 tentativas/min no login e 5/min em cadastro, recuperação,
+  reenvio de código, desafio de segundo fator e nas duas rotas de etapa,
   além do limite global de 100 req/min
+- Depois de entrar, o destino é sempre um caminho deste aplicativo: `//dominio.com`, `https://` e
+  `javascript:` no parâmetro de retorno são descartados e a pessoa vai para `/app`
 - Política de senha única em todo o sistema — mínimo de 8 caracteres com ao menos uma maiúscula e um
   caractere especial — validada no backend (`passwordPolicy.ts`) e inline nos formulários
 - Botão de olho para mostrar/ocultar senha em todo campo de senha (`PasswordInput`), inclusive na
@@ -288,7 +305,7 @@ qualquer tela do painel — sem recarregar a página, sem biblioteca de ícones 
   feita no servidor e as ações Abrir e Marcar lida na linha. O botão "Marcar todos" passa pelo diálogo de
   confirmação da casa, e "Ver contas vencidas agora" só aparece para quem tem `settings:write`
 - **Preferências na tela**: os cinco tipos com rótulo do negócio, canal in-app por tipo, canal de e-mail
-  desligado com o motivo declarado (sem SMTP não há envio), gravar travado até algo mudar de fato e "Voltar ao
+  desligado com o motivo declarado (nenhuma rotina de aviso chama a entrega ainda — N59), gravar travado até algo mudar de fato e "Voltar ao
   padrão". A empresa e o dono vêm sempre do token — não há seletor de empresa aqui
 - Sino e tela conversam pelo evento `nexus:avisos` (`lib/notificationsApi.ts`), então marcar lida num lugar
   atualiza o número do outro sem recarregar página nenhuma
@@ -297,7 +314,8 @@ qualquer tela do painel — sem recarregar a página, sem biblioteca de ícones 
 - Quem praticou a ação nunca recebe o próprio aviso; uma falha ao gravar aviso fica no log e **não** quebra
   a venda, a compra ou o estoque
 - Preferências por usuário e empresa com canal in-app e de e-mail separados. O canal de e-mail é guardado,
-  mas nada é enviado enquanto não houver SMTP configurado — o sistema não finge que envia
+  e a entrega por SMTP já existe desde a F4 — o que falta é as rotinas de aviso chamarem o mailer, então
+  hoje nada sai por e-mail pelo sino (N59); o sistema não finge que envia
 - `GET /api/notifications/count` é a rota barata do sino (número, quebra por tipo e urgentes): com a aba
   escondida a batida para, e voltar para a aba puxa a contagem na hora. `POST /api/notifications/scan`, a
   varredura de contas vencidas, é administrativa — só `OWNER`/`ADMIN` — e não repete o mesmo aviso dentro do
@@ -464,7 +482,7 @@ se o site está aberto ou em manutenção. A vitrine é única para toda a plata
 
 | Módulo | Banco | API | Tela | Estado |
 |---|:--:|:--:|:--:|---|
-| Autenticação, cadastro e recuperação | ✅ | ✅ 10 rotas | ✅ | no ar: login, cadastro, recuperação por código, renovação e encerramento de sessão, conta própria, troca de senha e troca de empresa |
+| Autenticação, cadastro e recuperação | ✅ | ✅ 19 rotas | ✅ | no ar: login, cadastro, recuperação por código, renovação e encerramento de sessão, conta própria, troca de senha e troca de empresa; verificação de e-mail (confirmar e reenviar código), segundo fator por TOTP (configurar com segredo cifrado, desafio, códigos de recuperação, desligar) e bloqueio de conta por tentativas, com as duas rotas de etapa fora do painel |
 | Sessões e revogação de tokens | ✅ | ✅ | ✅ (aba Sessões) | no ar |
 | Papéis e permissões (RBAC) | ✅ | ✅ | ✅ (aba Permissões) | no ar |
 | Multiempresa (isolamento e troca) | ✅ | ✅ | ✅ (Configurações) | no ar |
@@ -484,7 +502,7 @@ se o site está aberto ou em manutenção. A vitrine é única para toda a plata
 | CMS da página pública (cores, herói, capacidades, banners, depoimentos, métricas, FAQ) | ✅ | ✅ 14 rotas | ✅ | no ar: a vitrine `/` é montada pelo conteúdo do banco e o editor `/app/cms` cadastra esse conteúdo nas cinco abas |
 | Documentos legais (Termos, Privacidade, LGPD) | ✅ | ✅ | ✅ | `/legal/:kind` mostra só o que está publicado; rascunho e publicação na aba Textos legais do editor |
 | Modo manutenção da plataforma | ✅ (mesma tabela) | ✅ | ✅ | 503 com mensagem e previsão na API e na tela, contagem regressiva, pulso em tempo constante, IP permitido e o código guardado na aba |
-| Modelos de e-mail | ✅ | 🚧 | 🚧 | tabela `email_templates` criada; SMTP ainda não existe |
+| Modelos de e-mail | ✅ | 🚧 | 🚧 | tabela `email_templates` criada e sem leitor: as mensagens que saem (verificação, recuperação, segundo fator) são montadas em `src/lib/mail/mensagens.ts`, não no banco |
 | Rotinas agendadas (cron) | ✅ | ✅ 3 rotas | ✅ | no ar: `/app/rotinas` com as três varreduras do relógio — contas vencidas, estoque baixo e relatório diário —, liga/pausa e "Executar agora" |
 | Cobranças manuais (carnê: PIX por chave, boleto, transferência, dinheiro, cartão na maquininha) | ✅ tabela `charges` | ✅ 6 rotas | ✅ | no ar: `/app/cobrancas` com os oito indicadores do resumo, cobrança nascida de venda ou de ordem de serviço, recebimento registrado por pessoa e pelo dia dito por ela, uma única receita no caixa (corrida de dois cliques medida), cancelamento com motivo, "vencida" calculada no fuso da empresa, documento e recibo para imprimir e tabela que vira cartão no celular |
 | Gateways de pagamento (cobrança automática pelo provedor) | ✅ tabela `payment_gateways` | ✅ 2 rotas | ✅ (aba Gateways) | catálogo sempre com as quatro linhas (`MANUAL` disponível, `MERCADO_PAGO`, `EFI` e `STRIPE` indisponíveis com o motivo); a escrita é a do MANUAL — chave PIX, quem recebe, instruções e vencimento padrão — e as três colunas de credencial ficam nulas por construção e não aparecem na resposta; **nenhuma chamada de saída** enquanto não houver credencial real e a decisão G2 |
@@ -827,9 +845,19 @@ processo com a mensagem do caminho exato, em vez de deixar o serviço subir queb
 | `SEED_DEV_ACCOUNT` | `0` | `1` força a conta de desenvolvimento mesmo em produção (homologação explícita); pede `SEED_DEMO_COMPANY=1` junto |
 | `SEED_DEMO_COMPANY` | `0` | `1` libera a empresa de demonstração `nexus-demo` em produção; fora de produção ela é criada sempre |
 | `ALLOW_DEV_SEED` | `0` | única maneira de o seed rodar em `NODE_ENV=production`; sem ele o seed aborta antes da primeira consulta, e liberá-lo não libera as duas peças acima |
+| `DATABASE_URL_TESTE` | — (obrigatória para `npm test`) | o MySQL de prova (`nexusbusinessmanager_teste`) que a suíte da API e as provas de navegador usam; sem ela o Vitest se recusa a começar, para nenhum teste escrever no banco do servidor de desenvolvimento |
+| `MAIL_TRANSPORT` | vazio = decidido pelo ambiente | `smtp` entrega de verdade, `console` grava no log do processo, `memory` é a caixa da suíte de testes; em produção a régua recusa as duas saídas que não entregam a ninguém, e recusa `smtp` sem host, porta ou remetente |
+| `SMTP_HOST` / `SMTP_PORT` / `SMTP_USER` / `SMTP_PASS` | vazio / `587` / vazio / vazio | o servidor de saída; a senha real mora só no `.env` da máquina e nunca é impressa em log, teste ou resposta |
+| `SMTP_SECURE` | vazio segue a porta | `1` força TLS desde o início (465), `0` força texto puro, vazio deixa a porta decidir — na maioria dos provedores de 587 o certo é deixar vazio (STARTTLS) |
+| `MAIL_FROM` | vazio | o endereço que assina a mensagem, com formato validado |
+| `WEB_BASE_URL` | `http://localhost:5173` | o endereço público do painel, para onde apontam os links de "confirme seu e-mail" e "redefina a senha"; em produção a régua exige `https` e recusa `localhost` |
+| `REQUIRE_EMAIL_VERIFICATION` | `0` | `1` deixa o cadastro novo do lado de fora do painel até confirmar o e-mail; em produção a régua exige o `1` ligado |
+| `TOTP_ENCRYPTION_KEY` | vazio = segundo fator indisponível | 32 bytes em hexadecimal (64 caracteres), a chave que cifra o segredo do segundo fator em repouso (AES-256-GCM); sem ela as rotas de 2FA dizem que falta a chave, em vez de gravar segredo em claro, e em produção a subida é recusada |
 
 Em `NODE_ENV=production` a validação ganha uma régua extra (segredo de no mínimo 32 caracteres e sem marca
-de exemplo, CORS público, banco fora de root, `AUTH_EXPOSE_RESET_TOKEN` desligado): qualquer violação derruba
+de exemplo, CORS público, banco fora de root, `AUTH_EXPOSE_RESET_TOKEN` desligado, `WEB_BASE_URL` em `https`,
+saída de e-mail que entrega de verdade, verificação de cadastro ligada e `TOTP_ENCRYPTION_KEY` com 64
+hexadecimais aleatórios): qualquer violação derruba
 o processo na inicialização com a lista completa na mensagem. O código dessa régua é puro e testado em
 `validador-de-producao.test.ts`.
 
@@ -840,17 +868,20 @@ o processo na inicialização com a lista completa na mensagem. O código dessa 
 | Área | Como está hoje |
 |---|---|
 | Senha | bcrypt 12 rounds; política de 8+/maiúscula/especial no backend e nos formulários; nenhum valor de senha registrado no git, e o histórico foi reescrito antes do primeiro push |
-| Tokens | access JWT de curta duração; refresh hasheado (HMAC-SHA256) com rotação, revogação por sessão e revogação total ao **concluir** a troca de senha — pedir a recuperação não derruba mais a sessão da vítima, e o código só volta na resposta com `AUTH_EXPOSE_RESET_TOKEN=1` fora de produção |
+| Tokens | access JWT de curta duração; refresh hasheado (HMAC-SHA256) com rotação, revogação por sessão e revogação total ao **concluir** a troca de senha — pedir a recuperação não derruba mais a sessão da vítima, e o código só volta na resposta com `AUTH_EXPOSE_RESET_TOKEN=1` fora de produção; a corrida de dez segundos entre duas abas não reabre mais a sessão que a troca de senha encerrou (N57) |
+| Verificação de cadastro | com `REQUIRE_EMAIL_VERIFICATION=1`, quem se cadastra recebe código por e-mail e só entra no painel depois de confirmar; o `forgot-password` de endereço não confirmado responde igual ao dos demais, a tela pública `/verificar-email` resgata quem perdeu o link, e o reenvio tem limite próprio (5/min) |
+| Segundo fator (TOTP) | segredo cifrado em repouso com AES-256-GCM (`TOTP_ENCRYPTION_KEY`) e mostrados uma única vez na configuração; dez códigos de recuperação de uso único guardados como hash; obrigatório para o papel da plataforma e para o `OWNER` em produção, opcional fora disso; as duas rotas de etapa (`/2fa/challenge`, `/2fa/setup`) ficam fora do painel e só aceitam o token de etapa correspondente |
+| Bloqueio por conta | cinco senhas erradas em quinze minutos trancam a conta por quinze; a contagem mora em tabela própria chaveada pelo endereço em minúsculas, existe linha para endereço que não é de ninguém, e o bcrypt roda com o mesmo custo nos dois casos — a resposta não diz se o e-mail existe; entrar apaga a contagem e um `reset-password` bem-sucedido limpa o bloqueio |
 | Sessão e empresa | o refresh grava em qual empresa foi aberto (`company_id`) e renova dentro dela, com fallback para a primeira ativa do usuário; listar e revogar sessões é filtrado por empresa (id de outra empresa devolve 404, mesma empresa sem ser dono devolve 403), e o IP de origem só aparece para OWNER/ADMIN |
 | Acesso revogado | desativar a conta ou a empresa derruba o acesso na hora: toda requisição revalida o vínculo no banco junto das duas bandeiras de ativação (conta e empresa), então um access token ainda válido emitido antes não abre a porta depois da desativação — e reativar devolve o acesso sem precisar de login novo |
 | Autorização | mapa central `recurso:ação` verificado no servidor em toda rota de escrita; 403 antes de qualquer botão existir na tela. A hierarquia de papéis decide em um lugar só — ninguém atribui papel acima do próprio, e ADMIN não toca em OWNER nem em outro ADMIN. Conteúdo do site público é recurso `content`, só do OWNER |
 | Isolamento | empresa ativa vem do token e é revalidada contra `company_users` a cada request; toda leitura filtra por `companyId`, então registro de outra empresa devolve 404; teste dedicado de vazamento entre tenants |
 | Validação | Zod em todas as entradas; categorias e tipos cruzados validados; `pageSize` acima do limite devolve 400 |
-| Tráfego | helmet, CORS restrito por env, rate-limit global 100/min e limites próprios em login (10/min), cadastro e recuperação (5/min) e bypass da manutenção (30/min) |
+| Tráfego | helmet, CORS restrito por env, rate-limit global 100/min e limites próprios em login (10/min), cadastro, recuperação, reenvio de código, desafio de segundo fator e as duas rotas de etapa (5/min cada) e bypass da manutenção (30/min) |
 | Disponibilidade | modo manutenção fecha a API de negócio com 503 e deixa `/api/health`, `/api/auth`, `/api/public`, `/api/cms` e `/api/notifications` abertos (o sino continua pedindo sessão); quem entra com o token de pulso (comparação em tempo constante) ou o IP permitido |
 | Auditoria | toda escrita relevante grava autor, empresa, ação, entidade, metadados e IP; tela somente leitura; marcação de alteração sensível feita no servidor; eventos da plataforma perdem a empresa dona e ganham trilha reservada (`scope` no banco, `docs/adr/0007-escopo-da-auditoria.md`) |
 | Respostas de erro | handler central com códigos coerentes (400/401/403/404/409/429/500) e sem stack em produção |
-| Terceiros | **nenhuma integração inventada**: gateways de pagamento e SMTP têm tabela mas não têm chamada; o canal de e-mail fica guardado e desligado enquanto não houver credencial real |
+| Terceiros | **nenhuma integração inventada**: os gateways de pagamento continuam sem uma chamada de saída enquanto não houver credencial real e a decisão G2 — `payment_gateways` é lida e escrita só pela configuração do MANUAL, e `charge-adapters.ts` não conhece URL, chave ou SDK de provedor nenhum. O e-mail já é diferente: `nodemailer` entrega quando `SMTP_HOST`, `SMTP_PORT` e `MAIL_FROM` existem, grava no console fora de produção quando não existem, e a suíte de testes usa a caixa em memória; o servidor real nunca foi tocado por teste, e a entrega ainda espera dentro do request (N58) |
 
 ---
 
@@ -858,7 +889,7 @@ o processo na inicialização com a lista completa na mensagem. O código dessa 
 
 ```bash
 npm run typecheck          # api + web
-npm test                   # api: 39 arquivos · 361 testes contra o MySQL de prova — web: 10 arquivos · 79 testes no jsdom
+npm test                   # api: 46 arquivos · 434 testes contra o MySQL de prova — web: 12 arquivos · 87 testes no jsdom
 npm run test:api           # só a suíte da API
 npm run test:web           # só a suíte do navegador (Vitest + jsdom + Testing Library)
 npm run test:coverage      # a mesma suíte com a cobertura medida
@@ -872,6 +903,15 @@ npm run build              # produção (tsc + vite build)
 | `rbac-hierarquia.test.ts` | a hierarquia decidindo em um lugar só: ADMIN não cria OWNER, não rebaixa ninguém, não mexe no próprio papel nem no de outro ADMIN; MANAGER e STAFF ficam fora de toda rota de papel; o último dono não sai do papel, e com dois donos rebaixar o outro é lícito |
 | `desativacao-acesso.test.ts` | o access token que ainda está na mão do usuário cai quando a conta é desativada, volta quando ela reativa, e uma empresa inativa fecha o módulo para todo mundo — inclusive o proprietário |
 | `sessoes-empresa.test.ts` | quem trocou para a empresa B continua na B ao renovar o token, a lista de sessões da A não mostra a sessão aberta na B, id de outra empresa devolve 404, e gerente e atendente não leem o IP de origem |
+| `banco-de-teste-separado.test.ts` | a suíte está conectada ao banco de prova, nenhuma escrita de teste muda uma contagem do banco de desenvolvimento, e a limpeza devolve as contagens do banco de teste |
+| `recuperacao-por-email.test.ts` | o código chega na caixa postal e não no HTTP, endereço inexistente responde igual e nenhuma mensagem sai, um código queima no primeiro uso, código vencido não redefine senha, e falha de entrega não vaza detalhe |
+| `verificacao-de-email.test.ts` | com a flag desligada o cadastro entrega sessão e com ela ligada não entrega; o link confirma uma vez só, vale um prazo, e link vencido e link inventado respondem com a mesma frase; o reenvio não denuncia endereço cadastrado e a auditoria mascara o endereço sem nunca carregar o token |
+| `bloqueio-de-conta.test.ts` | cinco senhas erradas trancam com a mesma resposta de sempre, as três respostas são exatamente a mesma coisa, o e-mail que não existe também tem linha de contagem, venceu o prazo a senha certa entra, falhas espaçadas fora da janela não somam, e login bem-sucedido e `reset-password` limpam o bloqueio |
+| `segundo-fator.test.ts` | sem chave de cifraçao o fator não é oferecido; o segredo sai uma vez para a tela e o banco só vê o envelope cifrado; ligar exige código do aplicativo dentro do período; os dez códigos de recuperação são mostrados uma única vez e só o hash fica no banco; código de recuperação abre a porta uma vez e se gasta; desligar exige um código válido, não a senha; em produção OWNER e administrador da plataforma são obrigados a ligar antes de entrar |
+| `criptografia.test.ts` | cifra e devolve o mesmo texto sem nunca entregar o texto dentro do envelope, dois envelopes do mesmo segredo são diferentes e os dois abrem, chave errada e envelope adulterado devolvem erro sem citar chave nem segredo, e em produção a chave faltante ou malformada é recusada pelo nome sem imprimir valor |
+| `corrida-de-abas.test.ts` | a segunda aba que chega com o token velho dentro da janela renova e a corrida fica na auditoria, fora da janela o mesmo token é tratado como roubo (401, alarme, nenhuma sessão viva), a corrida mantém a empresa ativa da sessão, e a troca de senha fecha até a janela de corrida do token rotacionado (N57) |
+| `isolamento-rotas.test.ts` | a matriz das 129 rotas lida do próprio Fastify: nenhuma rota nasce sem `app.authenticate` e sem carimbo de pública, as públicas e as de etapa são exatamente a lista declarada, e a contagem medida bate com a declarada |
+| `guardas-herdadas.test.ts` | as proteções antigas re-aprovadas sob o regime da F4: ADMIN não cria nem rebaixa OWNER, empresa não fica sem proprietário, refresh devolve a empresa ativa mesmo com a corrida de abas, conta desativada perde o acesso com o segundo fator ligado, sessões respondem só pela empresa ativa, pedir recuperação não derruba sessão nenhuma, aviso não atravessa empresa e o estoque continua atômico |
 | `multiempresa.test.ts` | nenhum dado vaza entre empresas do mesmo usuário e de usuários diferentes |
 | `pagination.test.ts` | `{data, meta}` coerente e `pageSize` acima do limite → 400 |
 | `clients.test.ts`, `products.test.ts`, `sales.test.ts`, `purchases.test.ts`, `finance.test.ts`, `crm.test.ts`, `agenda.test.ts` | regras de negócio de cada módulo, incluindo baixa e estorno de estoque, custo atualizado na compra recebida, conversão de lead em cliente e expansão de recorrência |
@@ -891,6 +931,8 @@ npm run build              # produção (tsc + vite build)
 | `dinheiro-decimal.test.ts` | meio centavo que sobe na base 10, a armadilha do `round` do decimal embutido no Prisma, 2026 parcelas de R$ 0,10 fechando em 20 260 centavos, a porta nos três formatos de digitação e a invariante total = soma das linhas em nota real |
 | `parcelamento.test.ts` | política desligada que não escreve caixa nenhum, à vista que gera uma linha no dia da empresa, 3 parcelas fechando o centavo com vencimento mensal clampado, rascunho que só lança ao confirmar, cancelar que tira as pendentes e preserva a paga, despesa da compra recebida, categoria automática criada uma vez, o carnê invisível para a outra empresa e a porta que recusa parcela inválida |
 | `fim-de-sessao.test.tsx` (web) | sete sessões montadas no jsdom pelo caminho de verdade, com a rede parada no adaptador do axios: o interceptor de 401, o `AuthContext` e o `ProtectedRoute` exercitados juntos — logout pelo botão, `nexus:session-expired` no meio da tela de vendas, `/app` aberto por quem não tem sessão, o evento de `storage` de outra aba, o tema que sobrevive ao sair, o 401 sem refresh token em disco e a renovação recusada no bootstrap |
+| `login-com-segundo-fator.test.tsx` (web) | a tela nas quatro etapas: a senha certa de quem tem segundo fator abre a **etapa de código**, não o painel; depois das duas etapas o painel abre para um caminho desta casa; quem é obrigado a ligar vê a chave uma vez, ativa e só então recebe os dez códigos; "voltar para a senha" descarta a etapa sem deixar nada pendurado |
+| `destino-pos-login.test.ts` (web) | o destino depois do login é sempre um caminho deste aplicativo: devolve o caminho interno que a pessoa queria abrir, trata `//dominio` como saída do site e cai no padrão, recusa esquema explícito inclusive `javascript:`, e recusa o que não é texto de caminho |
 | `tema-landing.test.tsx` (web) | o alternador na vitrine montada pelo CMS: os dois sentidos, as cores da vitrine mudando junto, a escolha que volta ao remontar a página, o teclado com rótulo acessível e o tema aplicado antes do primeiro paint do React |
 | `paleta-da-vitrine.test.ts` (web) | a luminância WCAG que decide se a paleta cadastrada é escura ou clara, e o que entra e o que sai do elemento quando ela veste — ou não — o tema ativo, inclusive com cor vazia ou fora do formato |
 | `cores-da-landing.test.ts` (web) | a varredura de cor fixa nos estilos da vitrine: nenhum `#` fora dos tokens do tema, com a única exceção listada e justificada |
@@ -959,8 +1001,9 @@ fora do git, com histórico reescrito antes do primeiro push.
 
 ### A seguir
 
-1. **Modelos de e-mail** — cadastrar e editar os modelos guardados em `email_templates`;
-   SMTP só depois de haver credencial real
+1. **Modelos de e-mail** — cadastrar e editar os modelos guardados em `email_templates`; o SMTP já entrega
+   (verificação, recuperação e segundo fator saem por `nodemailer` quando configurado), mas nenhum trecho de
+   código lê a tabela ainda, e as rotinas de aviso do sino continuam sem chamar a entrega (N59)
 2. **Cobrança por gateway** — o carnê manual já está no ar em `/app/cobrancas`; ligar MERCADO_PAGO, EFI ou
    STRIPE depende da decisão G2 e da credencial de ambiente; nada de integração de fachada
 3. **SaaS: planos, assinaturas e faturas** · **backup e restauração** · **CI** com suíte automatizada a

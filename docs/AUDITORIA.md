@@ -1735,3 +1735,144 @@ decisão D6 apagou — e as duas contagens publicadas (o selo "427 testes em 47 
 38 arquivos / 354 casos. Corrigidas com a medição na mão: **39 arquivos / 361 casos** na API e **10 / 79** no
 jsdom, 440 testes em 49 arquivos. Achado de documentação, não de código: quem lesse o README ia fazer a prova
 escrever no banco de quem está trabalhando, que é o acidente que a T1 existiu para impedir.
+
+## Adenda da execução — T3 (F4: autenticação reforçada — D1, D2, D3) encerrada — 2026-10-13
+
+O que entrou, em uma frase cada: a porta de e-mail com adaptador SMTP genérico, de console e de caixa de
+memória (D1); verificação de cadastro atrás de `REQUIRE_EMAIL_VERIFICATION`, obrigatória em produção (D2);
+segundo fator TOTP com segredo cifrado em repouso, códigos de recuperação como hash, obrigatório para papel de
+plataforma e OWNER em produção, e bloqueio por conta sem diferença mensurável (D3); destino pós-login só para
+caminho desta casa; e a guarda da janela de corrida entre duas abas. As dez decisões estão em
+`docs/adr/0013-reforco-de-autenticacao-smtp-verificacao-e-totp.md`, e a migration é aditiva
+(`20261013040000_reforco_de_autenticacao`: três colunas em `users` — `email_verified_at`,
+`totp_secret_ciphertext` e `totp_enabled_at` — mais três tabelas novas, `email_verification_tokens`,
+`recovery_codes` e `login_attempts` — com o bloco `-- Reversão:` escrito dentro).
+
+Medição da rodada, no banco de prova (D6), na árvore final: **API 46 arquivos / 434 casos** e
+**web 12 arquivos / 87 casos**, zero falha e zero skip — saída guardada e conferida nesta passada: o portão de
+`npm test` mediu **447,05 s** (API) e **10,26 s** (web), e a corrida de cobertura do web, **15,39 s**. A
+duração da corrida de cobertura da API (**500,83 s**) foi lida no terminal daquela corrida, e a saída não foi
+guardada em arquivo, então ela não pode ser re-derivada agora; o que sustenta os percentuais da API é o
+`apps/api/coverage/lcov.info` que ficou no disco (87,79% de instruções, 76,01% de ramificações, 87,30% de
+funções, 90,62% de linhas, somados arquivo por arquivo por script de bancada). Os dois conjuntos de números
+estão em `docs/ESTADO-ATUAL.md` §8 e na tabela de portões da T3 em `docs/STATUS-AJUSTES.md`. A matriz de rotas recontada pela régua da
+regra 4 de `isolamento-rotas.test.ts` (o mesmo `grep` do teste, rodado à parte): **129** rotas de negócio em
+**19** arquivos — eram 120 na F3.2 Parte 2 —, com **13** públicas declaradas uma a uma (as duas de
+verificação e a de desafio do segundo fator entraram na lista), **2** rotas de etapa (`/auth/2fa/setup` e
+`/auth/2fa/activate`, que atravessam o gate com token de etapa e não são abertas), **8** de conta e **116**
+não públicas varridas anonimamente. `npm audit` continua em **3 high** (B1, o mesmo caminho
+`deepmerge-ts` → `@prisma/config` → `prisma`, nenhuma versão corrigida dentro do 6.19); `npm ls otpauth
+nodemailer` devolve as duas como folhas, sem transitivo.
+
+### N57 — corrigido nesta rodada: a janela de corrida de dez segundos reabria uma sessão que a troca de senha já tinha encerrado
+
+A janela existe para um caso legítimo: duas abas renovando quase juntas, em que a segunda chega com o token
+que a primeira acabou de girar. Dentro de dez segundos ela era atendida sem questionar, e aí morava o buraco
+— a revogação por decisão (trocar a senha, recuperar a senha, logout, administrador encerrando sessão) escreve
+`revokedAt` só nos tokens **vivos**, e o pai rotacionado já estava revogado pela própria rotação. Resultado:
+reapresentar o pai dentro da janela, depois de trocar a senha, **mintava uma sessão nova** pela porta da
+conveniência. O `test/settings.test.ts` ("trocar a senha derruba todas as sessões abertas") caiu com
+`expected 200 to be 401`; foi o vermelho que achou a regressão — antes da T3 a janela não existia e aquele
+teste passava.
+
+Vermelho mostrado antes da correção, medido nesta rodada: os dois casos novos de
+`apps/api/test/corrida-de-abas.test.ts` caíram em `:310` e `:328` com `expected 200 to be 401` — a troca de
+senha e o logout da aba que girou o token.
+
+Correção na implementação, e não no teste: antes de aceitar pela janela, `refresh()` conta a **linhagem viva**
+(`refreshToken.count` do usuário com `revokedAt: null` e `createdAt >= usedAt` do pai). Zero filhos vivos
+significa que uma decisão derrubou a família inteira, e o caminho cai no mesmo ramo do reuso — 401,
+`auth.refresh_reuse`, nenhuma sessão em pé. Nenhuma asserção herdada foi tocada: `seguranca.test.ts`,
+`settings.test.ts` e `guardas-herdadas.test.ts` passaram com os mesmos números, só com o passo de atrasar a
+rotação (`atrasarRotacao`) para tirar o caso da corrida legítima. Verde medido: 53 casos nos quatro arquivos
+rápidos e 30 nos dois que cobrem as guardas herdadas.
+
+### N58 — aberto: a entrega de e-mail espera dentro do request HTTP
+
+Os três envios reais são `await mailer().enviar(...)` chamados de dentro do handler
+(`auth.service.ts:615`, `verificacao.service.ts:53`, `segundo-fator.service.ts:357`). A regra 2 do desenho do
+G1 pedia fila ("nenhum request HTTP fica esperando provedor de e-mail"); a porta de hoje não tem fila, não tem
+re-tentativa e não tem backoff, e o `nodemailer` do `smtp.ts` roda com `connectionTimeout`,
+`greetingTimeout` e `dataTimeout` nos padrões dele. Um SMTP que aceita a conexão e demora para entregar segura
+a requisição — e no caso da verificação de cadastro, a pessoa está olhando para uma tela de "criando sua
+conta". O erro é tratado (vira auditoria `*_entrega_falhou` e a resposta HTTP não muda), então o risco é de
+tempo e de fila de conexões, não de consistência.
+
+Não foi corrigido em silêncio por escopo: a D1 pedia "entrega funcionando e código fora da resposta", e isso
+está entregue e provado. A assincronização mexe no ciclo de vida do request e pertence à fase de operação
+(**T5 / F6**), junto do `docs/PRODUCAO.md` que vai dizer qual SMTP apontar. Registrado aqui para a T5 não
+descobrir isso no escuro, do mesmo jeito que o N54 ficou registrado para a T7.
+
+### N59 — aberto: o sino e o relatório diário continuam sem chamador de e-mail, e uma frase da tela pode estar errada
+
+Depois da T3 existem exatamente três caminhos que chamam o mailer, e nenhum deles é de produto comercial:
+recuperação de senha, verificação de cadastro e aviso de que o segundo fator foi ligado. relatório diário
+(`cron.handlers.ts:94`) e as notificações (`notifications.service.ts:19`) carregam a anotação antiga — "sem
+SMTP não há e-mail" — e não importam o mailer. Nada foi ligado por conta própria: escrever o e-mail do
+relatório diário é escolher assunto, corpo, frequência e a caixa de quem recebe, e a D1 não autoriza nada
+disso.
+O G1 em `docs/decisoes/G1-envio-de-email.md` passou a **PARCIALMENTE FECHADO** por causa desta linha, com o
+que falta escrito lá.
+
+O achado fino: a tela de notificações mostra o quadro "E-mail" **desabilitado** com a frase "Indisponível: não
+há servidor de e-mail (SMTP) configurado nesta instalação" (`Notifications.tsx:396`). Até a T3 a frase era
+verdade por construção — não existia SMTP nenhum. Agora existe, escolhida por ambiente, então a instalação
+pode ter SMTP configurado e a frase continuar afirmando que não há, com a caixa cinza. É um caso pequeno de
+verdade de interface, e é trabalho da **T5** ligá-la ao estado real do `MAIL_TRANSPORT`, não a um `disabled`
+fixo.
+
+### N60 — resíduo aceito, e por isso registrado: o bloqueio por conta é uma negação de serviço de quinze minutos contra endereço conhecido
+
+A regra que a D3 pediu — "bloqueio com sem diferença mensurável" — foi cumprida: cinco falhas em quinze minutos
+trancam por quinze minutos, a contagem mora em `login_attempts` chaveada pelo endereço em minúsculas (sem FK,
+sem coluna em `users`), existe linha para endereço que não é de ninguém, e o `HASH_DE_ISCACAO` faz o e-mail
+inexistente custar o mesmo tempo de bcrypt que o existente. Essa é a metade defensiva.
+
+A outra metade é inerente ao desenho e ninguém a escreveu em lugar nenhum até agora: quem conhece o endereço de
+uma pessoa pode **trancá-la fora de conta dela** com cinco senhas chutadas, e a conta volta sozinha em quinze
+minutos. Mitigações que já existem no código: a janela vence com o tempo (`estaTrancada` confere
+`lastFailedAt`, não só `lockedUntil`), entrar apaga a contagem, e um `reset-password` bem-sucedido limpa o
+bloqueio (`auth.service.ts:671`) — quem tem a caixa postal se livra do ataque sem pedir suporte. O rate-limit
+de 10/min por IP (`auth.routes.ts:47`) limita o atacante disperso, não o insistente. É um troca consciente
+entre "não vaza quais endereços existem" e "não tranca quem não atacou nada", e a decisão da casa foi a
+primeira; precisa constar em `SECURITY.md` (**T6 / F7**) em vez de viver só nesta adenda.
+
+### N61 — aberto: não há porta administrativa para confirmar o e-mail de uma conta
+
+A única escrita em `users.email_verified_at` é `confirmarEmail()` (`verificacao.service.ts:118`), disparada
+pelo clique no link ou pelo código digitado na tela pública. Medido por grep em `apps/api/src`: nenhum
+endpoint, nenhuma rota de plataforma, nenhum script de linha de comando marca a coluna. Enquanto a flag
+`REQUIRE_EMAIL_VERIFICATION` estava desligada isto era irrelevante; com a D2 ela é obrigatória em produção, e
+o cenário passa a ser real — SMTP que não responde no momento do cadastro (`auth.verificacao_entrega_falhou`
+na auditoria), pessoa sem link, sem confirmação, sem painel, e suporte sem botão. A saída operacional hoje é
+escrever no banco à mão, que é exatamente o que um runbook existe para evitar.
+
+Fica para a **T5 / F6** com uma decisão de desenho (CLI `npm run` com o mesmo padrão do `admin:criar`, ou rota
+de plataforma com auditoria e `assertPlatformAdmin`), registrada aqui em vez de improvisada nesta rodada: o
+escopo da T3 era a autenticação, e abrir uma porta de escrita em coluna de identidade sem ela ter sido pedida
+seria a maior mudança da rodada — e a mais arriscada — feita às escondidas.
+
+### N62 — aberto: as duas telas novas da F4 não têm uma linha de teste, e a medição mostra isso
+
+A suíte de navegador cobriu o contrato inteiro da rodada pelo lado da API (46 arquivos / 434 casos) e pelo
+`Login.tsx` (71,92% de instruções, com as quatro etapas exercitadas em `src/test/login-com-segundo-fator.test.tsx`,
+4 casos). As duas telas que nasceram com a D2 e a D3 ficaram de fora, e a cobertura medida nesta rodada diz isso
+com número: `src/pages/VerificarEmail.tsx` **0%** (linhas 25-115 sem instrução), `src/components/settings/SegundoFatorPanel.tsx`
+**0%** (28-180), `src/lib/verificacao.ts` **0%** (13-20) e `src/lib/segundoFator.ts` **42,85%** (74-90 de fora).
+Ou seja, o painel de segurança que liga e desliga o TOTP, a página pública que recebe o código de seis dígitos e
+o cliente que chama `resend-verification` nunca foram montados num jsdom, e nenhuma prova de navegador os abriu.
+
+Por que isso é um achado e não uma nota de rodapé: as três telas são o caminho pelo qual uma pessoa **não
+confirmada** sai do estado em que a D2 a deixou. Com `REQUIRE_EMAIL_VERIFICATION` ligado em produção, um erro
+nela não é cosmético — é uma conta legítima trancada fora do painel sem recourse, exatamente o cenário que a N61
+descreve. O risco é menor do que parece só porque a API por trás delas está coberta: os cinco endpoints de
+verificação e os seis de segundo fator têm teste de contrato, e a tela é uma casca fina sobre eles.
+
+Não foi fechado aqui por escopo, e a escolha está registrada em vez de escondida: a rodada tinha como produto a
+autenticação reforçada, e cada tela nova que entra sem teste é dívida que a casa já reconheceu no padrão das
+outras (Settings, Users, Finance e mais dezoito arquivos em zero na mesma tabela). Fica para a **T4 / F5**, que é
+a tarefa de robustez do frontend e já devia recapturar as telas: `VerificarEmail.tsx` e `SegundoFatorPanel.tsx`
+entram na lista dela com teste de componente e prova de navegador, e a linha 74-90 do `segundoFator.ts` (o ramo
+de erro do cliente) junto. Até lá, `docs/ESTADO-ATUAL.md` §1 item 9, §8 (bullet do web) e §10 (P17) carregam a
+mesma medição, para ninguém ler "F4 feita" como "autenticação testada de ponta a ponta no navegador".
+
