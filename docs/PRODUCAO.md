@@ -370,11 +370,23 @@ operador precisa de quatro fatos:
    para conectar e dez minutos de socket mudo; `MAIL_FILA_MAXIMA` (200) é o teto de mensagens vivas, e o que
    passa dele é recusado com auditoria, sem tentativa nenhuma.
 4. **O que aparece na auditoria quando dá errado.** Uma linha por mensagem, carimbada pela fila depois da
-   última tentativa: `auth.forgot_password_entrega_falhou`, `auth.verificacao_entrega_falhou` ou
-   `auth.2fa_aviso_entrega_falhou`. Nos dois fluxos de código o metadata traz `{ rotulo, tentativas, motivo }`;
-   no aviso de segundo fator, `{ tentativas, motivo }`. O motivo é o texto curto do erro, sem endereço inteiro,
-   sem token e sem credencial. Sucesso de entrega não gera linha — o que gera é a mensagem na caixa postal de
-   quem pediu.
+   última tentativa: `auth.forgot_password_entrega_falhou`, `auth.verificacao_entrega_falhou`,
+   `auth.2fa_aviso_entrega_falhou` ou `notification.entrega_falhou`. Nos dois fluxos de código e no aviso do sino
+   o metadata traz `{ rotulo, tentativas, motivo }`; no aviso de segundo fator, `{ tentativas, motivo }`. A linha
+   do sino traz ainda o endereço mascarado (`mascaraEndereco()` — `no***@exemplo.test`), nunca a caixa postal
+   inteira. Sucesso de entrega não gera linha — o que gera é a mensagem na caixa postal de quem pediu.
+5. **O e-mail do painel é cópia do sino, e o portão é o que o entregador afirma** (N59,
+   `docs/adr/0021-o-email-e-copia-do-aviso-do-sino.md`). Primeiro nasce a linha do sino; depois, se aquela pessoa
+   ligou o canal, a mensagem entra na fila desta seção. Sem SMTP configurado nada é enfileirado — o console e a
+   caixa de memória **negam** a entrega com motivo escrito, e só o transporte SMTP afirma. É esse estado que a
+   tela de preferências mostra (`disponivel`, `transporte`, `motivo`), e não um `disabled` fixo.
+
+**Como se lê o número de e-mails.** `POST /api/notifications/scan` responde `{ criadas, emails }`, a auditoria
+`notification.scan` grava os dois, e as três rotinas fecham a frase da coluna "última execução" com
+`· N e-mail(s)` — `1 aviso criado em 6 empresas · 0 e-mails`. O `emails` conta mensagens **postas na fila**, não
+entregas confirmadas: a entrega é assíncrona (item 1) e o que fica de fora disso é a linha de falha, não o
+contador. `· 0 e-mails` numa instalação sem SMTP é o estado correto, não uma avaria; para o número subir é
+preciso apontar `SMTP_HOST`, `SMTP_PORT` e `MAIL_FROM` e reabrir a pilha.
 
 O desligue drena a fila antes de fechar (`apps/api/src/server.ts`, entre parar o agendador de rotinas e fechar
 o servidor), com teto de 5 segundos. Se não esvaziar a tempo, o processo registra
@@ -383,8 +395,9 @@ se perde, e é por isso que o desligue limpo e o `docker stop` com folga importa
 
 ## 11. O que ainda não está aqui
 
-- **Chamador de e-mail do sino e do relatório diário** (N59) e **porta administrativa de confirmação de
-  e-mail** (N61) — ainda na T5. A entrega em si já sai fora do request desde a T5.3 (N58, seção 10).
+- **Porta administrativa de confirmação de e-mail** (N61) — ainda na T5. O que já saiu desta conta: a entrega
+  fora do request desde a T5.3 (N58, seção 10) e o chamador do sino e das rotinas desde a T5.4 (N59, item 5
+  acima).
 - **Pipeline de CI, `npm audit`, portões de cobertura, `postinstall` do Prisma e o conserto da cadeia de
   migrations para clone limpo** (N54) — F8 (T7).
 - **Política de logs com rotação e retenção** — o backup do banco existe desde a T5.2, a rotação de log ainda não.

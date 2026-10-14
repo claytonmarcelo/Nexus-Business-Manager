@@ -1,6 +1,32 @@
 # G1 — Envio de e-mail (SMTP)
 
-**Situação:** PARCIALMENTE FECHADO · **Década:** 2026-10-11 · **Re-medido:** 2026-10-14 (fila de entrega, tarefa T5.3; antes: decisão D1, tarefa T3/F4) · **Nenhuma integração foi inventada.**
+**Situação:** PARCIALMENTE FECHADO · **Década:** 2026-10-11 · **Re-medido:** 2026-10-14 (aviso do sino e relatório diário, tarefa T5.4; antes: fila de entrega, T5.3, e decisão D1, tarefa T3/F4) · **Nenhuma integração foi inventada.**
+
+## O que mudou em 2026-10-14 (tarefa T5.4, achado N59)
+
+O último chamador que faltava apareceu, e a frase da tela deixou de ser escrita na tela. Desde a T3 a porta
+sabia mandar três coisas — código de recuperação, link de verificação e aviso de segundo fator — e nenhuma
+delas era produto comercial no dia a dia. Agora o **aviso do sino** (`notifications.service.ts`) manda cópia
+por e-mail para quem ligou o canal, e o **relatório diário** (`cron.handlers.ts`) usa o mesmo caminho, porque
+passou a chamar `notificarDetalhado`. As regras, com o porquê de cada uma:
+
+- **o e-mail é cópia de uma linha nova do sino**, não canal paralelo: a chave antiduplicação mora na linha do
+  sino, e sem ela a varredura de contas vencidas avisaria a mesma conta todo dia;
+- **nada é enfileirado se o entregador não afirma que entrega**: `estadoDoCanalDeEmail()` lê
+  `entregaDeVerdade` do adaptador, e só o SMTP afirma. O `console` escreve no log do servidor, e log de
+  servidor não é caixa postal de ninguém;
+- **os dois números aparecem onde alguém opera**: `POST /notifications/scan` responde `{ criadas, emails }` e a
+  coluna "última execução" das rotinas fecha com `· N e-mail(s)`;
+- **a tela obedece ao estado**: `disabled={!email.disponivel}`, com o motivo (ou o transporte) na dica. A caixa
+  fica marcada e desligada quando a pessoa pediu e-mail numa instalação sem SMTP — desmarcar por dentro seria
+  jogar fora uma intenção gravada;
+- **falha de entrega vira uma linha de auditoria** (`notification.entrega_falhou`, com endereço mascarado), e
+  sucesso não vira nenhuma.
+
+Decisão e preço em `docs/adr/0021-o-email-e-copia-do-aviso-do-sino.md`. O que **continua** sendo decisão do
+dono são as quatro caixas do fim desta página — provedor, remetente, texto por modelo próprio e e-mail por
+empresa. Sem `SMTP_HOST` apontando para um servidor real, tudo acima roda com o transporte de desenvolvimento
+e `emails` é zero por construção, não por engano.
 
 ## O que mudou em 2026-10-14 (tarefa T5.3, achado N58)
 
@@ -43,11 +69,10 @@ Continuam **abertas**, e são exatamente as quatro caixas da seção "O que eu p
 3. se o texto é próprio ou modelo — o que existe hoje é o texto dos três envios reais;
 4. **e-mail por empresa** ou um e-mail só da plataforma (a porta atual é da plataforma, uma instância).
 
-E falta um quarto item, descoberto ao escrever: o **relatório diário do cron**
-(`apps/api/src/modules/cron/cron.handlers.ts`) ainda carrega a anotação "sem SMTP configurado não há e-mail" e
-não chama o mailer. Os três chamadores reais são recuperação de senha (`auth.service.ts`), verificação de
-cadastro (`verificacao.service.ts`) e aviso de segundo fator (`segundo-fator.service.ts`). Registrar isso
-como G1 **PARCIAL** é o que impede o documento de mentir.
+E faltava um quinto ponto, descoberto ao escrever: o **relatório diário do cron**
+(`apps/api/src/modules/cron/cron.handlers.ts`) e o sino carregavam a anotação "sem SMTP configurado não há
+e-mail" e não chamavam o mailer. Esse ponto fechou em 2026-10-14 com a T5.4 — as quatro caixas acima, que são
+decisão de dono, continuam abertas.
 
 ## O que existia antes, no código
 
@@ -90,7 +115,7 @@ apps/api/src/lib/mail/porta.ts    MailerPort { nome; enviar(m: MensagemDeMail): 
 apps/api/src/lib/mail/smtp.ts     adaptador genérico (nodemailer 10.1.0), escolhido por variável de ambiente
 apps/api/src/lib/mail/console.ts  desenvolvimento: imprime assunto e destinatário mascarado
 apps/api/src/lib/mail/fake.ts     testes: guarda as mensagens em memória e permite ler o texto recebido
-apps/api/src/lib/mail/mensagens.ts  os três textos reais (recuperação, verificação de cadastro, aviso de 2FA)
+apps/api/src/lib/mail/mensagens.ts  os quatro textos (recuperação, verificação de cadastro, aviso de 2FA e cópia do aviso do sino)
 apps/api/src/lib/mail/index.ts    criarMailer(fonte) decide pelo ambiente; mailer() é o ponto dos chamadores
 apps/api/src/lib/mail/fila.ts     desde a T5.3: fila de memória do processo, retentativa, recuo, teto e auditoria da falha
 ```
@@ -121,7 +146,10 @@ Regras que a porta carrega, com o estado medido nesta rodada:
    (`src/config/producao.ts`) barra subir com credencial de exemplo.
 4. **O adaptador falso não finge sucesso.** Cumprida de outra forma: o `fake` grava o que foi enviado — e os
    testes leem o que foi gravado — enquanto o `console` escreve no log do processo. A falha real de entrega
-   vira auditoria (`auth.forgot_password_entrega_falhou`) sem mudar a resposta HTTP.
+   vira auditoria (`auth.forgot_password_entrega_falhou`) sem mudar a resposta HTTP. **Desde a T5.4 isso tem
+   uma segunda camada, declarada no tipo:** o adaptador diz se entrega de verdade (`entregaDeVerdade`), e o
+   padrão do contrato é a ausência — que significa "não afirma". SMTP afirma; console e fake negam com motivo
+   escrito. Assim um entregador de memória não pode virar caixa postal de ninguém nem na varredura do sino.
 
 ## O que eu preciso de você
 
@@ -138,4 +166,12 @@ desenvolvimento, adaptador SMTP real e as provas de envio existem, sem credencia
 quatro caixas, a primeira deixou de ser bloqueio técnico: SES, Postmark, Brevo e Postfix próprio conversam
 todos por SMTP, então a resposta do dono agora é apontar `SMTP_HOST`/`SMTP_PORT`/`SMTP_USER`/`SMTP_PASS`/
 `MAIL_FROM` e escolher o plano. As caixas 2, 3 e 4 (remetente, texto por modelo próprio, e-mail por empresa)
-continuam com o dono, e o relatório diário do cron continua sem chamador de e-mail.
+continuam com o dono, e naquela data o relatório diário do cron ainda estava sem chamador de e-mail.
+
+**Estado em 2026-10-14 (T5.4):** o cron e o sino têm chamador, a tela de preferências lê o estado do canal em
+vez de afirmar o que não sabe, e nenhum dos quatro textos foi inventado contra uma caixa postal viva — as provas
+usam a caixa de memória dos testes. O que ainda faz esta página dizer PARCIALMENTE FECHADO é exatamente uma
+coisa: **não há servidor de saída configurado neste repositório**, porque provedor, domínio e remetente são as
+três caixas que só o dono enche. Sem elas, `MAIL_TRANSPORT` fica no transporte de desenvolvimento, o canal se
+declara indisponível na tela, e `emails` é zero em toda varredura — que é o resultado honesto, não um
+funcionamento quebrado.

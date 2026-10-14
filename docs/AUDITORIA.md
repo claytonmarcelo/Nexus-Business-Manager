@@ -1852,7 +1852,7 @@ fila (medido em 1 269 ms de `responseTime` numa corrida e 1 708 ms em `makeAccou
 caminho de e-mail já drenado), então o caso de tempo aquece a rota antes de medir e o atraso de prova subiu para
 600 ms — com 250 ms um soluço do Windows (259 ms observado) é indistinguível de "o request pagou o provedor".
 
-### N59 — aberto: o sino e o relatório diário continuam sem chamador de e-mail, e uma frase da tela pode estar errada
+### N59 — corrigido na T5.4: o sino e o relatório diário continuavam sem chamador de e-mail, e uma frase da tela estava errada
 
 Depois da T3 existem exatamente três caminhos que chamam o mailer, e nenhum deles é de produto comercial:
 recuperação de senha, verificação de cadastro e aviso de que o segundo fator foi ligado. relatório diário
@@ -1869,6 +1869,44 @@ verdade por construção — não existia SMTP nenhum. Agora existe, escolhida p
 pode ter SMTP configurado e a frase continuar afirmando que não há, com a caixa cinza. É um caso pequeno de
 verdade de interface, e é trabalho da **T5** ligá-la ao estado real do `MAIL_TRANSPORT`, não a um `disabled`
 fixo.
+
+**Correção (T5.4, 2026-10-14).** Vermelho medido antes, nos dois lados: `apps/api/test/avisos-por-email.test.ts`
+**6 failed | 2 passed (8)** — com `expected [] to have a length of 1 but got +0` três vezes,
+`expected undefined to be 1`, `TypeError: Cannot read properties of undefined (reading 'disponivel')` e
+`expected '11 empresas fechadas · 1 aviso' to match /· \d+ e-mails?/` — e
+`apps/web/src/test/avisos-por-email.test.tsx` **3 failed | 1 passed (4)**, com `expected true to be false` duas
+vezes (o `disabled` e o `checked` que a tela de hoje escreve em pedra). Verde depois: **8 passed (8)** e
+**4 passed (4)**. As duas suítes completas fecharam verdes no banco de prova, medidas depois da mudança:
+`apps/api` **49 arquivos / 450 casos** (314 s, código de saída 0) e `apps/web` **19 arquivos / 144 casos**.
+
+O que existe agora, em ordem de grandeza:
+
+1. **o aviso do sino manda cópia por e-mail** (`notificarDetalhado`, em `notifications.service.ts`): primeiro a
+   linha do sino nasce, depois a mensagem entra na fila da T5.3, e o assunto é exatamente o título gravado — sino,
+   tela e e-mail descrevem o mesmo aviso. Uma pré-consulta de `dedupeKey` antes da escrita é o que garante que o
+   e-mail só existe para linha **nova**, porque `createMany({ skipDuplicates: true })` não devolve quais eram
+   velhas;
+2. **o relatório diário e as duas varreduras têm chamador** (`cron.handlers.ts`): os três handlers passaram a
+   `notificarDetalhado`/`varreduraGlobal`, e a coluna "última execução" fecha com `· N e-mail(s)`;
+3. **o portão é o que o entregador afirma** (`entregaDeVerdade`, campo **opcional** de `MailerPort`, com
+   `estadoDoCanalDeEmail()` por cima): SMTP afirma, console e fake negam com motivo. A ausência significa "não
+   afirma", e é por isso que o padrão do contrato é a ausência — um adaptador escrito amanhã já nasce do lado
+   seguro;
+4. **a rota de preferências devolve `email: { disponivel, transporte, motivo }`**, e `POST /notifications/scan`
+   devolve `{ criadas, emails }` (a auditoria `notification.scan` grava os dois);
+5. **a tela obedece ao estado**: `disabled={!email.disponivel}`, com o motivo ou o transporte na dica. A caixa
+   continua **marcada** quando a pessoa pediu e-mail numa instalação sem SMTP, porque desmarcar por dentro faria
+   o próximo clique em "Salvar" jogar fora uma intenção gravada no banco;
+6. **falha de entrega é uma linha de auditoria** (`notification.entrega_falhou`, com `mascaraEndereco()`), e
+   sucesso não é nenhuma — um aviso por venda encheria a trilha de eventos que não mudam nada.
+
+Provas do portão, não só do caminho feliz: o caso 5 da API amarra "sino desligado + e-mail ligado = nenhuma
+mensagem" (o que fecha a porta do spam diário da varredura), o caso 6 prova que um entregador que não afirma
+entrega **não recebe mensagem nenhuma** e que a mesma rota devolve o contrário com um entregador que afirma, e o
+caso 4 prova os dois contadores na mesma varredura (`criadas: 2`, `emails: 1`) e o zero na segunda rodada.
+Decisão e preço em `docs/adr/0021-o-email-e-copia-do-aviso-do-sino.md`; operação na seção 10 de
+`docs/PRODUCAO.md`. Dois achados nasceram deste trabalho e estão registrados logo abaixo (**N75**, **N76**) em
+vez de corrigidos de graça.
 
 ### N60 — resíduo aceito, e por isso registrado: o bloqueio por conta é uma negação de serviço de quinze minutos contra endereço conhecido
 
@@ -2246,8 +2284,82 @@ uma chave que tem padrão seria derrubar a subida por algo que funciona. O que a
 
 Fica declarado também o que **não** entrou nesta tarefa, para a linha não parecer mais larga do que foi: o
 relatório diário do cron (`apps/api/src/modules/cron/cron.handlers.ts`) e o sino (`notifications.service.ts`)
-seguem sem chamador de e-mail — isso é o N59, que continua aberto e é o próximo item da T5. E o `connectionTimeout`
+seguiam sem chamador de e-mail — isso é o N59, que foi o item seguinte da T5 e está fechado lá. E o `connectionTimeout`
 do nodemailer não foi tunado por tentativa medida contra um SMTP real: não há credencial viva neste repositório,
 e apontar timeout contra um servidor inventado seria escrever um número sem medição.
+
+# Adenda da execução — T5.4 (F6: sino e relatório diário com chamador de e-mail) encerrada — 2026-10-14
+
+Quarto item da T5, e o que estava registrado como N59. A correção inteira cabe em `docs/adr/0021-o-email-e
+copia-do-aviso-do-sino.md`, com os números antes/depois na linha do N59 acima. Dois achados apareceram **durante**
+o trabalho e entram aqui em vez de virar correção de graça na mesma carona.
+
+### N75 — corrigido nesta rodada: a tela de preferências apontava para um executor que já existia
+
+`apps/web/src/pages/Notifications.tsx:411` descrevia a varredura de contas vencidas assim: *"É o mesmo passo que a
+rotina agendada vai chamar **quando o executor existir** — hoje ele só roda daqui ou pela API"*. O executor existe
+desde a tarefa #59 (backend de rotinas: `cron.service.ts`, `POST /api/ops/jobs/:slug/run`, tabela `cron_jobs`) e
+tem tela própria desde a #61 (`/app/rotinas`), com prova de navegador em `tools/verify-rotinas.cjs`. A frase estava
+certa quando foi escrita e continuou no lugar depois de o fato mudar — que é o mesmo formato de defeito do N59:
+copy que não depende de estado nenhum. Corrigida junto porque é a mesma tela do mesmo achado, e com uma diferença
+que a frase velha escondia: daqui a varredura varre **só a empresa ativa**, e pela rotina varre todas.
+
+Medido, não deduzido: `grep -n "executor existir" apps/web/src` devolve zero depois da mudança, e a suíte web
+fechou verde com a frase nova na tela.
+
+### N76 — aberto: os três textos antigos montam HTML sem escapar, e o `textoSeguro` que nasceu nesta rodada só protege o texto novo
+
+`apps/api/src/lib/mail/mensagens.ts` ganhou `textoSeguro()` (escapa `& < > "`) porque a mensagem de aviso do sino
+carrega nome de produto, de cliente e de fornecedor **digitados por uma pessoa na tela** para ser lida por outra no
+e-mail dela. As três mensagens que já existiam — recuperação, verificação de cadastro e aviso de segundo fator —
+interpolam `primeiroNome` cru no `<p>`, e ficaram como estavam.
+
+O risco hoje é pequeno, e é por isso que isto é um registro e não um conserto: `primeiroNome` vem do cadastro da
+própria pessoa e a mensagem vai para a caixa postal dela mesma, então o pior caso é alguém quebrar o próprio HTML
+(auto-XSS de mensagem). Não há terceiro envolvido, nenhum cliente de e-mail executa script do HTML que recebe por
+padrão, e o `codigo`/`link` interpolados são gerados pelo servidor. Foi deixado aberto por escopo (§1: a T5.4 é o
+N59), e o conserto é uma linha por mensagem quando alguém quiser fechar — o `textoSeguro` já está escrito e é
+usável. Fica também o lembrete de desenho: `input.link` vai cru dentro de `href="..."`; ele é montado a partir de
+`WEB_BASE_URL` mais um caminho fixo, ou seja, é dado do servidor, e passa a precisar de aspas escapadas no dia em
+que algum link vier de dado digitado.
+
+**Para a T6 (F7)**, que é a tarefa de conformidade e `SECURITY.md`: esta linha é o que responde "o produto injeta
+dado de usuário em mensagem de e-mail?" — a resposta honesta é "na mensagem de aviso, escapado; nas três antigas,
+só com o nome da própria pessoa, sem escape".
+
+### N77 — corrigido nesta rodada: a tabela de módulos do README dizia que backup não existia, e ele existe desde a T5.2
+
+Medido ao reescrever a tabela para o N59: a linha "Backup e restauração" continuava `a caminho`, três blocos
+cinzentos e nada mais, enquanto `deploy/backup-mysql.cjs`, `deploy/restaurar-mysql.cjs` e
+`tools/verify-backup.cjs` estão nesta árvore desde a T5.2 — com dump real conferido byte a byte, sidecar de
+sha256, metadados, retenção GFS e restauração comparada tabela por tabela (56 verificações, 0 falhas). A tarefa
+atualizou `docs/PRODUCAO.md`, o ADR-0019, o CHANGELOG e a árvore de docs, e deixou a tabela de módulos para trás.
+Corrigida aqui, na mesma passada em que a tabela foi mexida, e declarada em vez de consertada em silêncio: os três
+marcadores continuam corretos (backup não tem tabela, rota nem tela — é ferramenta de operação), o que estava
+errado era o resumo. Ficou dito o que existe e o que não existe (agenda embutida e cópia fora da máquina, que é o
+N71 já aberto).
+
+### Prova de navegador desta rodada (N59), na pilha de prova
+
+`node tools/verify-notificacoes.cjs` contra 5174/3002: **88 checagens, 0 falhas**. As três checagens novas saíram
+verdes com o estado real desta instalação — `{"disponivel":false,"transporte":"console","motivo":"não há servidor
+de e-mail (SMTP) configurado nesta instalação: as mensagens são escritas no log do servidor"}` —, com a caixa
+acompanhando o `disponivel` e a dica repetindo o motivo que a rota devolveu. A varredura repetida disse "Nenhum
+aviso novo neste mês." e, como o canal não entrega, a prova conferiu que a frase não fala de fila de e-mail.
+Banco de prova medido antes e depois da corrida, tabela por tabela: `notifications` **12 → 12**,
+`notification_preferences` **1 → 1**, `finance_entries` pendentes **0 → 0**, `users` **182 → 182**,
+`companies` **3 → 3**, **35 tabelas** nos dois momentos; `audit_logs` de notificação **97 → 99** — as duas linhas
+são a auditoria do próprio produto (`notification.scan`), não resíduo da prova, e o `finally` da ferramenta apagou
+os 24 avisos e os 12 lançamentos que ela criou (medido na saída: `sobraram 0`).
+
+Capturas: a tela de preferências mudou de verdade (a dica do canal agora é o estado que a API devolve, e a frase
+cresceu duas linhas), então `21-notificacoes-preferencias.png` foi atualizada. O grupo das rotinas também — a
+coluna "última execução" passou a fechar com `· 0 e-mails` nas três linhas, e isso é texto de tela:
+`23-rotinas-tela`, `-executou`, `-confirmacao`, `-claro` e `-celular`. As cinco conferidas uma a uma antes de
+entrar, sem dado sensível e sem número de prova no lugar de número de produto. `21-notificacoes-sino.png` **não**
+entrou: a diferença entre a captura nova e a canônica é contagem transitória, não interface, e re-captura sem
+mudança não é entregável. As quatro demais do grupo das notificações saíram byte a byte iguais à galeria canônica
+(mesmo sha256), o que confere que a prova está fotografando a mesma tela de sempre.
+
 
 

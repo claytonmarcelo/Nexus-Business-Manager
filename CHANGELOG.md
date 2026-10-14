@@ -1,5 +1,50 @@
 ## [Não lançado]
 
+### Cada aviso do sino agora tem cópia por e-mail, e a caixa da tela obedece à instalação (2026-10-14)
+
+- **O que estava registrado (T5.4 / F6, N59).** Depois da F4 existiam exatamente três caminhos que chamavam o
+  mailer, e nenhum deles era de produto comercial: recuperação de senha, verificação de cadastro e aviso de
+  segundo fator. O sino guardava `emailChannel` no banco sem que ninguém lesse, e as três rotinas de aviso
+  carregavam a anotação "sem SMTP não há e-mail". A tela completava a cena com um `disabled` escrito em pedra e
+  a frase "Indisponível: não há servidor de e-mail (SMTP) configurado nesta instalação" — verdade no
+  desenvolvimento, mentira numa produção com SMTP ligado, porque a frase não dependia de estado nenhum.
+- **O e-mail é cópia do aviso, nesta ordem.** Primeiro a linha do sino nasce; depois, para quem ligou o canal, a
+  mensagem entra na fila da T5.3 com o mesmo título e o mesmo corpo. Uma pré-consulta da chave antiduplicação
+  antes da escrita é o que garante que a cópia só existe para linha **nova** — `createMany({ skipDuplicates: true })`
+  não devolve quais eram velhas. Quem desligou o sino não recebe nada, porque o aviso não chega a ser gravado: é
+  isso que impede a varredura de contas vencidas de virar spam diário.
+- **Nada é simulado.** O portão não é o nome do transporte, é o que o entregador afirma: `MailerPort` ganhou
+  `entregaDeVerdade` e `motivoDaIndisponibilidade`, o SMTP afirma, o console e a caixa de memória negam com
+  motivo escrito, e a ausência de afirmação vale "não entrega". Sem isso o serviço devolve `{ criadas: n, emails: 0 }`
+  antes de montar mensagem, e a tela mostra o estado que a API devolve em vez de uma frase fixa.
+- **Dois números onde quem opera olha.** `POST /api/notifications/scan` responde `{ criadas, emails }` (e a
+  auditoria `notification.scan` grava os dois), e as três rotinas fecham a coluna "última execução" com
+  `· N e-mail(s)` — `1 aviso criado em 6 empresas · 0 e-mails`. `emails` conta mensagens postas na fila, não
+  entregas confirmadas. A falha virou uma linha de auditoria por mensagem (`notification.entrega_falhou`, com o
+  endereço mascarado); o sucesso não virou nenhuma, de propósito.
+- **Vermelho antes, nos dois lados.** `apps/api/test/avisos-por-email.test.ts` marcou **6 failed | 2 passed** e
+  `apps/web/src/test/avisos-por-email.test.tsx` **3 failed | 1 passed** — incluindo `expected true to be false`
+  duas vezes, que é o `disabled` e o `checked` que a tela de antes escrevia em pedra. Verde depois: **8 passed
+  (8)** e **4 passed (4)**. Um vermelho foi meu e está no ADR: o título do aviso ia cru para o `<h2>` do HTML, e
+  o `textoSeguro()` que eu mesmo tinha escrito para o corpo não tinha chegado lá.
+- **Suíte e portões.** **API 49 arquivos / 450 casos** (8 novos) e **web 19 / 144** (4 novos), zero falha e zero
+  skip contra `nexusbusinessmanager_teste`; typecheck e build sem erro nem aviso de chunk. Prova de navegador na
+  pilha de prova: `tools/verify-notificacoes.cjs` com **88 checagens, 0 falhas** — agora conferindo o quadro de
+  e-mail contra o estado que a rota devolve, o que faz a mesma prova valer com e sem SMTP — e
+  `tools/verify-rotinas.cjs` com **37 / 0**. Banco de prova medido antes e depois da corrida: `notifications`
+  12 → 12, preferências 1 → 1, pendentes 0 → 0, usuários 182 → 182, **35 tabelas** nos dois momentos, e o
+  `finally` da prova apagando os 24 avisos e os 12 lançamentos que ela criou.
+- **Capturas.** A tela de preferências mudou de texto e a coluna das rotinas ganhou sufixo, então
+  `21-notificacoes-preferencias.png` e o grupo `23-rotinas-*` foram atualizados; `21-notificacoes-sino.png` ficou
+  como estava, porque a diferença era contagem transitória, não interface.
+- **Dois achados apareceram no caminho.** N75, corrigido: a própria tela apontava para "o executor, quando ele
+  existir", seis tarefas depois de o executor nascer. N76, aberto: as três mensagens antigas interpolam o
+  primeiro nome sem escape no HTML — auto-XSS de mensagem, sem terceiro envolvido, e registrado para o
+  `SECURITY.md` da F7 dizer isso com a resposta na mão.
+- Decisão em `docs/adr/0021-o-email-e-copia-do-aviso-do-sino.md`; `docs/decisoes/G1-envio-de-email.md` re-medida;
+  `docs/PRODUCAO.md` seção 10 com o "como se lê o número de e-mails". **Fica aberto** o que a T5 ainda deve: a
+  porta administrativa de confirmação de e-mail (N61).
+
 ### A entrega de e-mail saiu de dentro do request (2026-10-14)
 
 - **O que a regra 2 do G1 cobrava, medido (T5.3 / F6, N58).** Com um entregador injetado que demora 600 ms no

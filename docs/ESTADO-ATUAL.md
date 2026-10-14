@@ -43,8 +43,8 @@ continua marcada para a F9.
    manuais com o recebimento registrado por pessoa e uma única receita no caixa,
    relatórios agregados, notificações, auditoria, rotinas agendadas,
    CMS da vitrine, documentos legais e modo manutenção.
-3. A suíte inteira passa nesta rodada: 47 arquivos / 437 casos na API e 18 arquivos
-   / 140 casos no web, com o banco MySQL de prova da decisão D6 (sem mock).
+3. A suíte inteira passa nesta rodada: 49 arquivos / 450 casos na API e 19 arquivos
+   / 144 casos no web, com o banco MySQL de prova da decisão D6 (sem mock).
 4. É parcial por escolha, não por esquecimento: os relatórios agregados têm teste
    de acesso e de dinheiro, mas nem cada um dos oito tem asserção de valor
    própria. Saiu dessa lista o tema do painel: desde a T4.3 o `<html>` carrega as
@@ -469,7 +469,7 @@ Cinco estados possíveis: **Implementado e testado**, **Implementado sem teste**
 | Módulo | Estado | Evidência |
 | --- | --- | --- |
 | Autenticação, cadastro, recuperação | Implementado e testado | 19 rotas; `auth.test.ts`, `auth-flows.test.ts`, `seguranca.test.ts`, `recuperacao-por-email.test.ts` (6), `verificacao-de-email.test.ts` (11); prova `tools/verify-logout.cjs` |
-| Entrega de e-mail (SMTP, verificação, 2FA) | Implementado e testado, com o provedor por decidir | `src/lib/mail/` (porta + SMTP + console + caixa de memória), três chamadores reais; `recuperacao-por-email.test.ts` e `verificacao-de-email.test.ts` leem a caixa de teste e provam que o código nunca volta no HTTP. Adaptador de fornecedor nenhum: D1, `docs/decisoes/G1-envio-de-email.md` |
+| Entrega de e-mail (SMTP, verificação, 2FA, avisos) | Implementado e testado, com o provedor por decidir | `src/lib/mail/` (porta + SMTP + console + caixa de memória + fila da T5.3), com chamadores nos dois lados do produto: recuperação, verificação, aviso de segundo fator, a cópia por e-mail de cada aviso do sino e as três rotinas que avisam (`cron.handlers.ts`); `recuperacao-por-email.test.ts` e `verificacao-de-email.test.ts` leem a caixa de teste e provam que o código nunca volta no HTTP, e `avisos-por-email.test.ts` (8) prova o portão do canal e os dois contadores. Adaptador de fornecedor nenhum: D1, `docs/decisoes/G1-envio-de-email.md`, `docs/adr/0021` |
 | Segundo fator (TOTP) e bloqueio por conta | Implementado e testado | `segundo-fator.test.ts` (16), `bloqueio-de-conta.test.ts` (8), `criptografia.test.ts` (8 — o envelope AES-256-GCM do segredo); rotas de etapa com decorador próprio; tela em quatro passos com prova `apps/web/src/test/login-com-segundo-fator.test.tsx` (4) |
 | Sessões e revogação | Implementado e testado | `sessoes-empresa.test.ts`; refresh com empresa lembrada; 8 casos em `sessoes-empresa.test.ts`; corrida de duas abas e a guarda da linhagem em `corrida-de-abas.test.ts` (8) |
 | Papéis, permissões e hierarquia | Implementado e testado | `lib/rbac.ts`; `rbac.test.ts`, `rbac-hierarquia.test.ts`; aba Permissões |
@@ -484,7 +484,7 @@ Cinco estados possíveis: **Implementado e testado**, **Implementado sem teste**
 | Agenda (janela, recorrência, FullCalendar) | Implementado e testado | 7 rotas; `agenda.test.ts`; fuso em `fuso-dia.test.ts` |
 | Ordens de serviço (atendimento, peças, baixa de estoque) | Implementado e testado | 6 rotas; `ordens-de-servico.test.ts` (35 casos) e `ordens-de-servico.test.tsx` (10); prova `tools/verify-ordens-de-servico.cjs` (103); decisão em `docs/adr/0008-ordem-de-servico-baixa-estoque-na-conclusao.md` |
 | Relatórios agregados | **Parcial** | 8 rotas existem e respondem; asserções de valor cobrem overview, financeiro e dinheiro; os seis demais relatórios só têm teste de acesso/intrusão |
-| Notificações e preferências | Implementado e testado | 7 rotas; `notifications.test.ts` |
+| Notificações e preferências | Implementado e testado | 7 rotas; `notifications.test.ts`, mais os 8 casos de `avisos-por-email.test.ts` (a cópia por e-mail do aviso do sino, o portão do canal e os dois contadores da varredura); prova `tools/verify-notificacoes.cjs` (88 checagens) |
 | Auditoria | Implementado e testado | 2 rotas de leitura (empresa e plataforma); gravação exercitada em 31 dos 46 arquivos de teste (`grep -l "audit\|AuditLog"` em `apps/api/test/*.test.ts`) |
 | Rotinas agendadas (cron) | Implementado e testado | 3 rotas de plataforma; `cron.test.ts`; prova `tools/verify-rotinas.cjs` |
 | CMS da vitrine | Implementado e testado | 14 rotas; `cms.test.ts`; provas `tools/verify-cms.cjs` e `tools/verify-landing-cms.cjs` |
@@ -492,7 +492,7 @@ Cinco estados possíveis: **Implementado e testado**, **Implementado sem teste**
 | Modo manutenção | Implementado e testado | `plugins/maintenance.ts`, bypass público com rate-limit próprio |
 | Painel/Dashboard | Implementado e testado pela API | `/api/reports/overview` + meta de receita; tela `Dashboard.tsx` |
 | Cobranças manuais e catálogo de gateways | Implementado e testado | 6 rotas de cobrança + 2 de gateway; `cobrancas.test.ts` (24 casos) e `cobrancas.test.tsx` (15); prova `tools/verify-cobrancas.cjs` (137); decisão em `docs/adr/0009-cobranca-manual-receita-unica-e-vencida-lida.md`. Os três provedores de mercado param no catálogo com `available: false` e o motivo por escrito — nenhuma chamada de saída |
-| Modelos de e-mail | **Só tabela** | `email_templates` no schema; sem delegate, sem rota, sem tela. A F4 criou a **entrega** (`src/lib/mail/`) com os textos em código, não na tabela — os templates do sino e do relatório diário continuam dependendo do provedor que o dono escolher (G1) |
+| Modelos de e-mail | **Só tabela** | `email_templates` no schema; sem delegate, sem rota, sem tela. A F4 criou a **entrega** (`src/lib/mail/`) com os textos em código, não na tabela, e desde a T5.4 o sino e o relatório diário também chamam essa entrega — o que continua dependendo do provedor que o dono escolher (G1) é a caixa de saída, não o chamador |
 | Upload de arquivo (logo, anexos) | **Não iniciado** | nenhum parser `multipart` na API; `logoUrl` é `VarChar(255)` de URL |
 | SaaS: planos, assinaturas, faturas | **Não iniciado** | sem tabela, sem rota |
 | Backup e restauração | Implementado e conferido | `deploy/backup-mysql.cjs` despeja o `mysqldump` do container em gzip com `.sha256` e `.meta.json`, `deploy/restaurar-mysql.cjs` recusa hash divergente, schema reservado e banco não vazio antes de escrever, e `tools/verify-backup.cjs` restaura o dump num banco separado e confere tabela por tabela — **56 verificações, 0 falhas**. Roteiro na seção 8 de `docs/PRODUCAO.md`, decisão em `docs/adr/0019-backup-com-mysqldump-dentro-do-container-e-restauracao-conferida.md`. O que fica declarado fora: agenda própria e cópia off-site (N71) |
@@ -762,8 +762,12 @@ houver credencial real e a decisão G2", e o código confirma as duas partes:
 deixou de ser divergência nesta rodada: o README dizia "gateways de pagamento e
 SMTP têm tabela mas não têm chamada", e a chamada de e-mail agora existe
 (`nodemailer` atrás da porta `MailerPort`), então a linha de Terceiros foi reescrita
-para dizer o que ainda não existe — o sino e o relatório diário não chamam a entrega
-(N59), e nenhum provedor de pagamento é chamado. O que continua sem leitura de código
+para dizer o que ainda não existe — nenhum provedor de pagamento é chamado. Desde a
+T5.4 **não sobra nenhum chamador de e-mail dentro do produto**: recuperação,
+verificação de cadastro, aviso de segundo fator, cópia do aviso do sino e o relatório
+diário das rotinas passam todos pela mesma entrega (`docs/adr/0021`), e o que falta é
+a **porta administrativa de confirmação de e-mail** (N61), que é uma rota de escrita,
+não um chamador. O que continua sem leitura de código
 é a tabela `email_templates`: as mensagens são montadas em
 `src/lib/mail/mensagens.ts`, e a linha "Modelos de e-mail" da tabela de módulos do
 README diz isso em vez de dizer que falta SMTP.
@@ -796,6 +800,8 @@ Ligadas ao item correspondente de `docs/AUDITORIA.md`.
 | P18 | Bloqueio de conta é, pelo lado da vítima, uma negação de serviço de quinze minutos disparada por quem conhece o endereço | AUDITORIA N60 | risco **aceito e registrado**: janela de contagem, login que limpa o contador, recuperação que limpa o contador e limite de 10 requisições por IP; a divulgação vai em `SECURITY.md` na T6/F7 |
 | P19 | O CSS do painel continua um arquivo único de **398,54 kB** (gzip 61,29 kB), quando o JavaScript já foi dividido por rota | AUDITORIA N62 / `docs/adr/0014` | baixa, dívida declarada: a divisão por rota é do lado do `import`, e o stylesheet entra todo no `<head>`; a passada é de uma rodada de frente que ainda não existiu |
 | P20 | Nove ferramentas de captura (`tools/shoot-*.cjs`) não acompanham a interface de hoje, e 48 PNGs ainda mostram a barra anterior à F3.1 | AUDITORIA N29 e N30 | média — fora do escopo por decisão do dono (D7: nenhuma recaptura em massa); a consertada entra na **T7/F8**, e as famílias regravadas nesta rodada foram conferidas pixel a pixel (N30 re-medido) |
+| P21 | O sino e o relatório diário das rotinas não tinham chamador de e-mail nenhum, e a caixa "aviso por e-mail" da tela de preferências era desenhada com `disabled` em pedra, sem consultar a instalação | AUDITORIA N59 | **fechado na T5.4**: cada linha nova do sino ganha cópia por e-mail pela mesma fila da T5.3 (`notificarDetalhado()` grava o aviso e depois enfileira, com pré-consulta de `dedupeKey` para que a varredura não reenvie aviso velho), os três handlers de rotina chamam a entrega e fecham a coluna "última execução" com `· N e-mail(s)`, o portão é `entregaDeVerdade` (quem não afirma entrega não enfileira nem simula), a rota responde `{ criadas, emails }`, a falha vira `notification.entrega_falhou` com endereço mascarado, e a caixa passou a ler `estadoDoCanalDeEmail()`. Medido: `avisos-por-email.test.ts` **8 casos** e `avisos-por-email.test.tsx` **4 casos**, vermelhos antes e verdes depois, suítes completas **API 49/450** e **web 19/144**, prova de navegador `verify-notificacoes.cjs` **88 checagens / 0 falhas**; decisão em `docs/adr/0021` |
+| P22 | As três mensagens de e-mail anteriores à T5.4 interpolam `primeiroNome` no HTML sem escape | AUDITORIA N76 | baixa com auto-XSS: o texto vem do próprio cadastro, então não há terceiro envolvido; a sanitização entra na passada de e-mail do `SECURITY.md` da **T6/F7**, registrada em vez de corrigida em silêncio fora do N59 |
 
 ---
 
@@ -805,8 +811,9 @@ Nada aqui foi inventado; está bloqueado por escolha registrada.
 
 1. **SMTP** (`docs/decisoes/G1-envio-de-email.md`) — escolha do provedor e
    credenciais reais. Desde a F4 (decisão D1) o caminho de entrega existe e é o
-   único caminho: verificação de cadastro, recuperação de senha e os avisos de
-   segundo fator saem pela `MailerPort`, e o código **nunca** volta no corpo da
+   único caminho: verificação de cadastro, recuperação de senha, os avisos de
+   segundo fator e — desde a T5.4 — a cópia por e-mail de cada aviso do sino e o
+   relatório diário das rotinas saem pela `MailerPort`, e o código **nunca** volta no corpo da
    resposta em produção — a porta de eco `AUTH_EXPOSE_RESET_TOKEN=1` só funciona
    fora de produção e o validador de `.env` recusa a subida com ela ligada. O que
    depende do dono agora é ligar `SMTP_HOST`/`SMTP_PORT`/`SMTP_USER`/`SMTP_PASS`/

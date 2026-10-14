@@ -304,8 +304,9 @@ qualquer tela do painel — sem recarregar a página, sem biblioteca de ícones 
   lidos e urgentes, chip por tipo com o número de cada um, filtro combinado com lidas/não lidas, paginação
   feita no servidor e as ações Abrir e Marcar lida na linha. O botão "Marcar todos" passa pelo diálogo de
   confirmação da casa, e "Ver contas vencidas agora" só aparece para quem tem `settings:write`
-- **Preferências na tela**: os cinco tipos com rótulo do negócio, canal in-app por tipo, canal de e-mail
-  desligado com o motivo declarado (nenhuma rotina de aviso chama a entrega ainda — N59), gravar travado até algo mudar de fato e "Voltar ao
+- **Preferências na tela**: os cinco tipos com rótulo do negócio, canal in-app por tipo, canal de e-mail com a
+  caixa obedecendo ao estado que a API declara (`disponivel`, `transporte` e o motivo por escrito quando não
+  entrega — nada de `disabled` fixo), gravar travado até algo mudar de fato e "Voltar ao
   padrão". A empresa e o dono vêm sempre do token — não há seletor de empresa aqui
 - Sino e tela conversam pelo evento `nexus:avisos` (`lib/notificationsApi.ts`), então marcar lida num lugar
   atualiza o número do outro sem recarregar página nenhuma
@@ -313,9 +314,11 @@ qualquer tela do painel — sem recarregar a página, sem biblioteca de ícones 
   estoque, lead, financeiro e relatório diário
 - Quem praticou a ação nunca recebe o próprio aviso; uma falha ao gravar aviso fica no log e **não** quebra
   a venda, a compra ou o estoque
-- Preferências por usuário e empresa com canal in-app e de e-mail separados. O canal de e-mail é guardado,
-  e a entrega por SMTP já existe desde a F4 — o que falta é as rotinas de aviso chamarem o mailer, então
-  hoje nada sai por e-mail pelo sino (N59); o sistema não finge que envia
+- Preferências por usuário e empresa com canal in-app e de e-mail separados. O e-mail é **cópia do aviso do
+  sino**: primeiro a linha nasce no sino, depois a mensagem entra na fila da T5.3, com o mesmo título e o mesmo
+  corpo. Quem desligou o sino não recebe mensagem nenhuma, porque o aviso não chega a ser gravado — é isso que
+  impede a varredura de contas vencidas de virar spam diário. Sem entregador que entrega, nada é enfileirado e
+  o número que aparece na tela e na rotina é zero: o sistema não finge que envia
 - `GET /api/notifications/count` é a rota barata do sino (número, quebra por tipo e urgentes): com a aba
   escondida a batida para, e voltar para a aba puxa a contagem na hora. `POST /api/notifications/scan`, a
   varredura de contas vencidas, é administrativa — só `OWNER`/`ADMIN` — e não repete o mesmo aviso dentro do
@@ -502,12 +505,12 @@ se o site está aberto ou em manutenção. A vitrine é única para toda a plata
 | CMS da página pública (cores, herói, capacidades, banners, depoimentos, métricas, FAQ) | ✅ | ✅ 14 rotas | ✅ | no ar: a vitrine `/` é montada pelo conteúdo do banco e o editor `/app/cms` cadastra esse conteúdo nas cinco abas |
 | Documentos legais (Termos, Privacidade, LGPD) | ✅ | ✅ | ✅ | `/legal/:kind` mostra só o que está publicado; rascunho e publicação na aba Textos legais do editor |
 | Modo manutenção da plataforma | ✅ (mesma tabela) | ✅ | ✅ | 503 com mensagem e previsão na API e na tela, contagem regressiva, pulso em tempo constante, IP permitido e o código guardado na aba |
-| Modelos de e-mail | ✅ | 🚧 | 🚧 | tabela `email_templates` criada e sem leitor: as mensagens que saem (verificação, recuperação, segundo fator) são montadas em `src/lib/mail/mensagens.ts`, não no banco |
-| Rotinas agendadas (cron) | ✅ | ✅ 3 rotas | ✅ | no ar: `/app/rotinas` com as três varreduras do relógio — contas vencidas, estoque baixo e relatório diário —, liga/pausa e "Executar agora" |
+| Modelos de e-mail | ✅ | 🚧 | 🚧 | tabela `email_templates` criada e sem leitor: as quatro mensagens que saem (verificação, recuperação, segundo fator e a cópia do aviso do sino) são montadas em `src/lib/mail/mensagens.ts`, não no banco |
+| Rotinas agendadas (cron) | ✅ | ✅ 3 rotas | ✅ | no ar: `/app/rotinas` com as três varreduras do relógio — contas vencidas, estoque baixo e relatório diário —, liga/pausa e "Executar agora"; a coluna "última execução" fecha com `· N e-mail(s)`, que é o número de mensagens postas na fila naquela corrida |
 | Cobranças manuais (carnê: PIX por chave, boleto, transferência, dinheiro, cartão na maquininha) | ✅ tabela `charges` | ✅ 6 rotas | ✅ | no ar: `/app/cobrancas` com os oito indicadores do resumo, cobrança nascida de venda ou de ordem de serviço, recebimento registrado por pessoa e pelo dia dito por ela, uma única receita no caixa (corrida de dois cliques medida), cancelamento com motivo, "vencida" calculada no fuso da empresa, documento e recibo para imprimir e tabela que vira cartão no celular |
 | Gateways de pagamento (cobrança automática pelo provedor) | ✅ tabela `payment_gateways` | ✅ 2 rotas | ✅ (aba Gateways) | catálogo sempre com as quatro linhas (`MANUAL` disponível, `MERCADO_PAGO`, `EFI` e `STRIPE` indisponíveis com o motivo); a escrita é a do MANUAL — chave PIX, quem recebe, instruções e vencimento padrão — e as três colunas de credencial ficam nulas por construção e não aparecem na resposta; **nenhuma chamada de saída** enquanto não houver credencial real e a decisão G2 |
 | SaaS: planos, assinaturas e faturas | 🚧 | 🚧 | 🚧 | a caminho |
-| Backup e restauração | 🚧 | 🚧 | 🚧 | a caminho |
+| Backup e restauração | 🚧 | 🚧 | 🚧 | não é módulo do painel: é ferramenta de operação (`deploy/backup-mysql.cjs` e `deploy/restaurar-mysql.cjs`, régua `tools/verify-backup.cjs` com 56 verificações), com dump real, hash, metadados, retenção GFS e restauração conferida tabela por tabela. Sem agenda embutida e sem cópia fora da máquina — N71 |
 
 Legenda: ✅ existe e é usado · 🚧 falta. Toda linha do menu abre uma página que existe — o que não existe fica
 marcado aqui, não na barra lateral.
@@ -615,7 +618,8 @@ importa só o CSS do AdminLTE) e `sweetalert2` (substituído pelo diálogo de co
                                prova separado · 0011 casa que abre no login · 0012 motivo escrito para cancelar ·
                                0013 autenticação reforçada · 0014 code splitting · 0015 alvo de toque · 0016 tema ·
                                0017 pilha de prova com porta própria · 0018 produção em container com uma porta ·
-                               0019 backup com restauração conferida · 0020 e-mail por fila de memória
+                               0019 backup com restauração conferida · 0020 e-mail por fila de memória ·
+                               0021 o e-mail é cópia do aviso do sino
     design/palette.md          paleta oficial extraída da logo
     screenshots/               as capturas desta página
   tools/                       provas de navegador, recaptura de telas e utilitários do repo
@@ -1029,8 +1033,8 @@ fora do git, com histórico reescrito antes do primeiro push.
 ### A seguir
 
 1. **Modelos de e-mail** — cadastrar e editar os modelos guardados em `email_templates`; o SMTP já entrega
-   (verificação, recuperação e segundo fator saem por `nodemailer` quando configurado), mas nenhum trecho de
-   código lê a tabela ainda, e as rotinas de aviso do sino continuam sem chamar a entrega (N59)
+   (verificação, recuperação, segundo fator e a cópia de cada aviso do sino saem por `nodemailer` quando
+   configurado), mas nenhum trecho de código lê a tabela ainda
 2. **Cobrança por gateway** — o carnê manual já está no ar em `/app/cobrancas`; ligar MERCADO_PAGO, EFI ou
    STRIPE depende da decisão G2 e da credencial de ambiente; nada de integração de fachada
 3. **SaaS: planos, assinaturas e faturas** · **backup e restauração** · **CI** com suíte automatizada a
@@ -1070,8 +1074,11 @@ O detalhamento está em [`CHANGELOG.md`](CHANGELOG.md) (Keep a Changelog, mais n
 | `T4 → T5` | A operação começou a existir fora da máquina do dono. A pilha de prova ganhou porta própria (3002/5174) e a 3001/5173 deixou de ser disputada (N65, ADR-0017), a **pilha Docker** nasceu com quatro serviços e **uma única porta publicada** — MySQL e API sem porta nenhuma no host, painel servindo `/api` por proxy na mesma origem (29 verificações, ADR-0018) — e o **backup do banco passou a ter restauração testada**: `mysqldump` dentro do container, gzip com `.sha256` e `.meta.json`, retenção GFS 7/4/12 com semana ISO, e a régua que restaura num banco separado e confere tabela por tabela antes de chamar aquilo de backup (56 verificações, ADR-0019). A suíte foi de **437 + 140** para **442 + 140** com a T5.3, que tirou a entrega de e-mail de dentro do request:
 os três chamadores agora entregam um código numa **fila de memória do processo**, e um worker fala com o SMTP com
 retentativa de recuo exponencial, timeout de socket e dreno no desligue — medido em 7,43 ms de resposta contra os
-600 ms do entregador injetado (N58 fechado, ADR-0020). O que falta da T5 é o chamador do sino (N59) e a porta
-administrativa de confirmação (N61) |
+600 ms do entregador injetado (N58 fechado, ADR-0020). Na mesma tarefa o sino ganhou chamador: cada aviso novo
+do sino tem **cópia por e-mail** para quem ligou o canal, as três rotinas fecham a frase de execução com
+`· N e-mail(s)`, e a caixa da tela de preferências passou a obedecer ao estado que a API declara em vez de um
+`disabled` escrito em pedra (N59 fechado, ADR-0021). O que falta da T5 é a porta administrativa de confirmação
+(N61) |
 | `T3 → T4` | A F5 inteira. Cinco listas pararam de aceitar resposta atrasada (N51), a tela de entrada zerou a senha nos três momentos em que ela sobrava — envio recusado, desmontagem e `pageshow` do histórico — e ganhou rótulo associado de verdade (Problema C). O painel passou a escrever `data-bs-theme` no `<html>` que o Bootstrap 4 lê (N7), a casa ganhou `ErrorBoundary` na raiz e por rota com registro do erro, e o `npm run verify` abriu a fumaça: **63 telas** percorridas no navegador, com HTTP, conteúdo montado e zero erro de console. As duas telas novas da F4 saíram dos 0% de cobertura (N62), o JavaScript deixou de ser um arquivo só — **964,31 kB / 283,61 kB gzip viraram 354,85 kB / 121,62 kB em 37 pedaços**, com a Agenda carregando a pé (D8, ADR-0014) — e a acessibilidade ganhou régua: **22 checagens, 0 falhas** em rótulo, foco, teclado, movimento reduzido e alvo de toque (ADR-0015). A suíte fechou em **437 + 140** |
 
 ---
