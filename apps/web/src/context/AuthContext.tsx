@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from "react";
 import { api, refreshSession } from "../lib/api";
+import { confirmarDesafio as confirmarDesafioNaApi, ativarPeloTokenDeEtapa } from "../lib/segundoFator";
 import { REFRESH_KEY, tokenStore } from "../lib/tokenStore";
 import { configurarFormatos } from "../lib/format";
 
@@ -26,11 +27,33 @@ export interface SessionUser {
 // (nunca houve sessão nenhuma), e é o que diz à vitrine se deve avisar.
 export type FimDeSessao = "logout" | "expirada" | "outra-aba";
 
+// F4 (D2/D3): a senha certa deixou de ser o único desfecho de um login e de um
+// cadastro. Os estados abaixo são os mesmos que a API devolve, e a tela precisa
+// saber qual deles desenhou — uma promessa de "você entrou" quando faltou o
+// segundo fator seria a mentira mais cara do fluxo.
+export type ResultadoDeLogin =
+  | { estado: "sessao"; user: SessionUser }
+  | { estado: "desafio"; challengeToken: string }
+  | { estado: "configuracao"; setupToken: string; mensagem: string };
+
+export type ResultadoDeCadastro = { estado: "sessao" } | { estado: "verificacao-pendente" };
+
 interface AuthCtx {
   user: SessionUser | null;
   status: "loading" | "authenticated" | "anonymous";
-  login: (email: string, password: string, companyId?: string) => Promise<void>;
-  register: (name: string, email: string, password: string) => Promise<void>;
+  login: (email: string, password: string, companyId?: string) => Promise<ResultadoDeLogin>;
+  /** Segunda etapa do login: o código do aplicativo troca o desafio pela sessão. */
+  confirmarDesafio: (challengeToken: string, codigo: string) => Promise<void>;
+  /**
+   * Caminho obrigatório do login: confirma o código do aplicativo, liga o segundo
+   * fator e instala a sessão que a API emite junto. `entrou` é falso quando a API
+   * respondeu sem par de tokens — a tela tem de dizer isso, e não fingir que entrou.
+   */
+  ligarSegundoFatorNoLogin: (
+    setupToken: string,
+    codigo: string,
+  ) => Promise<{ codigosDeRecuperacao: string[]; entrou: boolean }>;
+  register: (name: string, email: string, password: string) => Promise<ResultadoDeCadastro>;
   logout: () => Promise<void>;
   switchCompany: (companyId: string) => Promise<void>;
   reload: () => Promise<void>;
@@ -162,30 +185,94 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => window.removeEventListener("storage", onStorage);
   }, [encerrar]);
 
-  const login = useCallback(
-    async (email: string, password: string, companyId?: string) => {
-      const { data } = await api.post("/auth/login", { email, password, companyId });
+  // Instala no navegador o par de tokens que uma resposta de auth devolveu. Os
+  // três caminhos que chegam aqui — login, segunda etapa e cadastro — têm a mesma
+  // forma de resposta, e é esta função que decide "sessão existe" uma vez só.
+  const aplicarSessao = useCallback(
+    (data: { accessToken?: string; refreshToken?: string; user?: unknown }) => {
+      if (!data.accessToken || !data.refreshToken || !data.user) {
+        throw new Error("A resposta não trouxe uma sessão completa.");
+      }
       tokenStore.setAccess(data.accessToken);
       tokenStore.setRefresh(data.refreshToken);
       // Sessão nova: um motivo de fim antigo não tem mais o que avisar.
       fimRef.current = null;
-      setUser(data.user);
+      setUser(data.user as SessionUser);
       aplicaStatus("authenticated");
     },
     [aplicaStatus],
   );
 
-  // Cadastro self-service: a API cria usuario + empresa (OWNER) e ja devolve sessao.
-  const register = useCallback(
-    async (name: string, email: string, password: string) => {
-      const { data } = await api.post("/auth/register", { name, email, password });
-      tokenStore.setAccess(data.accessToken);
-      tokenStore.setRefresh(data.refreshToken);
-      fimRef.current = null;
-      setUser(data.user);
-      aplicaStatus("authenticated");
+  const login = useCallback(
+    async (email: string, password: string, companyId?: string): Promise<ResultadoDeLogin> => {
+      const { data } = await api.post<Record<string, unknown>>("/auth/login", {
+        email,
+        password,
+        companyId,
+      });
+      // D3: os dois estados de etapa respondem 200 sem sessão nenhuma. Nada é
+      // guardado no navegador aqui — o token de etapa vive só em memória, na tela,
+      // e morre com ela.
+      if (data.twoFactorRequired === true) {
+        return { estado: "desafio", challengeToken: String(data.challengeToken) };
+      }
+      if (data.twoFactorSetupRequired === true) {
+        return {
+          estado: "configuracao",
+          setupToken: String(data.setupToken),
+          mensagem:
+            typeof data.mensagem === "string"
+              ? data.mensagem
+              : "Ligue o segundo fator para entrar.",
+        };
+      }
+      aplicarSessao(data);
+      return { estado: "sessao", user: data.user as SessionUser };
     },
-    [aplicaStatus],
+    [aplicarSessao],
+  );
+
+  // Segunda etapa do login (D3): o código do aplicativo — ou um de recuperação —
+  // troca o desafio pela sessão. A rota é pública e o cabeçalho é o do desafio.
+  const confirmarDesafio = useCallback(
+    async (challengeToken: string, codigo: string): Promise<void> => {
+      const sessao = await confirmarDesafioNaApi(challengeToken, codigo);
+      aplicarSessao(sessao);
+    },
+    [aplicarSessao],
+  );
+
+  // Caminho obrigatório do login (D3): a ativação devolve os códigos de
+  // recuperação e, como a pessoa ainda não tem sessão, devolve também o par de
+  // tokens da casa que ela escolheu na senha. Sem par, a tela tem de dizer que
+  // não entrou — e é este booleano que ela consulta.
+  const ligarSegundoFatorNoLogin = useCallback(
+    async (setupToken: string, codigo: string): Promise<{ codigosDeRecuperacao: string[]; entrou: boolean }> => {
+      const resposta = await ativarPeloTokenDeEtapa(setupToken, codigo);
+      const entrou = Boolean(resposta.accessToken && resposta.refreshToken && resposta.user);
+      if (entrou) {
+        aplicarSessao(resposta);
+      }
+      return { codigosDeRecuperacao: resposta.codigosDeRecuperacao, entrou };
+    },
+    [aplicarSessao],
+  );
+
+  // Cadastro self-service: sem verificação, a API cria usuario + empresa (OWNER) e
+  // ja devolve sessao. Com a verificação ligada (D2), ela devolve 201 sem sessão
+  // nenhuma, e a tela é o "confirme seu e-mail", não o painel.
+  const register = useCallback(
+    async (name: string, email: string, password: string): Promise<ResultadoDeCadastro> => {
+      const { data } = await api.post<Record<string, unknown>>("/auth/register", {
+        name,
+        email,
+        password,
+      });
+      if (data.verificationRequired === true) return { estado: "verificacao-pendente" };
+      aplicarSessao(data);
+      return { estado: "sessao" };
+    },
+    [aplicarSessao],
   );
 
   // Só encerra a sessão e diz por quê. O destino (a página de boas-vindas) é
@@ -228,6 +315,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         user,
         status,
         login,
+        confirmarDesafio,
+        ligarSegundoFatorNoLogin,
         register,
         logout,
         switchCompany,

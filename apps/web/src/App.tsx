@@ -5,6 +5,7 @@ import { Landing } from "./pages/Landing";
 import { Login } from "./pages/Login";
 import { Register } from "./pages/Register";
 import { ForgotPassword } from "./pages/ForgotPassword";
+import { VerificarEmail } from "./pages/VerificarEmail";
 import { Dashboard } from "./pages/Dashboard";
 import { Users } from "./pages/Users";
 import { Clients } from "./pages/Clients";
@@ -33,6 +34,10 @@ export function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/cadastro" element={<Register />} />
         <Route path="/recuperar-senha" element={<ForgotPassword />} />
+        {/* D2: a rota do link de confirmação. O caminho é o mesmo que a API escreve
+            na mensagem (WEB_BASE_URL + /verificar-e-mail?token=...), e ela é pública
+            porque quem clica ainda não tem sessão nenhuma. */}
+        <Route path="/verificar-e-mail" element={<VerificarEmail />} />
         <Route path="/legal/:slug" element={<Legal />} />
         <Route path="/403" element={<Forbidden />} />
         <Route path="/401" element={<Unauthorized />} />

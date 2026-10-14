@@ -6,7 +6,11 @@ const baseURL = import.meta.env.VITE_API_URL || "/api";
 export const api = axios.create({ baseURL, withCredentials: false });
 
 api.interceptors.request.use((config) => {
-  if (tokenStore.access) {
+  // F4 (D3): um cabeçalho escrito à mão tem prioridade sobre a sessão em memória.
+  // As rotas de etapa do login — `/2fa/setup`, `/2fa/activate`, `/2fa/challenge` —
+  // não existem para uma sessão comum (a API recusa o token de sessão nelas), e o
+  // interceptor as calcaria com o Bearer que estiver guardado na aba.
+  if (tokenStore.access && !config.headers.Authorization) {
     config.headers.Authorization = `Bearer ${tokenStore.access}`;
   }
   // Site em manutencao: quem recebeu o pulso nesta aba o apresenta em toda

@@ -135,6 +135,7 @@ export function SenhaPanel() {
 
     setTrocando(true);
     setErros({});
+    let reentrou = false;
     try {
       const { sessionsRevoked } = await trocarSenha(atual, nova);
       // Trocar a senha revoga todos os refresh tokens, inclusive o desta aba.
@@ -142,7 +143,15 @@ export function SenhaPanel() {
       // quando a sessão atual expirar, no meio de um cadastro.
       if (user) {
         try {
-          await login(user.email, nova);
+          const resultado = await login(user.email, nova);
+          // D3: com o segundo fator ligado a senha não reabre a porta sozinha. A
+          // sessão desta aba já era a senha velha e não existe mais — encerrar aqui
+          // devolve a pessoa ao login, onde a etapa se completa do jeito certo.
+          if (resultado.estado === "sessao") {
+            reentrou = true;
+          } else {
+            await logout();
+          }
         } catch {
           await logout();
         }
@@ -151,7 +160,9 @@ export function SenhaPanel() {
       setNova("");
       setConfirmar("");
       notify.success(
-        "Senha alterada. " +
+        (reentrou
+          ? "Senha alterada. "
+          : "Senha alterada. Entre de novo para concluir a autenticação. ") +
           (sessionsRevoked === 1
             ? "Uma sessão anterior foi encerrada."
             : sessionsRevoked + " sessões anteriores foram encerradas."),

@@ -9,6 +9,7 @@ import { PageLoader } from "../components/PageLoader";
 import { ErrorState } from "../components/StateView";
 import { Bloco } from "../components/Fields";
 import { ContaPanel, SenhaPanel } from "../components/settings/ContaPanel";
+import { SegundoFatorPanel } from "../components/settings/SegundoFatorPanel";
 import { EmpresaPanel } from "../components/settings/EmpresaPanel";
 import { formatDate, formatDateTime, formatCurrency } from "../lib/format";
 import {
@@ -22,7 +23,7 @@ import {
 } from "../lib/settingsApi";
 
 const ABAS: TabItem[] = [
-  { id: "conta", label: "Minha conta", hint: "Nome, telefone e senha de acesso" },
+  { id: "conta", label: "Minha conta", hint: "Nome, telefone, segundo fator e senha de acesso" },
   { id: "empresa", label: "Empresa", hint: "Cadastro, endereço, formato e meta de receita" },
   { id: "aparencia", label: "Aparência", hint: "Tema deste navegador e o formato em uso no painel" },
   { id: "acesso", label: "Empresas", hint: "Listar as empresas da conta e trocar a ativa" },
@@ -105,6 +106,7 @@ export function Settings() {
       <TabPanel id="conta" active={active}>
         <div className="nx-painel">
           <ContaPanel />
+          <SegundoFatorPanel />
           <SenhaPanel />
         </div>
       </TabPanel>

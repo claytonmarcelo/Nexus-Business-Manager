@@ -777,6 +777,45 @@ a.nexus-footer-autor:focus-visible { color: var(--text); text-decoration: underl
 .auth-form { display: flex; flex-direction: column; gap: 0.8rem; }
 .auth-form .field { display: flex; flex-direction: column; gap: 0.4rem; }
 .auth-form .field-label { font-size: 0.8rem; font-weight: 700; color: var(--text-muted); }
+
+/* ===== F4 (D3): etapas do login e o bloco da conta ===== */
+/* A chave do aplicativo é texto que a pessoa precisa copiar com os olhos: monoespaçada,
+   quebrável, selecionável. Sem realce de "campo", porque ela não se digita — se lê. */
+.auth-2fa-chave, .auth-2fa-codigos, .nx-2fa { display: flex; flex-direction: column; gap: 0.6rem; margin-bottom: 0.9rem; }
+.auth-2fa-segredo, .nx-2fa-segredo {
+  font-family: var(--font-mono);
+  font-size: 0.86rem;
+  letter-spacing: 0.06em;
+  word-break: break-all;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: 11px;
+  padding: 0.6rem 0.7rem;
+  box-shadow: var(--neu-inset);
+  user-select: all;
+}
+.auth-2fa-uri, .nx-2fa-uri { font-size: 0.8rem; color: var(--text-muted); }
+.auth-2fa-uri summary, .nx-2fa-uri summary { cursor: pointer; font-weight: 700; }
+.auth-2fa-uri p, .nx-2fa-uri p {
+  margin: 0.4rem 0 0;
+  font-family: var(--font-mono);
+  font-size: 0.74rem;
+  word-break: break-all;
+  color: var(--text-2);
+}
+.auth-2fa-codigos ol, .nx-2fa-codigos {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.35rem 0.8rem;
+  margin: 0;
+  padding-left: 1.2rem;
+  font-family: var(--font-mono);
+  font-size: 0.82rem;
+}
+.nx-2fa-codigos { list-style: decimal; }
+.auth-2fa-input { text-align: center; letter-spacing: 0.22em; font-family: var(--font-mono); }
+.auth-2fa-voltar { align-self: center; background: none; border: none; padding: 0; font-size: 0.82rem; cursor: pointer; }
+.nx-2fa-acoes { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
 /* Entrada relevada: interior afundado (neumorfismo) */
 .neu-input {
   width: 100%;

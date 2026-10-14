@@ -8,6 +8,7 @@ import { notify } from "../lib/notify";
 import { extractErrorMessage } from "../lib/api";
 import { validateEmail, validateName, validatePassword, validateConfirm } from "../lib/validators";
 import { PASSWORD_RULE_HINT } from "../lib/uiCopy";
+import { reenviarVerificacao } from "../lib/verificacao";
 
 interface FieldErrors { name?: string | null; email?: string | null; password?: string | null; confirm?: string | null }
 
@@ -20,6 +21,11 @@ export function Register() {
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // D2: depois do cadastro com verificação obrigatória, a tela troca de assunto —
+  // deixa de ser formulário e passa a ser a instrução da caixa de entrada.
+  const [pendente, setPendente] = useState(false);
+  const [reenviando, setReenviando] = useState(false);
+  const [reenviado, setReenviado] = useState(false);
 
   const set = (k: keyof typeof form) => (v: string) => {
     setForm((f) => ({ ...f, [k]: v }));
@@ -43,7 +49,15 @@ export function Register() {
     if (!validate()) return;
     setSubmitting(true);
     try {
-      await register(form.name.trim(), form.email.trim(), form.password);
+      const resultado = await register(form.name.trim(), form.email.trim(), form.password);
+      // D2: com a verificação ligada a conta existe, mas não entra. A tela é o
+      // "confirme o seu e-mail", e não o painel — navegar aqui seria fingir que
+      // havia sessão quando a API respondeu exatamente o contrário.
+      if (resultado.estado === "verificacao-pendente") {
+        setPendente(true);
+        setSubmitting(false);
+        return;
+      }
       setSuccess(true);
       setTimeout(() => {
         notify.success("Conta criada com sucesso! Bem-vindo ao Nexus.");
@@ -52,6 +66,18 @@ export function Register() {
     } catch (err) {
       setError(extractErrorMessage(err, "Não foi possível criar a conta."));
       setSubmitting(false);
+    }
+  }
+
+  async function reenviar() {
+    setReenviando(true);
+    try {
+      await reenviarVerificacao(form.email.trim());
+      setReenviado(true);
+    } catch (err) {
+      notify.error(extractErrorMessage(err, "Não foi possível reenviar agora."));
+    } finally {
+      setReenviando(false);
     }
   }
 
@@ -69,6 +95,15 @@ export function Register() {
         <div className="auth-logo">
           <Logo size={72} animation="heartbeat" />
         </div>
+        {pendente ? (
+          <PainelVerificacao
+            email={form.email}
+            reenviando={reenviando}
+            reenviado={reenviado}
+            aoReenviar={reenviar}
+          />
+        ) : (
+          <>
         <h1 className="auth-title">Criar conta</h1>
         <p className="auth-sub">Inicie a sua jornada conosco</p>
 
@@ -125,6 +160,8 @@ export function Register() {
           Já tem uma conta?{" "}
           <Link to="/login" className="auth-link">Entrar</Link>
         </p>
+          </>
+        )}
       </main>
 
       {success && (
@@ -138,5 +175,46 @@ export function Register() {
         </div>
       )}
     </div>
+  );
+}
+
+/**
+ * D2: a tela de quem acabou de criar conta e ainda não entrou.
+ *
+ * O endereço é o que a pessoa digitou — não há confirmação da API de que aquela
+ * conta existe (a rota de reenvio responde a mesma frase genérica para qualquer
+ * endereço), e a tela também não afirma nada além do que pode saber: "enviamos se
+ * houver conta esperando". O link do e-mail leva para `/verificar-e-mail`, que é
+ * onde o token é conferido.
+ */
+function PainelVerificacao(props: {
+  email: string;
+  reenviando: boolean;
+  reenviado: boolean;
+  aoReenviar: () => void;
+}) {
+  return (
+    <>
+      <h1 className="auth-title">Confirme o seu e-mail</h1>
+      <p className="auth-sub">
+        Enviamos uma mensagem para {props.email || "o endereço digitado"}. Abra-a e clique no
+        link para ativar a conta — o link vale por sete dias.
+      </p>
+      <p className="auth-hint">
+        Não recebeu? Confira a caixa de spam e peça outra mensagem. Se houver uma conta
+        esperando confirmação neste endereço, ela chega de novo.
+      </p>
+      {props.reenviado ? (
+        <p className="auth-hint">Pedido registrado. Confira a caixa de entrada em instantes.</p>
+      ) : null}
+      <div className="auth-form">
+        <button type="button" className="neu-btn" onClick={props.aoReenviar} disabled={props.reenviando}>
+          {props.reenviando ? "Enviando…" : "REENVIAR A MENSAGEM"}
+        </button>
+        <Link to="/login" className="auth-link">
+          Já confirmei, quero entrar
+        </Link>
+      </div>
+    </>
   );
 }
