@@ -10,7 +10,9 @@ import type { AccessTokenPayload } from "../../plugins/auth";
 import { rolePermissions } from "../../lib/rbac";
 import { somenteDigitos } from "../../lib/brFields";
 // F4 (D1): o serviço monta a mensagem; quem entrega é decisão do ambiente.
-import { mailer } from "../../lib/mail";
+// N58 (T5.3): e a entrega acontece na fila do processo, não dentro do request.
+import { enfileirarMail } from "../../lib/mail/fila";
+import { resumoDaFalha } from "../../lib/mail/porta";
 import { mensagemDeRecuperacao } from "../../lib/mail/mensagens";
 // F4 (T3.2): a contagem de tentativas vive fora de `users` — ver lib/tentativas.
 import {
@@ -436,19 +438,6 @@ export function toSessionUser(
 
 const RESET_TTL_MS = 30 * 60 * 1000; // código válido por 30 minutos
 
-// Resumo de um erro de entrega para a auditoria. O objeto de erro do nodemailer
-// costuma carregar o usuário que autenticou no SMTP, a URL do servidor e, em
-// alguns provedores, pedaços da própria mensagem — nada disso é logável. Aqui
-// sai só texto livre de sequência hexadecimal (código nenhum passa) e cortado em
-// 140 caracteres.
-function resumoDaFalha(erro: unknown): string {
-  const texto = erro instanceof Error ? erro.message : String(erro);
-  return texto
-    .replace(/[0-9a-zA-Z+/]{24,}/g, "redigido")
-    .replace(/[\r\n]+/g, " ")
-    .slice(0, 140);
-}
-
 function slugify(name: string): string {
   return name
     .normalize("NFD")
@@ -611,28 +600,33 @@ export async function forgotPassword(email: string, ip?: string): Promise<{ ok: 
   // ninguém sabia o que fazia com ele. Manter as duas janelas (mensagem + o
   // desvio de desenvolvimento abaixo) é o que permite à prova conferir o texto
   // recebido sem depender do console de ninguém.
-  try {
-    await mailer().enviar(
-      mensagemDeRecuperacao({
-        para: user.email,
-        nome: user.name,
-        codigo: token,
-        validadeEmMinutos: Math.round(RESET_TTL_MS / 60_000),
-      }),
-    );
-  } catch (erro) {
-    // A entrega falhou, a pessoa não. A resposta HTTP continua a mesma
-    // (genérica, sem código) para não denunciar o endereço, e o motivo técnico
-    // vem para a auditoria, que é onde quem administra a instalação lê.
-    await audit({
-      userId: user.id,
-      action: "auth.forgot_password_entrega_falhou",
-      entity: "user",
-      entityId: user.id,
-      ip,
-      metadata: { rotulo: "recuperacao-de-senha", motivo: resumoDaFalha(erro) },
-    });
-  }
+  //
+  // N58 (T5.3): a entrega mudou de lado do balcão. O handler enfileira e devolve;
+  // quem espera o SMTP é a fila do processo, e a auditoria de falha é carimbada
+  // por ela depois da última tentativa — não mais dentro do request, que é o que
+  // fazia uma tela de "esqueci a senha" pagar o tempo de um servidor de e-mail.
+  enfileirarMail(
+    mensagemDeRecuperacao({
+      para: user.email,
+      nome: user.name,
+      codigo: token,
+      validadeEmMinutos: Math.round(RESET_TTL_MS / 60_000),
+    }),
+    async (resultado) => {
+      if (resultado.ok) return;
+      // A entrega falhou, a pessoa não. A resposta HTTP continua a mesma
+      // (genérica, sem código) para não denunciar o endereço, e o motivo técnico
+      // vem para a auditoria, que é onde quem administra a instalação lê.
+      await audit({
+        userId: user.id,
+        action: "auth.forgot_password_entrega_falhou",
+        entity: "user",
+        entityId: user.id,
+        ip,
+        metadata: { rotulo: "recuperacao-de-senha", tentativas: resultado.tentativas, motivo: resumoDaFalha(resultado.erro) },
+      });
+    },
+  );
   // A7 do prompt de mercado: além do flag explícito do .env, o código de
   // recuperação nunca sai pelo HTTP quando o ambiente é produção. O zod de
   // `env.ts` já recusa a subida com AUTH_EXPOSE_RESET_TOKEN=1 em produção (A9);

@@ -5,6 +5,7 @@ import { hashToken } from "../src/lib/tokens";
 import { verifyPassword } from "../src/lib/password";
 import { fakeMailer } from "../src/lib/mail/fake";
 import { definirMailer } from "../src/lib/mail";
+import { aguardarFilaDeMail } from "../src/lib/mail/fila";
 import type { RotuloDeMail } from "../src/lib/mail/porta";
 
 // T3.1 (decisão D1 do dono): "enviar e-mail" deixou de ser devolver o código na
@@ -19,6 +20,11 @@ import type { RotuloDeMail } from "../src/lib/mail/porta";
 // O entregador é a caixa em memória (`fakeMailer`) injetada por `definirMailer`:
 // nenhuma conexão de rede sai do teste, e o que ele lê é exatamente a mensagem
 // que a aplicação montou.
+//
+// Desde a T5.3 (achado N58) quem chama o entregador é a fila do processo, não o
+// request. Este arquivo por isso drena a fila antes de ler a caixa: o que se prova
+// aqui é o conteúdo da mensagem, e a prova de que a resposta HTTP não espera a
+// entrega mora em `fila-de-mail.test.ts`, onde o atraso do entregador é medido.
 
 const caixa = fakeMailer();
 
@@ -26,8 +32,13 @@ const caixa = fakeMailer();
  * O codigo que a ultima mensagem de recuperacao trouxe. Extrai do corpo do e-mail,
  * nunca de uma saida de debug: a prova de que a pessoa consegue redefinir a senha e
  * a prova de que o codigo chegou escrito sao a mesma coisa.
+ *
+ * Espera a fila antes de ler de propósito: quem chama não precisa saber que a
+ * entrega é assíncrona, e uma leitura sem dreno devolveria a caixa vazia — que é
+ * exatamente o tipo de falso verde que o `aguardarFilaDeMail()` veio impedir.
  */
-function ultimoCodigoEntregue(rotulo: RotuloDeMail = "recuperacao-de-senha"): string {
+async function ultimoCodigoEntregue(rotulo: RotuloDeMail = "recuperacao-de-senha"): Promise<string> {
+  await aguardarFilaDeMail();
   const mensagem = caixa.porRotulo(rotulo).at(-1);
   const achado = /[0-9a-f]{48}/.exec(mensagem?.texto ?? "")?.[0];
   if (!achado) throw new Error("nenhum codigo chegou na caixa postal de " + rotulo);
@@ -48,15 +59,24 @@ function registrou(f: Fixture): Fixture {
 }
 
 async function pedirRecuperacao(email: string) {
-  return app.inject({ method: "POST", url: "/api/auth/forgot-password", payload: { email } });
+  const res = await app.inject({ method: "POST", url: "/api/auth/forgot-password", payload: { email } });
+  // A entrega é da fila, não do request (N58): drena antes de devolver, para que
+  // quem lê a caixa leia a mensagem que a aplicação já montou — e não uma conta
+  // pela metade.
+  await aguardarFilaDeMail();
+  return res;
 }
 
-beforeEach(() => {
+beforeEach(async () => {
+  // Primeiro drena, depois limpa: uma entrega atrasada do teste anterior não pode
+  // aparecer na caixa deste como se fosse mensagem nova.
+  await aguardarFilaDeMail();
   caixa.limpar();
   definirMailer(caixa);
 });
 
-afterEach(() => {
+afterEach(async () => {
+  await aguardarFilaDeMail();
   definirMailer(undefined);
 });
 
@@ -126,7 +146,7 @@ describe("Recuperação de senha entregue por e-mail (D1)", () => {
 
     const primeiro = await pedirRecuperacao(conta.email);
     expect(primeiro.statusCode).toBe(200);
-    const codigo = ultimoCodigoEntregue();
+    const codigo = await ultimoCodigoEntregue();
 
     // segundo pedido antes de usar o primeiro: dois códigos vivos na mesma conta.
     await pedirRecuperacao(conta.email);
@@ -165,7 +185,7 @@ describe("Recuperação de senha entregue por e-mail (D1)", () => {
   it("codigo vencido nao redefine senha nenhuma", async () => {
     const conta = registrou(await makeAccount("OWNER"));
     await pedirRecuperacao(conta.email);
-    const codigo = ultimoCodigoEntregue();
+    const codigo = await ultimoCodigoEntregue();
 
     // Viagem no tempo pela coluna, sem mexer em relógio de processo: o que se
     // prova é a checagem de `expiresAt`, não a idade real da linha.

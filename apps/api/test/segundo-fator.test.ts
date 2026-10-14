@@ -5,6 +5,7 @@ import { prisma } from "../src/lib/prisma";
 import { EMISSOR_DO_TOTP } from "../src/lib/segundo-fator";
 import { fakeMailer } from "../src/lib/mail/fake";
 import { definirMailer } from "../src/lib/mail";
+import { aguardarFilaDeMail } from "../src/lib/mail/fila";
 
 // T3.4 (decisão D3 do dono): segundo fator TOTP, segredo cifrado em repouso.
 //
@@ -121,12 +122,16 @@ beforeAll(async () => {
   tokensAntes = await prisma.emailVerificationToken.count();
 });
 
-beforeEach(() => {
+beforeEach(async () => {
+  // Drena antes de limpar (N58): a entrega do aviso de segurança é da fila do
+  // processo, e aviso atrasado do caso anterior não pode contar como deste.
+  await aguardarFilaDeMail();
   caixa.limpar();
   definirMailer(caixa);
 });
 
-afterEach(() => {
+afterEach(async () => {
+  await aguardarFilaDeMail();
   definirMailer(undefined);
 });
 
@@ -236,6 +241,7 @@ describe("Segundo fator (D3)", () => {
     expect(texto).not.toContain(segredo);
 
     // O aviso de segurança vai embora pela porta de entrega, sem segredo nenhum.
+    await aguardarFilaDeMail();
     const avisos = caixa.porRotulo("segundo-fator-ativado");
     expect(avisos).toHaveLength(1);
     expect(avisos[0]!.para).toBe(conta.email);
@@ -371,6 +377,7 @@ describe("Segundo fator (D3)", () => {
     expect(gravado.totpSecretCiphertext).toBeNull();
     expect(await prisma.recoveryCode.count({ where: { userId: conta.userId } })).toBe(0);
 
+    await aguardarFilaDeMail();
     const avisos = caixa.porRotulo("segundo-fator-desativado");
     expect(avisos).toHaveLength(1);
 

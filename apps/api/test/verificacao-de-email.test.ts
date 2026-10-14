@@ -5,6 +5,7 @@ import { hashToken } from "../src/lib/tokens";
 import { env } from "../src/config/env";
 import { fakeMailer } from "../src/lib/mail/fake";
 import { definirMailer } from "../src/lib/mail";
+import { aguardarFilaDeMail } from "../src/lib/mail/fila";
 import { strongPassword } from "../src/lib/passwordPolicy";
 
 // T3.3 (decisão D2 do dono): conta sem e-mail confirmado não entra no painel.
@@ -26,7 +27,10 @@ import { strongPassword } from "../src/lib/passwordPolicy";
 //      barreira é do produto, não uma sentença de morte para a conta.
 //
 // O entregador é a caixa em memória de `fakeMailer`: nenhuma rede sai do teste, e
-// o que ele lê é exatamente a mensagem que a aplicação montou.
+// o que ele lê é exatamente a mensagem que a aplicação montou. Desde a T5.3
+// (achado N58) quem entrega é a fila do processo, então os pedidos que enfileiram
+// mensagem (`cadastrar`, `reenviar`) drenam a fila antes de devolver — a prova de
+// que o request não espera o provedor está em `fila-de-mail.test.ts`.
 
 const caixa = fakeMailer();
 const SENHA = "SenhaForte123!";
@@ -65,12 +69,17 @@ function novoIp(): string {
 }
 
 async function cadastrar(email: string, nome = "Conta de Prova") {
-  return app.inject({
+  const res = await app.inject({
     method: "POST",
     url: "/api/auth/register",
     remoteAddress: novoIp(),
     payload: { name: nome, email, password: SENHA },
   });
+  // Drenamos a fila depois do que enfileira mensagem (N58): este arquivo prova o
+  // conteúdo da mensagem e o que o banco guarda, não o tempo do request — que é
+  // objeto de `fila-de-mail.test.ts`.
+  await aguardarFilaDeMail();
+  return res;
 }
 
 function entrar(email: string, password = SENHA) {
@@ -91,13 +100,15 @@ function confirmar(token: string) {
   });
 }
 
-function reenviar(email: string) {
-  return app.inject({
+async function reenviar(email: string) {
+  const res = await app.inject({
     method: "POST",
     url: "/api/auth/resend-verification",
     remoteAddress: novoIp(),
     payload: { email },
   });
+  await aguardarFilaDeMail();
+  return res;
 }
 
 /** O código de 48 hexadecimal que a última mensagem de verificação trouxe. */
@@ -122,12 +133,15 @@ beforeAll(async () => {
   tokensAntes = await prisma.emailVerificationToken.count();
 });
 
-beforeEach(() => {
+beforeEach(async () => {
+  // Drena antes de limpar: entrega atrasada do caso anterior não entra nesta caixa.
+  await aguardarFilaDeMail();
   caixa.limpar();
   definirMailer(caixa);
 });
 
-afterEach(() => {
+afterEach(async () => {
+  await aguardarFilaDeMail();
   definirMailer(undefined);
 });
 

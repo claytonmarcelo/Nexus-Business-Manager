@@ -52,6 +52,24 @@ const schema = z.object({
   // "1" força TLS explícito, "0" força texto puro, vazio segue a porta (465 = TLS).
   SMTP_SECURE: z.enum(["", "0", "1"]).default(""),
   MAIL_FROM: z.string().default(""),
+  // N58 (T5.3): a entrega passou a acontecer numa fila do processo, e estes são os
+  // quatro números dela. Todos com padrão seguro de propósito — a régua de produção
+  // não cobra nenhum deles, porque o comportamento padrão já é o que se quer em
+  // produção: três tentativas, recuo exponencial a partir de meio segundo, teto de
+  // quinze segundos por tentativa e duzentas mensagens na memória.
+  //
+  // `MAIL_TENTATIVAS` é o número de tentativas *totais* (1 = uma tentativa só, sem
+  // retentativa). `MAIL_BACKOFF_BASE_MS` é a base do recuo exponencial (base, 2x,
+  // 4x); 0 desliga a espera e é o que a suíte de testes usa onde precisa de pressa.
+  // `MAIL_TIMEOUT_MS` é o teto de cada tentativa: um SMTP que aceita a conexão e
+  // nunca entrega é cortado ali em vez de segurar a fila para sempre — 0 desliga o
+  // teto, e aí quem manda é o padrão do nodemailer. `MAIL_FILA_MAXIMA` é o teto de
+  // memória: fila é RAM do processo, e o que passa dela é recusado com auditoria,
+  // não acumulado.
+  MAIL_TENTATIVAS: z.coerce.number().int().min(1).max(10).default(3),
+  MAIL_BACKOFF_BASE_MS: z.coerce.number().int().min(0).max(60000).default(500),
+  MAIL_TIMEOUT_MS: z.coerce.number().int().min(0).max(120000).default(15000),
+  MAIL_FILA_MAXIMA: z.coerce.number().int().min(1).max(10000).default(200),
   // Base do link que sai no corpo do e-mail (verificação de cadastro,
   // recuperação). Em produção é https de verdade — um link de e-mail que aponta
   // para localhost entrega a mensagem a quem abriu a caixa errado.

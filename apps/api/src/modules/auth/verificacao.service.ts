@@ -4,7 +4,10 @@ import { hashToken } from "../../lib/tokens";
 import { env } from "../../config/env";
 import { badRequest } from "../../lib/errors";
 import { audit } from "../../lib/audit";
-import { mailer, mascaraEndereco } from "../../lib/mail";
+// N58 (T5.3): a mensagem entra na fila do processo e o request devolve; a auditoria
+// de entrega é o veredito da fila, não do handler.
+import { enfileirarMail } from "../../lib/mail/fila";
+import { mascaraEndereco, resumoDaFalha } from "../../lib/mail";
 import { mensagemDeVerificacao } from "../../lib/mail/mensagens";
 
 // F4 (decisão D2): verificação de e-mail do cadastro.
@@ -49,48 +52,47 @@ export async function emitirTokenDeVerificacao(input: {
   // O link vai com o token na query; o mesmo token serve de código para quem
   // prefere digitar. A tela de confirmação é pública e não pede sessão.
   const link = env.WEB_BASE_URL.replace(/\/+$/, "") + "/verificar-e-mail?token=" + token;
-  try {
-    await mailer().enviar(
-      mensagemDeVerificacao({
-        para: input.email,
-        nome: input.nome,
-        link,
-        codigo: token,
-        validadeEmDias: Math.round(TTL_DA_VERIFICACAO_MS / 86_400_000),
-      }),
-    );
-  } catch (erro) {
-    // Mesma regra da recuperação: a entrega falhou, a pessoa não. O cadastro já
-    // existe e o token já está gravado, então o reenvio continua sendo a saída —
-    // mas quem administra a instalação precisa saber que o SMTP não respondeu, e é
-    // na auditoria que isso fica. O `return` é o ponto: sem ele a linha de abaixo
-    // carimbaria "enviada" numa mensagem que não saiu, e a auditoria de entrega
-    // deixaria de ser o lugar onde se confia.
-    await audit({
-      userId: input.userId,
-      action: "auth.verificacao_entrega_falhou",
-      entity: "user",
-      entityId: input.userId,
-      ip: input.ip,
-      metadata: { rotulo: "verificacao-de-email", motivo: resumoDaFalha(erro) },
-    });
-    return;
-  }
-  await audit({
-    userId: input.userId,
-    action: "auth.verificacao_enviada",
-    entity: "user",
-    entityId: input.userId,
-    ip: input.ip,
-    metadata: { para: mascaraEndereco(input.email) },
-  });
-}
-
-// Resumo de um erro de entrega para a auditoria: texto livre de sequência longa
-// (token nenhum passa) e sem quebra de linha.
-function resumoDaFalha(erro: unknown): string {
-  const texto = erro instanceof Error ? erro.message : String(erro);
-  return texto.replace(/[0-9a-zA-Z+/]{24,}/g, "redigido").replace(/[\r\n]+/g, " ").slice(0, 140);
+  // N58 (T5.3): a pessoa acabou de apertar "criar conta" e a tela está na frente
+  // dela. Antes, os dois `audit` abaixo aconteciam dentro do request, um depois de
+  // `mailer().enviar(...)`: com SMTP lento, o cadastro esperava o e-mail para
+  // responder. Agora o handler enfileira e devolve, e é a fila que carimba o
+  // veredito — sucesso ou falha — depois da última tentativa.
+  enfileirarMail(
+    mensagemDeVerificacao({
+      para: input.email,
+      nome: input.nome,
+      link,
+      codigo: token,
+      validadeEmDias: Math.round(TTL_DA_VERIFICACAO_MS / 86_400_000),
+    }),
+    async (resultado) => {
+      if (resultado.ok) {
+        await audit({
+          userId: input.userId,
+          action: "auth.verificacao_enviada",
+          entity: "user",
+          entityId: input.userId,
+          ip: input.ip,
+          metadata: { para: mascaraEndereco(input.email) },
+        });
+        return;
+      }
+      // Mesma regra da recuperação: a entrega falhou, a pessoa não. O cadastro já
+      // existe e o token já está gravado, então o reenvio continua sendo a saída —
+      // mas quem administra a instalação precisa saber que o SMTP não respondeu, e é
+      // na auditoria que isso fica. O `return` acima é o ponto: sem ele a linha de
+      // baixo carimbaria "enviada" numa mensagem que não saiu, e a auditoria de
+      // entrega deixaria de ser o lugar onde se confia.
+      await audit({
+        userId: input.userId,
+        action: "auth.verificacao_entrega_falhou",
+        entity: "user",
+        entityId: input.userId,
+        ip: input.ip,
+        metadata: { rotulo: "verificacao-de-email", tentativas: resultado.tentativas, motivo: resumoDaFalha(resultado.erro) },
+      });
+    },
+  );
 }
 
 /**

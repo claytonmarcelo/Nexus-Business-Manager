@@ -5,6 +5,7 @@ import { prisma } from "../src/lib/prisma";
 import { EMISSOR_DO_TOTP } from "../src/lib/segundo-fator";
 import { fakeMailer } from "../src/lib/mail/fake";
 import { definirMailer } from "../src/lib/mail";
+import { aguardarFilaDeMail } from "../src/lib/mail/fila";
 
 // T3.5 (F4), parte final: as guardas antigas continuam de pé DEPOIS do reforço.
 //
@@ -195,12 +196,17 @@ beforeAll(async () => {
   tokensAntes = await prisma.refreshToken.count();
 });
 
-beforeEach(() => {
+beforeEach(async () => {
+  // Dreno (N58): a entrega de aviso de segundo fator é fila do processo, e este
+  // arquivo roda com as rotas de autenticação completas. Nada pode sair daqui com
+  // mensagem no ar — nem auditoria escrita depois da contagem do `afterAll`.
+  await aguardarFilaDeMail();
   caixa.limpar();
   definirMailer(caixa);
 });
 
-afterEach(() => {
+afterEach(async () => {
+  await aguardarFilaDeMail();
   definirMailer(undefined);
 });
 

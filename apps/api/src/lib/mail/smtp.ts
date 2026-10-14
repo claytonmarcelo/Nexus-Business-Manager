@@ -11,6 +11,12 @@ export interface ConfiguracaoSmtp {
   /** "1" = TLS explícito; "0" = nunca; ausente = TLS quando a porta é 465. */
   seguro?: string;
   remetente: string;
+  /**
+   * Teto de cada fase da conversa SMTP, em ms (N58). Ausente = os padrões do
+   * nodemailer, que são generosos de propósito para um cliente interativo:
+   * `connectionTimeout` deles é dois minutos, e uma fila não pode esperar isso.
+   */
+  timeoutMs?: number;
 }
 
 /**
@@ -35,6 +41,15 @@ export function smtpMailer(config: ConfiguracaoSmtp): MailerPort {
       port: config.port,
       secure: usaTls,
       auth: config.usuario ? { user: config.usuario, pass: config.senha ?? "" } : undefined,
+      // N58: os quatro tempos abaixo vão embora dos padrões da biblioteca, que são
+      // de cliente interativo — `connectionTimeout` de dois minutos e
+      // `socketTimeout` (inatividade) de dez. Uma fila não pode ter uma tentativa
+      // viva por dez minutos: o servidor que aceita a conexão e fica mudo seguraria
+      // a fila inteira, e o teto é o mesmo número que o worker usa para desistir.
+      connectionTimeout: config.timeoutMs,
+      greetingTimeout: config.timeoutMs,
+      socketTimeout: config.timeoutMs,
+      dnsTimeout: config.timeoutMs,
     });
   }
 

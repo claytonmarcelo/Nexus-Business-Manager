@@ -50,6 +50,8 @@ export interface FonteDeMail {
   SMTP_PASS?: string;
   SMTP_SECURE?: string;
   MAIL_FROM?: string;
+  /** Teto de cada tentativa de entrega (N58) — o mesmo número que a fila usa. */
+  MAIL_TIMEOUT_MS?: string;
 }
 
 /**
@@ -62,4 +64,23 @@ export function mascaraEndereco(endereco: string): string {
   if (!dominio) return "***";
   const inicial = (caixa ?? "").slice(0, 1).toLowerCase();
   return (inicial || "*") + "***@" + dominio.toLowerCase();
+}
+
+/**
+ * Redação de um erro de entrega para a auditoria — uma função só, porque a regra
+ * é de segurança e existia em três cópias parecidas (T5.3, achado N58).
+ *
+ * O objeto de erro do nodemailer costuma carregar o usuário que autenticou no
+ * SMTP, a URL do servidor e pedaços da própria mensagem. Daqui sai texto livre de
+ * sequência longa — nenhum código de recuperação ou de verificação passa —, sem
+ * quebra de linha e cortado em 140 caracteres. As três cópias antigas não
+ * batiam: uma delas não tirava a quebra de linha, que em log de auditoria vira
+ * duas linhas onde se procurava uma.
+ */
+export function resumoDaFalha(erro: unknown): string {
+  const texto = erro instanceof Error ? erro.message : String(erro);
+  return texto
+    .replace(/[0-9a-zA-Z+/]{24,}/g, "redigido")
+    .replace(/[\r\n]+/g, " ")
+    .slice(0, 140);
 }

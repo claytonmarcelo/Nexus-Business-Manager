@@ -6,12 +6,13 @@
 // em memória sem trocar o import de cada serviço.
 
 import type { FonteDeMail, MailerPort } from "./porta";
+import { env } from "../../config/env";
 import { consoleMailer } from "./console";
 import { fakeMailer } from "./fake";
 import { smtpMailer } from "./smtp";
 
 export type { MailerPort, MensagemDeMail, RotuloDeMail } from "./porta";
-export { mascaraEndereco } from "./porta";
+export { mascaraEndereco, resumoDaFalha } from "./porta";
 export { consoleMailer } from "./console";
 export { fakeMailer } from "./fake";
 export { smtpMailer } from "./smtp";
@@ -34,6 +35,7 @@ export function criarMailer(fonte: FonteDeMail): MailerPort {
   const porta = Number.parseInt(fonte.SMTP_PORT ?? "", 10);
   const remetente = (fonte.MAIL_FROM ?? "").trim();
   if (host && Number.isInteger(porta) && porta > 0 && remetente) {
+    const teto = Number.parseInt(fonte.MAIL_TIMEOUT_MS ?? "", 10);
     return smtpMailer({
       host,
       port: porta,
@@ -41,6 +43,10 @@ export function criarMailer(fonte: FonteDeMail): MailerPort {
       senha: fonte.SMTP_PASS ?? undefined,
       seguro: fonte.SMTP_SECURE?.trim() || undefined,
       remetente,
+      // O mesmo número que a fila usa para cortar a espera (N58) vai para o
+      // transporte, para que o socket também tenha teto. Lido do mapa, não do
+      // `process.env`: a fábrica continua pura.
+      timeoutMs: Number.isInteger(teto) && teto > 0 ? teto : undefined,
     });
   }
   return consoleMailer();
@@ -48,9 +54,16 @@ export function criarMailer(fonte: FonteDeMail): MailerPort {
 
 let instancia: MailerPort | undefined;
 
-/** O entregador do processo. Criado sob demanda a partir do ambiente real. */
+/**
+ * O entregador do processo. Criado sob demanda a partir do ambiente real.
+ *
+ * A chave de tempo da entrega vem do `env` validado, não do `process.env` cru: a
+ * fila (`fila.ts`) e o transporte SMTP têm que enxergar o mesmo teto, e o padrão
+ * de 15 segundos mora no zod de `config/env.ts` — um processo sem a chave no
+ * ambiente não pode ter fila com teto e socket sem ele (N58).
+ */
 export function mailer(): MailerPort {
-  instancia ??= criarMailer(process.env as FonteDeMail);
+  instancia ??= criarMailer({ ...(process.env as FonteDeMail), MAIL_TIMEOUT_MS: String(env.MAIL_TIMEOUT_MS) });
   return instancia;
 }
 

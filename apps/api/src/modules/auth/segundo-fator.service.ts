@@ -3,7 +3,8 @@ import { prisma } from "../../lib/prisma";
 import { env } from "../../config/env";
 import { badRequest, conflict, forbidden, unauthorized } from "../../lib/errors";
 import { audit } from "../../lib/audit";
-import { mailer } from "../../lib/mail";
+import { resumoDaFalha } from "../../lib/mail";
+import { enfileirarMail } from "../../lib/mail/fila";
 import { avisoDeSegundoFator } from "../../lib/mail/mensagens";
 import { cifraDisponivel, decifrar } from "../../lib/criptografia";
 import { hashDeCodigoDeRecuperacao, codigoConfere, cifrarSegredo, gerarCodigosDeRecuperacao, novoSegredo, uriDeConfiguracao, doisFatorObrigatorio } from "../../lib/segundo-fator";
@@ -157,7 +158,7 @@ export async function ativarSegundoFator(input: {
   // Os códigos de recuperação existem uma única vez: saem aqui, e o banco fica só
   // com o HMAC de cada um. A tela precisa obrigatoriamente mostrá-los nesta
   // resposta — não há segunda vez, e é assim que tem de ser.
-  await enviarAviso(user.id, user.email, user.name, "ativado", input.ip);
+  enviarAviso(user.id, user.email, user.name, "ativado", input.ip);
   await audit({
     userId: user.id,
     action: "auth.2fa_ativado",
@@ -280,7 +281,7 @@ export async function desativarSegundoFator(
     prisma.user.update({ where: { id: user.id }, data: { totpEnabledAt: null, totpSecretCiphertext: null } }),
     prisma.recoveryCode.deleteMany({ where: { userId: user.id } }),
   ]);
-  await enviarAviso(user.id, user.email, user.name, "desativado", ip);
+  enviarAviso(user.id, user.email, user.name, "desativado", ip);
   await audit({ userId: user.id, action: "auth.2fa_desativado", entity: "user", entityId: user.id, ip });
   return { ok: true };
 }
@@ -346,25 +347,25 @@ async function conferirCodigo(input: {
   return "recuperacao";
 }
 
-async function enviarAviso(
+// N58 (T5.3): o aviso sai pela fila. Ligar o segundo fator é uma tela que a pessoa
+// está preenchendo com o celular na mão; o aviso de segurança vai atrás, com as
+// três tentativas da fila, e só a última tentativa falha chega à auditoria.
+function enviarAviso(
   userId: string,
   email: string,
   nome: string,
   acao: "ativado" | "desativado",
   ip?: string,
-): Promise<void> {
-  try {
-    await mailer().enviar(avisoDeSegundoFator({ para: email, nome, acao }));
-  } catch (erro) {
+): void {
+  enfileirarMail(avisoDeSegundoFator({ para: email, nome, acao }), async (resultado) => {
+    if (resultado.ok) return;
     await audit({
       userId,
       action: "auth.2fa_aviso_entrega_falhou",
       entity: "user",
       entityId: userId,
       ip,
-      metadata: {
-        motivo: (erro instanceof Error ? erro.message : String(erro)).replace(/[0-9a-zA-Z+/]{24,}/g, "redigido").slice(0, 140),
-      },
+      metadata: { tentativas: resultado.tentativas, motivo: resumoDaFalha(resultado.erro) },
     });
-  }
+  });
 }
