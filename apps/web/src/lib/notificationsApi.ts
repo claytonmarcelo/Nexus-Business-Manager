@@ -51,6 +51,22 @@ export interface Preferencias {
 export type ChavePreferencia =
   | "saleAlerts" | "lowStock" | "newLead" | "overdueBills" | "dailyReport";
 
+/**
+ * Estado real do canal de e-mail nesta instalação (N59), espelho do
+ * `EstadoDoCanal` que a API tira do entregador do processo. A tela não decide por
+ * conta própria se o e-mail funciona: ela pergunta.
+ */
+export interface EstadoDoCanal {
+  disponivel: boolean;
+  transporte: string;
+  motivo: string | null;
+}
+
+export interface LeituraDePreferencias {
+  preferencias: Preferencias;
+  email: EstadoDoCanal;
+}
+
 // Ordem e rótulos são os do serviço (TIPOS, em notifications.service.ts), para
 // sino, tela e API descreverem o mesmo aviso com as mesmas palavras. A "dica" é
 // só da tela: diz o que gera aquele tipo, coisa que o banco não guarda.
@@ -102,12 +118,30 @@ export async function marcarTodasLidas(): Promise<number> {
   return data.marcadas;
 }
 
-export async function lerPreferencias(): Promise<Preferencias> {
-  const { data } = await api.get<Preferencias & { tipos: unknown }>("/notifications/preferences");
+/**
+ * O canal sem estado declarado: nem a resposta chegou, nem a instalação afirmou
+ * que entrega. É o valor inicial da tela e o fallback de uma API antiga — o
+ * sentido seguro é desligar a caixa, nunca acender um botão que não faz nada.
+ */
+export const CANAL_SEM_ESTADO: EstadoDoCanal = {
+  disponivel: false,
+  transporte: "desconhecido",
+  motivo: "a instalação não informou o estado do canal de e-mail, então nada será enviado por ele",
+};
+
+/**
+ * As chaves salvas junto do estado do canal de e-mail (N59). O `email` não é uma
+ * preferência: é o que o entregador deste servidor afirma sobre si mesmo, lido na
+ * hora do pedido, e é ele que liga ou desliga a caixa da tela.
+ */
+export async function lerPreferencias(): Promise<LeituraDePreferencias> {
+  const { data } = await api.get<
+    Preferencias & { tipos: unknown; email?: EstadoDoCanal }
+  >("/notifications/preferences");
   // O servidor manda os rótulos dos tipos junto, para quem não tem a tabela.
   // A tela já tem (TIPOS acima, na mesma ordem), então ficam só as chaves.
-  const { tipos: _tipos, ...preferencias } = data;
-  return preferencias;
+  const { tipos: _tipos, email: _email, ...preferencias } = data;
+  return { preferencias, email: _email ?? CANAL_SEM_ESTADO };
 }
 
 export async function salvarPreferencias(preferencias: Preferencias): Promise<Preferencias> {
@@ -116,12 +150,19 @@ export async function salvarPreferencias(preferencias: Preferencias): Promise<Pr
 }
 
 /**
- * Varredura de contas vencidas — o passo que o agendador vai chamar. Rota
- * administrativa (settings:write); devolve quantos avisos nasceram.
+ * Varredura de contas vencidas — o passo que a rotina agendada também chama. Rota
+ * administrativa (settings:write); devolve quantos avisos nasceram e quantas
+ * mensagens entraram na fila de e-mail (N59), porque um número só não diz a quem
+ * opera se a cópia por e-mail saiu ou se o canal está desligado aqui.
  */
-export async function varrerContasVencidas(): Promise<number> {
-  const { data } = await api.post<{ criadas: number }>("/notifications/scan");
-  return data.criadas;
+export async function varrerContasVencidas(): Promise<ResultadoDoAviso> {
+  const { data } = await api.post<ResultadoDoAviso>("/notifications/scan");
+  return data;
+}
+
+export interface ResultadoDoAviso {
+  criadas: number;
+  emails: number;
 }
 
 // Um aviso mudou de estado em algum lugar do painel: a tela avisa, o sino escuta.

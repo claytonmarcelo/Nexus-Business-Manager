@@ -5,13 +5,13 @@
 // único que o negócio chama, e `definirMailer()` permite ao teste subir uma caixa
 // em memória sem trocar o import de cada serviço.
 
-import type { FonteDeMail, MailerPort } from "./porta";
+import type { EstadoDoCanal, FonteDeMail, MailerPort } from "./porta";
 import { env } from "../../config/env";
 import { consoleMailer } from "./console";
 import { fakeMailer } from "./fake";
 import { smtpMailer } from "./smtp";
 
-export type { MailerPort, MensagemDeMail, RotuloDeMail } from "./porta";
+export type { MailerPort, MensagemDeMail, RotuloDeMail, EstadoDoCanal } from "./porta";
 export { mascaraEndereco, resumoDaFalha } from "./porta";
 export { consoleMailer } from "./console";
 export { fakeMailer } from "./fake";
@@ -70,4 +70,29 @@ export function mailer(): MailerPort {
 /** Injeção para teste: troca o entregador; `undefined` devolve a criação preguiçosa. */
 export function definirMailer(novo: MailerPort | undefined): void {
   instancia = novo;
+}
+
+/**
+ * O estado do canal de e-mail desta instalação (N59).
+ *
+ * É a leitura que a rota de preferências devolve e que a tela usa para decidir se
+ * a caixa "E-mail" está editável. Antes, a frase "Indisponível: não há servidor de
+ * e-mail (SMTP) configurado nesta instalação" estava escrita no JSX, ao lado de um
+ * `disabled` fixo: dizia a verdade no desenvolvimento e mentiria numa produção com
+ * SMTP ligado, porque não dependia do entregador nenhum. Aqui depende: quem
+ * responde é a capacidade declarada pelo `MailerPort` em uso, lida no instante da
+ * pergunta — por isso a função lê `mailer()` em vez de receber o entregador por
+ * parâmetro, e é por isso que um entregador que não declara capacidade é lido como
+ * indisponível.
+ */
+export function estadoDoCanalDeEmail(): EstadoDoCanal {
+  const entregador = mailer();
+  if (entregador.entregaDeVerdade) return { disponivel: true, transporte: entregador.nome, motivo: null };
+  return {
+    disponivel: false,
+    transporte: entregador.nome,
+    motivo:
+      entregador.motivoDaIndisponibilidade ??
+      "o entregador desta instalação não declara que entrega de verdade",
+  };
 }

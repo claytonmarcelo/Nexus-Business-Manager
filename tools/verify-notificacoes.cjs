@@ -10,6 +10,11 @@
 //
 // Toda comparação de número sai de uma leitura fresca da API, nunca de um valor
 // guardado lá do começo: o sino, a aba e os filtros mudam contagem o tempo todo.
+//
+// O quadro "E-mail" das preferências e a frase da varredura (N59) são conferidos
+// contra o estado que a própria rota devolve, e não contra uma frase fixa: a mesma
+// prova vale numa máquina sem SMTP — caixa desligada e o motivo na dica — e numa
+// produção com SMTP ligado — caixa editável e o transporte na dica.
 const puppeteer = require("puppeteer-core");
 const { EMAIL_ADMIN, SENHA_ADMIN } = require("./senha-admin.cjs");
 const { conferirServidorDeProva, clienteDoBancoDeProva } = require("./banco-de-prova.cjs");
@@ -112,6 +117,25 @@ async function avisoDe(page, trecho) {
     .catch(() => false);
   ok("a tela avisa: " + trecho, visto);
   await semToast(page);
+}
+
+/**
+ * O mesmo espera do `avisoDe`, mas devolve a frase inteira do Toastr: quando a
+ * asserção é sobre o que a tela afirma (N59), procurar um trecho não basta — é
+ * preciso conferir o que veio junto.
+ */
+async function textoDoAviso(page, trecho) {
+  const pegado = await page
+    .waitForFunction(
+      (t) => [...document.querySelectorAll(".toast-message")]
+        .map((m) => m.textContent || "").find((c) => c.includes(t)) ?? null,
+      { timeout: 12000 },
+      trecho,
+    )
+    .then((handle) => handle.jsonValue())
+    .catch(() => null);
+  await semToast(page);
+  return pegado;
 }
 
 async function semToast(page) {
@@ -559,10 +583,26 @@ const linhasDaTela = (page) =>
       preferencias.salvarDesabilitado === true);
     ok("o canal de sino é editável e ligado",
       preferencias.linhas.some((l) => l.rotulo === "Sino do painel" && !l.desabilitada && l.marcada));
-    ok("o canal de e-mail aparece desligado e explica por quê",
-      preferencias.linhas.some((l) => l.rotulo === "E-mail" && l.desabilitada &&
-        /SMTP|servidor de e-mail/i.test(l.dica)),
-      preferencias.linhas.find((l) => l.rotulo === "E-mail")?.dica.slice(0, 70));
+    // N59: a caixa de e-mail não é mais uma frase escrita na tela. A prova lê o
+    // estado que a própria rota devolve e confere se o quadro obedece a ele — assim
+    // o script vale tanto numa instalação sem SMTP quanto numa com SMTP ligado.
+    const canal = await chame("GET", "/notifications/preferences");
+    const email = canal.dados.email ?? {};
+    const linhaEmail = preferencias.linhas.find((l) => l.rotulo === "E-mail");
+    ok("a rota descreve o canal com transporte e motivo quando não entrega",
+      typeof email.disponivel === "boolean" && typeof email.transporte === "string" &&
+      (email.disponivel ? email.motivo === null : (email.motivo ?? "").length > 0),
+      JSON.stringify(email));
+    ok("a caixa de e-mail obedece ao estado do canal, não a um disabled fixo",
+      email.disponivel ? linhaEmail && !linhaEmail.desabilitada
+        : linhaEmail && linhaEmail.desabilitada && linhaEmail.dica.includes(email.motivo ?? "###"),
+      (linhaEmail ? (linhaEmail.desabilitada ? "desligada" : "editável") : "sem linha") +
+        " · disponivel=" + String(email.disponivel));
+    ok("a dica do canal diz o que a instalação afirma de si",
+      linhaEmail && (email.disponivel
+        ? linhaEmail.dica.includes(email.transporte)
+        : /Indispon/i.test(linhaEmail.dica)),
+      linhaEmail?.dica.slice(0, 70));
 
     await pagina.evaluate(() => {
       const linha = [...document.querySelectorAll(".nx-avisos-tipos .check-line")]
@@ -613,8 +653,16 @@ const linhasDaTela = (page) =>
       JSON.stringify(restaurado.dados));
 
     // Varredura pela tela: a chave antifduplication do mês não repete o aviso.
+    // N59: o aviso agora traz os dois números, e esta instalação não tem entregador
+    // que entrega, então a parte do e-mail não pode aparecer na frase.
     await clicarTexto(pagina, "button", "Rodar varredura agora");
-    await avisoDe(pagina, "Nenhuma conta vencida nova neste mês");
+    const avisoDaVarredura = await textoDoAviso(pagina, "Nenhum aviso novo neste mês");
+    ok("a varredura repetida avisa pelo sino", avisoDaVarredura !== null, String(avisoDaVarredura));
+    if (!email.disponivel) {
+      ok("sem entregador que entrega, a frase não fala de fila de e-mail",
+        avisoDaVarredura !== null && !avisoDaVarredura.includes("fila de e-mail"),
+        String(avisoDaVarredura));
+    }
     ok("a varredura repetida não duplica aviso",
       (await contarPeloBanco()).dados.naoLidas === 0);
 

@@ -1,6 +1,6 @@
 import type { MensagemDeMail } from "./porta";
 
-// As três mensagens que o produto sabe mandar. O texto é de produto, não de
+// As quatro mensagens que o produto sabe mandar. O texto é de produto, não de
 // desenvolvedor: quem lê um e-mail de recuperação não precisa saber o que é
 // token, hash ou TTL — precisa saber o que fazer e até quando dá tempo.
 //
@@ -16,6 +16,21 @@ const NOME_DO_PRODUTO = "Nexus Business Manager";
 
 function paragrafo(texto: string): string {
   return "<p>" + texto + "</p>";
+}
+
+/**
+ * Escapa texto que vem de dado de usuário antes de entrar no HTML. A mensagem de
+ * aviso (N59) carrega nome de produto, de cliente e de fornecedor digitados na
+ * tela, e um `<` escrito por quem cadastra viraria markup na mensagem de outra
+ * pessoa. As três mensagens antigas só interpolam o primeiro nome de quem pediu,
+ * que é a própria pessoa; esta interpola o que a equipe digitou.
+ */
+function textoSeguro(valor: string): string {
+  return valor
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
 }
 
 function html(titulo: string, paragrafos: string[]): string {
@@ -133,5 +148,65 @@ export function avisoDeSegundoFator(input: {
         : "Se não foi você, troque a sua senha e reative a verificação em duas etapas imediatamente.",
     ]),
     rotulo: input.acao === "ativado" ? "segundo-fator-ativado" : "segundo-fator-desativado",
+  };
+}
+
+/**
+ * Cópia por e-mail de um aviso do sino (N59, seção 44).
+ *
+ * A mensagem não inventa conteúdo: o assunto é exatamente o título gravado na
+ * linha do sino, e o corpo é o corpo daquela linha — sino, tela e e-mail descrevem
+ * o mesmo aviso com as mesmas palavras. É por isso também que o e-mail é cópia e
+ * não canal próprio: quem desligou o sino não recebe mensagem, porque o aviso não
+ * chega a nascer (a chave antiduplicação mora na linha do sino, e sem ela a
+ * varredura de contas vencidas viraria spam diário).
+ *
+ * O `link` chega absoluto, montado pelo serviço com `WEB_BASE_URL`: dentro do
+ * painel o clique é numa rota relativa, numa caixa de e-mail precisa do endereço
+ * do produto — a mesma base do link de verificação de cadastro.
+ */
+export function avisoDeNotificacao(input: {
+  para: string;
+  nome: string;
+  empresa: string;
+  titulo: string;
+  corpo?: string | null;
+  link?: string | null;
+}): MensagemDeMail {
+  const primeiroNome = input.nome.trim().split(/\s+/)[0] || "você";
+  const corpo = input.corpo?.trim() || "";
+  const link = input.link?.trim() || "";
+  const texto = [
+    "Olá, " + primeiroNome + ".",
+    "",
+    "Um aviso novo chegou para você na empresa " + input.empresa + " do " + NOME_DO_PRODUTO + ":",
+    "",
+    input.titulo,
+    ...(corpo ? ["", corpo] : []),
+    ...(link ? ["", "Abra o painel para ver: " + link] : []),
+    "",
+    "Você recebe esta mensagem porque ligou o canal de e-mail nas preferências de aviso desta empresa." +
+      " Para parar de receber, desligue o canal na tela Notificações, na aba Preferências.",
+  ].join("\n");
+
+  const paragrafos = [
+    "Olá, " + textoSeguro(primeiroNome) + ".",
+    "Um aviso novo chegou para você na empresa <strong>" + textoSeguro(input.empresa) + "</strong> do " +
+      NOME_DO_PRODUTO + ":",
+    "<strong>" + textoSeguro(input.titulo) + "</strong>",
+    ...(corpo ? [textoSeguro(corpo)] : []),
+    ...(link ? ['<a href="' + link.replace(/"/g, "%22") + '">Abrir o painel</a>'] : []),
+    "Você recebe esta mensagem porque ligou o canal de e-mail nas preferências de aviso desta empresa. " +
+      "Para parar de receber, desligue o canal na tela Notificações, na aba Preferências.",
+  ];
+
+  return {
+    para: input.para,
+    assunto: input.titulo,
+    texto,
+    // O mesmo escape do corpo vale para o título que vira cabeçalho: ele é a frase
+    // do sino, e essa frase carrega nome de produto, de cliente e de fornecedor.
+    html: html(textoSeguro(input.titulo), paragrafos),
+    rotulo: "aviso-de-notificacao",
   };
 }

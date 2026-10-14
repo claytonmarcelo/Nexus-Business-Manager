@@ -10,9 +10,9 @@ import { Pagination, PAGE_SIZE_PADRAO } from "../components/Pagination";
 import {
   anunciarMudancaNosAvisos, contarNotificacoes, lerPreferencias, listarNotificacoes,
   marcarLida, marcarTodasLidas, salvarPreferencias, varrerContasVencidas,
-  EVENTO_AVISOS, ROTULOS_PRIORIDADE, TIPOS, rotuloTipo,
-  type FiltroStatus, type Notificacao, type Preferencias, type Resumo,
-  type TipoNotificacao,
+  CANAL_SEM_ESTADO, EVENTO_AVISOS, ROTULOS_PRIORIDADE, TIPOS, rotuloTipo,
+  type EstadoDoCanal, type FiltroStatus, type Notificacao, type Preferencias,
+  type Resumo, type TipoNotificacao,
 } from "../lib/notificationsApi";
 
 // ===== Tela de avisos (/app/notificacoes) =====
@@ -270,6 +270,9 @@ function PainelPreferencias({ aoMudarEstado }: { aoMudarEstado: () => void }) {
   const podeVarrer = can("settings:write");
   const [preferencias, setPreferencias] = useState<Preferencias | null>(null);
   const [rascunho, setRascunho] = useState<Preferencias | null>(null);
+  // Estado do canal lido do servidor (N59), não uma conclusão da tela. Antes do
+  // primeiro GET vale o sentido seguro: sem resposta, não afirme que entrega.
+  const [canalEmail, setCanalEmail] = useState<EstadoDoCanal>(CANAL_SEM_ESTADO);
   const [erro, setErro] = useState<string | null>(null);
   const [ocupado, setOcupado] = useState(false);
   const [varrendo, setVarrendo] = useState(false);
@@ -277,9 +280,10 @@ function PainelPreferencias({ aoMudarEstado }: { aoMudarEstado: () => void }) {
   const carregar = useCallback(async () => {
     setErro(null);
     try {
-      const p = await lerPreferencias();
-      setPreferencias(p);
-      setRascunho(p);
+      const leitura = await lerPreferencias();
+      setPreferencias(leitura.preferencias);
+      setRascunho(leitura.preferencias);
+      setCanalEmail(leitura.email);
     } catch (e) {
       setErro(extractErrorMessage(e, "Não foi possível ler suas preferências."));
     }
@@ -307,14 +311,19 @@ function PainelPreferencias({ aoMudarEstado }: { aoMudarEstado: () => void }) {
   async function varrer() {
     setVarrendo(true);
     try {
-      const criadas = await varrerContasVencidas();
+      const { criadas, emails } = await varrerContasVencidas();
       aoMudarEstado();
-      notify.success(
-        criadas === 0 ? "Nenhuma conta vencida nova neste mês."
+      const avisosTxt =
+        criadas === 0 ? "Nenhum aviso novo neste mês."
           : criadas === 1 ? "1 aviso de conta vencida criado."
-            : criadas + " avisos de conta vencida criados.",
-        "Varredura",
-      );
+            : criadas + " avisos de conta vencida criados.";
+      // Os dois números (N59): quem opera precisa saber se a cópia por e-mail saiu
+      // ou se o canal está desligado nesta instalação — "2 avisos" sozinho não diz.
+      const emailsTxt =
+        emails === 0 ? ""
+          : emails === 1 ? " 1 mensagem foi para a fila de e-mail."
+            : ` ${emails} mensagens foram para a fila de e-mail.`;
+      notify.success(avisosTxt + emailsTxt, "Varredura");
     } catch (e) {
       notify.error(extractErrorMessage(e), "A varredura não pôde rodar");
     } finally {
@@ -389,13 +398,21 @@ function PainelPreferencias({ aoMudarEstado }: { aoMudarEstado: () => void }) {
             </span>
           </label>
           <label className="check-line">
-            <input type="checkbox" checked={rascunho.emailChannel} disabled onChange={() => undefined} />
+            <input
+              type="checkbox"
+              checked={rascunho.emailChannel}
+              disabled={!canalEmail.disponivel}
+              onChange={(e) => setRascunho({ ...rascunho, emailChannel: e.target.checked })}
+            />
             <span className="nx-avisos-preferencia">
               <strong>E-mail</strong>
               <span className="nx-avisos-dica">
-                Indisponível: não há servidor de e-mail (SMTP) configurado nesta instalação, então nenhuma
-                mensagem sairia. A preferência existe no banco e este quadro entra em ação quando o envio for
-                real — mostramos o que não funciona em vez de acender um botão que mente.
+                {canalEmail.disponivel
+                  ? `Disponível: as mensagens saem pelo transporte ${canalEmail.transporte}. Ligue para receber`
+                    + " a cópia de cada aviso que entrar no seu sino."
+                  : `Indisponível: ${canalEmail.motivo ?? "esta instalação não informou o canal de e-mail"}.`
+                    + " A sua preferência continua guardada; quando houver servidor de e-mail, a caixa volta"
+                    + " a ficar editável sem que você remarque nada."}
               </span>
             </span>
           </label>
@@ -407,8 +424,9 @@ function PainelPreferencias({ aoMudarEstado }: { aoMudarEstado: () => void }) {
           <h2 className="nx-panel-title">Varredura de contas vencidas</h2>
           <p className="nx-panel-sub">
             Rota administrativa: percorre os lançamentos pendentes vencidos e grava o aviso para quem ainda
-            não recebeu um neste mês. É o mesmo passo que a rotina agendada vai chamar quando o executor
-            existir — hoje ele só roda daqui ou pela API.
+            não recebeu um neste mês. É o mesmo passo que a rotina "Contas vencidas" executa na tela de
+            Rotinas, com uma diferença: daqui ela varre só a empresa ativa, e lá ela percorre todas. O
+            resultado diz quantos avisos nasceram e quantas mensagens entraram na fila de e-mail.
           </p>
           <div className="row-actions">
             <button type="button" className="btn btn-brand btn-sm" onClick={() => void varrer()} disabled={varrendo}>

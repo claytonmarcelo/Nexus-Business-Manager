@@ -3,6 +3,11 @@ import { prisma } from "../../lib/prisma";
 import { paginate, skipTake, type PaginationInput } from "../../lib/pagination";
 import { notFound } from "../../lib/errors";
 import { calendarioDaEmpresa, diaDeCalendario, fusoDaEmpresa, mesNoFuso } from "../../lib/time";
+import { env } from "../../config/env";
+import { audit } from "../../lib/audit";
+import { estadoDoCanalDeEmail, mascaraEndereco, resumoDaFalha } from "../../lib/mail";
+import { avisoDeNotificacao } from "../../lib/mail/mensagens";
+import { enfileirarMail } from "../../lib/mail/fila";
 import type { TipoNotificacao, PreferenciasInput } from "./notifications.schemas";
 
 // ===== Notificações persistentes (seção 44) =====
@@ -15,11 +20,15 @@ import type { TipoNotificacao, PreferenciasInput } from "./notifications.schemas
 //  - cada tipo tem uma preferência; desligar "estoque" não silencia "venda";
 //  - sem linha de preferência salva vale o padrão do schema (avisos ligados);
 //  - o canal "aplicativo" (sino + tela) decide se o aviso é gravado; o canal de
-//    e-mail é apenas preferência guardada, pois disparar mensagem depende de
-//    SMTP configurado no servidor (nada é simulado aqui);
-//  - varreduras periódicas usam dedupe_key para não repetir o mesmo aviso;
+//    e-mail (N59) é uma CÓPIA do aviso gravado: só recebe mensagem por e-mail quem
+//    tem a linha no sino, a preferência do tipo ligada e o canal ligado — e nada é
+//    enfileirado quando o entregador da instalação não entrega de verdade
+//    (`estadoDoCanalDeEmail()`); nada aqui é simulado;
+//  - varreduras periódicas usam dedupe_key para não repetir o mesmo aviso, e como
+//    a chave mora na linha do sino, é ela que segura o e-mail também: o mesmo aviso
+//    não gera segunda mensagem;
 //  - falha em gerar aviso nunca derruba a operação de negócio (mesma política
-//    da auditoria).
+//    da auditoria), e falha na entrega do e-mail não apaga o aviso que já nasceu.
 
 type FlagPreferencia = "saleAlerts" | "lowStock" | "newLead" | "overdueBills" | "dailyReport";
 
@@ -66,55 +75,166 @@ function texto(v: string | null | undefined, limite: number): string {
 }
 
 /**
- * Grava o aviso para quem deve recebê-lo. Devolve quantas notificações foram
- * criadas (0 quando todos desligaram o tipo ou não há destinatário).
+ * As sete chaves de preferência lidas de uma linha salva ou do padrão. Uma função
+ * só porque o mesmo espelho era escrito à mão em três lugares (`notificar`,
+ * `obterPreferencias` e `salvarPreferencias`), e chave esquecida num deles vira
+ * preferência que some da tela.
+ */
+type LinhasDePreferencia = {
+  saleAlerts: boolean; lowStock: boolean; dailyReport: boolean; overdueBills: boolean;
+  newLead: boolean; emailChannel: boolean; inAppChannel: boolean;
+};
+
+function comoPreferencias(p: LinhasDePreferencia): PreferenciasInput {
+  return {
+    saleAlerts: p.saleAlerts,
+    lowStock: p.lowStock,
+    dailyReport: p.dailyReport,
+    overdueBills: p.overdueBills,
+    newLead: p.newLead,
+    emailChannel: p.emailChannel,
+    inAppChannel: p.inAppChannel,
+  };
+}
+
+/** O que um aviso produziu: linhas no sino e mensagens postas na fila de e-mail. */
+export interface ResultadoDoAviso {
+  criadas: number;
+  emails: number;
+}
+
+/**
+ * Grava o aviso para quem deve recebê-lo e devolve só quantas notificações foram
+ * criadas (0 quando todos desligaram o tipo ou não há destinatário). É a porta que
+ * as operações de negócio chamam; quem precisa saber também dos e-mails usa
+ * `notificarDetalhado`.
  */
 export async function notificar(companyId: string, evento: EventoNotificavel): Promise<number> {
+  return (await notificarDetalhado(companyId, evento)).criadas;
+}
+
+/**
+ * A porta completa do aviso (seção 44 + N59).
+ *
+ * Duas pernas, na ordem: primeiro a linha do sino nasce, depois a cópia por e-mail
+ * é enfileirada. A ordem não é enfeite — o e-mail é cópia do aviso gravado, então
+ * (a) ele só existe para quem tem linha nova no sino, o que faz a chave
+ * antiduplicação da varredura segurar as duas pontas, e (b) uma mensagem nunca é
+ * enviada por um aviso que não chegou a ser gravado.
+ *
+ * O contador de e-mails conta mensagens enfileiradas, não entregas confirmadas:
+ * entrega é assíncrona (N58) e o veredito de uma que falhou vai para a auditoria
+ * como `notification.entrega_falhou`. Sucesso não é auditado de propósito — um
+ * aviso por venda, por minuto, numa empresa com movimento, encheria a trilha de
+ * eventos que não mudam nada; o que precisa de rastro é a falha.
+ */
+export async function notificarDetalhado(
+  companyId: string,
+  evento: EventoNotificavel,
+): Promise<ResultadoDoAviso> {
   try {
     const regra = TIPOS[evento.kind];
     const membros = await prisma.companyUser.findMany({
       where: { companyId, user: { active: true } },
-      select: { userId: true },
+      select: { userId: true, user: { select: { email: true, name: true } } },
     });
-    let destinatarios = membros.map((m) => m.userId);
+    let destinatarios = membros;
     if (evento.toUserId) {
-      destinatarios = destinatarios.includes(evento.toUserId) ? [evento.toUserId] : [];
+      destinatarios = destinatarios.filter((m) => m.userId === evento.toUserId);
     }
     if (evento.fromUserId) {
-      destinatarios = destinatarios.filter((id) => id !== evento.fromUserId);
+      destinatarios = destinatarios.filter((m) => m.userId !== evento.fromUserId);
     }
-    if (destinatarios.length === 0) return 0;
+    if (destinatarios.length === 0) return { criadas: 0, emails: 0 };
 
     const salvas = await prisma.notificationPreference.findMany({
-      where: { companyId, userId: { in: destinatarios } },
+      where: { companyId, userId: { in: destinatarios.map((m) => m.userId) } },
     });
-    const preferenciaPorUsuario = new Map(salvas.map((p) => [p.userId, p]));
+    const preferenciaPorUsuario = new Map(
+      salvas.map((p) => [p.userId, comoPreferencias(p)]),
+    );
+    const preferenciaDe = (userId: string): PreferenciasInput =>
+      preferenciaPorUsuario.get(userId) ?? PREFERENCIAS_PADRAO;
 
     const linhas = destinatarios
-      .filter((userId) => {
-        const p = preferenciaPorUsuario.get(userId);
-        if (!p) return PREFERENCIAS_PADRAO.inAppChannel && PREFERENCIAS_PADRAO[regra.preferencia];
+      .filter((m) => {
+        const p = preferenciaDe(m.userId);
         return p.inAppChannel && p[regra.preferencia];
       })
-      .map((userId) => ({
-        userId,
+      .map((m) => ({
+        userId: m.userId,
         companyId,
         kind: evento.kind,
         title: texto(evento.title, 160),
         body: texto(evento.body, 400) || null,
         link: evento.link ? texto(evento.link, 200) : null,
         priority: evento.priority ?? NotificationPriority.MEDIUM,
-        dedupeKey: evento.dedupeBase ? texto(evento.dedupeBase + ":" + userId, 120) : null,
+        dedupeKey: evento.dedupeBase ? texto(evento.dedupeBase + ":" + m.userId, 120) : null,
       }));
 
-    if (linhas.length === 0) return 0;
-    const { count } = await prisma.notification.createMany({ data: linhas, skipDuplicates: true });
-    return count;
+    if (linhas.length === 0) return { criadas: 0, emails: 0 };
+
+    // A chave antiduplicação é única no banco, então uma linha que já existe não
+    // renasce — e não pode virar segunda mensagem para a mesma pessoa. `createMany`
+    // com `skipDuplicates` já não gravaria, mas ele não devolve QUAIS linhas eram
+    // velhas: a consulta abaixo é o que deixa o e-mail do lado certo da regra.
+    const chaves = linhas.map((l) => l.dedupeKey).filter((k): k is string => Boolean(k));
+    const existentes = chaves.length === 0
+      ? new Set<string>()
+      : new Set(
+          (await prisma.notification.findMany({
+            where: { dedupeKey: { in: chaves } },
+            select: { dedupeKey: true },
+          })).map((e) => e.dedupeKey ?? ""),
+        );
+    const novas = linhas.filter((l) => !l.dedupeKey || !existentes.has(l.dedupeKey));
+    if (novas.length === 0) return { criadas: 0, emails: 0 };
+
+    const { count } = await prisma.notification.createMany({ data: novas, skipDuplicates: true });
+
+    // Perna de e-mail (N59): as linhas que acabaram de nascer, para quem ligou o
+    // canal, e só quando o entregador desta instalação entrega de verdade. Sem
+    // entregador real nada é enfileirado — um console que escreve no log do
+    // servidor não é caixa postal de ninguém, e o projeto não simula entrega.
+    const comCanal = novas.filter((l) => preferenciaDe(l.userId).emailChannel);
+    if (comCanal.length === 0 || !estadoDoCanalDeEmail().disponivel) return { criadas: count, emails: 0 };
+
+    const empresa = await prisma.company.findFirst({ where: { id: companyId }, select: { name: true } });
+    const base = env.WEB_BASE_URL.replace(/\/+$/, "");
+    const membroPorId = new Map(destinatarios.map((m) => [m.userId, m]));
+    for (const linha of comCanal) {
+      const m = membroPorId.get(linha.userId);
+      if (!m) continue;
+      const mensagem = avisoDeNotificacao({
+        para: m.user.email,
+        nome: m.user.name,
+        empresa: empresa?.name ?? "sua empresa",
+        titulo: linha.title,
+        corpo: linha.body,
+        link: linha.link ? base + linha.link : null,
+      });
+      enfileirarMail(mensagem, async (resultado) => {
+        if (resultado.ok) return;
+        await audit({
+          userId: linha.userId,
+          companyId,
+          action: "notification.entrega_falhou",
+          entity: "notification",
+          metadata: {
+            rotulo: mensagem.rotulo,
+            tentativas: resultado.tentativas,
+            motivo: resumoDaFalha(resultado.erro),
+            para: mascaraEndereco(m.user.email),
+          },
+        });
+      });
+    }
+    return { criadas: count, emails: comCanal.length };
   } catch (err) {
     // Um aviso que não nasceu não pode estragar a venda, a compra ou o estoque.
     // eslint-disable-next-line no-console
     console.error("[notificacoes] falha ao gerar avisos", evento.kind, (err as Error).message);
-    return 0;
+    return { criadas: 0, emails: 0 };
   }
 }
 
@@ -214,8 +334,11 @@ function dataBR(d: Date): string {
 
 /**
  * Avisos que não nascem de uma ação da pessoa: contas vencidas. Retorna a
- * quantidade criada. A chave antifduplication usa o mês da varredura, então a
- * mesma conta vencida avisa uma vez por mês e não vira spam diário.
+ * quantidade criada. É a casca fina para as operações de negócio; a rotina
+ * agendada e a rota administrativa querem os dois números, e usam
+ * `varreduraEmpresaDetalhada` abaixo. A chave antiduplicação usa o mês da
+ * varredura, então a mesma conta vencida avisa uma vez por mês e não vira spam
+ * diário.
  *
  * Fase 3c: o "hoje" da varredura é o de dentro da empresa, não o do servidor.
  * Uma conta que vence hoje só é vencida quando o dia dela vira; com o relógio
@@ -227,6 +350,20 @@ export async function varreduraEmpresa(
   agora = new Date(),
   fuso?: string,
 ): Promise<number> {
+  return (await varreduraEmpresaDetalhada(companyId, agora, fuso)).criadas;
+}
+
+/**
+ * Mesma varredura com os dois contadores (N59): linhas criadas no sino e cópias
+ * postas na fila de e-mail. É o que a rota administrativa e a rotina agendada
+ * reportam, porque "avisos criados" sozinho não diz a quem opera se a mensagem
+ * saiu ou se o canal está desligado nesta instalação.
+ */
+export async function varreduraEmpresaDetalhada(
+  companyId: string,
+  agora = new Date(),
+  fuso?: string,
+): Promise<ResultadoDoAviso> {
   const tz = fuso ?? (await fusoDaEmpresa(companyId));
   const hoje = calendarioDaEmpresa(tz, agora);
   const mes = mesNoFuso(tz, agora);
@@ -238,12 +375,12 @@ export async function varreduraEmpresa(
     include: { client: { select: { name: true } }, supplier: { select: { name: true } } },
   });
 
-  let criadas = 0;
+  const soma: ResultadoDoAviso = { criadas: 0, emails: 0 };
   for (const e of vencidas) {
     const atraso = diasDeAtraso(e.dueDate, hoje);
     const despesa = e.type === "EXPENSE";
     const responsavel = despesa ? e.supplier?.name : e.client?.name;
-    criadas += await notificar(companyId, {
+    const r = await notificarDetalhado(companyId, {
       kind: "billing",
       title: `${despesa ? "Despesa" : "Recebimento"} vencido há ${atraso} ${atraso === 1 ? "dia" : "dias"}`,
       body:
@@ -254,19 +391,28 @@ export async function varreduraEmpresa(
       priority: atraso > 7 ? NotificationPriority.HIGH : NotificationPriority.MEDIUM,
       dedupeBase: `vencida:${e.id}:${mes}`,
     });
+    soma.criadas += r.criadas;
+    soma.emails += r.emails;
   }
-  return criadas;
+  return soma;
 }
 
 /** Varredura de todas as empresas ativas (usada pela rotina agendada). */
-export async function varreduraGlobal(agora = new Date()): Promise<{ empresas: number; criadas: number }> {
+export async function varreduraGlobal(
+  agora = new Date(),
+): Promise<{ empresas: number; criadas: number; emails: number }> {
   const empresas = await prisma.company.findMany({
     where: { active: true },
     select: { id: true, timezone: true },
   });
   let criadas = 0;
-  for (const c of empresas) criadas += await varreduraEmpresa(c.id, agora, c.timezone);
-  return { empresas: empresas.length, criadas };
+  let emails = 0;
+  for (const c of empresas) {
+    const r = await varreduraEmpresaDetalhada(c.id, agora, c.timezone);
+    criadas += r.criadas;
+    emails += r.emails;
+  }
+  return { empresas: empresas.length, criadas, emails };
 }
 
 // ---- Leitura e estado (a pessoa só enxerga os próprios avisos) ----
@@ -356,15 +502,7 @@ export async function obterPreferencias(userId: string, companyId: string): Prom
     where: { userId_companyId: { userId, companyId } },
   });
   if (!p) return { ...PREFERENCIAS_PADRAO };
-  return {
-    saleAlerts: p.saleAlerts,
-    lowStock: p.lowStock,
-    dailyReport: p.dailyReport,
-    overdueBills: p.overdueBills,
-    newLead: p.newLead,
-    emailChannel: p.emailChannel,
-    inAppChannel: p.inAppChannel,
-  };
+  return comoPreferencias(p);
 }
 
 export async function salvarPreferencias(
@@ -377,13 +515,5 @@ export async function salvarPreferencias(
     create: { userId, companyId, ...input },
     update: { ...input },
   });
-  return {
-    saleAlerts: salva.saleAlerts,
-    lowStock: salva.lowStock,
-    dailyReport: salva.dailyReport,
-    overdueBills: salva.overdueBills,
-    newLead: salva.newLead,
-    emailChannel: salva.emailChannel,
-    inAppChannel: salva.inAppChannel,
-  };
+  return comoPreferencias(salva);
 }

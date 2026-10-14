@@ -18,13 +18,26 @@ export interface MailerDeTeste extends MailerPort {
   porRotulo(rotulo: MensagemDeMail["rotulo"]): MensagemDeMail[];
 }
 
-export function fakeMailer(): MailerDeTeste {
+export interface OpcoesDoFake {
+  /**
+   * N59: a caixa de memória pode se passar por um entregador que entrega, e é
+   * assim que o ramo ligado do canal de e-mail é provado sem servidor nenhum.
+   * O padrão é falso de propósito: uma caixa que não declara capacidade não faz
+   * a tela de preferências afirmar que há e-mail.
+   */
+  entregaDeVerdade?: boolean;
+}
+
+export function fakeMailer(opcoes: OpcoesDoFake = {}): MailerDeTeste {
   const caixa: MensagemDeMail[] = [];
   let falharDepoisDe = Number.POSITIVE_INFINITY;
   let enviadas = 0;
   return {
     nome: "fake",
     caixa,
+    entregaDeVerdade: opcoes.entregaDeVerdade === true,
+    motivoDaIndisponibilidade:
+      "esta instalação está usando o entregador de memória dos testes, que não é um servidor de e-mail",
     falharApos(quantas: number) {
       falharDepoisDe = quantas;
     },

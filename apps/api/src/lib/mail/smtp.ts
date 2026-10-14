@@ -55,6 +55,10 @@ export function smtpMailer(config: ConfiguracaoSmtp): MailerPort {
 
   return {
     nome: "smtp",
+    // N59: este é o único entregador dos três que afirma entrega — e afirma porque
+    // foi montado com host, porta e remetente vindos do ambiente, que é exatamente
+    // o estado que a tela de preferências passa a ler.
+    entregaDeVerdade: true,
     async enviar(mensagem: MensagemDeMail): Promise<void> {
       transporte ??= criar();
       try {

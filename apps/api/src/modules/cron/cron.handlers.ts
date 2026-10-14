@@ -7,12 +7,23 @@
 import { NotificationPriority } from "@prisma/client";
 import { prisma } from "../../lib/prisma";
 import { diaNoFuso, meiaNoiteNoFuso, ontemNoFuso } from "../../lib/time";
-import { moeda, notificar, varreduraGlobal } from "../notifications/notifications.service";
+import { moeda, notificarDetalhado, varreduraGlobal } from "../notifications/notifications.service";
 
 export interface ResultadoExecucao {
   /** Frase curta (<= 400 caracteres) gravada em cron_jobs.last_message. */
   mensagem: string;
   detalhes: Record<string, unknown>;
+}
+
+/**
+ * O pedaço de e-mail da frase de execução (N59). Sem ele, a coluna "última
+ * execução" da tela de Rotinas diz "2 avisos" e quem opera não tem como saber se
+ * alguém recebeu mensagem ou se o canal está desligado nesta instalação. O número
+ * é o de mensagens postas na fila, não o de entregas confirmadas — o veredito de
+ * uma que falhou mora na auditoria (`notification.entrega_falhou`).
+ */
+function parteDeEmail(emails: number): string {
+  return `· ${emails} ${emails === 1 ? "e-mail" : "e-mails"}`;
 }
 
 export interface JobDefinicao {
@@ -36,8 +47,8 @@ export interface JobDefinicao {
 async function rotinaContasVencidas(agora: Date): Promise<ResultadoExecucao> {
   const r = await varreduraGlobal(agora);
   return {
-    mensagem: `${r.criadas} ${r.criadas === 1 ? "aviso criado" : "avisos criados"} em ${r.empresas} ${r.empresas === 1 ? "empresa" : "empresas"}`,
-    detalhes: { empresas: r.empresas, criadas: r.criadas },
+    mensagem: `${r.criadas} ${r.criadas === 1 ? "aviso criado" : "avisos criados"} em ${r.empresas} ${r.empresas === 1 ? "empresa" : "empresas"} ${parteDeEmail(r.emails)}`,
+    detalhes: { empresas: r.empresas, criadas: r.criadas, emails: r.emails },
   };
 }
 
@@ -51,6 +62,7 @@ async function rotinaEstoqueBaixo(agora: Date): Promise<ResultadoExecucao> {
   });
   let avisadas = 0;
   let criadas = 0;
+  let emails = 0;
   for (const c of empresas) {
     const dia = diaNoFuso(c.timezone, agora);
     const monitoradas = await prisma.product.findMany({
@@ -69,7 +81,7 @@ async function rotinaEstoqueBaixo(agora: Date): Promise<ResultadoExecucao> {
     }
     const total = criticos + alerta;
     if (total === 0) continue;
-    const criados = await notificar(c.id, {
+    const aviso = await notificarDetalhado(c.id, {
       kind: "stock",
       title: `${total} ${total === 1 ? "produto com estoque" : "produtos com estoque"} abaixo do mínimo`,
       body:
@@ -80,25 +92,29 @@ async function rotinaEstoqueBaixo(agora: Date): Promise<ResultadoExecucao> {
       priority: criticos > 0 ? NotificationPriority.HIGH : NotificationPriority.MEDIUM,
       dedupeBase: `estoque-baixo:${c.id}:${dia}`,
     });
-    if (criados > 0) avisadas += 1;
-    criadas += criados;
+    if (aviso.criadas > 0) avisadas += 1;
+    criadas += aviso.criadas;
+    emails += aviso.emails;
   }
   return {
-    mensagem: `${avisadas} ${avisadas === 1 ? "empresa avisada" : "empresas avisadas"} · ${criadas} ${criadas === 1 ? "aviso" : "avisos"}`,
-    detalhes: { empresas: empresas.length, avisadas, criadas },
+    mensagem: `${avisadas} ${avisadas === 1 ? "empresa avisada" : "empresas avisadas"} · ${criadas} ${criadas === 1 ? "aviso" : "avisos"} ${parteDeEmail(emails)}`,
+    detalhes: { empresas: empresas.length, avisadas, criadas, emails },
   };
 }
 
 // ---- 3. Relatório diário ----
 // O fechamento de ontem para quem ligou "Relatório diário" nas preferências
-// (o padrão é desligado — só recebe quem pediu). Sem SMTP não há e-mail: o
-// relatório chega pelo sino, como o resto.
+// (o padrão é desligado — só recebe quem pediu). N59: o mesmo aviso que entra no
+// sino é copiado para a fila de e-mail para quem ligou o canal, e a frase de
+// execução diz quantas mensagens entraram. Sem entregador que entrega, o número
+// é zero — não há relatório simulado em lugar nenhum.
 async function rotinaRelatorioDiario(agora: Date): Promise<ResultadoExecucao> {
   const empresas = await prisma.company.findMany({
     where: { active: true },
     select: { id: true, timezone: true },
   });
   let criadas = 0;
+  let emails = 0;
   for (const c of empresas) {
     // "Ontem" é a janela entre as duas viradas de dia da empresa. Subtrair
     // 24h da meia-noite de hoje dá o instante certo mesmo no dia em que o
@@ -117,7 +133,7 @@ async function rotinaRelatorioDiario(agora: Date): Promise<ResultadoExecucao> {
     ]);
     const totalVendas = Number(vendas._sum.total ?? 0);
     const dataBr = diaNoFuso(c.timezone, ontem).split("-").reverse().join("/");
-    criadas += await notificar(c.id, {
+    const aviso = await notificarDetalhado(c.id, {
       kind: "report",
       title: `Relatório de ${dataBr}`,
       body:
@@ -127,10 +143,12 @@ async function rotinaRelatorioDiario(agora: Date): Promise<ResultadoExecucao> {
       priority: NotificationPriority.LOW,
       dedupeBase: `relatorio-diario:${c.id}:${dia}`,
     });
+    criadas += aviso.criadas;
+    emails += aviso.emails;
   }
   return {
-    mensagem: `${empresas.length} ${empresas.length === 1 ? "empresa fechada" : "empresas fechadas"} · ${criadas} ${criadas === 1 ? "aviso" : "avisos"}`,
-    detalhes: { empresas: empresas.length, criadas },
+    mensagem: `${empresas.length} ${empresas.length === 1 ? "empresa fechada" : "empresas fechadas"} · ${criadas} ${criadas === 1 ? "aviso" : "avisos"} ${parteDeEmail(emails)}`,
+    detalhes: { empresas: empresas.length, criadas, emails },
   };
 }
 

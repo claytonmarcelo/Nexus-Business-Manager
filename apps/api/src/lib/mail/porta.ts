@@ -19,7 +19,8 @@ export type RotuloDeMail =
   | "recuperacao-de-senha"
   | "verificacao-de-email"
   | "segundo-fator-ativado"
-  | "segundo-fator-desativado";
+  | "segundo-fator-desativado"
+  | "aviso-de-notificacao";
 
 export interface MensagemDeMail {
   /** Caixa postal de entrega. Vive só em memória e na conexão SMTP. */
@@ -34,7 +35,33 @@ export interface MensagemDeMail {
 
 export interface MailerPort {
   readonly nome: string;
+  /**
+   * Capacidade de entrega (N59). O padrão é a ausência, e a ausência significa
+   * "não afirma que entrega": um entregador novo que esqueça de declarar a
+   * capacidade é lido como indisponível, nunca como disponível. É o sentido
+   * seguro do erro — o achado N59 existe justamente porque a tela de
+   * preferências afirmava que o canal de e-mail não funcionava sem depender de
+   * nada, e passou a depender desta leitura.
+   */
+  readonly entregaDeVerdade?: boolean;
+  /**
+   * Por que este entregador não chama ninguém de verdade, em uma frase de
+   * produto. Usada pela rota de preferências e pelo quadro "E-mail" da tela;
+   * ignorada quando `entregaDeVerdade` é verdadeiro.
+   */
+  readonly motivoDaIndisponibilidade?: string;
   enviar(mensagem: MensagemDeMail): Promise<void>;
+}
+
+/**
+ * O que a instalação sabe sobre o próprio canal de e-mail agora (N59). É a
+ * resposta de `estadoDoCanalDeEmail()`, e o formato que a tela de preferências
+ * usa para decidir se a caixa "E-mail" está editável — nunca um `disabled` fixo.
+ */
+export interface EstadoDoCanal {
+  disponivel: boolean;
+  transporte: string;
+  motivo: string | null;
 }
 
 /**
