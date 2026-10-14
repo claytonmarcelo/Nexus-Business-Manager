@@ -53,3 +53,28 @@ Independente da escolha, estas quatro coisas deixam de ser decisão e viram regr
 - [ ] Quem paga a conta de infra (você, ou repassado ao cliente)?
 - [ ] Janela de backup aceita (RPO de 24h basta? precisa de menor?) e por quanto tempo guardar (RPO/RTO)?
 - [ ] Precisa de alta disponibilidade ou "fora do ar por dez minutos por mês" é aceitável hoje?
+
+## O que mudou desde que esta decisão foi escrita — a regra 1 virou código, e a regra 2 não é o que o texto supõe (T5.2, 2026-10-14)
+
+- **Regra 1, parte da retenção: existe, e é medida.** `deploy/backup-mysql.cjs` aplica exatamente 7 diários,
+  4 semanais e 12 mensais — com a semana contada como **semana ISO**, que é o que faz a janela não derivar a
+  cada execução. `tools/verify-backup.cjs` confere as propriedades da política numa série de 45 arquivos e
+  fecha **56 verificações, 0 falhas**.
+- **Regra 1, parte do "automático diário": não existe.** Não há agenda neste repositório. `npm run
+  docker:backup` é um comando, e quem o repete é o cron/Agendador de Tarefas da máquina que hospeda — o que
+  depende da resposta de hospedagem acima. O executor de rotinas do painel não pode fazer isso: roda dentro
+  do container da API, sem o binário `docker` e sem a pasta do host. Registrado como N71, e não entregue por
+  fora da decisão.
+- **Regra 1, parte da "restauração testada em ambiente separado": agora é comando, não memória.**
+  `npm run docker:provar-backup` restaura o dump num banco separado (`nexusbm_restauracao`) dentro do MySQL da
+  pilha, compara tabela por tabela com a origem e apaga o banco de conferência no fim. O que continua faltando
+  é o **exercício trimestral em outro host**: enquanto a hospedagem não for escolhida, não há outro host. A
+  régua é o que dá para fazer hoje, e é ela que a regra 1 chama de "prova".
+- **Regra 2 está escrita sobre uma premissa falsa** (N72): o painel não guarda imagem/logo em disco — a API
+  aceita logo só como endereço `http(s)` (`companies.schemas.ts:69`), e não existe parser `multipart` em
+  nenhuma rota. Então "dump lógico + arquivo de uploads" hoje é *só* dump lógico, porque não há uploads para
+  copiar. Quando o upload das seções 26 e 48 chegar, a regra 2 passa a ter objeto e o backup tem de crescer
+  junto — a linha acima é o lembrete, e o texto da regra continua como está para não apagar a decisão original.
+- **Regra 4, conferida na subida da pilha** (T5.1): o compose nasce com `NODE_ENV=production`, a A9 recusou a
+  subida com `WEB_BASE_URL` sem https e sem `CORS_ORIGIN` público, e TLS termina fora daqui — o container serve
+  texto puro na `PAINEL_PORT`; certificado é do ambiente escolhido acima.

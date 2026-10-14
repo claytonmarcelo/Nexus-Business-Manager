@@ -2071,3 +2071,87 @@ produção queria nível `warn`, ou se o `LOG_LEVEL` deveria vir do ambiente, e 
 retenção do arquivo que o Docker administra. Rotação e retenção não estão no repositório, e não foram fingidas:
 `docs/PRODUCAO.md` diz `NÃO VERIFICADO` nesse ponto, e a amarração com o roteiro de backup vem na próxima
 tarefa da T5 (seção 45 do prompt).
+# Adenda da execução — T5.2 (F6: backup do banco com restauração testada) encerrada — 2026-10-14
+
+Segundo item da T5: seção 45 do prompt, sob a regra 1 de `docs/decisoes/G5-hospedagem-e-backup.md` — *backup que
+nunca foi restaurado é desejo, não plano*. Agora existem três peças e elas se conferem: `deploy/backup-mysql.cjs`
+faz o dump, `deploy/restaurar-mysql.cjs` despeja, `tools/verify-backup.cjs` restaura o dump num banco separado e
+compara tabela por tabela. A régua fecha **56 verificações, 0 falhas** (12 de recusa, 13 de retenção, 31 de dump
+e restauração reais), código de saída 0 com a pilha de pé e código 2 com `NAO VERIFICADO` sem ela. A linha real
+do dump: `35 tabela(s), 24 linha(s), 9 kB gzip em 1683 ms`, no banco `nexusbusinessmanager` do container, com
+`sha256` de 64 dígitos no sidecar e no `meta.json`. A senha nunca saiu do ambiente do container — o `mysqldump` e
+o `mysql` rodam por `docker compose exec` lendo `MYSQL_PWD` de `$MYSQL_ROOT_PASSWORD` lá dentro — e nada de valor
+de segredo é impresso por nenhuma das três. A política é GFS 7/4/12 com **semana ISO** e a trava de nunca deixar
+a pasta sem backup; destino padrão fora do repositório, e destino dentro dele é recusa medida (código 1, e o
+diretório proibido não chega a ser criado). Decisão em `docs/adr/0019-backup-com-mysqldump-dentro-do-container-e-restauracao-conferida.md`,
+roteiro em `docs/PRODUCAO.md` seção 8.
+
+O achado da rodada nasceu da régua, não do produto.
+
+### N70 — corrigido nesta rodada: o backup media o hash do byte errado, e a régua pegou antes do verde
+
+`deploy/backup-mysql.cjs` contava o sha256 sobre os bytes que passavam pelo stream **antes** de o gzip terminar,
+e escrevia esse valor no sidecar e no meta. A régua e o restaurador conferem o arquivo `.sql.gz` que está no
+disco. As duas contas não batiam, e o resultado medido foi `FALHA o hash do dump confere com o sidecar` seguido
+de `restaurar com hash divergente sai com codigo 1 antes de tocar em banco` — ou seja, a ferramenta se recusava
+a restaurar o próprio backup. Corrigido: o hash é calculado sobre o arquivo fechado (`sha256DoArquivo(caminho)`),
+e a régua passou a conferir o triplo (arquivo, sidecar, meta) na ordem em que o restaurador os lê. O que isto
+vale registrar não é o erro de digitação, é o desenho: se a verificação estivesse escrita como log da ferramenta
+em vez de medição independente, o verde teria saído com o hash errado dentro.
+
+A régua também tinha uma expectativa minha errada, e ela foi corrigida no teste, não no código: ela pedia que
+**dois dumps no mesmo dia** ficassem na pasta. Na política GFS dois dumps do mesmo dia são um bucket só — o
+mais velho sai junto do sidecar e do meta. A asserção agora mede isso (`dois dumps no mesmo dia viram um bucket:
+ficou o mais novo`), e o comportamento da ferramenta está correto.
+
+### N73 — corrigido nesta rodada: a retenção não tinha motivo para dizer por que apagava
+
+A linha que `deploy/backup-mysql.cjs` mostra a quem opera, medida na terceira execução real da rodada:
+`retencao apagou nexus-mysql--2026-10-14--164801.sql.gz (undefined, mais velho que a janela)`. Duas mentiras
+numa linha só. O `undefined` vinha de o campo `motivo` só ser escrito na malha de nunca-zero — no caminho
+normal os arquivos apagados saíam do `planejarRetencao` sem motivo nenhum. E "mais velho que a janela"
+estava fixo no texto, quando aquele arquivo era o **segundo dump do mesmo dia**: não estava fora de janela
+alguma, tinha apenas perdido o bucket para o irmão mais novo. Corrigido: quem perde o bucket responde
+`repetido-no-bucket`, quem não cabe em diário/semanal/mensal responde `fora-da-janela`, e a frase fixa saiu
+da linha. A régua ganhou a asserção que faltava — todo arquivo apagado traz um motivo escrito — e mediu
+vermelho (`[null,null,null]`) antes da correção; com ela dentro são **56 verificações, 0 falhas**. O que
+isto vale, junto com o N70: as duas falhas da rodada não apareceram olhando o dump, apareceram porque a
+verificação foi escrita como medição independente da ferramenta, e não como log dela.
+
+### N71 — aberto: o backup não tem agenda, não tem cópia fora da máquina e não cobre o que o produto ainda não tem
+
+Três limitações honestas, todas com decisão de quem mantém, e nenhuma fingida no repositório:
+
+1. **Nenhum `cron` roda o backup.** `npm run docker:backup` é um comando; a periodicidade é do Agendador de
+   Tarefas/cron da máquina que hospeda. O executor de rotinas do painel (`/app/rotinas`) **não** serve para
+   isso por construção: ele roda dentro do container da API, não tem o binário
+   `docker` nem como escrever na pasta do host. A alternativa seria um serviço extra no compose montando a
+   socket do Docker — o que daria a um container o poder de mexer em outro, exatamente o desenho de porta
+   fechada que a T5.1 acabou de fechar. Registrado como escolha, não como esquecimento.
+2. **Não há cópia off-site.** Um dump na mesma máquina do banco protege de erro de operação (a restauração
+   testada cobre isso), não de disco perdido. Isso é a parte de hospedagem do G5, e a decisão é do dono.
+3. **Não há arquivos de upload para backup.** A seção 45 fala de "dump lógico + arquivo de uploads"; o produto
+   não tem upload em disco hoje — `apps/api/src/modules/companies/companies.schemas.ts:69` recusa logo que não
+   seja endereço `http(s)` completo, com a frase "o upload de arquivo ainda não existe". Então a segunda metade
+   não tem o que copiar. Quando o upload chegar (seções 26 e 48, tarefa #28), o backup terá de chegar junto, e
+   esta linha é o lembrete.
+
+### N72 — aberto: a regra 2 do G5 está escrita sobre uma premissa que o código desmente
+
+`docs/decisoes/G5-hospedagem-e-backup.md` diz, como regra de projeto número 2: *"Dump lógico + arquivo de
+uploads — o painel guarda imagem/logo em disco; só o SQL não recupera nada"*. O produto não guarda nada em
+disco: `apps/api/src/modules/companies/companies.schemas.ts:69` aceita logo **apenas** como endereço `http(s)`
+completo, com a frase "o upload de arquivo ainda não existe", e não existe parser `multipart` em nenhuma rota
+da API (varrido em `docs/ESTADO-ATUAL.md`, seção de módulos: *Upload de arquivo — Não iniciado*). Consequência
+direta: a segunda metade da regra não tem objeto, e o backup entregue é o dump lógico — que é o que a régua
+prova. Não foi fingido um diretório de uploads para backup nem uma pasta vazia no `meta.json`. O achado fica
+registrado porque a decisão do dono foi escrita contra uma suposição falsa, e a pergunta de hospedagem (RPO, o
+que copiar) muda quando o upload das seções 26 e 48 chegar: nesse momento a regra 2 vira real, e o backup tem
+de crescer junto. Não foi corrigido aqui porque criar upload de arquivo não é tarefa da T5.
+
+Também fica declarado aqui o que a restauração **não** foi testada contra: o MySQL do WAMP desta máquina
+(3306, banco de desenvolvimento). Por D6 as três peças falam só com o MySQL do container, e a régua mede no
+container de pé que o serviço `mysql` não publica porta nenhuma no host — não existe socket por onde um dump
+pudesse estar lendo o banco do dono sem alguém querer.
+
+

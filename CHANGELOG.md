@@ -1,5 +1,44 @@
 ## [Não lançado]
 
+### O banco da pilha tem backup, e a restauração foi feita de verdade (2026-10-14)
+
+- **Três peças, e elas se conferem (T5.2 / F6, seção 45 do prompt).** `deploy/backup-mysql.cjs` faz o dump,
+  `deploy/restaurar-mysql.cjs` despeja, `tools/verify-backup.cjs` restaura o dump num banco separado e compara
+  as contagens tabela por tabela. A regra 1 do G5 — *backup que nunca foi restaurado é desejo, não plano* —
+  é o motivo de a régua existir. Medido com a pilha de pé: **56 verificações, 0 falhas** (12 de recusa, 13 de
+  retenção, 31 de dump e restauração reais), e o dump real devolve `35 tabela(s), 24 linha(s), 9 kB gzip em
+  1683 ms`.
+- **A senha nunca sai do container.** `mysqldump` e `mysql` rodam por `docker compose exec`, lendo `MYSQL_PWD`
+  de `$MYSQL_ROOT_PASSWORD` do ambiente do próprio container; a linha de comando do host não vê credencial,
+  o `meta.json` e o sidecar não a contêm, e nada imprime valor de segredo. O dump é escrito **sem
+  `--databases`** — sem `CREATE DATABASE` nem `USE` — e é isso que permite restaurar o mesmo arquivo num banco
+  de outro nome, que é o formato da prova.
+- **Retenção GFS 7/4/12 com semana ISO, e uma trava.** `planejarRetencao()` é função pura, conferida numa série
+  de 45 arquivos sintéticos: os sete diários ficam, dois dumps do mesmo dia são um bucket só, um arquivo de
+  300 dias ainda é mensal e um de 400 sai, a retenção **nunca deixa a pasta sem backup** (o mais recente fica
+  com o motivo `ultimo`), e o que não segue o padrão não é tocado. Destino padrão é `~/nexus-business-manager/backups`
+  (`NEXUS_BACKUP_DIR`); dentro do repositório é recusa medida, com código 1 e sem criar o diretório.
+- **A restauração recusa antes de escrever, e a régua bate em cada recusa.** Arquivo inexistente, schema
+  reservado do MySQL, hash divergente, banco alvo com tabelas sem `--aceito-sobrepor` — todas saem com código 1,
+  e a do hash acontece antes de qualquer conexão com banco. Restaurar por cima do banco da instalação sem o
+  aceite é medido de propósito.
+- **Dois erros reais da ferramenta, pegos pela régua antes do verde (N70 e N73).** O hash do N70 era calculado
+  sobre os bytes antes de o gzip fechar, enquanto sidecar e restaurador conferem o arquivo no disco: as contas
+  não batiam, e a ferramenta se recusava a restaurar o próprio backup — corrigido para hash do arquivo fechado.
+  O do N73 era a linha que a retenção mostra a quem opera: ela imprimia `undefined` e emprestava a frase "mais
+  velho que a janela" a um arquivo que era só o segundo dump do mesmo dia. Hoje cada apagado responde
+  `repetido-no-bucket` ou `fora-da-janela`, a régua confere que nenhum sai sem motivo, e a saída real da rodada
+  diz `retencao apagou nexus-mysql--2026-10-14--171045.sql.gz (repetido-no-bucket)`. Os dois ficam registrados
+  pela mesma razão: apareceram porque a verificação foi escrita como medição independente, e não como log da
+  própria ferramenta.
+- **Documentado e declarado aberto.** `docs/PRODUCAO.md` ganhou a seção 8 (comando por comando, os três
+  arquivos, as recusas, a ordem da emergência), a decisão está em
+  `docs/adr/0019-backup-com-mysqldump-dentro-do-container-e-restauracao-conferida.md`, e o que **não** existe
+  está dito: agenda (o executor de rotinas do painel roda dentro do container e não pode chamar `docker`),
+  cópia off-site e backup de uploads — o produto não tem upload em disco hoje, então a segunda metade da
+  seção 45 não tem o que copiar (N71).
+
+
 ### A instalação em container existe, e o banco não atende fora de casa (2026-10-14)
 
 - **Uma porta publicada, e não é a do banco (T5.1 / F6).** `Dockerfile.api`, `Dockerfile.web`,

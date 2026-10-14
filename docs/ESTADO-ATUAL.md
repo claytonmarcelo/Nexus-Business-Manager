@@ -51,12 +51,16 @@ continua marcada para a F9.
    duas chaves — a nossa e a `data-bs-theme` que o AdminLTE 4 lê — escritas pela
    mesma porta, com decisão em `docs/adr/0016`.
 5. Não existe: cobrança automática por gateway com credencial real, assinatura SaaS,
-   nota fiscal, upload real de arquivo (a logo é só uma URL), backup e restauração —
+   nota fiscal, upload real de arquivo (a logo é só uma URL) —
    e nem fila de saída de e-mail: a entrega que a F4 montou é síncrona dentro da
    request, registrado como N58. Saiu da lista nesta rodada o item que abria a frase
    anterior: **envio de e-mail por SMTP existe** (porta `MailerPort`, adaptador nodemailer,
    console no desenvolvimento e fake na prova — decisão D1). Falta só a credencial do
-   provedor, que é a decisão G1 do dono. A ordem de serviço saiu da lista na F3.2 Parte 1;
+   provedor, que é a decisão G1 do dono. Saiu também da lista o **backup com restauração conferida**:
+   desde a T5.2 o dump do MySQL da pilha é medido por uma régua que restaura o arquivo num banco
+   separado e compara as contagens tabela por tabela (56 verificações, `tools/verify-backup.cjs`);
+   agenda própria e cópia fora da máquina continuam de fora, e isso está registrado como N71.
+   A ordem de serviço saiu da lista na F3.2 Parte 1;
    a cobrança saiu na Parte 2, porque o carnê hoje emite, registra o recebimento, cancela
    e imprime. Nada disso tem botão morto na interface — o que não tem integração
    aparece na tela marcado como indisponível, com o motivo escrito.
@@ -489,7 +493,7 @@ Cinco estados possíveis: **Implementado e testado**, **Implementado sem teste**
 | Modelos de e-mail | **Só tabela** | `email_templates` no schema; sem delegate, sem rota, sem tela. A F4 criou a **entrega** (`src/lib/mail/`) com os textos em código, não na tabela — os templates do sino e do relatório diário continuam dependendo do provedor que o dono escolher (G1) |
 | Upload de arquivo (logo, anexos) | **Não iniciado** | nenhum parser `multipart` na API; `logoUrl` é `VarChar(255)` de URL |
 | SaaS: planos, assinaturas, faturas | **Não iniciado** | sem tabela, sem rota |
-| Backup e restauração | **Não iniciado** | sem código |
+| Backup e restauração | Implementado e conferido | `deploy/backup-mysql.cjs` despeja o `mysqldump` do container em gzip com `.sha256` e `.meta.json`, `deploy/restaurar-mysql.cjs` recusa hash divergente, schema reservado e banco não vazio antes de escrever, e `tools/verify-backup.cjs` restaura o dump num banco separado e confere tabela por tabela — **56 verificações, 0 falhas**. Roteiro na seção 8 de `docs/PRODUCAO.md`, decisão em `docs/adr/0019-backup-com-mysqldump-dentro-do-container-e-restauracao-conferida.md`. O que fica declarado fora: agenda própria e cópia off-site (N71) |
 | CI / quality gate | **Não iniciado** | não existe `.github/` nem script de lint |
 
 ---

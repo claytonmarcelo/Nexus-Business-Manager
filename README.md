@@ -604,12 +604,18 @@ importa só o CSS do AdminLTE) e `sweetalert2` (substituído pelo diálogo de co
     ANALISE-LACUNAS.md         lacunas contra o PROMPT MESTRE de 67 seções
     AUDITORIA.md               auditoria comercial: achados por severidade e o que foi feito de cada um
     STATUS-AJUSTES.md          situação de cada tarefa do prompt de mercado, com a prova apontada
+    PRODUCAO.md                a ordem de subida de uma instalação real: pilha Docker, migrations, bootstrap,
+                               logs e o backup com restauração testada
     decisoes/                  G1 a G6 e G8 — SMTP, cobrança, fiscal, cadastro aberto, hospedagem,
                                licença e o administrador da plataforma
     adr/                       0001 persistência única · 0002 multiempresa e RBAC · 0003 AdminLTE + design
                                system · 0004 rodapé único · 0005 semente sem demonstração · 0006 bootstrap do
                                administrador · 0007 escopo da auditoria · 0008 ordem de serviço baixa estoque na
-                               conclusão · 0009 cobrança manual, receita única e "vencida" lida
+                               conclusão · 0009 cobrança manual, receita única e "vencida" lida · 0010 banco de
+                               prova separado · 0011 casa que abre no login · 0012 motivo escrito para cancelar ·
+                               0013 autenticação reforçada · 0014 code splitting · 0015 alvo de toque · 0016 tema ·
+                               0017 pilha de prova com porta própria · 0018 produção em container com uma porta ·
+                               0019 backup com restauração conferida
     design/palette.md          paleta oficial extraída da logo
     screenshots/               as capturas desta página
   tools/                       provas de navegador, recaptura de telas e utilitários do repo
@@ -770,6 +776,9 @@ npm run db:prova              # banco de prova: cria nexusbusinessmanager_teste,
 | `npm run docker:admin` | o mesmo `admin:criar` de cima, atravessando o container |
 | `npm run docker:logs` | as últimas 40 linhas da API no stdout |
 | `npm run docker:provar` | a régua da topologia (`tools/verify-docker.cjs`): 29 verificações — sem a pilha de pé ela devolve `NAO VERIFICADO` em vez de fechar verde pela metade |
+| `npm run docker:backup` | dump do banco do container (`deploy/backup-mysql.cjs`): `mysqldump` rodando **dentro** do container, gzip, `.sha256` e `.meta.json` ao lado, e retenção 7 diários / 4 semanais / 12 mensais fora do repositório (`--simulacao` mostra o que faria) |
+| `npm run docker:restaurar` | despeja um dump (`deploy/restaurar-mysql.cjs`): confere hash, schema reservado e banco não vazio **antes** de escrever; `--criar` para banco novo, `--aceito-sobrepor` para por cima |
+| `npm run docker:provar-backup` | a régua do backup (`tools/verify-backup.cjs`): 56 verificações — recusas medidas, as propriedades da retenção, e a restauração conferida tabela por tabela num banco separado que ela apaga no fim |
 
 ### Produção
 
@@ -803,7 +812,10 @@ reativar uma conta desativada exigem, cada um, o seu consentimento escrito (`ADM
 decisão em `docs/adr/0006-bootstrap-do-administrador-da-plataforma.md`. A pilha de instalação existe e é medida: `Dockerfile.api`,
 `Dockerfile.web`, `docker-compose.yml` e `deploy/nginx-painel.conf` descrevem a topologia em que o painel é a
 única porta aberta no host, e o MySQL e a API não publicam porta nenhuma — o tráfego da API entra pelo painel,
-pela rede interna do compose. O pipeline de CI ainda não está no repositório (F8), e a escolha de hospedagem é
+pela rede interna do compose. O banco dessa pilha tem backup com restauração conferida (`npm run docker:backup`,
+`docker:restaurar` e a régua de 56 verificações `docker:provar-backup`), com o roteiro na seção 8 de
+`docs/PRODUCAO.md` e a decisão em `docs/adr/0019-backup-com-mysqldump-dentro-do-container-e-restauracao-conferida.md`;
+repetir o comando em agenda e copiar para fora da máquina são decisões de instalação (N71). O pipeline de CI ainda não está no repositório (F8), e a escolha de hospedagem é
 do dono (`docs/decisoes/G5-hospedagem-e-backup.md`); a decisão de topologia está em
 `docs/adr/0018-producao-em-container-com-uma-porta.md`.
 
@@ -1052,6 +1064,7 @@ O detalhamento está em [`CHANGELOG.md`](CHANGELOG.md) (Keep a Changelog, mais n
 | `agora → T1` | As provas e os testes ganharam banco próprio (`nexusbusinessmanager_teste`, declarado em `DATABASE_URL_TESTE`): `npm run db:prova` monta e semeia, `npm run dev:api:teste` sobe a API nele, e toda `tools/verify-*.cjs` confere o servidor pelo login antes de abrir o navegador — servidor no banco errado é HTTP 401 com a instrução do comando. Medido com `diff` tabela por tabela: o banco de desenvolvimento saiu idêntico da rodada inteira (541 usuários, 45 empresas, 2.186 sessões, 67.722 auditorias) enquanto o de prova crescia. Suíte em 354 + 77, e a cadeia de migrations abriu o achado N54 (em MySQL zerado ela para na segunda migration) |
 | `T1 → T2` | Duas decisões do dono viraram código. A casa que abre no login deixou de ser sorteio do índice: **pedida > lembrada (`users.last_company_id`) > vínculo mais antigo**, com desempate por `createdAt` e `id`, lembrança escrita por `switch-company` e respeitada pelo refresh (ADR-0011). E cancelar ordem, estornar ordem concluída e cancelar cobrança passaram a exigir **motivo escrito** em diálogo novo e aditivo (`confirmActionComMotivo`, ADR-0012) — sem motivo nada sai pela rede, e o texto digitado sobrevive ao erro da rota. Provas de navegador em 107 e 137 checagens, suíte em 361 + 79 |
 | `T2 → T3` | A F4 inteira (D1, D2, D3): porta `MailerPort` com SMTP real, console fora de produção e caixa em memória na suíte; verificação de cadastro atrás de `REQUIRE_EMAIL_VERIFICATION`, com a tela pública `/verificar-e-mail`; segundo fator TOTP com segredo cifrado em repouso (AES-256-GCM) e dez códigos de recuperação guardados só em hash; bloqueio por conta que não entrega no tempo se o endereço existe; destino pós-login aceito apenas como caminho interno. A superfície foi de 120 para **129 rotas**, as tabelas de 32 para 35, e a suíte para **434 + 87** (ADR-0013) |
+| `T4 → T5` | A operação começou a existir fora da máquina do dono. A pilha de prova ganhou porta própria (3002/5174) e a 3001/5173 deixou de ser disputada (N65, ADR-0017), a **pilha Docker** nasceu com quatro serviços e **uma única porta publicada** — MySQL e API sem porta nenhuma no host, painel servindo `/api` por proxy na mesma origem (29 verificações, ADR-0018) — e o **backup do banco passou a ter restauração testada**: `mysqldump` dentro do container, gzip com `.sha256` e `.meta.json`, retenção GFS 7/4/12 com semana ISO, e a régua que restaura num banco separado e confere tabela por tabela antes de chamar aquilo de backup (56 verificações, ADR-0019). A suíte continua em **437 + 140**; o que falta da T5 é e-mail fora do request (N58), o chamador do sino (N59) e a porta administrativa de confirmação (N61) |
 | `T3 → T4` | A F5 inteira. Cinco listas pararam de aceitar resposta atrasada (N51), a tela de entrada zerou a senha nos três momentos em que ela sobrava — envio recusado, desmontagem e `pageshow` do histórico — e ganhou rótulo associado de verdade (Problema C). O painel passou a escrever `data-bs-theme` no `<html>` que o Bootstrap 4 lê (N7), a casa ganhou `ErrorBoundary` na raiz e por rota com registro do erro, e o `npm run verify` abriu a fumaça: **63 telas** percorridas no navegador, com HTTP, conteúdo montado e zero erro de console. As duas telas novas da F4 saíram dos 0% de cobertura (N62), o JavaScript deixou de ser um arquivo só — **964,31 kB / 283,61 kB gzip viraram 354,85 kB / 121,62 kB em 37 pedaços**, com a Agenda carregando a pé (D8, ADR-0014) — e a acessibilidade ganhou régua: **22 checagens, 0 falhas** em rótulo, foco, teclado, movimento reduzido e alvo de toque (ADR-0015). A suíte fechou em **437 + 140** |
 
 ---

@@ -1,8 +1,8 @@
 # Produção — como uma instalação deste produto nasce
 
 Este arquivo é o caminho de subida de uma instalação real do Nexus Business Manager. A F1.4 escreveu a
-primeira metade — a parte que decide quem manda na plataforma — e a F6 (T5.1, 2026-10-14) escreveu o resto
-no mesmo lugar: a pilha Docker, a porta do banco fechada e o que foi medido nela. O que está aqui foi
+primeira metade — a parte que decide quem manda na plataforma — e a F6 (T5.1 e T5.2, 2026-10-14) escreveu o resto
+no mesmo lugar: a pilha Docker, a porta do banco fechada, o backup com restauração testada e o que foi medido nelas. O que está aqui foi
 executado nesta máquina com Docker 29.6.2 e MySQL 8.4 em container; nada é promessa de comportamento que o
 repositório ainda não tenha. O que ainda não existe está declarado no fim do arquivo, com a tarefa que o
 traz.
@@ -229,7 +229,107 @@ O que existe hoje, medido no stdout da pilha (não é descrição do que se deve
 backup da seção 45 do prompt (próxima tarefa da T5), que é quem decide quanto tempo uma instalação guarda o
 próprio histórico.
 
-## 8. Depois da primeira subida
+## 8. Backup e restauração (seção 45 do prompt, regra 1 do G5)
+
+A decisão `docs/decisoes/G5-hospedagem-e-backup.md` deixou a regra escrita: **backup que nunca foi restaurado
+é desejo, não plano**. Por isso esta tarefa tem três peças, e não uma:
+
+- `deploy/backup-mysql.cjs` faz o dump;
+- `deploy/restaurar-mysql.cjs` despeja o dump;
+- `tools/verify-backup.cjs` restaura o dump num banco separado e confere as contagens tabela por tabela antes
+  de qualquer uma das duas poder ser chamada de backup.
+
+### Como se roda
+
+| Comando | O que faz |
+| --- | --- |
+| `npm run docker:backup` | dump + gzip + retenção na pasta de backup |
+| `npm run docker:backup -- --simulacao` | diz destino, banco e o arquivo que seria escrito; não escreve nada |
+| `npm run docker:backup -- --dest <pasta-fora-do-repositorio>` | mesma coisa em outra pasta |
+| `npm run docker:backup -- --limite-diarios 14 --limite-semanais 8 --limite-mensais 24` | muda a janela; `--sem-retencao` desliga o corte |
+| `npm run docker:restaurar -- --arquivo <pasta-de-backup>/nexus-mysql--AAAA-MM-DD--HHMMSS.sql.gz --banco <nome> --criar` | restaura num banco que ainda não existe |
+| `npm run docker:restaurar -- --arquivo <pasta-de-backup>/nexus-mysql--AAAA-MM-DD--HHMMSS.sql.gz --banco <nome> --aceito-sobrepor` | derruba as tabelas do alvo antes de despejar |
+| `npm run docker:provar-backup` | a régua: 56 verificações (12 de recusa, 13 de retenção, 31 de dump e restauração reais) |
+
+As três peças falam com o MySQL **do container**, por `docker compose exec`, e não por porta nenhuma: a régua
+mede no container de pé que o serviço `mysql` não publica porta alguma no host, então não existe socket por
+onde um dump pudesse ler o MySQL da máquina. A pilha precisa estar de pé (`npm run docker:subir`).
+
+### O que sai de um dump
+
+Cada execução escreve três arquivos do mesmo lado:
+
+```
+nexus-mysql--2026-10-14--164801.sql.gz     o dump gzipado
+nexus-mysql--2026-10-14--164801.sha256     o sha256 do arquivo .sql.gz que está no disco
+nexus-mysql--2026-10-14--164801.meta.json  banco, tabelas, linhas, bytes, duração, sha256, versão do mysqldump
+```
+
+A linha real medida nesta rodada: `35 tabela(s), 24 linha(s), 9 kB gzip em 1683 ms` no banco
+`nexusbusinessmanager` da pilha Docker. O `meta.json` guarda os números da hora em que o dump foi feito; é com
+ele que a régua confere "a pilha responde o mesmo número de tabelas que o meta conta", em vez de confiar em
+memória. O nome do arquivo é a data e a hora locais, e o destino padrão é `~/nexus-business-manager/backups`
+(ou `NEXUS_BACKUP_DIR`) — nunca dentro do repositório.
+
+O dump é escrito **sem `--databases`**: não contém `CREATE DATABASE` nem `USE`. É exatamente isso que permite
+restaurar o mesmo arquivo num banco de outro nome, que é o formato da prova de restauração.
+
+### A senha nunca sai do container
+
+`mysqldump` e `mysql` rodam *dentro* do container `mysql`, lendo `MYSQL_PWD` de `$MYSQL_ROOT_PASSWORD` do
+ambiente do próprio container. A linha de comando do host nunca vê a senha, os sidecar e o meta não a contêm,
+e nenhuma das três peças imprime valor de segredo: o que aparece é nome de banco, de arquivo, de tabela e
+contagem.
+
+### A retenção corta o que a política manda
+
+7 diários, 4 semanais e 12 mensais (esquema GFS), com a semana contada como **semana ISO** — não como bloco de
+sete dias corridos. `planejarRetencao(nomes, agora, limites)` é função pura, e a régua confere as propriedades
+dela numa série de 45 arquivos sintéticos:
+
+- os sete diários mais recentes ficam, e todo arquivo recebe exatamente um veredito (não sobra, não duplica);
+- em cada nível e cada bucket fica no máximo um arquivo — **dois dumps no mesmo dia são um bucket só**, e o
+  mais velho sai junto do sidecar e do meta;
+- arquivo de 300 dias ainda é mensal; de 400 dias sai;
+- a retenção **nunca deixa a pasta sem nenhum backup**: se tudo coubesse fora da janela, o mais recente fica
+  com o motivo `ultimo`;
+- arquivo fora do padrão (`README.txt`, dump de outra época) não é mantido nem apagado;
+- cada arquivo que sai responde por quê na linha do operador: `repetido-no-bucket` para quem perdeu o bucket
+  do dia ou da semana, `fora-da-janela` para quem não cabe em nível nenhum (medido: `retencao apagou
+  nexus-mysql--2026-10-14--171045.sql.gz (repetido-no-bucket)`).
+
+### As recusas, medidas antes de escrever
+
+| Situação | O que acontece |
+| --- | --- |
+| destino dentro do repositório | código 1, diz que o destino tem de ficar fora do repositório, e o diretório proibido não é criado |
+| `--arquivo` que não existe | código 1 |
+| schema reservado do MySQL (`mysql`, `information_schema`, `performance_schema`, `sys`) | código 1, e a frase fala do schema reservado |
+| hash do arquivo diferente do sidecar | código 1 **antes** de tocar em banco qualquer |
+| banco alvo com tabelas, sem `--aceito-sobrepor` | código 1, com `o banco "X" ja tem N tabela(s) e nao esta vazio` |
+| banco da instalação da pilha, sem aceite | código 1 — a régua confere este caso de propósito, porque é o que impede um `restaurar` distraído de apagar uma produção |
+
+### Restauração de emergência, na ordem
+
+1. `npm run docker:subir` — o alvo é o MySQL do container, então a pilha tem de estar de pé;
+2. `npm run docker:restaurar -- --arquivo <pasta-de-backup>/nexus-mysql--AAAA-MM-DD--HHMMSS.sql.gz --banco nexusbusinessmanager --aceito-sobrepor`;
+3. ler as contagens que a própria ferramenta imprime no fim (tabelas e linhas por tabela);
+4. `npm run docker:provar` e `npm run docker:provar-backup` para as réguas dizerem se a pilha continua honesta.
+
+Para *conferir* sem risco, o caminho é o da régua: restaurar com `--banco <outro_nome> --criar`, comparar as
+contagens com o `meta.json`, e derrubar o banco de conferência depois.
+
+### O que ainda não está aqui
+
+Não existe agenda embutida: `docker:backup` é um comando, e quem o repete é o cron/Agendador de Tarefas da
+máquina. O executor de rotinas do painel não serve para isso — ele roda dentro do container da API e não tem
+como chamar `docker` nem escrever na pasta do host. Cópia para fora da máquina (off-site) também não existe;
+o que existe é o dump lógico, o hash e a restauração testada. E não há arquivos de upload do produto para
+proteger: o produto não aceita upload em disco (`apps/api/src/modules/companies/companies.schemas.ts` exige
+endereço `http(s)` para o logo), então o backup de hoje é o banco, e é isso que a régua prova.
+
+
+## 9. Depois da primeira subida
 
 - **Trocar a senha do administrador**: pelo painel, em *Minha conta* (a troca derruba as outras sessões), ou
   reexecutando o bootstrap com `ADMIN_CRIAR_RENOVAR_SENHA=1`.
@@ -241,14 +341,13 @@ próprio histórico.
   literal atribuído a `SEED_ADMIN_PASSWORD`, `SEED_DEV_PASSWORD`, `NEXUS_CAPTURA_SENHA` e `ADMIN_CRIAR_SENHA`
   em qualquer arquivo rastreado.
 
-## 9. O que ainda não está aqui
+## 10. O que ainda não está aqui
 
-- **Backup** do volume `nexus-mysql` e o roteiro de restauração — seção 45 do prompt, próxima tarefa da T5.
 - **Entrega de e-mail fora do request** (N58), **chamador de e-mail do sino e do relatório diário** (N59) e
   **porta administrativa de confirmação de e-mail** (N61) — ainda na T5.
 - **Pipeline de CI, `npm audit`, portões de cobertura, `postinstall` do Prisma e o conserto da cadeia de
   migrations para clone limpo** (N54) — F8 (T7).
-- **Política de logs com rotação e retenção** — vem amarrada ao backup, não decidida sozinha. O nível de log de
-  produção (N69, seção 7) está na mesma conta.
+- **Política de logs com rotação e retenção** — o backup do banco existe desde a T5.2, a rotação de log ainda não.
+  O nível de log de produção (N69, seção 7) está na mesma conta.
 - **Hospedagem recomendada**: não existe no repositório, e a decisão é do dono
   (`docs/decisoes/G5-hospedagem-e-backup.md`).
