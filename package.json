@@ -35,7 +35,10 @@
     "docker:migrar": "docker compose exec -T api node_modules/.bin/prisma migrate deploy --schema apps/api/prisma/schema.prisma",
     "docker:admin": "docker compose exec -T api npm run admin:criar --workspace @nexus/api",
     "docker:logs": "docker compose logs --tail=40 api",
-    "docker:provar": "node tools/verify-docker.cjs"
+    "docker:provar": "node tools/verify-docker.cjs",
+    "docker:backup": "node deploy/backup-mysql.cjs",
+    "docker:restaurar": "node deploy/restaurar-mysql.cjs",
+    "docker:provar-backup": "node tools/verify-backup.cjs"
   },
   "devDependencies": {
     "puppeteer-core": "^25.13.0"
