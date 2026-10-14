@@ -1,3 +1,5 @@
+import { esquecaEMailLembrado } from "./lembranca";
+
 // Armazena o access token apenas em memória (reduz superfície de XSS) e o
 // refresh token em localStorage para sobreviver ao reload. Decisão documentada (seção 33).
 // A chave é exportada porque o AuthContext escuta o evento "storage" dela: é
@@ -55,5 +57,10 @@ export const tokenStore = {
     } catch {
       /* noop */
     }
+    // F5 (Problema C): apagar a sessao deste navegador apaga tambem o e-mail que
+    // o "lembrar de mim" guardava. Os sete caminhos de fim de sessao — botao sair,
+    // 401 de negocio, renovacao morta, logout em outra aba, bootstrap — passam por
+    // aqui, entao nenhum deles deixa a identidade para tras.
+    esquecaEMailLembrado();
   },
 };

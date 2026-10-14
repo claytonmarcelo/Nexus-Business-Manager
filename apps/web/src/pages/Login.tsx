@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Logo } from "../components/Logo";
 import { ThemeToggle } from "../components/ThemeToggle";
@@ -9,8 +9,7 @@ import { extractErrorMessage } from "../lib/api";
 import { validateEmail, validateRequired } from "../lib/validators";
 import { destinoSeguro } from "../lib/destino";
 import { prepararPeloTokenDeEtapa } from "../lib/segundoFator";
-
-const REMEMBER_KEY = "nexus.remember.email";
+import { esquecaEMailLembrado, graveEMailLembrado, leiaEMailLembrado } from "../lib/lembranca";
 
 // F4 (D3): a tela de entrada tem quatro passos, e não um formulário só.
 //
@@ -57,16 +56,45 @@ export function Login() {
   const [codigo, setCodigo] = useState("");
   const [codigosDeRecuperacao, setCodigosDeRecuperacao] = useState<string[]>([]);
 
+  // F5 (Problema C): a referencia ao no do campo de senha existe para uma coisa
+  // só — apagar o que esta escrito ali. O estado sozinho nao basta: o navegador
+  // pode guardar a pagina no historico (bfcache) e devolve-la com o campo
+  // preenchido exatamente como a pessoa deixou.
+  const campoSenha = useRef<HTMLInputElement | null>(null);
+
+  function zereSenha(no?: HTMLInputElement | null) {
+    setPassword("");
+    // Na desmontagem o React ja desprendeu a referencia do no, entao quem limpa
+    // precisa chegar com o no na mao — foi por isso que a tela o guarda em cima.
+    const alvo = no ?? campoSenha.current;
+    if (alvo) alvo.value = "";
+  }
+
   useEffect(() => {
-    try {
-      const salvo = localStorage.getItem(REMEMBER_KEY);
-      if (salvo) {
-        setRememberedEmail(salvo);
-        setRemember(true);
-      }
-    } catch {
-      /* storage indisponível */
+    const salvo = leiaEMailLembrado();
+    if (salvo) {
+      setRememberedEmail(salvo);
+      setRemember(true);
     }
+    // O formulario monta sempre vazio: o e-mail lembrado fica no navegador e e
+    // usado em silencio, e a senha comeca zerada. O no e capturado aqui porque na
+    // desmontagem o React ja tera desprendido a referencia — sem ele nao haveria
+    // campo para limpar.
+    const no = campoSenha.current;
+    zereSenha(no);
+
+    // "Voltar" no navegador reusa este mesmo documento. Sem escutar a pageshow
+    // persistida, a senha digitada antes de sair voltaria escrita na tela.
+    const aoRetomar = (evento: PageTransitionEvent) => {
+      if (evento.persisted) zereSenha();
+    };
+    window.addEventListener("pageshow", aoRetomar);
+    return () => {
+      window.removeEventListener("pageshow", aoRetomar);
+      // Desmontar tambem zera: quem sai da tela nao deixa a senha no documento
+      // que o navegador ainda pode guardar.
+      zereSenha(no);
+    };
   }, []);
 
   // E-mail efetivo: o digitado tem prioridade; se o campo estiver vazio usamos o lembrado.
@@ -106,12 +134,10 @@ export function Login() {
     setSubmitting(true);
     try {
       const resultado = await login(effectiveEmail, password);
-      try {
-        if (remember) localStorage.setItem(REMEMBER_KEY, effectiveEmail);
-        else localStorage.removeItem(REMEMBER_KEY);
-      } catch {
-        /* noop */
-      }
+      // So depois de a credencial passar e que o navegador pode lembrar o e-mail.
+      // A senha nunca escreve em lugar nenhum — ver lib/lembranca.ts.
+      if (remember) graveEMailLembrado(effectiveEmail);
+      else esquecaEMailLembrado();
       if (resultado.estado === "sessao") {
         entrarNoPainel();
         return;
@@ -131,6 +157,10 @@ export function Login() {
     } catch (err) {
       setError(extractErrorMessage(err, "Não foi possível entrar."));
       setSubmitting(false);
+    } finally {
+      // F5 (Problema C): entrada aceita ou recusada, a senha digitada nao continua
+      // no campo nem no estado da tela.
+      zereSenha();
     }
   }
 
@@ -221,8 +251,13 @@ export function Login() {
         {etapa === "credenciais" ? (
           <form onSubmit={onSubmit} className="auth-form" noValidate>
             <div className="field">
-              <span className="field-label">E-mail</span>
+              {/* F5 (Problema C): rotulo associado (item 7) e identificadores
+                  neutros — sem "email", "user" ou "login" no name/id, para o
+                  gerenciador de senhas do navegador nao reconhecer o campo. */}
+              <label className="field-label" htmlFor="nx-campo-1">E-mail</label>
               <input
+                id="nx-campo-1"
+                name="nx-campo-1"
                 type="email"
                 className={"neu-input" + (errors.email ? " is-error" : "")}
                 autoComplete="off"
@@ -238,7 +273,16 @@ export function Login() {
             </div>
 
             <div className="field">
-              <PasswordInput label="Senha" value={password} onChange={(v) => { setPassword(v); if (errors.password) setErrors((x) => ({ ...x, password: null })); }} autoComplete="current-password" inputClassName={"neu-input" + (errors.password ? " is-error" : "")} />
+              <PasswordInput
+                label="Senha"
+                id="nx-campo-2"
+                name="nx-campo-2"
+                inputRef={campoSenha}
+                value={password}
+                onChange={(v) => { setPassword(v); if (errors.password) setErrors((x) => ({ ...x, password: null })); }}
+                autoComplete="new-password"
+                inputClassName={"neu-input" + (errors.password ? " is-error" : "")}
+              />
               {errors.password && <span className="field-error">{errors.password}</span>}
             </div>
 

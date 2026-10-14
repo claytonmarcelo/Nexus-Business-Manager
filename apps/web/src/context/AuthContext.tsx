@@ -103,8 +103,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const encerrar = useCallback((motivo: FimDeSessao) => {
     if (statusRef.current !== "authenticated") return;
     fimRef.current = motivo;
-    // clear() remove só o refresh token e o pulso da manutenção: preferências
-    // deste navegador, como o tema escolhido, continuam no lugar.
+    // clear() remove o refresh token, o pulso da manutenção e o e-mail lembrado do
+    // "lembrar de mim" (F5, Problema C). Preferências deste navegador, como o tema
+    // escolhido, continuam no lugar.
     tokenStore.clear();
     setUser(null);
     aplicaStatus("anonymous");

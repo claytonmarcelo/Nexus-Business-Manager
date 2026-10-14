@@ -93,8 +93,9 @@ function monteLogin(rotas: Rota[], estadoDeRota?: unknown): Chamada[] {
 
 function preenchaERode(email: string, senha: string) {
   fireEvent.change(screen.getByPlaceholderText("seu@email.com"), { target: { value: email } });
-  // O `PasswordInput` escreve o rótulo como `<span>`, não como `<label htmlFor>`:
-  // quem procura pelo texto não acha o campo. A régua aqui é o tipo do próprio input.
+  // A régua aqui é o tipo do próprio input — a mesma que um gerenciador de senhas
+  // usaria. O rótulo passou a ser `<label htmlFor>` (F5, item 7), mas se a pessoa
+  // ligar o "olho" o campo vira `type="text"`, e o teste continuaria acertando.
   const campo = document.querySelector('input[type="password"]');
   if (!campo) throw new Error("a tela de entrada não tem campo de senha");
   fireEvent.change(campo, { target: { value: senha } });
