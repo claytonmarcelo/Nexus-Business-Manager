@@ -1,0 +1,78 @@
+# syntax=docker/dockerfile:1
+#
+# F6 (T5.1) — a API dentro de um container, do jeito que a casa constrói: o mesmo
+# `npm run build` de sempre, só que executado dentro da imagem.
+#
+# Etapas declaradas em ordem porque a leitura da imagem faz parte da prova: quem revisa
+# precisa ver que o fonte não está apenas jogado num node:20, e que o `npm ci` roda antes
+# do CÓPIA do código para a cache de dependência sobreviver à mudança de uma linha num
+# serviço.
+#
+# A etapa final leva as devDependencies da API e não o `--omit=dev`, e a razão é de operação: os
+# três scripts que um deploy precisa ter em mão nesta casa (aplicar migration, semear e o
+# bootstrap do administrador da plataforma) estão em TypeScript e dependem de `prisma` e
+# `tsx`, que são devDependencies do workspace. Uma imagem que não consegue aplicar a própria
+# migration pede um segundo container só para existir — e aí a topologia deixa de ser a que
+# está descrita em docs/PRODUCAO.md. O que fica de fora é o toolchain do painel: o `npm ci` é
+# filtrado pelo workspace da API, e medir isso foi o que tirou 95 MB da imagem (969 MB com a
+# árvore inteira do monorepo, 874 MB com o filtro; `docker images`, nesta máquina).
+
+# ---------------------------------------------------------------- 1) dependências
+FROM node:20-bookworm-slim AS dependencias
+WORKDIR /app
+# Só os três manifestos: qualquer mudança de fonte nesta fase não invalida o npm ci.
+COPY package.json package-lock.json ./
+COPY apps/api/package.json apps/api/
+COPY apps/web/package.json apps/web/
+RUN npm ci --workspace @nexus/api --include-workspace-root
+
+# ---------------------------------------------------------------- 2) cliente Prisma + compilação
+FROM node:20-bookworm-slim AS compilacao
+# openssl instalado AQUI, antes do generate. O `node:20-bookworm-slim` não traz nem o binário
+# nem a biblioteca (medido nesta máquina: `openssl version` responde "not found" e
+# /usr/lib/x86_64-linux-gnu/libssl* não existe). Sem openssl no sistema, o `prisma generate`
+# escolhe o engine `debian-openssl-1.1.x`; a etapa final tem libssl3, procura
+# `debian-openssl-3.0.x` e o processo morre em `PrismaClientInitializationError` antes de ouvir
+# a porta — foi exatamente o que a primeira subida desta pilha produziu.
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends openssl ca-certificates \
+ && rm -rf /var/lib/apt/lists/*
+WORKDIR /app
+COPY --from=dependencias /app/node_modules ./node_modules
+COPY package.json package-lock.json ./
+COPY apps/api ./apps/api
+COPY deploy ./deploy
+COPY apps/web/package.json ./apps/web/
+RUN npm run prisma:generate --workspace @nexus/api \
+ && npm run build --workspace @nexus/api
+
+# ---------------------------------------------------------------- 3) execução
+FROM node:20-bookworm-slim AS execucao
+# A biblioteca continua necessária aqui: é ela que o engine do Prisma carrega em tempo de
+# execução, e é o certificado de CA que a conexão TLS com o MySQL verifica.
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends openssl ca-certificates \
+ && rm -rf /var/lib/apt/lists/*
+
+ENV NODE_ENV=production \
+    PORT=3001 \
+    HOST=0.0.0.0
+
+WORKDIR /app
+COPY --from=compilacao --chown=node:node /app /app
+# Nada de root dentro do container: se o processo vaza, não leva a máquina junto.
+USER node
+
+EXPOSE 3001
+
+# O healthcheck prova que o processo atende e que a rota de monitoração existe. O corpo da
+# resposta ("db": "up") é conta da pilha inteira, conferido depois das migrations por
+# tools/verify-docker.cjs — um container que nasce antes da primeira migration não é um
+# container doente, é um container esperando o deploy.
+HEALTHCHECK --interval=15s --timeout=5s --start-period=30s --retries=4 \
+  CMD ["node","-e","fetch('http://127.0.0.1:3001/api/health').then((r)=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+
+# apps/api/dist/src/server.js é o caminho que o `tsc` produz (rootDir "." no tsconfig, então
+# a árvore src/ se repete dentro de dist/). O atalho dist/server.js que estava no manifesto
+# nunca existiu — é o achado N67, fechado nesta tarefa.
+CMD ["node","apps/api/dist/src/server.js"]

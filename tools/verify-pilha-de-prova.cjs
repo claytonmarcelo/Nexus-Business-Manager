@@ -124,7 +124,7 @@ const ferramentas = fs
   .readdirSync(TOOLS)
   .filter((n) => /^(verify|shoot|audit)-.*\.cjs$/.test(n) && !FORA_DA_REGUA.has(n))
   .sort();
-confere(ferramentas.length >= 34, "a lista de ferramentas sob a regua esta completa (medido nesta rodada: 34)", ferramentas.length + " arquivos");
+confere(ferramentas.length >= 35, "a lista de ferramentas sob a regua esta completa (medido nesta rodada: 35)", ferramentas.length + " arquivos");
 
 const quebradas = [];
 for (const nome of ferramentas) {

@@ -1,0 +1,146 @@
+# F6 (T5.1) — a topologia de produção em quatro serviços, e uma única porta no host.
+#
+# Por que este arquivo existe: até aqui a casa só tinha topologia de desenvolvimento — `npm run dev`
+# (produto, 3001/5173) e `npm run dev:prova` (prova, 3002/5174, decisão da T5.0). Os dois são janelas
+# de trabalho. Uma instalação de produto quer outra coisa: um banco que ninguém de fora alcança, um
+# processo de API que não precisa ser dono de porta nenhuma, e um painel servido por um servidor
+# estático que faz o proxy de `/api` com a mesma origem. É o que está descrito abaixo, e o que a
+# régua `tools/verify-docker.cjs` confere.
+#
+# A regra que manda no arquivo inteiro: NENHUMA credencial tem valor aqui. Todo segredo vem do `.env`
+# da máquina (ignorado pelo git), e a ausência dele faz o `docker compose config` recusar com o nome
+# da variável faltando — nunca subir com valor de exemplo. A régua A9 (`apps/api/src/config/producao.ts`)
+# confere o mesmo conjunto quando o processo nasce: segredo curto, CORS de localhost, root sem senha,
+# SMTP ausente e segundo fator sem chave derrubam a API antes da primeira requisição.
+#
+# O `.env` da máquina não basta sozinho: produção exige nome de domínio real em `CORS_ORIGIN` e
+# `WEB_BASE_URL` (https). O modelo `.env.docker.example` no repositório explica o que preencher. Sem
+# domínio, a pilha sobe com `NEXUS_NODE_ENV=development` para inspeção local — e inspeção local não é
+# produção.
+
+name: nexus-business-manager
+
+# Ambiente da API, escrito uma vez e emprestado a dois serviços: a API e o job de migrations falam com
+# o mesmo banco, e duplicar a string de conexão é duplicar segredo em arquivo.
+x-ambiente-api: &ambiente-api
+  NODE_ENV: ${NEXUS_NODE_ENV:-production}
+  PORT: "3001"
+  HOST: "0.0.0.0"
+  # A conta da aplicação, nunca o root: a régua de produção recusa root sem senha, e privilégio
+  # limitado é o que torna o vazamento de uma string de conexão um problema de um banco só.
+  DATABASE_URL: mysql://${MYSQL_USER:?}:${MYSQL_PASSWORD:?}@mysql:3306/${MYSQL_DATABASE:?}
+  CORS_ORIGIN: ${CORS_ORIGIN:?defina CORS_ORIGIN no .env da maquina}
+  JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET:?defina JWT_ACCESS_SECRET no .env da maquina}
+  JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:?defina JWT_REFRESH_SECRET no .env da maquina}
+  JWT_ACCESS_TTL: ${JWT_ACCESS_TTL:-15m}
+  JWT_REFRESH_TTL: ${JWT_REFRESH_TTL:-7d}
+  RATE_LIMIT_MAX: ${RATE_LIMIT_MAX:-100}
+  RATE_LIMIT_WINDOW_MS: ${RATE_LIMIT_WINDOW_MS:-60000}
+  # O nginx deste arquivo é o proxy imediato. Sem proxy na frente o X-Forwarded-For é forjável, e o IP
+  # da auditoria, do rate-limit e do modo de manutenção mentiriam juntos.
+  TRUST_PROXY: "1"
+  BODY_LIMIT_BYTES: ${BODY_LIMIT_BYTES:-1048576}
+  CRON_ENABLED: ${CRON_ENABLED:-1}
+  SUPER_ADMIN_EMAIL: ${SUPER_ADMIN_EMAIL:?defina SUPER_ADMIN_EMAIL no .env da maquina}
+  REQUIRE_EMAIL_VERIFICATION: ${REQUIRE_EMAIL_VERIFICATION:-1}
+  AUTH_EXPOSE_RESET_TOKEN: "0"
+  TOTP_ENCRYPTION_KEY: ${TOTP_ENCRYPTION_KEY:?defina TOTP_ENCRYPTION_KEY no .env da maquina}
+  MAIL_TRANSPORT: ${MAIL_TRANSPORT:-smtp}
+  SMTP_HOST: ${SMTP_HOST:?defina SMTP_HOST no .env da maquina}
+  SMTP_PORT: ${SMTP_PORT:-587}
+  SMTP_USER: ${SMTP_USER:-}
+  SMTP_PASS: ${SMTP_PASS:-}
+  SMTP_SECURE: ${SMTP_SECURE:-}
+  MAIL_FROM: ${MAIL_FROM:?defina MAIL_FROM no .env da maquina}
+  WEB_BASE_URL: ${WEB_BASE_URL:?defina WEB_BASE_URL no .env da maquina}
+
+services:
+  # ------------------------------------------------------------------ banco
+  # Sem a seção `ports`, de propósito. O MySQL escuta na rede interna do compose e mais ninguém: nem o
+  # navegador de quem trabalha, nem um script na máquina, nem um scanner de porta na internet. A única
+  # trilha até os dados passa pela API, que tem autenticação, RBAC, isolamento por empresa e auditoria
+  # na frente. É a resposta de topologia ao 3306 aberto que a casa já teve (docs/PRODUCAO.md, seção 2).
+  mysql:
+    image: mysql:8.4
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?defina MYSQL_ROOT_PASSWORD no .env da maquina}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:?defina MYSQL_DATABASE no .env da maquina}
+      MYSQL_USER: ${MYSQL_USER:?defina MYSQL_USER no .env da maquina}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:?defina MYSQL_PASSWORD no .env da maquina}
+    volumes:
+      - nexus-mysql:/var/lib/mysql
+    healthcheck:
+      # `$$` é o escape do compose: o valor é lido dentro do container e não aparece no
+      # `docker compose config` impresso. Nenhum segredo é escrito em log por esta casa.
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -u root --password=\"$$MYSQL_ROOT_PASSWORD\" --silent"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 40s
+    restart: unless-stopped
+
+  # ------------------------------------------------------------------ migrations (job de uma passagem)
+  # Existe para a pilha subir com um comando só numa instalação nova. Sem ele, o ciclo é
+  # galinha-ovo: o healthcheck da API responde 500 enquanto o banco não tem tabela (o plugin de
+  # manutenção consulta o CMS a cada requisição), a API fica "unhealthy" e o painel, que depende dela
+  # saudável, nunca nasce. O job roda a mesma imagem da API, aplica as migrations e termina com 0.
+  migracoes:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    image: nexus-api:local
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment: *ambiente-api
+    command: ["node", "deploy/preparar-banco-de-dados.cjs"]
+    restart: "no"
+
+  # ------------------------------------------------------------------ api
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    image: nexus-api:local
+    depends_on:
+      mysql:
+        condition: service_healthy
+      migracoes:
+        condition: service_completed_successfully
+    environment: *ambiente-api
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3001/api/health').then((r)=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 15s
+      timeout: 5s
+      retries: 4
+      start_period: 30s
+    restart: unless-stopped
+    # Sem `ports`, também de propósito: a API não é alcançável pelo host. Todo tráfego dela entra pelo
+    # painel, na única porta publicada desta pilha.
+
+  # ------------------------------------------------------------------ painel
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile.web
+    image: nexus-painel:local
+    depends_on:
+      api:
+        condition: service_healthy
+    ports:
+      # A única porta publicada. 8080 porque o 80 da máquina já tem dono (nesta máquina, medido com
+      # netstat, é o Apache do WAMP); trocar de porta é uma linha no .env.
+      - "${PAINEL_PORT:-8080}:80"
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1/"]
+      interval: 15s
+      timeout: 4s
+      retries: 3
+      start_period: 10s
+    restart: unless-stopped
+
+volumes:
+  nexus-mysql:

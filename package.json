@@ -28,7 +28,14 @@
     "db:migrate": "npm run prisma:migrate --workspace @nexus/api",
     "db:prova": "node tools/preparar-banco-de-prova.cjs",
     "db:seed": "npm run prisma:seed --workspace @nexus/api",
-    "admin:criar": "npm run admin:criar --workspace @nexus/api"
+    "admin:criar": "npm run admin:criar --workspace @nexus/api",
+    "docker:build": "docker compose build",
+    "docker:subir": "docker compose up -d --build",
+    "docker:descer": "docker compose down",
+    "docker:migrar": "docker compose exec -T api node_modules/.bin/prisma migrate deploy --schema apps/api/prisma/schema.prisma",
+    "docker:admin": "docker compose exec -T api npm run admin:criar --workspace @nexus/api",
+    "docker:logs": "docker compose logs --tail=40 api",
+    "docker:provar": "node tools/verify-docker.cjs"
   },
   "devDependencies": {
     "puppeteer-core": "^25.13.0"

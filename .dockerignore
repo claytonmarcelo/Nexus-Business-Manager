@@ -1,0 +1,39 @@
+# F6 (T5.1) — o que NÃO entra no contexto de build das imagens.
+#
+# O contexto vira o /app dentro das etapas de dependência e de compilação. Cada linha aqui é
+# uma coisa que ou é grande demais (node_modules, dist), ou é dado que não pode atravessar
+# para dentro de uma imagem que vai ser versionada e publicada (.env, banco, capturas), ou é
+# ferramenta de prova que só existe na máquina de quem desenvolve (tools, docs).
+
+# Git e histórico
+.git
+.gitignore
+.gitattributes
+
+# Dependências e artefatos de build da máquina de quem compila: a imagem reinstala e rebuilda
+**/node_modules
+**/dist
+**/coverage
+**/*.tsbuildinfo
+
+# Ambiente e segredos: jamais dentro de uma imagem
+.env
+.env.*
+apps/api/.env
+apps/web/.env
+CREDENCIAIS.md
+
+# Banco local solto
+apps/api/prisma/*.db
+
+# Documentação, capturas e ferramentas de prova
+docs
+tools
+assets
+**/*.md
+
+# A própria topologia não precisa estar dentro do contexto
+Dockerfile.api
+Dockerfile.web
+docker-compose.yml
+.dockerignore
