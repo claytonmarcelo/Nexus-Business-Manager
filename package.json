@@ -15,6 +15,7 @@
   "scripts": {
     "dev": "node tools/dev.cjs",
     "dev:api": "npm run dev --workspace @nexus/api",
+    "dev:prova": "node tools/servidor-de-prova.cjs",
     "dev:api:teste": "node tools/servidor-de-prova.cjs",
     "dev:web": "npm run dev --workspace @nexus/web",
     "build": "npm run build --workspace @nexus/api && npm run build --workspace @nexus/web",

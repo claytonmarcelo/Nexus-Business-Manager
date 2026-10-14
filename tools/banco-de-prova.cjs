@@ -122,7 +122,7 @@ function conferenciaRecente(raiz) {
 async function conferirServidorDeProva(api, quem) {
   const url = urlDoBancoDeProva();
   const conta = quem || contaDeProva();
-  const raiz = raizDaApi(api || (process.env.NEXUS_API || "http://localhost:3001") + "/api");
+  const raiz = raizDaApi(api || (require("./pilha-de-prova.cjs").raizDaApi()) + "/api");
   if (!conta.email || !conta.senha) {
     throw new Error("[banco de prova] falta e-mail ou senha da conta de prova — rode `npm run db:prova`");
   }

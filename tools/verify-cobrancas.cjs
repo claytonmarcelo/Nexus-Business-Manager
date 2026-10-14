@@ -36,9 +36,9 @@ const { sessaoDaCaptura } = require("./conta-de-captura.cjs");
 const { conferirServidorDeProva, clienteDoBancoDeProva } = require("./banco-de-prova.cjs");
 
 const CHROME = "C:/Program Files/Google/Chrome/Application/chrome.exe";
-const BASE = process.env.NEXUS_WEB || "http://localhost:5173";
-const API = (process.env.NEXUS_API || "http://localhost:3001") + "/api";
-const SHOTS = path.join(__dirname, "..", "docs", "screenshots");
+const BASE = require("./pilha-de-prova.cjs").baseDoNavegador();
+const API = (require("./pilha-de-prova.cjs").raizDaApi()) + "/api";
+const SHOTS = require("./pilha-de-prova.cjs").pastaDeCaptura("docs/screenshots");
 
 // O espaço que o Intl brasileiro põe entre "R$" e o número é indivisível. Na tela
 // é o mesmo "R$ 700,00" que a pessoa lê; no texto cru do documento é outro

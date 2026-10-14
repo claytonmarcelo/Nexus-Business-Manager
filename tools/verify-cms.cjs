@@ -10,9 +10,9 @@ const { EMAIL_ADMIN, SENHA_ADMIN } = require("./senha-admin.cjs");
 const { conferirServidorDeProva } = require("./banco-de-prova.cjs");
 
 const CHROME = "C:/Program Files/Google/Chrome/Application/chrome.exe";
-const BASE = process.env.NEXUS_WEB || "http://localhost:5173";
-const API = (process.env.NEXUS_API || "http://localhost:3001") + "/api";
-const SHOTS = "docs/screenshots";
+const BASE = require("./pilha-de-prova.cjs").baseDoNavegador();
+const API = (require("./pilha-de-prova.cjs").raizDaApi()) + "/api";
+const SHOTS = require("./pilha-de-prova.cjs").pastaDeCaptura("docs/screenshots");
 
 let checks = 0;
 const falhas = [];

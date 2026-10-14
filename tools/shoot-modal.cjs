@@ -4,8 +4,8 @@ const puppeteer = require("puppeteer-core");
 const { EMAIL_ADMIN, SENHA_ADMIN } = require("./senha-admin.cjs");
 const path = require("path");
 const { conferirServidorDeProva } = require("./banco-de-prova.cjs");
-const BASE = "http://localhost:5173";
-const OUT = path.join(__dirname, "..", "docs", "screenshots");
+const BASE = require("./pilha-de-prova.cjs").baseDoNavegador();
+const OUT = require("./pilha-de-prova.cjs").pastaDeCaptura("docs/screenshots");
 const falhas = [];
 const checks = [];
 function ok(nome, valor) {

@@ -37,7 +37,7 @@ const DIST = path.join(__dirname, "..", "apps", "web", "dist");
 const ASSETS = path.join(DIST, "assets");
 const PORTA = Number(process.env.NEXUS_PORTA_DO_DIST || 4173);
 const BASE = "http://127.0.0.1:" + PORTA;
-const RAIZ_DA_API = process.env.NEXUS_API || "http://localhost:3001";
+const RAIZ_DA_API = require("./pilha-de-prova.cjs").raizDaApi();
 
 // Medido com `npm run build --workspace @nexus/web` na arvore de trabalho de
 // 2026-10-14, com todas as paginas importadas no topo do App.tsx: um unico arquivo

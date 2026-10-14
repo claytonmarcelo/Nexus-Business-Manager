@@ -7,8 +7,8 @@ const { EMAIL_ADMIN, SENHA_ADMIN } = require("./senha-admin.cjs");
 const { conferirServidorDeProva } = require("./banco-de-prova.cjs");
 
 const CHROME = "C:/Program Files/Google/Chrome/Application/chrome.exe";
-const BASE = "http://localhost:5173";
-const SHOTS = "docs/screenshots";
+const BASE = require("./pilha-de-prova.cjs").baseDoNavegador();
+const SHOTS = require("./pilha-de-prova.cjs").pastaDeCaptura("docs/screenshots");
 
 let checks = 0;
 const falhas = [];
@@ -365,7 +365,16 @@ function estado() {
         { timeout: 15000 },
         linha.href
       );
-      await espera(420);
+      // A rota chega sob demanda (D8: cada tela e um chunk), e no servidor de prova o Vite
+      // ainda nao tem aquela tela no cache. Esperar um tempo fixo amostrava o titulo no
+      // escuro e a barra perdia a checagem por corrida, nao por produto. Espera-se o
+      // primeiro sinal de que a tela respondeu: titulo, pagina ou pagina de erro.
+      await page
+        .waitForFunction(
+          () => document.querySelector(".page-title") || document.querySelector(".error-page") || document.querySelector(".page"),
+          { timeout: 20000 }
+        )
+        .catch(() => {});
       const tela = await page.evaluate(() => {
         const h = document.querySelector(".page-title");
         return {

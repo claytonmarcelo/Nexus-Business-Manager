@@ -13,7 +13,7 @@ const { conferirServidorDeProva } = require("./banco-de-prova.cjs");
     defaultViewport: { width: 1440, height: 900 },
   });
   const page = await browser.newPage();
-  await page.goto("http://localhost:5173/login", { waitUntil: "networkidle0" });
+  await page.goto(require("./pilha-de-prova.cjs").baseDoNavegador() + "/login", { waitUntil: "networkidle0" });
   await page.waitForSelector("input[type=email]");
   await page.type("input[type=email]", EMAIL_ADMIN);
   await page.type("input[type=password]", SENHA_ADMIN);
@@ -23,7 +23,7 @@ const { conferirServidorDeProva } = require("./banco-de-prova.cjs");
   ]);
   await page.waitForSelector(".kpi-grid", { timeout: 15000 });
   await new Promise((r) => setTimeout(r, 800));
-  await page.screenshot({ path: "docs/screenshots/03-dashboard.png" });
+  await page.screenshot({ path: require("path").join(require("./pilha-de-prova.cjs").pastaDeCaptura("docs/screenshots"), "03-dashboard.png") });
   await browser.close();
   console.log("ok");
 })().catch((e) => { console.error("falha:", e.message); process.exit(1); });

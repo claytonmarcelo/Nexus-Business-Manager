@@ -16,7 +16,7 @@ const puppeteer = require("puppeteer-core");
 const { EMAIL_ADMIN, SENHA_ADMIN } = require("./senha-admin.cjs");
 const { conferirServidorDeProva } = require("./banco-de-prova.cjs");
 
-const BASE = "http://localhost:5173";
+const BASE = require("./pilha-de-prova.cjs").baseDoNavegador();
 const EMAIL = EMAIL_ADMIN;
 const AVISO = "Sua sessão expirou. Entre novamente para continuar.";
 

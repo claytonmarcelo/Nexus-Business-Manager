@@ -15,8 +15,8 @@ const puppeteer = require("puppeteer-core");
 const path = require("path");
 const { conferirServidorDeProva } = require("./banco-de-prova.cjs");
 
-const BASE = "http://localhost:5173";
-const OUT = path.join(__dirname, "..", "docs", "screenshots");
+const BASE = require("./pilha-de-prova.cjs").baseDoNavegador();
+const OUT = require("./pilha-de-prova.cjs").pastaDeCaptura("docs/screenshots");
 
 // Endereco de teste (RFC 6761) que nunca e cadastrado: e por ele que a tela de
 // recuperacao chega ao passo 2 sem que a API precise soltar um codigo real.

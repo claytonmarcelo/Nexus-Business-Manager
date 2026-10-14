@@ -21,7 +21,7 @@ const path = require("path");
 const crypto = require("crypto");
 const { conferirServidorDeProva } = require("./banco-de-prova.cjs");
 
-const API = (process.env.NEXUS_API || "http://localhost:3001") + "/api";
+const API = (require("./pilha-de-prova.cjs").raizDaApi()) + "/api";
 const ARQUIVO_LOCAL = path.join(__dirname, "conta-de-captura.local.json");
 
 const EMAIL_PADRAO = "demo@exemplo.test";

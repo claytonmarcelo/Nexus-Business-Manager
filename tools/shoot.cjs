@@ -18,10 +18,10 @@ const { EMAIL_ADMIN, SENHA_ADMIN } = require("./senha-admin.cjs");
 const { contaDeCaptura } = require("./conta-de-captura.cjs");
 const { conferirServidorDeProva } = require("./banco-de-prova.cjs");
 
-const OUT = path.join(__dirname, "..", "docs", "screenshots");
+const OUT = require("./pilha-de-prova.cjs").pastaDeCaptura("docs/screenshots");
 fs.mkdirSync(OUT, { recursive: true });
 
-const BASE = "http://localhost:5173";
+const BASE = require("./pilha-de-prova.cjs").baseDoNavegador();
 
 const PEDIDO = (process.env.NEXUS_PROVA_FOTOS || "")
   .split(",")

@@ -10,13 +10,13 @@ const { EMAIL_ADMIN, SENHA_ADMIN } = require("./senha-admin.cjs");
 const { conferirServidorDeProva } = require("./banco-de-prova.cjs");
 
 const CHROME = "C:/Program Files/Google/Chrome/Application/chrome.exe";
-const BASE = "http://localhost:5173";
-const SHOTS = "docs/screenshots";
+const BASE = require("./pilha-de-prova.cjs").baseDoNavegador();
+const SHOTS = require("./pilha-de-prova.cjs").pastaDeCaptura("docs/screenshots");
 
 // A secao 5 desativa um cliente de verdade (e exatamente o ponto da prova). O
 // restaurador fala com a API na porta 3001 para devolver o registro ao estado
 // anterior, sem depender de um botao "Ativar" que a tela de Clientes nao tem.
-const API = process.env.NEXUS_API || "http://localhost:3001";
+const API = require("./pilha-de-prova.cjs").raizDaApi();
 const ADMIN_EMAIL = EMAIL_ADMIN;
 const ADMIN_SENHA = SENHA_ADMIN;
 

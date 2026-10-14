@@ -6,8 +6,8 @@ const { EMAIL_ADMIN, SENHA_ADMIN } = require("./senha-admin.cjs");
 const path = require("path");
 const { conferirServidorDeProva } = require("./banco-de-prova.cjs");
 
-const BASE = "http://localhost:5173";
-const OUT = path.join(__dirname, "..", "docs", "screenshots");
+const BASE = require("./pilha-de-prova.cjs").baseDoNavegador();
+const OUT = require("./pilha-de-prova.cjs").pastaDeCaptura("docs/screenshots");
 const sufixo = Date.now().toString().slice(-6);
 const SIMPLES = "Degustacao " + sufixo;
 const SERIE = "Manutencao " + sufixo;
@@ -93,7 +93,7 @@ const titulosNoCalendario = (page) => page.$$eval(".fc-event", (els) => els.map(
 // A prova cria dados de verdade. Antes de comecar, apaga pelo API o que as
 // rodadas anteriores deixaram no mes, para as contagens valerem.
 async function limparSobras() {
-  const login = await fetch("http://localhost:3001/api/auth/login", {
+  const login = await fetch(require("./pilha-de-prova.cjs").raizDaApi() + "/api/auth/login", {
     method: "POST",
     headers: { "content-type": "application/json" },
     body: JSON.stringify({ email: EMAIL_ADMIN, password: SENHA_ADMIN }),
@@ -102,12 +102,12 @@ async function limparSobras() {
   if (!token) throw new Error("login da limpeza falhou");
   const de = new Date(); de.setDate(1); de.setHours(0, 0, 0, 0);
   const ate = new Date(de.getFullYear(), de.getMonth() + 1, 0, 23, 59, 59);
-  const url = "http://localhost:3001/api/agenda/events?from=" + de.toISOString() + "&to=" + ate.toISOString();
+  const url = require("./pilha-de-prova.cjs").raizDaApi() + "/api/agenda/events?from=" + de.toISOString() + "&to=" + ate.toISOString();
   const linhas = await fetch(url, { headers: { authorization: "Bearer " + token } }).then((r) => r.json());
   const regex = /^(Degustacao|Manutencao) [0-9]+$/;
   const mestres = new Set((linhas.data || linhas || []).filter((e) => regex.test(e.title)).map((e) => e.masterId));
   for (const id of mestres) {
-    await fetch("http://localhost:3001/api/agenda/events/" + id, { method: "DELETE", headers: { authorization: "Bearer " + token } });
+    await fetch(require("./pilha-de-prova.cjs").raizDaApi() + "/api/agenda/events/" + id, { method: "DELETE", headers: { authorization: "Bearer " + token } });
   }
   console.log("limpeza: " + mestres.size + " cadastro(s) de rodadas anteriores removidos");
 }

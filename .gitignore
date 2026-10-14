@@ -35,6 +35,12 @@ apps/api/prisma/*.db
 # Artefatos temporários
 tools/wf.cjs.bak
 
+# O endereco da pilha de prova enquanto ela esta de pe (tools/pilha-de-prova.cjs)
+tools/ponteiro-de-prova.local.json
+
+# Capturas feitas contra a pilha de prova: evidencia de corrida, nao entregavel
+docs/screenshots-prova/
+
 # Credenciais que ficam no disco e nunca vao para o git (regra de acesso)
 CREDENCIAIS.md
 tools/senha-admin.local.cjs

@@ -16,8 +16,8 @@ const path = require("path");
 const { conferirServidorDeProva } = require("./banco-de-prova.cjs");
 
 const CHROME = "C:/Program Files/Google/Chrome/Application/chrome.exe";
-const BASE = "http://localhost:5173";
-const OUT = path.join(__dirname, "..", "docs", "screenshots");
+const BASE = require("./pilha-de-prova.cjs").baseDoNavegador();
+const OUT = require("./pilha-de-prova.cjs").pastaDeCaptura("docs/screenshots");
 
 // NEXUS_PROVA_PAGINAS=usuarios roda e fotografa so as telas pedidas. O resto
 // da galeria fica no git exatamente como esta, sem ruido de diff.

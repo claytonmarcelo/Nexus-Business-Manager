@@ -29,7 +29,7 @@ const path = require("path");
 const { EMAIL_ADMIN, SENHA_ADMIN } = require("./senha-admin.cjs");
 const { conferirServidorDeProva } = require("./banco-de-prova.cjs");
 
-const BASE = process.env.NEXUS_WEB_BASE || "http://localhost:5173";
+const BASE = require("./pilha-de-prova.cjs").baseDoNavegador();
 const CHAVE_LEMBRADO = "nexus.remember.email";
 const CHAVE_TEMA = "nexus.theme";
 const ENDERECO_INEXISTENTE = "ninguem@exemplo.invalido";

@@ -62,8 +62,8 @@ const puppeteer = require("puppeteer-core");
 const { EMAIL_ADMIN, SENHA_ADMIN } = require("./senha-admin.cjs");
 const { conferirServidorDeProva } = require("./banco-de-prova.cjs");
 
-const BASE = "http://localhost:5173";
-const API = (process.env.NEXUS_API || "http://localhost:3001") + "/api";
+const BASE = require("./pilha-de-prova.cjs").baseDoNavegador();
+const API = (require("./pilha-de-prova.cjs").raizDaApi()) + "/api";
 const ALVO_DE_TOQUE = 44;
 const ALVO_DE_TECLA = 24;
 

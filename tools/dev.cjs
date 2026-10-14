@@ -7,11 +7,11 @@
 // script". Esta janela levanta os dois, mostra o endereco de cada um e derruba
 // os dois juntos no Ctrl+C, que e o que se espera de um comando com esse nome.
 //
-// O que este comando NAO faz e servir o banco de prova. Para prova de navegador
-// e suíte de testes existe `npm run dev:api:teste` (tools/servidor-de-prova.cjs),
-// que atende a mesma porta 3001 pelo banco `nexusbusinessmanager_teste` — e ai a
-// conta de administrador desta maquina nao existe, que e o aviso que aquela
-// janela imprime ao subir. Os dois nao rodam juntos: um fica com a porta.
+// O que este comando NAO faz e servir o banco de prova. Para prova de navegador e
+// a suite de testes existe `npm run dev:prova` (tools/servidor-de-prova.cjs), que sobe
+// a API no banco `nexusbusinessmanager_teste` na porta 3002 e um Vite de prova na 5174.
+// As duas janelas podem rodar juntas, e essa e a decisao inteira do achado N65: a
+// 3001/5173 e de quem trabalha, e a prova nao pega mais a porta de ninguem.
 const { spawn } = require("child_process");
 const fs = require("fs");
 const path = require("path");
@@ -111,7 +111,7 @@ console.log(
     LADOS.map((l) => l.nome + " em " + l.endereco).join(" e ") +
     " | banco de desenvolvimento desta maquina",
 );
-console.log("para as provas de navegador e a suíte de testes use `npm run dev:api:teste` no lugar (banco de prova)");
+console.log("para as provas de navegador e a suíte de testes use `npm run dev:prova` no lugar (banco de prova: api 3002, navegador 5174)");
 
 for (const sinal of ["SIGINT", "SIGTERM"]) {
   process.on(sinal, () => {

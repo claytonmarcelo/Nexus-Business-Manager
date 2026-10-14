@@ -3,7 +3,7 @@
 const puppeteer = require("puppeteer-core");
 const { EMAIL_ADMIN, SENHA_ADMIN } = require("./senha-admin.cjs");
 const { conferirServidorDeProva } = require("./banco-de-prova.cjs");
-const BASE = "http://localhost:5173";
+const BASE = require("./pilha-de-prova.cjs").baseDoNavegador();
 
 const WIDTHS = [360, 414, 768];
 const PUBLIC = ["/", "/login", "/cadastro", "/recuperar-senha", "/rota-inexistente"];

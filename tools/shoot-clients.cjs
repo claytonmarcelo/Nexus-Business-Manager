@@ -7,7 +7,7 @@ const puppeteer = require("puppeteer-core");
 const path = require("path");
 const { contaDeCaptura } = require("./conta-de-captura.cjs");
 const { conferirServidorDeProva } = require("./banco-de-prova.cjs");
-const BASE = "http://localhost:5173";
+const BASE = require("./pilha-de-prova.cjs").baseDoNavegador();
 
 (async () => {
   // D6 (tarefa T1): a prova so escreve no banco de prova. A conferencia entra na API, pega o
@@ -60,7 +60,7 @@ const BASE = "http://localhost:5173";
 
   const linhas = await page.$$eval(".table tbody tr", (rows) => rows.length);
   console.log("linhas na tabela:", linhas);
-  await page.screenshot({ path: path.join(__dirname, "..", "docs", "screenshots", "07-clientes.png") });
+  await page.screenshot({ path: path.join(require("./pilha-de-prova.cjs").pastaDeCaptura("docs/screenshots"), "07-clientes.png") });
   await browser.close();
   console.log("ok: clientes capturado");
 })().catch((e) => { console.error("falha:", e.message); process.exit(1); });

@@ -14,9 +14,9 @@ const { contaDeCaptura } = require("./conta-de-captura.cjs");
 const { conferirServidorDeProva, clienteDoBancoDeProva } = require("./banco-de-prova.cjs");
 
 const CHROME = "C:/Program Files/Google/Chrome/Application/chrome.exe";
-const BASE = process.env.NEXUS_WEB || "http://localhost:5173";
-const API = (process.env.NEXUS_API || "http://localhost:3001") + "/api";
-const SHOTS = "docs/screenshots";
+const BASE = require("./pilha-de-prova.cjs").baseDoNavegador();
+const API = (require("./pilha-de-prova.cjs").raizDaApi()) + "/api";
+const SHOTS = require("./pilha-de-prova.cjs").pastaDeCaptura("docs/screenshots");
 // A conta desta corrida: fictícia, com empresa própria vazia.
 const CAPTA = contaDeCaptura();
 // NEXUS_PROVA_FOTOS=22-configuracoes-conta,... fotografa só o que foi pedido.
