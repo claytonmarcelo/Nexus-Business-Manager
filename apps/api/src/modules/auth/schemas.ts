@@ -67,4 +67,44 @@ export type ForgotPasswordInput = z.infer<typeof forgotPasswordSchema>;
 export type ResetPasswordInput = z.infer<typeof resetPasswordSchema>;
 export type UpdateProfileInput = z.infer<typeof updateProfileSchema>;
 export type ChangePasswordInput = z.infer<typeof changePasswordSchema>;
+
+// ---- F4 (D2): verificação de e-mail ----
+
+export const verifyEmailSchema = z.object({
+  // Token de 48 caracteres hexadecimais, ou o mesmo código digitado com espaços:
+  // a régua minima é a do que o serviço emite, não a da conveniência da tela.
+  token: z.string().trim().min(32, "Cole o código de confirmação recebido"),
+});
+
+export const resendVerificationSchema = z.object({
+  email: z.string().trim().toLowerCase().email("E-mail inválido"),
+});
+
+// ---- F4 (D3): segundo fator ----
+
+// Formato aceito nas duas pontas: os seis dígitos do aplicativo ou o código de
+// recuperação (dez caracteres do alfabeto sem ambiguidade, com ou sem o traço que
+// a tela mostra). Algo maior que isso é digitação de outro campo, e o zod corta
+// antes de chegar a quem compara.
+const codigoDeSegundoFator = z
+  .string()
+  .trim()
+  .regex(/^(\d{6}|[a-z0-9]{5}-?[a-z0-9]{5})$/i, "Digite o código de 6 dígitos ou um código de recuperação");
+
+export const segundoFatorDesafioSchema = z
+  .object({
+    challengeToken: z.string().min(16, "Faça login novamente"),
+    codigo: codigoDeSegundoFator,
+  })
+  .strict();
+
+// Rota de etapa: o token é o cabeçalho? Não — vem no corpo, porque a pessoa ainda
+// não tem sessão nenhuma e o navegador não tem onde guardar um cookie de etapa.
+export const segundoFatorAtivarSchema = z.object({ codigo: codigoDeSegundoFator }).strict();
+
+export const segundoFatorDesativarSchema = z.object({ codigo: codigoDeSegundoFator }).strict();
+
+export type VerifyEmailInput = z.infer<typeof verifyEmailSchema>;
+export type SegundoFatorDesafioInput = z.infer<typeof segundoFatorDesafioSchema>;
+export { codigoDeSegundoFator };
 export { PASSWORD_HINT };

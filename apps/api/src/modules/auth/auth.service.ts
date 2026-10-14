@@ -9,6 +9,20 @@ import { audit } from "../../lib/audit";
 import type { AccessTokenPayload } from "../../plugins/auth";
 import { rolePermissions } from "../../lib/rbac";
 import { somenteDigitos } from "../../lib/brFields";
+// F4 (D1): o serviço monta a mensagem; quem entrega é decisão do ambiente.
+import { mailer } from "../../lib/mail";
+import { mensagemDeRecuperacao } from "../../lib/mail/mensagens";
+// F4 (T3.2): a contagem de tentativas vive fora de `users` — ver lib/tentativas.
+import {
+  HASH_DE_ISCACAO,
+  JANELA_DE_CONTAGEM_MS,
+  lerTentativas,
+  registrarFalha,
+  zerarTentativas,
+} from "../../lib/tentativas";
+// F4 (D3): segunda etapa do login.
+import { TTL_DA_CONFIGURACAO, TTL_DO_DESAFIO, doisFatorObrigatorio } from "../../lib/segundo-fator";
+import { emitirTokenDeVerificacao } from "./verificacao.service";
 
 export interface AuthTokens {
   accessToken: string;
@@ -33,7 +47,10 @@ export interface SessionUser {
   platform: boolean;
 }
 
-async function issueTokens(
+// Exportada porque as duas etapas do login (segundo fator obrigatório e desafio)
+// também precisam emitir sessão exatamente com as mesmas regras: empresa no
+// refresh, mesmo TTL, mesmo registro.
+export async function issueTokens(
   app: FastifyInstance,
   userId: string,
   companyId: string,
@@ -130,28 +147,69 @@ function renovacaoDaEmpresa(
   return pickMembership(memberships, { lembrada });
 }
 
+// O que o login devolve hoje são três estados, não um: sessão pronta, sessão
+// esperando o segundo fator, ou sessão nenhuma porque a conta precisa ligar o
+// segundo fator antes de existir. Os dois últimos trazem um token de escopo
+// curto, que não abre rota de negócio alguma (ver `plugins/auth.ts`).
+export type ResultadoDeLogin =
+  | { tokens: AuthTokens; user: SessionUser }
+  | { twoFactorRequired: true; challengeToken: string }
+  | { twoFactorSetupRequired: true; setupToken: string };
+
 export async function login(
   app: FastifyInstance,
   email: string,
   password: string,
   requestedCompanyId: string | undefined,
   ip?: string,
-): Promise<{ tokens: AuthTokens; user: SessionUser }> {
+): Promise<ResultadoDeLogin> {
   const user = await prisma.user.findUnique({
     where: { email },
     include: { memberships: { include: { company: true } } },
   });
+  // T3.2: leitura da contagem ANTES de qualquer resposta. Um timeout aqui faria o
+  // erro do banco abrir a porta em vez de fechá-la, então a régua é "se não
+  // consigo ler o bloqueio, não deixo entrar".
+  const { trancada } = await lerTentativas(email);
 
-  // Mensagem genérica: não revelar se o e-mail existe (seção 33).
-  if (!user || !user.active) {
+  // T3.2: o hash de iscaço não é credencial de ninguém — é o trabalho que o
+  // caminho de "e-mail inexistente" passa a fazer de propósito, para responder no
+  // mesmo tempo que o caminho de "senha errada". Sem ele, um cronômetro na tela
+  // de login diria quais endereços estão cadastrados, e o bloqueio por conta só
+  // existiria para quem já tem conta.
+  const confere = await verifyPassword(password, user?.passwordHash ?? HASH_DE_ISCACAO);
+
+  // Conta, conta desativada e senha errada respondem a mesma coisa. O registro da
+  // falha vem antes da resposta, sempre — inclusive quando o e-mail não existe.
+  if (!user || !user.active || !confere) {
+    const estado = await registrarFalha(email);
+    if (estado.bloqueouAgora) {
+      await audit({
+        userId: user?.id ?? null,
+        action: "auth.login_bloqueado",
+        entity: "user",
+        entityId: user?.id ?? null,
+        ip,
+        metadata: { tentativas: estado.failures, janelaDeContagemMinutos: Math.round(JANELA_DE_CONTAGEM_MS / 60_000) },
+      });
+    }
     await audit({ userId: user?.id ?? null, action: "auth.login.failed", entity: "user", ip, metadata: { email } });
     throw unauthorized("Credenciais inválidas");
   }
-  const ok = await verifyPassword(password, user.passwordHash);
-  if (!ok) {
-    await audit({ userId: user.id, action: "auth.login.failed", entity: "user", ip, metadata: { email } });
+
+  // A senha está certa e a conta continua de fora: é exatamente isso que faz o
+  // bloqueio ser uma resposta ao ataque e não um aviso cosmético. A falha aqui
+  // soma na contagem mas NÃO empurra o prazo (regra de `registrarFalha`), senão
+  // quem espera ansioso pelo fim do bloqueio nunca veria o fim dele.
+  if (trancada) {
+    await registrarFalha(email);
+    await audit({ userId: user.id, action: "auth.login.failed", entity: "user", entityId: user.id, ip, metadata: { email } });
     throw unauthorized("Credenciais inválidas");
   }
+
+  // Entrou: a contagem some, e com ela qualquer bloqueio antigo.
+  await zerarTentativas(email);
+
   if (user.memberships.length === 0) {
     throw forbidden("Usuário sem vínculo com empresa");
   }
@@ -160,11 +218,56 @@ export async function login(
     pedida: requestedCompanyId,
     lembrada: user.lastCompanyId,
   });
+
+  // D2: conta sem e-mail confirmado não entra no painel — e só se cobra dela o
+  // que ela mesma já provou ter: a senha conferiu acima, então a frase que avisa
+  // "confirme seu e-mail" não entrega a ninguém que aquele endereço existe.
+  if (env.REQUIRE_EMAIL_VERIFICATION === "1" && !user.emailVerifiedAt) {
+    throw forbidden("Confirme o seu e-mail para entrar. Reenvie a mensagem se ela não chegou.");
+  }
+
+  // D3: quem responde pela plataforma, e todo OWNER de empresa, tem segundo fator
+  // obrigatório em produção. Sem ele a sessão não nasce: o que volta é um token de
+  // configuração, que só abre as rotas de 2FA.
+  const exigeConfigurar = doisFatorObrigatorio({
+    platformRole: user.platformRole,
+    papeis: user.memberships.map((m) => m.role),
+    nodeEnv: env.NODE_ENV,
+  });
+  if (exigeConfigurar && !user.totpEnabledAt) {
+    const setupToken = await app.jwt.sign(
+      { sub: user.id, cid: membership.companyId, role: membership.role, escopo: "2fa-configuracao" },
+      { expiresIn: TTL_DA_CONFIGURACAO },
+    );
+    await audit({ userId: user.id, action: "auth.2fa_configuracao_exigida", entity: "user", entityId: user.id, ip });
+    return { twoFactorSetupRequired: true, setupToken };
+  }
+
+  // D3: segundo fator ligado é uma etapa, não um campo a mais na mesma tela. A
+  // senha conferiu, a sessão ainda não existe — o que existe é um token de
+  // desafio, curto, que só serve para a rota de confirmação.
+  if (user.totpEnabledAt && user.totpSecretCiphertext) {
+    const desafio = await app.jwt.sign(
+      { sub: user.id, cid: membership.companyId, role: membership.role, escopo: "2fa-desafio" },
+      { expiresIn: TTL_DO_DESAFIO },
+    );
+    await audit({ userId: user.id, action: "auth.login.aguarda_segundo_fator", entity: "user", entityId: user.id, ip });
+    return { twoFactorRequired: true, challengeToken: desafio };
+  }
+
   const tokens = await issueTokens(app, user.id, membership.companyId, membership.role, ip);
   await audit({ userId: user.id, companyId: membership.companyId, action: "auth.login", entity: "user", entityId: user.id, ip });
 
   return { tokens, user: toSessionUser(user, membership) };
 }
+
+// T3.5: a tolerância da corrida de duas abas, em milissegundos. Explicada no ramo
+// que a usa, dentro de `refresh`. Dez segundos é o intervalo em que dois pedidos
+// de renovação legítimos podem sair com o mesmo token na mão — o `refreshSession()`
+// do front_end tem voo único por design, e o giro do token no navegador acontece
+// quando a resposta chega; nada além de um concorrente do mesmo navegador entra
+// nessa janela sem ser a própria pessoa.
+const JANELA_DE_CORRIDA_MS = 10_000;
 
 export async function refresh(
   app: FastifyInstance,
@@ -185,6 +288,56 @@ export async function refresh(
   // encerrar sessão, troca de senha, recuperação — marca só revokedAt, sem
   // usedAt, e por isso não dispara a reação em cadeia.
   if (record.usedAt && record.revokedAt) {
+    // T3.5 (F4): a corrida de duas abas, antes do alarme de roubo.
+    //
+    // Duas abas abertas da mesma conta renovam no mesmo instante — a do acesso que
+    // expira primeiro dispara o `refreshSession()` de cada uma, com o mesmo token
+    // velho na mão, porque o giro do `localStorage` ainda não aconteceu quando a
+    // segunda requisição saiu. Sem esta janela, o segundo pedido legítimo seria
+    // tratado como roubo: derrubaria todas as sessões da própria pessoa e a
+    // derrubaria no meio do trabalho. Um alarme que toca em uso normal é um alarme
+    // que se aprende a ignorar, e é assim que deteção de roubo vira ruído.
+    //
+    // O preço aceito: um token roubado reapresentado nos dez segundos seguintes à
+    // rotação legítima ganha um par novo em vez de fechar a família. É uma janela
+    // estreíssima comparada ao que o roubo já exige (ter o token e usá-lo antes da
+    // próxima renovação da vítima), e cada uso dela fica registrado em
+    // `auth.refresh_corrida` — repetição desse evento é o que o teste de intrusão
+    // e a auditoria de plataforma passam a procurar. Fora da janela, a reação em
+    // cadeia de roubo continua exatamente como estava.
+    if (Date.now() - record.usedAt.getTime() <= JANELA_DE_CORRIDA_MS) {
+      // Guarda da própria janela (T3.5): ela é da rotação, não da conta. A janela
+      // existe porque a segunda aba do MESMO navegador saiu com o token velho na
+      // mão antes de o giro chegar ao disco — e só faz sentido enquanto a linhagem
+      // que aquela rotação abriu continua de pé. Toda revogação por decisão (troca
+      // de senha, recuperação de senha, logout, admin encerrando sessão) derruba o
+      // filho que a rotação emitiu; conferredo aqui, e não no `revokedAt` do pai,
+      // porque o pai já estava revogado pela própria rotação. Sem nenhum token vivo
+      // nascido depois do consumo, reapresentar o pai dentro dos dez segundos não
+      // reabre porta nenhuma — e volta a ser o comportamento da Fase 2, anterior à
+      // janela. O custo aceito é estreito: um concorrente que espere a pessoa fazer
+      // logout ou trocar a senha para reapresentar o token roubado no instante
+      // seguinte passa a tomar 401 em vez de ganhar sessão.
+      const linhagemViva = await prisma.refreshToken.count({
+        where: { userId: record.userId, revokedAt: null, createdAt: { gte: record.usedAt } },
+      });
+      if (linhagemViva > 0) {
+        if (!record.user.active) throw forbidden("Usuário inativo");
+        const empresa = renovacaoDaEmpresa(record.user.memberships, record.companyId, record.user.lastCompanyId);
+        await audit({
+          userId: record.userId,
+          companyId: empresa.companyId,
+          action: "auth.refresh_corrida",
+          entity: "user",
+          entityId: record.userId,
+          ip,
+          metadata: { desdeARotacaoMs: Date.now() - record.usedAt.getTime(), motivo: "duas abas renovando juntas" },
+        });
+        return issueTokens(app, record.userId, empresa.companyId, empresa.role, ip);
+      }
+    }
+    // Fora da janela — ou com a linhagem já derrubada por decisão — a reapresentação
+    // de um token consumido é a assinatura clássica de roubo: a família inteira cai.
     await prisma.refreshToken.updateMany({
       where: { userId: record.userId, revokedAt: null },
       data: { revokedAt: new Date() },
@@ -250,7 +403,7 @@ export async function switchCompany(
   return issueTokens(app, userId, companyId, membership.role, ip);
 }
 
-function toSessionUser(
+export function toSessionUser(
   user: {
     id: string; email: string; name: string; phone: string | null;
     platformRole?: string | null;
@@ -283,6 +436,19 @@ function toSessionUser(
 
 const RESET_TTL_MS = 30 * 60 * 1000; // código válido por 30 minutos
 
+// Resumo de um erro de entrega para a auditoria. O objeto de erro do nodemailer
+// costuma carregar o usuário que autenticou no SMTP, a URL do servidor e, em
+// alguns provedores, pedaços da própria mensagem — nada disso é logável. Aqui
+// sai só texto livre de sequência hexadecimal (código nenhum passa) e cortado em
+// 140 caracteres.
+function resumoDaFalha(erro: unknown): string {
+  const texto = erro instanceof Error ? erro.message : String(erro);
+  return texto
+    .replace(/[0-9a-zA-Z+/]{24,}/g, "redigido")
+    .replace(/[\r\n]+/g, " ")
+    .slice(0, 140);
+}
+
 function slugify(name: string): string {
   return name
     .normalize("NFD")
@@ -293,12 +459,22 @@ function slugify(name: string): string {
     .slice(0, 40) || "empresa";
 }
 
-// Cadastro self-service: cria usuário + empresa própria e já emite sessão.
+// Cadastro self-service: cria usuário + empresa própria.
+//
+// Com `REQUIRE_EMAIL_VERIFICATION=1` (a régua de produção) o cadastro NÃO emite
+// sessão: ele emite a mensagem de confirmação e devolve "falta confirmar". Sem a
+// flag, emite sessão como sempre emitiu — é o que mantém o desenvolvimento e a
+// suíte de testes independentes de caixa de e-mail, e é a decisão D2 registrada em
+// `docs/decisoes/ADR-0014`.
+export type ResultadoDeCadastro =
+  | { tokens: AuthTokens; user: SessionUser }
+  | { verificationRequired: true };
+
 export async function register(
   app: FastifyInstance,
   input: { name: string; email: string; password: string },
   ip?: string,
-): Promise<{ tokens: AuthTokens; user: SessionUser }> {
+): Promise<ResultadoDeCadastro> {
   const exists = await prisma.user.findUnique({ where: { email: input.email } });
   if (exists) throw conflict("Este e-mail já está cadastrado");
 
@@ -339,12 +515,56 @@ export async function register(
     return { user: novo, membership: vinculo };
   });
 
+  // D2: com a verificação ligada, o cadastro entrega a mensagem e para aí. A
+  // sessão nasce depois do clique no link, no login — não aqui.
+  if (env.REQUIRE_EMAIL_VERIFICATION === "1") {
+    await emitirTokenDeVerificacao({ userId: user.id, email: user.email, nome: user.name, ip });
+    await audit({
+      userId: user.id,
+      companyId: membership.companyId,
+      action: "auth.register_aguarda_verificacao",
+      entity: "user",
+      entityId: user.id,
+      ip,
+    });
+    return { verificationRequired: true };
+  }
+
   const tokens = await issueTokens(app, user.id, membership.companyId, membership.role, ip);
   await audit({ userId: user.id, companyId: membership.companyId, action: "auth.register", entity: "user", entityId: user.id, ip });
   return {
     tokens,
     user: toSessionUser(user, membership),
   };
+}
+
+// ---- O codigo que a recuperacao entrega (T3.1 e T3.2) ----
+//
+// O prompt diz duas coisas que precisam morar juntas na mesma tela: "a recuperacao
+// por e-mail nao pode vazar o codigo" e "a pessoa digita o codigo que recebeu". A
+// costura e esta:
+//
+// - a resposta HTTP nao traz o codigo. Ele aparece na mensagem entregue, na caixa
+//   postal de quem pediu -- e so na resposta quando o .env local declara
+//   AUTH_EXPOSE_RESET_TOKEN=1 fora de producao, para quem desenvolve sem SMTP na
+//   mesa. Um cronometro na tela de recuperacao tambem nao diz nada: o pedido de
+//   e-mail existente e o de e-mail inexistente fazem o mesmo trabalho.
+// - no banco vai o HMAC do valor, nunca o valor. Quem ler a tabela nao abre porta
+//   nenhuma com ela.
+// - a tela aceita o codigo com a tolerancia de digitacao que a vida real exige:
+//   espaco, traco e maiuscula sao ruido de teclado e de quebra de linha, nao
+//   segredo. A forma canonica e a minuscula sem separadores, e e sobre ela que o
+//   HMAC e calculado -- nos dois lados, o que cria e o que confere.
+const MENSAGEM_DE_CODIGO_INVALIDO = "Código de recuperação inválido ou expirado";
+
+/**
+ * A forma canonica de um codigo de recuperacao: minusculo, sem espaco e sem traco.
+ * Token hexadecimal nao tem traco nem letra maiuscula de proposito, entao a
+ * normalizacao e inofensiva para o caminho do link clicado e indispensavel para o
+ * caminho de quem copiou o codigo de um e-mail aberto no celular.
+ */
+export function formaCanonica(codigo: string): string {
+  return codigo.trim().toLowerCase().replace(/[\s.-]/g, "");
 }
 
 // Solicitação de recuperação: SEMPRE responde ok genérico (não revela se o
@@ -385,6 +605,34 @@ export async function forgotPassword(email: string, ip?: string): Promise<{ ok: 
   // momento em que a senha realmente muda (`resetPassword`), que é onde ela
   // protege alguém de verdade.
   await audit({ userId: user.id, action: "auth.forgot_password", entity: "user", entityId: user.id, ip });
+  // D1: o código vai embora pela porta de entrega, sempre. Antes desta linha não
+  // existia entrega nenhuma — o código aparecia no corpo da resposta quando o
+  // `.env` pedia, e fora disso o pedido de recuperação era um formulário que
+  // ninguém sabia o que fazia com ele. Manter as duas janelas (mensagem + o
+  // desvio de desenvolvimento abaixo) é o que permite à prova conferir o texto
+  // recebido sem depender do console de ninguém.
+  try {
+    await mailer().enviar(
+      mensagemDeRecuperacao({
+        para: user.email,
+        nome: user.name,
+        codigo: token,
+        validadeEmMinutos: Math.round(RESET_TTL_MS / 60_000),
+      }),
+    );
+  } catch (erro) {
+    // A entrega falhou, a pessoa não. A resposta HTTP continua a mesma
+    // (genérica, sem código) para não denunciar o endereço, e o motivo técnico
+    // vem para a auditoria, que é onde quem administra a instalação lê.
+    await audit({
+      userId: user.id,
+      action: "auth.forgot_password_entrega_falhou",
+      entity: "user",
+      entityId: user.id,
+      ip,
+      metadata: { rotulo: "recuperacao-de-senha", motivo: resumoDaFalha(erro) },
+    });
+  }
   // A7 do prompt de mercado: além do flag explícito do .env, o código de
   // recuperação nunca sai pelo HTTP quando o ambiente é produção. O zod de
   // `env.ts` já recusa a subida com AUTH_EXPOSE_RESET_TOKEN=1 em produção (A9);
@@ -400,16 +648,16 @@ export async function resetPassword(
   ip?: string,
 ): Promise<{ ok: true }> {
   const record = await prisma.passwordResetToken.findUnique({
-    where: { tokenHash: hashToken(token) },
+    where: { tokenHash: hashToken(formaCanonica(token)) },
     include: { user: true },
   });
   if (!record || record.usedAt || record.expiresAt < new Date() || record.user.email !== email) {
-    throw unauthorized("Código de recuperação inválido ou expirado");
+    throw unauthorized(MENSAGEM_DE_CODIGO_INVALIDO);
   }
   // Cinto extra do gate da recuperação: um token perdido de código antigo
   // também não redefine senha de administrador de plataforma.
   if (record.user.platformRole === "SUPER_ADMIN") {
-    throw unauthorized("Código de recuperação inválido ou expirado");
+    throw unauthorized(MENSAGEM_DE_CODIGO_INVALIDO);
   }
   const passwordHash = await hashPassword(password);
   await prisma.$transaction([
@@ -419,6 +667,12 @@ export async function resetPassword(
     prisma.refreshToken.updateMany({ where: { userId: record.userId, revokedAt: null }, data: { revokedAt: new Date() } }),
   ]);
   await audit({ userId: record.userId, action: "auth.reset_password", entity: "user", entityId: record.userId, ip });
+  // T3.2: quem passou por e-mail + código + senha nova é dono da conta, e não há
+  // motivo para herdar o bloqueio de quem estava sendo atacado. Sem esta linha, a
+  // recuperação bem-sucedida ainda devolveria "credenciais inválidas" por até
+  // quinze minutos, e a primeira coisa que a pessoa faria seria pedir recuperação
+  // de novo — exatamente o que a contagem pune.
+  await zerarTentativas(email);
   return { ok: true };
 }
 

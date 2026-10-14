@@ -1,6 +1,7 @@
 import { buildApp } from "../src/app";
 import { prisma } from "../src/lib/prisma";
 import { hashPassword } from "../src/lib/password";
+import { env } from "../src/config/env";
 
 export const app = buildApp();
 
@@ -8,6 +9,26 @@ let counter = 0;
 export function uid(prefix = "t"): string {
   counter += 1;
   return `${prefix}-${Date.now()}-${counter}-${Math.floor(Math.random() * 1e6)}`;
+}
+
+// Liga uma chave de ambiente só dentro de um trecho de teste e devolve o valor
+// anterior no caminho de volta, inclusive quando o trecho lança. `env` é o objeto
+// validado pelo zod de `config/env.ts`, e os serviços o leem na hora da chamada —
+// foi assim que a F4 pôde provar os dois lados de REQUIRE_EMAIL_VERIFICATION sem
+// subir um segundo processo da API. O `vitest` roda os arquivos em série num único
+// processo (pool forks + singleFork), então não há corrida com outra suíte.
+export async function comFlag<T>(
+  nome: keyof typeof env,
+  valor: string,
+  trecho: () => Promise<T>,
+): Promise<T> {
+  const anterior = env[nome];
+  (env as Record<string, unknown>)[nome] = valor;
+  try {
+    return await trecho();
+  } finally {
+    (env as Record<string, unknown>)[nome] = anterior;
+  }
 }
 
 export interface Fixture {
@@ -67,7 +88,11 @@ export function origemDaSessao(metadata: unknown): string | null {
 // compra aponta fornecedor — barram o deleteMany direto da empresa se a
 // limpeza tentar contar só com as cascatas. ids vêm dos próprios testes (uuid),
 // nunca de usuário, então a interpolação na lista IN é segura aqui.
-export async function cleanup(ids: { userIds?: string[]; companyIds?: string[] }): Promise<void> {
+export async function cleanup(ids: {
+  userIds?: string[];
+  companyIds?: string[];
+  emails?: string[];
+}): Promise<void> {
   const empresaIds = (ids.companyIds ?? []).map((i) => `'${i.replace(/'/g, "")}'`).join(",");
   if (empresaIds) {
     const viaPai: Array<[child: string, parent: string]> = [
@@ -92,4 +117,12 @@ export async function cleanup(ids: { userIds?: string[]; companyIds?: string[] }
     await prisma.company.deleteMany({ where: { id: { in: ids.companyIds } } });
   }
   if (ids.userIds?.length) await prisma.user.deleteMany({ where: { id: { in: ids.userIds } } });
+  // F4: a contagem de tentativas é chaveada pelo endereço, não pelo id da conta
+  // (é o que permite bloquear quem testa e-mail inexistente sem denunciar quais
+  // existem). Sem foreign key, ela não cai junto do `deleteMany` de `users`, então
+  // o fixture apaga por aqui — senão o próximo teste da mesma suíte herdaria o
+  // bloqueio da conta que acabou de ser removida.
+  if (ids.emails?.length) {
+    await prisma.loginAttempt.deleteMany({ where: { email: { in: ids.emails.map((e) => e.toLowerCase()) } } });
+  }
 }

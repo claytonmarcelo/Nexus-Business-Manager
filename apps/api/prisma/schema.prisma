@@ -27,14 +27,14 @@ enum PlatformRole {
 }
 
 model User {
-  id             String               @id @default(uuid()) @db.VarChar(36)
-  email          String               @unique
-  name           String
-  phone          String?              @db.VarChar(32)
-  avatarUrl      String?              @map("avatar_url") @db.VarChar(255)
-  passwordHash   String               @map("password_hash")
-  active         Boolean              @default(true)
-  platformRole   PlatformRole?        @map("platform_role")
+  id                    String                @id @default(uuid()) @db.VarChar(36)
+  email                 String                @unique
+  name                  String
+  phone                 String?               @db.VarChar(32)
+  avatarUrl             String?               @map("avatar_url") @db.VarChar(255)
+  passwordHash          String                @map("password_hash")
+  active                Boolean               @default(true)
+  platformRole          PlatformRole?         @map("platform_role")
   // N32 (decisão D5): a última empresa que a pessoa escolheu em `switch-company`.
   // Sem ela, o login sem empresa pedida não tinha resposta determinística: a
   // escolha caía na primeira empresa ativa na ordem que o índice do banco
@@ -42,62 +42,84 @@ model User {
   // Nullable e sem chave estrangeira de propósito: é preferência, não vínculo.
   // A casa pode ser excluída ou adormecer, e a conta continua entrando — a
   // camada de auth confere o vínculo ativo antes de usar a lembrança.
-  lastCompanyId  String?              @map("last_company_id") @db.VarChar(36)
-  createdAt      DateTime             @default(now()) @map("created_at")
-  updatedAt      DateTime             @updatedAt @map("updated_at")
-  memberships    CompanyUser[]
-  sessions       RefreshToken[]
-  auditLogs      AuditLog[]
-  resetTokens    PasswordResetToken[]
-  sales          Sale[]
-  purchases      Purchase[]
-  financeEntries FinanceEntry[]
-  leads          Lead[]
-  agendaEvents   AgendaEvent[]
+  lastCompanyId         String?               @map("last_company_id") @db.VarChar(36)
+  // F4 (decisão D2 do dono): verificação de e-mail. Nulo = a caixa postal nunca
+  // foi confirmada. O login só bloqueia por isto quando o ambiente declara
+  // REQUIRE_EMAIL_VERIFICATION=1, que é a régua de produção — contas antigas do
+  // desenvolvimento e do banco de prova continuam entrando sem ler caixa nenhuma,
+  // e uma conta criada por quem administra a instalação (o bootstrap) nasce
+  // confirmada de propósito: não existe e-mail de verdade atrás dela.
+  emailVerifiedAt       DateTime?             @map("email_verified_at")
+  // F4 (decisão D3): segredo do segundo fator. NUNCA em claro — o texto guardado
+  // aqui é o envelope `v1:<iv>:<tag>:<texto cifrado>` produzido por
+  // `lib/criptografia.ts` com AES-256-GCM e a chave `TOTP_ENCRYPTION_KEY`. Ler o
+  // banco inteiro, portanto, não dá a ninguém a capacidade de gerar códigos
+  // válidos: falta a chave, que vive só no ambiente de quem hospeda.
+  totpSecretCiphertext  String?               @map("totp_secret_ciphertext") @db.VarChar(512)
+  // Ligado de fato: só depois de conferir um código gerado com o segredo pendente.
+  // Segredo gerado e nunca confirmado fica com esta coluna nula e não protege
+  // login nenhum.
+  totpEnabledAt         DateTime?             @map("totp_enabled_at")
+  createdAt             DateTime              @default(now()) @map("created_at")
+  updatedAt             DateTime              @updatedAt @map("updated_at")
+  memberships           CompanyUser[]
+  sessions              RefreshToken[]
+  auditLogs             AuditLog[]
+  resetTokens           PasswordResetToken[]
+  sales                 Sale[]
+  purchases             Purchase[]
+  financeEntries        FinanceEntry[]
+  leads                 Lead[]
+  agendaEvents          AgendaEvent[]
   // Ordens de serviço (F3.2 Parte 1): três relações com User porque são três
   // perguntas diferentes — quem atende, quem abriu o chamado e quem mudou o
   // status. Uma só relação não responderia nenhuma delas com clareza.
-  serviceOrdersAssigned ServiceOrder[] @relation("ServiceOrderAssigned")
-  serviceOrdersCreated  ServiceOrder[] @relation("ServiceOrderCreated")
+  serviceOrdersAssigned ServiceOrder[]        @relation("ServiceOrderAssigned")
+  serviceOrdersCreated  ServiceOrder[]        @relation("ServiceOrderCreated")
   serviceOrderHistory   ServiceOrderHistory[] @relation("ServiceOrderHistory")
   // Cobranças (F3.2 Parte 2): as mesmas três perguntas da OS — quem abriu a
   // cobrança, quem registrou o recebimento e quem cancelou.
-  chargesCreated        Charge[] @relation("ChargeCreated")
-  chargesPaid           Charge[] @relation("ChargePaid")
-  chargesCancelled      Charge[] @relation("ChargeCancelled")
+  chargesCreated        Charge[]              @relation("ChargeCreated")
+  chargesPaid           Charge[]              @relation("ChargePaid")
+  chargesCancelled      Charge[]              @relation("ChargeCancelled")
 
   notifications           Notification[]
   notificationPreferences NotificationPreference[]
+  // F4: os códigos de um lado (verificação de e-mail, segundo fator) vivem em
+  // tabelas próprias e caem junto da conta — são chave de acesso dela, e uma
+  // chave órfã de quem saiu do sistema não tem dono nem utilidade.
+  verificationTokens      EmailVerificationToken[]
+  recoveryCodes           RecoveryCode[]
 
   @@map("users")
 }
 
 model Company {
-  id                String            @id @default(uuid()) @db.VarChar(36)
-  name              String
-  slug              String            @unique
-  active            Boolean           @default(true)
-  legalName         String?           @map("legal_name") @db.VarChar(160)
-  tradeName         String?           @map("trade_name") @db.VarChar(160)
-  cnpj              String?           @db.VarChar(18)
-  phone             String?           @db.VarChar(32)
-  email             String?           @db.VarChar(160)
-  zipCode           String?           @map("zip_code") @db.VarChar(16)
-  street            String?           @db.VarChar(160)
-  number            String?           @db.VarChar(32)
-  district          String?           @db.VarChar(80)
-  city              String?           @db.VarChar(80)
-  stateUf           String?           @map("state_uf") @db.VarChar(2)
-  logoUrl           String?           @map("logo_url") @db.VarChar(255)
-  currency          String            @default("BRL") @db.VarChar(8)
-  timezone          String            @default("America/Sao_Paulo") @db.VarChar(64)
-  language          String            @default("pt-BR") @db.VarChar(8)
-  revenueTarget     Decimal?          @map("revenue_target") @db.Decimal(14, 2)
+  id                   String            @id @default(uuid()) @db.VarChar(36)
+  name                 String
+  slug                 String            @unique
+  active               Boolean           @default(true)
+  legalName            String?           @map("legal_name") @db.VarChar(160)
+  tradeName            String?           @map("trade_name") @db.VarChar(160)
+  cnpj                 String?           @db.VarChar(18)
+  phone                String?           @db.VarChar(32)
+  email                String?           @db.VarChar(160)
+  zipCode              String?           @map("zip_code") @db.VarChar(16)
+  street               String?           @db.VarChar(160)
+  number               String?           @db.VarChar(32)
+  district             String?           @db.VarChar(80)
+  city                 String?           @db.VarChar(80)
+  stateUf              String?           @map("state_uf") @db.VarChar(2)
+  logoUrl              String?           @map("logo_url") @db.VarChar(255)
+  currency             String            @default("BRL") @db.VarChar(8)
+  timezone             String            @default("America/Sao_Paulo") @db.VarChar(64)
+  language             String            @default("pt-BR") @db.VarChar(8)
+  revenueTarget        Decimal?          @map("revenue_target") @db.Decimal(14, 2)
   // Fase 3b da auditoria: política de estoque é decisão da empresa, não do
   // sistema. Falso (padrão) = nenhuma saída empurra o saldo para negativo;
   // verdadeiro = a baixa acontece mesmo sem saldo e o negativo fica visível
   // como dívida de estoque a acertar.
-  allowNegativeStock Boolean          @default(false) @map("allow_negative_stock")
+  allowNegativeStock   Boolean           @default(false) @map("allow_negative_stock")
   // Fase 3e da auditoria: venda confirmada e compra recebida existiam sem
   // reflexo nenhum no financeiro — o relatório mostrava a receita e o caixa
   // nunca tinha visto aquele dinheiro. O vínculo passa a ser gerado pelo
@@ -106,23 +128,23 @@ model Company {
   // querer. São duas chaves e não uma só porque venda e compra são decisões de
   // hábito diferentes: há quem confira o dinheiro que entra e lance o que sai
   // à mão, e o contrário também existe.
-  autoFinanceSales Boolean            @default(false) @map("auto_finance_sales")
-  autoFinancePurchases Boolean        @default(false) @map("auto_finance_purchases")
-  createdAt         DateTime          @default(now()) @map("created_at")
-  updatedAt         DateTime          @updatedAt @map("updated_at")
-  members           CompanyUser[]
-  auditLogs         AuditLog[]
-  clients           Client[]
-  categories        ProductCategory[]
-  products          Product[]
-  stockMovements    StockMovement[]
-  sales             Sale[]
-  suppliers         Supplier[]
-  purchases         Purchase[]
-  financeCategories FinanceCategory[]
-  financeEntries    FinanceEntry[]
-  leads             Lead[]
-  agendaEvents      AgendaEvent[]
+  autoFinanceSales     Boolean           @default(false) @map("auto_finance_sales")
+  autoFinancePurchases Boolean           @default(false) @map("auto_finance_purchases")
+  createdAt            DateTime          @default(now()) @map("created_at")
+  updatedAt            DateTime          @updatedAt @map("updated_at")
+  members              CompanyUser[]
+  auditLogs            AuditLog[]
+  clients              Client[]
+  categories           ProductCategory[]
+  products             Product[]
+  stockMovements       StockMovement[]
+  sales                Sale[]
+  suppliers            Supplier[]
+  purchases            Purchase[]
+  financeCategories    FinanceCategory[]
+  financeEntries       FinanceEntry[]
+  leads                Lead[]
+  agendaEvents         AgendaEvent[]
 
   notificationPreferences NotificationPreference[]
   notifications           Notification[]
@@ -278,6 +300,54 @@ model PasswordResetToken {
   @@map("password_reset_tokens")
 }
 
+// F4 (decisão D2): o mesmo desenho do token de recuperação, para outra
+// pergunta — "este e-mail existe de fato?". Guarda só o HMAC, nunca o código,
+// por nada: uma tabela dessas lida junto do dump do banco daria a qualquer um o
+// direito de confirmar a caixa postal de outra pessoa.
+model EmailVerificationToken {
+  id        String    @id @default(uuid()) @db.VarChar(36)
+  userId    String    @map("user_id") @db.VarChar(36)
+  tokenHash String    @unique @map("token_hash")
+  expiresAt DateTime  @map("expires_at")
+  usedAt    DateTime? @map("used_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("email_verification_tokens")
+}
+
+// F4 (decisão D3): códigos de recuperação do segundo fator, um por linha, cada
+// um usável uma única vez. Hash (o mesmo HMAC dos tokens de sessão) e não
+// segredo em claro: quem lê o banco não ganha uma porta de entrada, e quem
+// perdeu o telefone continua tendo como entrar.
+model RecoveryCode {
+  id        String    @id @default(uuid()) @db.VarChar(36)
+  userId    String    @map("user_id") @db.VarChar(36)
+  codeHash  String    @unique @map("code_hash")
+  usedAt    DateTime? @map("used_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("recovery_codes")
+}
+
+// F4: tentativa de login por endereço de e-mail. A chave é o endereço, e não o
+// id da conta, de propósito: um atacante que testa endereços que não existem
+// ainda não sabe que não sabe — sem esta linha o bloqueio existiria só para
+// quem acertou um e-mail cadastrado, e a própria diferença de resposta entregaria
+// a informação. A tabela é de contagem, não de usuário: nada aponta para `users`.
+model LoginAttempt {
+  email         String    @id @db.VarChar(191)
+  failures      Int       @default(0)
+  firstFailedAt DateTime  @map("first_failed_at")
+  lastFailedAt  DateTime  @map("last_failed_at")
+  lockedUntil   DateTime? @map("locked_until")
+
+  @@map("login_attempts")
+}
+
 model ProductCategory {
   id        String    @id @default(uuid()) @db.VarChar(36)
   companyId String    @map("company_id") @db.VarChar(36)
@@ -293,24 +363,24 @@ model ProductCategory {
 }
 
 model Product {
-  id            String           @id @default(uuid()) @db.VarChar(36)
-  companyId     String           @map("company_id") @db.VarChar(36)
-  categoryId    String?          @map("category_id") @db.VarChar(36)
-  name          String           @db.VarChar(160)
-  sku           String?          @db.VarChar(64)
-  unit          String           @default("un") @db.VarChar(16)
-  costPrice     Decimal?         @map("cost_price") @db.Decimal(12, 2)
-  salePrice     Decimal          @map("sale_price") @db.Decimal(12, 2)
-  stockQuantity Decimal          @default(0) @map("stock_quantity") @db.Decimal(12, 3)
-  minStock      Decimal          @default(0) @map("min_stock") @db.Decimal(12, 3)
-  trackStock    Boolean          @default(true) @map("track_stock")
-  description   String?          @db.Text
-  active        Boolean          @default(true)
-  createdAt     DateTime         @default(now()) @map("created_at")
-  updatedAt     DateTime         @updatedAt @map("updated_at")
-  company       Company          @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  category      ProductCategory? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
-  movements     StockMovement[]
+  id                String             @id @default(uuid()) @db.VarChar(36)
+  companyId         String             @map("company_id") @db.VarChar(36)
+  categoryId        String?            @map("category_id") @db.VarChar(36)
+  name              String             @db.VarChar(160)
+  sku               String?            @db.VarChar(64)
+  unit              String             @default("un") @db.VarChar(16)
+  costPrice         Decimal?           @map("cost_price") @db.Decimal(12, 2)
+  salePrice         Decimal            @map("sale_price") @db.Decimal(12, 2)
+  stockQuantity     Decimal            @default(0) @map("stock_quantity") @db.Decimal(12, 3)
+  minStock          Decimal            @default(0) @map("min_stock") @db.Decimal(12, 3)
+  trackStock        Boolean            @default(true) @map("track_stock")
+  description       String?            @db.Text
+  active            Boolean            @default(true)
+  createdAt         DateTime           @default(now()) @map("created_at")
+  updatedAt         DateTime           @updatedAt @map("updated_at")
+  company           Company            @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  category          ProductCategory?   @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  movements         StockMovement[]
   saleItems         SaleItem[]
   purchaseItems     PurchaseItem[]
   serviceOrderItems ServiceOrderItem[]
@@ -340,23 +410,23 @@ model StockMovement {
 
 // ===== Vendas (modulo 8) =====
 model Sale {
-  id        String     @id @default(uuid()) @db.VarChar(36)
-  companyId String     @map("company_id") @db.VarChar(36)
-  clientId  String?    @map("client_id") @db.VarChar(36)
-  userId    String?    @map("user_id") @db.VarChar(36)
-  status    SaleStatus @default(PENDING)
-  total     Decimal    @db.Decimal(14, 2)
+  id             String         @id @default(uuid()) @db.VarChar(36)
+  companyId      String         @map("company_id") @db.VarChar(36)
+  clientId       String?        @map("client_id") @db.VarChar(36)
+  userId         String?        @map("user_id") @db.VarChar(36)
+  status         SaleStatus     @default(PENDING)
+  total          Decimal        @db.Decimal(14, 2)
   // Fase 3e: em quantas parcelas mensais o total se divide. 1 (padrão) é "à
   // vista" — uma única parcela com o valor cheio, que é exatamente o que o
   // financeiro mostrava quando o lançamento era feito à mão.
-  installments Int      @default(1)
-  notes     String?    @db.VarChar(500)
-  createdAt DateTime   @default(now()) @map("created_at")
-  updatedAt DateTime   @updatedAt @map("updated_at")
-  company   Company    @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  client    Client?    @relation(fields: [clientId], references: [id], onDelete: SetNull)
-  user      User?      @relation(fields: [userId], references: [id], onDelete: SetNull)
-  items     SaleItem[]
+  installments   Int            @default(1)
+  notes          String?        @db.VarChar(500)
+  createdAt      DateTime       @default(now()) @map("created_at")
+  updatedAt      DateTime       @updatedAt @map("updated_at")
+  company        Company        @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  client         Client?        @relation(fields: [clientId], references: [id], onDelete: SetNull)
+  user           User?          @relation(fields: [userId], references: [id], onDelete: SetNull)
+  items          SaleItem[]
   // Procedência dos lançamentos gerados (lib/installments.ts). SetNull e não
   // Cascade: lançamento é escrituração — a venda pode sair do sistema, o
   // lançamento que já foi pago não sai junto com ela.
@@ -402,22 +472,22 @@ model Supplier {
 }
 
 model Purchase {
-  id         String         @id @default(uuid()) @db.VarChar(36)
-  companyId  String         @map("company_id") @db.VarChar(36)
-  supplierId String         @map("supplier_id") @db.VarChar(36)
-  userId     String?        @map("user_id") @db.VarChar(36)
-  status     PurchaseStatus @default(DRAFT)
-  total      Decimal        @db.Decimal(14, 2)
+  id             String         @id @default(uuid()) @db.VarChar(36)
+  companyId      String         @map("company_id") @db.VarChar(36)
+  supplierId     String         @map("supplier_id") @db.VarChar(36)
+  userId         String?        @map("user_id") @db.VarChar(36)
+  status         PurchaseStatus @default(DRAFT)
+  total          Decimal        @db.Decimal(14, 2)
   // Mesma régua da venda (Fase 3e): quantas parcelas mensais o fornecedor vai
   // receber. 1 é à vista.
-  installments Int          @default(1)
-  notes      String?        @db.VarChar(500)
-  createdAt  DateTime       @default(now()) @map("created_at")
-  updatedAt  DateTime       @updatedAt @map("updated_at")
-  company    Company        @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  supplier   Supplier       @relation(fields: [supplierId], references: [id], onDelete: Restrict)
-  user       User?          @relation(fields: [userId], references: [id], onDelete: SetNull)
-  items      PurchaseItem[]
+  installments   Int            @default(1)
+  notes          String?        @db.VarChar(500)
+  createdAt      DateTime       @default(now()) @map("created_at")
+  updatedAt      DateTime       @updatedAt @map("updated_at")
+  company        Company        @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  supplier       Supplier       @relation(fields: [supplierId], references: [id], onDelete: Restrict)
+  user           User?          @relation(fields: [userId], references: [id], onDelete: SetNull)
+  items          PurchaseItem[]
   financeEntries FinanceEntry[]
 
   @@index([companyId, status, createdAt])
@@ -795,37 +865,37 @@ enum ServiceOrderItemKind {
 }
 
 model ServiceOrder {
-  id             String               @id @default(uuid()) @db.VarChar(36)
-  companyId      String               @map("company_id") @db.VarChar(36)
+  id             String                @id @default(uuid()) @db.VarChar(36)
+  companyId      String                @map("company_id") @db.VarChar(36)
   // Sequencial por empresa. Não é o id: o id serve para a máquina, o número
   // serve para o balcão e para a conversa com o cliente.
   number         Int
-  clientId       String               @map("client_id") @db.VarChar(36)
-  assignedUserId String?              @map("assigned_user_id") @db.VarChar(36)
-  status         ServiceOrderStatus   @default(OPEN)
-  priority       ServiceOrderPriority @default(NORMAL)
-  title          String               @db.VarChar(160)
-  description    String?              @db.Text
-  diagnosis      String?              @db.Text
-  scheduledAt    DateTime?            @map("scheduled_at")
-  startedAt      DateTime?            @map("started_at")
-  completedAt    DateTime?            @map("completed_at")
+  clientId       String                @map("client_id") @db.VarChar(36)
+  assignedUserId String?               @map("assigned_user_id") @db.VarChar(36)
+  status         ServiceOrderStatus    @default(OPEN)
+  priority       ServiceOrderPriority  @default(NORMAL)
+  title          String                @db.VarChar(160)
+  description    String?               @db.Text
+  diagnosis      String?               @db.Text
+  scheduledAt    DateTime?             @map("scheduled_at")
+  startedAt      DateTime?             @map("started_at")
+  completedAt    DateTime?             @map("completed_at")
   // O desconto é gravado junto da OS, mas o total nunca vem da tela: ele é a
   // soma das linhas em centavo menos o desconto, calculada no servidor (Fase 3d
   // — dinheiro anda em Decimal, não em vírgula flutuante).
-  discount       Decimal              @default(0) @db.Decimal(14, 2)
-  total          Decimal              @db.Decimal(14, 2)
-  notes          String?              @db.VarChar(500)
-  createdBy      String?              @map("created_by") @db.VarChar(36)
-  createdAt      DateTime             @default(now()) @map("created_at")
-  updatedAt      DateTime             @updatedAt @map("updated_at")
-  company        Company              @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  discount       Decimal               @default(0) @db.Decimal(14, 2)
+  total          Decimal               @db.Decimal(14, 2)
+  notes          String?               @db.VarChar(500)
+  createdBy      String?               @map("created_by") @db.VarChar(36)
+  createdAt      DateTime              @default(now()) @map("created_at")
+  updatedAt      DateTime              @updatedAt @map("updated_at")
+  company        Company               @relation(fields: [companyId], references: [id], onDelete: Cascade)
   // Restrict nos dois lados do cadastro: cliente com ordem de serviço não se
   // apaga, e peça que já saiu numa OS concluída também não. Histórico é a
   // memória da empresa — não se apaga memória para liberar um formulário.
-  client         Client               @relation(fields: [clientId], references: [id], onDelete: Restrict)
-  assignedUser   User?                @relation("ServiceOrderAssigned", fields: [assignedUserId], references: [id], onDelete: SetNull)
-  creator        User?                @relation("ServiceOrderCreated", fields: [createdBy], references: [id], onDelete: SetNull)
+  client         Client                @relation(fields: [clientId], references: [id], onDelete: Restrict)
+  assignedUser   User?                 @relation("ServiceOrderAssigned", fields: [assignedUserId], references: [id], onDelete: SetNull)
+  creator        User?                 @relation("ServiceOrderCreated", fields: [createdBy], references: [id], onDelete: SetNull)
   items          ServiceOrderItem[]
   history        ServiceOrderHistory[]
   charges        Charge[]
@@ -863,15 +933,15 @@ model ServiceOrderItem {
 // ela é a prova de quem tomou cada decisão, incluída a de estornar uma OS
 // concluída — que só ADMIN/OWNER fazem.
 model ServiceOrderHistory {
-  id             String               @id @default(uuid()) @db.VarChar(36)
-  serviceOrderId String               @map("service_order_id") @db.VarChar(36)
-  fromStatus     ServiceOrderStatus?  @map("from_status")
-  toStatus       ServiceOrderStatus   @map("to_status")
-  userId         String?              @map("user_id") @db.VarChar(36)
-  note           String?              @db.VarChar(500)
-  createdAt      DateTime             @default(now()) @map("created_at")
-  serviceOrder   ServiceOrder         @relation(fields: [serviceOrderId], references: [id], onDelete: Cascade)
-  user           User?                @relation("ServiceOrderHistory", fields: [userId], references: [id], onDelete: SetNull)
+  id             String              @id @default(uuid()) @db.VarChar(36)
+  serviceOrderId String              @map("service_order_id") @db.VarChar(36)
+  fromStatus     ServiceOrderStatus? @map("from_status")
+  toStatus       ServiceOrderStatus  @map("to_status")
+  userId         String?             @map("user_id") @db.VarChar(36)
+  note           String?             @db.VarChar(500)
+  createdAt      DateTime            @default(now()) @map("created_at")
+  serviceOrder   ServiceOrder        @relation(fields: [serviceOrderId], references: [id], onDelete: Cascade)
+  user           User?               @relation("ServiceOrderHistory", fields: [userId], references: [id], onDelete: SetNull)
 
   @@index([serviceOrderId, createdAt])
   @@map("service_order_histories")

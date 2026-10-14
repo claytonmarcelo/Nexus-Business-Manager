@@ -24,6 +24,11 @@ type Linha = {
   url: string;
   publica: boolean;
   autenticada: boolean;
+  // F4 (D3): as etapas do login não têm sessão para conferir — quem apresenta é um
+  // token curto e com escopo, emitido pela própria rota de login. O decorador que
+  // os confere é outro (`authenticateSegundoFator`), e a matriz precisa enxergar
+  // essa terceira porta em vez de fingir que ela é pública.
+  deEtapa: boolean;
   fonte: string;
 };
 
@@ -44,22 +49,37 @@ const PUBLICAS = [
   "GET /api/health",
   "GET /api/public/landing",
   "GET /api/public/legal/:kind",
+  "POST /api/auth/2fa/challenge",
   "POST /api/auth/forgot-password",
   "POST /api/auth/login",
   "POST /api/auth/logout",
   "POST /api/auth/refresh",
   "POST /api/auth/register",
+  "POST /api/auth/resend-verification",
   "POST /api/auth/reset-password",
+  "POST /api/auth/verify-email",
   "POST /api/public/bypass",
 ];
+
+// F4 (D3): as duas rotas que atravessam o gate com token de etapa. Elas não têm
+// sessão (por isso não entram em DE_CONTA) e não são abertas (por isso não estão em
+// PUBLICAS): o que cada uma exige é o token de quinze minutos com escopo
+// `2fa-configuracao` que o login obrigatório devolveu, conferido pelo decorador
+// próprio e amarrado ao escopo dentro do handler. Uma rota nova que nascer com
+// esse decorador fora desta lista derruba o teste.
+const DE_ETAPA = ["POST /api/auth/2fa/activate", "POST /api/auth/2fa/setup"];
 
 // Rotas autenticadas que falam com a CONTA, não com uma empresa escolhida pelo
 // contexto. Nenhuma devolve dado de tenant: duas listam os vínculos do próprio
 // usuário, uma cria um tenant novo e uma devolve tabelas fixas (moeda, fuso,
 // idioma) para o formulário de criação.
 const DE_CONTA = [
+  "GET /api/auth/2fa/status",
   "GET /api/companies",
   "GET /api/companies/settings/opcoes",
+  "POST /api/auth/2fa/ativar",
+  "POST /api/auth/2fa/desativar",
+  "POST /api/auth/2fa/preparar",
   "POST /api/auth/switch-company",
   "POST /api/companies",
 ];
@@ -154,6 +174,7 @@ beforeAll(async () => {
       url: rota.url,
       publica: rota.config?.public === true,
       autenticada: lista.includes(app.authenticate),
+      deEtapa: lista.includes(app.authenticateSegundoFator),
       fonte: String(rota.handler),
     });
   });
@@ -174,7 +195,9 @@ afterAll(async () => {
 
 describe("Matriz de rotas lida do próprio Fastify (F2)", () => {
   it("nenhuma rota nasce sem app.authenticate e sem carimbo de pública", () => {
-    const semGate = linhas.filter((l) => l.metodo !== "OPTIONS" && !l.autenticada && !l.publica);
+    // A rota de etapa conta como autenticada: o decorador é outro, mas ela pede
+    // alguma coisa antes de chegar ao handler — que é o que o gate vigia.
+    const semGate = linhas.filter((l) => l.metodo !== "OPTIONS" && !l.autenticada && !l.deEtapa && !l.publica);
     expect(semGate.map(chave)).toEqual([]);
   });
 
@@ -203,9 +226,23 @@ describe("Matriz de rotas lida do próprio Fastify (F2)", () => {
   it("cada rota é plataforma, empresa ou conta, e as de conta são as declaradas", () => {
     // Só entra na partição quem tem sessão: as públicas já foram julgadas na
     // regra 3, e misturar as duas listas faria uma rota pública sem contexto
-    // parecer uma rota de conta nova.
-    const deConta = negocio().filter((l) => !l.publica && !plataforma(l) && !deEmpresa(l)).map(chave).sort();
+    // parecer uma rota de conta nova. As de etapa ficam de fora por outro motivo:
+    // elas têm um token, mas não é sessão — é o token de escopo do login.
+    const deConta = negocio()
+      .filter((l) => !l.publica && !l.deEtapa && !plataforma(l) && !deEmpresa(l))
+      .map(chave)
+      .sort();
     expect(deConta).toEqual([...DE_CONTA].sort());
+
+    // E a porta de etapa é exatamente a declarada — nem uma a mais, porque rota de
+    // etapa que ninguém declarou é uma porta que abre sessão sem segundo fator.
+    const deEtapa = negocio().filter((l) => l.deEtapa).map(chave).sort();
+    expect(deEtapa).toEqual([...DE_ETAPA].sort());
+    // Dupla conferência: quem é de etapa não é autenticado pela sessão comum.
+    for (const linha of negocio().filter((l) => l.deEtapa)) {
+      expect(linha.autenticada, chave(linha)).toBe(false);
+      expect(linha.publica, chave(linha)).toBe(false);
+    }
 
     // Área de plataforma mora em prefixos conhecidos. Uma rota nova que se diga
     // de plataforma fora deles é achado a ser julgado, não exceção silenciosa.

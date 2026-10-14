@@ -26,6 +26,20 @@ describe("Segurança de produção (Fase 2)", () => {
   const sessoesVivas = (userId: string) =>
     prisma.refreshToken.count({ where: { userId, revokedAt: null } });
 
+  // Janela de corrida de abas (T3.5): dez segundos. Repetida aqui de propósito —
+  // este arquivo prova o ROUBO, e o roubo é o que acontece depois dela.
+  const JANELA_DE_CORRIDA_MS = 10_000;
+
+  /** Volta no tempo o consumo de um token rotacionado, sem dormir na suíte. */
+  async function atrasarRotacao(refreshToken: string): Promise<void> {
+    const registro = await prisma.refreshToken.findUniqueOrThrow({ where: { tokenHash: hashToken(refreshToken) } });
+    if (!registro.usedAt) throw new Error("esperava token já rotacionado");
+    await prisma.refreshToken.update({
+      where: { id: registro.id },
+      data: { usedAt: new Date(registro.usedAt.getTime() - (JANELA_DE_CORRIDA_MS + 5_000)) },
+    });
+  }
+
   // ---- 1. Gate estrutural ----
 
   it("o gate recusa o registro de uma rota sem autenticação", async () => {
@@ -85,6 +99,13 @@ describe("Segurança de produção (Fase 2)", () => {
 
     // O token velho reaparece — o dono legítimo nunca reapresenta o que já
     // trocou. A família inteira cai.
+    //
+    // T3.5 (F4) abriu uma janela de dez segundos para a segunda aba do mesmo
+    // navegador, e `corrida-de-abas.test.ts` prova o que acontece dentro dela. Este
+    // caso é o roubo, que por definição chega depois: aqui o consumo do token volta
+    // no tempo, para que a reapresentação caia fora da janela sem que a suíte durma
+    // dez segundos. A asserção não muda — 401, família no chão e trilha de reuso.
+    await atrasarRotacao(antigo);
     const reuso = await app.inject({ method: "POST", url: "/api/auth/refresh", payload: { refreshToken: antigo } });
     expect(reuso.statusCode).toBe(401);
     expect(await sessoesVivas(f.userId)).toBe(0);

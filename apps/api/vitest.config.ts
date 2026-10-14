@@ -63,8 +63,12 @@ export default defineConfig({
     // por rota — login, cadastro, recuperação — continuam nos valores reais,
     // porque é o comportamento deles que os testes de auth provam.
     // `DATABASE_URL` é a linha da decisão D6: dentro do teste, o banco é sempre
-    // o de prova, nunca o do servidor de desenvolvimento.
-    env: { RATE_LIMIT_MAX: "100000", DATABASE_URL: URL_DE_PROVA },
+    // o de prova, nunca o do servidor de desenvolvimento. `MAIL_TRANSPORT=memory`
+    // é a linha da F4 (D1): sem ela, cada teste que pede recuperação de senha
+    // imprimiria o código gerado no console do vitest — inútil (a caixa de teste
+    // é injetada por quem precisa ler a mensagem) e barulhento para quem lê a
+    // saída. Nenhum teste depende de escrever num servidor de e-mail.
+    env: { RATE_LIMIT_MAX: "100000", DATABASE_URL: URL_DE_PROVA, MAIL_TRANSPORT: "memory" },
 
     testTimeout: 20000,
     hookTimeout: 20000,

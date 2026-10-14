@@ -27,7 +27,12 @@ export function registerAuthGate(app: FastifyInstance): void {
       : route.preHandler
         ? [route.preHandler]
         : [];
-    if (lista.includes(app.authenticate)) return;
+    // F4 (D3): a segunda aceitação é o decorador das etapas do login, que também é
+    // função nomeada conferida por identidade. Rota de segundo fator não tem
+    // sessão para conferir — o que ela tem é um token de etapa, e o que o gate
+    // vigia continua sendo "a rota pede alguma coisa", não "a rota pede o
+    // authenticate". Uma rota que não pede nada ainda derruba a subida.
+    if (lista.includes(app.authenticate) || lista.includes(app.authenticateSegundoFator)) return;
     const metodos = Array.isArray(route.method) ? route.method.join(",") : route.method;
     // Pré-voo do CORS: o @fastify/cors registra um `OPTIONS *` por conta própria
     // para responder preflight, e o HEAD espelho do GET herda o carimbo. Rota
