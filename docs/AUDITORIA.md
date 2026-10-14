@@ -1811,21 +1811,46 @@ significa que uma decisão derrubou a família inteira, e o caminho cai no mesmo
 rotação (`atrasarRotacao`) para tirar o caso da corrida legítima. Verde medido: 53 casos nos quatro arquivos
 rápidos e 30 nos dois que cobrem as guardas herdadas.
 
-### N58 — aberto: a entrega de e-mail espera dentro do request HTTP
+### N58 — corrigido na T5.3: a entrega de e-mail esperava dentro do request HTTP
 
-Os três envios reais são `await mailer().enviar(...)` chamados de dentro do handler
-(`auth.service.ts:615`, `verificacao.service.ts:53`, `segundo-fator.service.ts:357`). A regra 2 do desenho do
-G1 pedia fila ("nenhum request HTTP fica esperando provedor de e-mail"); a porta de hoje não tem fila, não tem
-re-tentativa e não tem backoff, e o `nodemailer` do `smtp.ts` roda com `connectionTimeout`,
-`greetingTimeout` e `dataTimeout` nos padrões dele. Um SMTP que aceita a conexão e demora para entregar segura
-a requisição — e no caso da verificação de cadastro, a pessoa está olhando para uma tela de "criando sua
-conta". O erro é tratado (vira auditoria `*_entrega_falhou` e a resposta HTTP não muda), então o risco é de
-tempo e de fila de conexões, não de consistência.
+Os três envios reais eram `await mailer().enviar(...)` chamados de dentro do handler
+(`auth.service.ts`, `verificacao.service.ts`, `segundo-fator.service.ts`). A regra 2 do desenho do G1 pedia
+fila ("nenhum request HTTP fica esperando provedor de e-mail"); a porta de então não tinha fila, não tinha
+re-tentativa e não tinha recuo, e o `nodemailer` do `smtp.ts` rodava com `connectionTimeout`,
+`greetingTimeout`, `socketTimeout` e `dnsTimeout` nos padrões dele. Um SMTP que aceita a conexão e demora para
+entregar segura a requisição — e no caso da verificação de cadastro, a pessoa está olhando para uma tela de
+"criando sua conta". O erro é tratado (vira auditoria `*_entrega_falhou` e a resposta HTTP não muda), então o
+risco é de tempo e de fila de conexões, não de consistência.
 
 Não foi corrigido em silêncio por escopo: a D1 pedia "entrega funcionando e código fora da resposta", e isso
 está entregue e provado. A assincronização mexe no ciclo de vida do request e pertence à fase de operação
 (**T5 / F6**), junto do `docs/PRODUCAO.md` que vai dizer qual SMTP apontar. Registrado aqui para a T5 não
 descobrir isso no escuro, do mesmo jeito que o N54 ficou registrado para a T7.
+
+**Correção (T5.3, 2026-10-14).** Vermelho medido antes: com um entregador de 250 ms injetado no lugar do SMTP,
+o `POST /api/auth/forgot-password` respondeu em **320 ms** (`expected 320 to be less than 250`). Depois, com a
+mesma injeção e o atraso de prova já em 600 ms: **7,43 ms** (o `responseTime` do pino na corrida que fechou o
+arquivo verde), e no instante da resposta a caixa do entregador estava vazia com uma mensagem viva na
+fila (`vivas: 1`). O que existe agora é `apps/api/src/lib/mail/fila.ts` — fila de memória do processo,
+consumidor único, FIFO, três tentativas com recuo exponencial, teto por tentativa e teto de tamanho, com a
+auditoria de falha carimbada pelo worker depois da última tentativa (uma linha, com a contagem). Os handlers
+passaram a chamar `enfileirarMail(...)`, e o desligue do servidor drena a fila antes de fechar. As quatro
+chaves (`MAIL_TENTATIVAS`, `MAIL_BACKOFF_BASE_MS`, `MAIL_TIMEOUT_MS`, `MAIL_FILA_MAXIMA`) têm padrão no código,
+nenhuma é obrigatória, e a régua de produção não mudou. O porquê de a fila não ser persistida no banco, e o que
+isso custa, está em `docs/adr/0020-entrega-de-email-por-fila-de-memoria.md`; a operação lê o resto em
+`docs/PRODUCAO.md` seção 10. Verde medido: 5 casos novos em `test/fila-de-mail.test.ts`, e os quatro arquivos
+que leem caixa de e-mail (`recuperacao-por-email`, `verificacao-de-email`, `segundo-fator`, `guardas-herdadas`)
+ganharam dreno sem perder nenhuma asserção.
+
+Dois erros registrados aqui porque a linha existe para isso. O primeiro é **meu, não do código**: esta linha
+da auditoria citava `dataTimeout` entre os tempos do nodemailer, e esse nome não existe nos tipos da
+biblioteca 10.1.0 — a tentativa de usá-lo deu `TS2769`, e o `.env.example` tinha repetido o nome errado. Os
+quatro tempos reais (`connectionTimeout`, `greetingTimeout`, `socketTimeout`, `dnsTimeout`) foram conferidos em
+`node_modules/nodemailer/dist/cjs/smtp-connection/index.d.ts` e são os que o transporte declara agora. O
+segundo é de medição, e virou regra de teste: o primeiro request do processo carrega um custo frio que não é da
+fila (medido em 1 269 ms de `responseTime` numa corrida e 1 708 ms em `makeAccount` em outra, com o mesmo
+caminho de e-mail já drenado), então o caso de tempo aquece a rota antes de medir e o atraso de prova subiu para
+600 ms — com 250 ms um soluço do Windows (259 ms observado) é indistinguível de "o request pagou o provedor".
 
 ### N59 — aberto: o sino e o relatório diário continuam sem chamador de e-mail, e uma frase da tela pode estar errada
 
@@ -2153,5 +2178,76 @@ Também fica declarado aqui o que a restauração **não** foi testada contra: o
 (3306, banco de desenvolvimento). Por D6 as três peças falam só com o MySQL do container, e a régua mede no
 container de pé que o serviço `mysql` não publica porta nenhuma no host — não existe socket por onde um dump
 pudesse estar lendo o banco do dono sem alguém querer.
+
+# Adenda da execução — T5.3 (F6: entrega de e-mail fora do request) encerrada — 2026-10-14
+
+Terceiro item da T5: a regra 2 do desenho do G1 — *"nenhum request HTTP fica esperando provedor de e-mail"*.
+O achado é o N58, e a correção coube inteira no processo: `apps/api/src/lib/mail/fila.ts` é a fila de memória
+do processo (consumidor único, FIFO, recuo exponencial, teto por tentativa, teto de tamanho), os três chamadores
+passaram a entregar um código e o worker é que fala com o SMTP. O que a régua do N58 exigiu como prova não é a
+ausência de erro — é a **ausência de espera**: com um entregador de 600 ms injetado no lugar do SMTP, o
+`POST /api/auth/forgot-password` respondeu em **7,43 ms**, a caixa do entregador estava **vazia** e a fila tinha
+**1 mensagem viva** naquele instante. Verde medido nesta árvore: **API 48 arquivos / 442 casos** (os cinco casos
+novos de `test/fila-de-mail.test.ts`, mais os quatro arquivos que leem caixa de e-mail —
+`recuperacao-por-email`, `verificacao-de-email`, `segundo-fator`, `guardas-herdadas` — adaptados com dreno, sem
+uma asserção removida). Decisão em `docs/adr/0020-entrega-de-email-por-fila-de-memoria.md`, operação na seção 10
+de `docs/PRODUCAO.md`, e a regra 2 do `docs/decisoes/G1-envio-de-email.md` saiu de "NÃO cumprida".
+
+Três vermelhos apareceram no caminho, e a origem de cada um foi conferida antes de mexer em qualquer um deles.
+
+### O primeiro era do código, e o teste o achou por semântica
+
+`aguardarFilaDeMail()` acordava dentro de `concluir()`, que ainda estava **dentro** do laço do worker. O estado
+medido no `expect` foi `{ vivas: 0, naFila: 0, trabalhando: true }` contra o `{ vivas: 0, naFila: 0,
+trabalhando: false }` que o teste pedia — ou seja, "a fila esvaziou" era verdade para as mensagens e mentira para
+o processo: um teste que passasse nesse estado poderia encerrar enquanto a última entrega ainda estava no
+`await` do SMTP. Corrigido no `fila.ts`, não no teste: o aviso aos despertadores agora confere as três condições
+(`vivas`, `fila.length`, `trabalhando`) e é chamado também no `finally` do laço. O mesmo `finally` é o que impede
+a fila de ficar parada sem avisar quando o worker morre — e ela **não** se religa no mesmo turno, porque um erro
+que se repete viraria laço quente; o `aguardarFilaDeMail()` estoura o teto de 5 s e denuncia, que é o
+comportamento correto para uma fila parada.
+
+### Os outros dois eram meus, e ficaram escritos para a próxima leitura não repetir
+
+O primeiro é de biblioteca: esta auditoria e o `.env.example` citavam `dataTimeout` entre os tempos do
+`nodemailer`, e esse nome **não existe** nos tipos da versão 10.1.0 — a tentativa de usá-lo deu `TS2769`. Os
+quatro tempos reais (`connectionTimeout`, `greetingTimeout`, `socketTimeout`, `dnsTimeout`) foram conferidos em
+`node_modules/nodemailer/dist/cjs/smtp-connection/index.d.ts` e são os que o transporte declara agora. O segundo
+é de medição: o primeiro contato do processo com o Prisma e com o HTTP carrega um custo frio que não tem nada a
+ver com a fila — medido em **1 269 ms** de `responseTime` numa corrida e **1 708 ms** em `makeAccount` em outra,
+com o mesmo caminho de e-mail já drenado. Um teste de tempo que não tira esse custo da conta é um teste que passa
+por motivos errados. O caso de tempo aquece a rota antes de medir, o atraso de prova subiu de 250 ms para
+**600 ms** (com 250 ms um soluço de agendamento do Windows — 259 ms observado — é indistinguível de "o request
+pagou o provedor"), e a asserção de tempo nunca anda sozinha: ela é acompanhada das duas leituras independentes
+de relógio (`recebidas: 0` e `vivas: 1`) e de uma medição de contraste que prova que o entregador injetado
+**demora** os 600 ms quando alguém espera por ele.
+
+### N74 — aberto: a fila é do processo, e o preço disso é declarado antes de ser pago
+
+Três limitações que a decisão de não persistir a fila traz junto, nenhuma fingida no repositório:
+
+1. **Processo que morre leva a fila.** Mensagem enfileirada e não entregue no instante de uma queda não chega a
+   ser reenviada por ninguém; o desligue limpo drena com teto de 5 s, e o teto existe exatamente para o desligue
+   não virar uma segunda falha. O caso é raro e o motivo do "por quê" está no ADR-0020: o conteúdo dessas
+   mensagens é código de recuperação e link de verificação — texto puro que não pode virar linha de banco.
+2. **Pelo menos uma vez, com duplicata possível.** A retentativa recua depois de a entrega ter sido aceita pelo
+   provedor e a resposta ter se perdido no caminho, então um SMTP lento pode gerar duas mensagens iguais na caixa
+   de quem pediu recuperação. A escolha declarada é duplicar a perder, e o teto de tentativas limita o estrago.
+3. **Uma fila por réplica.** Com mais de uma instância da API, cada processo tem sua fila e seu contador, e o
+   teto de tamanho (`MAIL_FILA_MAXIMA`, padrão 200) é por processo, não global. Isto não é um problema hoje
+   porque a topologia entregue pela T5.1 é de **uma** réplica da API; no dia em que houver mais de uma, esta
+   linha é o que precisa ser lido antes — a alternativa seria a fila no banco ou no provedor, e as duas são
+   decisão do dono junto da G1.
+
+As quatro chaves novas (`MAIL_TENTATIVAS`, `MAIL_BACKOFF_BASE_MS`, `MAIL_TIMEOUT_MS`, `MAIL_FILA_MAXIMA`) têm
+padrão no código, nenhuma é obrigatória, e a régua de produção (A9) **não** passou a cobrar nenhuma delas: pedir
+uma chave que tem padrão seria derrubar a subida por algo que funciona. O que a régua cobra continua sendo
+`SMTP_HOST`/`SMTP_PORT`/`MAIL_FROM` — sem servidor de saída não há o que enfileirar.
+
+Fica declarado também o que **não** entrou nesta tarefa, para a linha não parecer mais larga do que foi: o
+relatório diário do cron (`apps/api/src/modules/cron/cron.handlers.ts`) e o sino (`notifications.service.ts`)
+seguem sem chamador de e-mail — isso é o N59, que continua aberto e é o próximo item da T5. E o `connectionTimeout`
+do nodemailer não foi tunado por tentativa medida contra um SMTP real: não há credencial viva neste repositório,
+e apontar timeout contra um servidor inventado seria escrever um número sem medição.
 
 

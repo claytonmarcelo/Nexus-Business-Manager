@@ -1,8 +1,9 @@
 # Produção — como uma instalação deste produto nasce
 
 Este arquivo é o caminho de subida de uma instalação real do Nexus Business Manager. A F1.4 escreveu a
-primeira metade — a parte que decide quem manda na plataforma — e a F6 (T5.1 e T5.2, 2026-10-14) escreveu o resto
-no mesmo lugar: a pilha Docker, a porta do banco fechada, o backup com restauração testada e o que foi medido nelas. O que está aqui foi
+primeira metade — a parte que decide quem manda na plataforma — e a F6 (T5.1, T5.2 e T5.3, 2026-10-14) escreveu o resto
+no mesmo lugar: a pilha Docker, a porta do banco fechada, o backup com restauração testada, a fila de entrega
+de e-mail e o que foi medido nelas. O que está aqui foi
 executado nesta máquina com Docker 29.6.2 e MySQL 8.4 em container; nada é promessa de comportamento que o
 repositório ainda não tenha. O que ainda não existe está declarado no fim do arquivo, com a tarefa que o
 traz.
@@ -27,6 +28,11 @@ régua é puro e testado em `apps/api/test/validador-de-producao.test.ts`; o que
 | `REQUIRE_EMAIL_VERIFICATION=1` | em produção o cadastro não entra no painel sem clicar no link |
 | `TOTP_ENCRYPTION_KEY` | 64 caracteres hexadecimais, no mínimo 8 distintos; sem ela o segundo fator não tem onde cifrar o segredo |
 | `WEB_BASE_URL` | https e não local — é o endereço que aparece nos links enviados por e-mail |
+
+As quatro chaves da fila de entrega (`MAIL_TENTATIVAS`, `MAIL_BACKOFF_BASE_MS`, `MAIL_TIMEOUT_MS`,
+`MAIL_FILA_MAXIMA`) **não** estão nessa tabela de propósito: elas têm padrão no código, a régua de produção não
+cobra nenhuma delas, e uma instalação que não as declara entrega com três tentativas, recuo de meio segundo,
+teto de 15 segundos por tentativa e 200 mensagens na espera. A seção 10 diz o que cada uma muda.
 
 Onde cada trilha lê essas chaves:
 
@@ -341,10 +347,44 @@ endereço `http(s)` para o logo), então o backup de hoje é o banco, e é isso 
   literal atribuído a `SEED_ADMIN_PASSWORD`, `SEED_DEV_PASSWORD`, `NEXUS_CAPTURA_SENHA` e `ADMIN_CRIAR_SENHA`
   em qualquer arquivo rastreado.
 
-## 10. O que ainda não está aqui
+## 10. E-mail: fila do processo, retentativa e desligue
 
-- **Entrega de e-mail fora do request** (N58), **chamador de e-mail do sino e do relatório diário** (N59) e
-  **porta administrativa de confirmação de e-mail** (N61) — ainda na T5.
+A decisão inteira está em `docs/adr/0020-entrega-de-email-por-fila-de-memoria.md` (N58, regra 2 do G1). O
+operador precisa de quatro fatos:
+
+1. **Nenhum request espera o provedor.** O handler de recuperação, o de verificação e o de segundo fator
+   empurram a mensagem para `apps/api/src/lib/mail/fila.ts` e devolvem. Medido na corrida que fechou o arquivo
+   verde: com um entregador de 600 ms no ar, o `POST /api/auth/forgot-password` respondeu em **7,43 ms**
+   (`responseTime` do pino), e a mensagem ainda estava viva na fila (`vivas: 1`) no instante da resposta. Antes
+   da fila, com um entregador de 250 ms, o mesmo request pagava **320 ms** — tempo que era
+   do servidor de e-mail, não da pessoa.
+2. **A fila é memória do processo.** Ela não sobrevive a reinício e não é compartilhada entre réplicas. Isso é
+   escolha, não esquecimento: a mensagem de recuperação e a de verificação carregam o código em texto puro, e
+   persistir a fila seria gravar token em repouso — o banco guarda só o HMAC deles. A consequência prática é
+   que o reenvio continua sendo a saída de quem não recebeu, e é por isso que a rota de reenvio existe.
+3. **As quatro chaves, com o padrão de cada uma.** `MAIL_TENTATIVAS` (3) é quantas vezes a fila tenta antes de
+   desistir; `MAIL_BACKOFF_BASE_MS` (500) é a base do recuo exponencial — a segunda espera começa 500 ms depois
+   da primeira falha e a terceira, 1 000 ms; `MAIL_TIMEOUT_MS` (15 000) é o teto de **uma** tentativa, e é o
+   mesmo número que vai para os tempos do socket do nodemailer (`connectionTimeout`, `greetingTimeout`,
+   `socketTimeout`, `dnsTimeout`), que sem declaração ficam nos padrões de cliente interativo — dois minutos
+   para conectar e dez minutos de socket mudo; `MAIL_FILA_MAXIMA` (200) é o teto de mensagens vivas, e o que
+   passa dele é recusado com auditoria, sem tentativa nenhuma.
+4. **O que aparece na auditoria quando dá errado.** Uma linha por mensagem, carimbada pela fila depois da
+   última tentativa: `auth.forgot_password_entrega_falhou`, `auth.verificacao_entrega_falhou` ou
+   `auth.2fa_aviso_entrega_falhou`. Nos dois fluxos de código o metadata traz `{ rotulo, tentativas, motivo }`;
+   no aviso de segundo fator, `{ tentativas, motivo }`. O motivo é o texto curto do erro, sem endereço inteiro,
+   sem token e sem credencial. Sucesso de entrega não gera linha — o que gera é a mensagem na caixa postal de
+   quem pediu.
+
+O desligue drena a fila antes de fechar (`apps/api/src/server.ts`, entre parar o agendador de rotinas e fechar
+o servidor), com teto de 5 segundos. Se não esvaziar a tempo, o processo registra
+`a fila de e-mail não esvaziou antes do desligue` no log e fecha — uma mensagem no meio da terceira tentativa
+se perde, e é por isso que o desligue limpo e o `docker stop` com folga importam.
+
+## 11. O que ainda não está aqui
+
+- **Chamador de e-mail do sino e do relatório diário** (N59) e **porta administrativa de confirmação de
+  e-mail** (N61) — ainda na T5. A entrega em si já sai fora do request desde a T5.3 (N58, seção 10).
 - **Pipeline de CI, `npm audit`, portões de cobertura, `postinstall` do Prisma e o conserto da cadeia de
   migrations para clone limpo** (N54) — F8 (T7).
 - **Política de logs com rotação e retenção** — o backup do banco existe desde a T5.2, a rotação de log ainda não.

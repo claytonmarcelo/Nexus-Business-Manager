@@ -1,5 +1,40 @@
 ## [Não lançado]
 
+### A entrega de e-mail saiu de dentro do request (2026-10-14)
+
+- **O que a regra 2 do G1 cobrava, medido (T5.3 / F6, N58).** Com um entregador injetado que demora 600 ms no
+  lugar do SMTP, o `POST /api/auth/forgot-password` respondeu em **7,43 ms**, a caixa do entregador estava **vazia**
+  e a fila tinha **1 mensagem viva** naquele instante. Antes da fila o mesmo pedido levava **320 ms** com um
+  entregador de 250 ms — o request pagava o provedor, e no cadastro a pessoa estava olhando uma tela de "criando
+  sua conta" enquanto o SMTP respondia.
+- **Fila de memória do processo, consumidor único, FIFO** (`apps/api/src/lib/mail/fila.ts`). Os três chamadores
+  — recuperação de senha, verificação de cadastro e aviso de segundo fator — passaram a chamar
+  `enfileirarMail(...)`; o worker entrega, com retentativa de recuo exponencial, teto de tentativas, timeout por
+  tentativa e teto de tamanho, e a auditoria de falha é carimbada pelo worker depois da última tentativa (uma
+  linha, com a contagem), sem mudar nenhuma `action` existente. O `nodemailer` passou a declarar os quatro tempos
+  que ele tem (`connectionTimeout`, `greetingTimeout`, `socketTimeout`, `dnsTimeout`) em vez dos padrões.
+- **As quatro chaves novas têm padrão e a régua de produção não cobra nenhuma delas**: `MAIL_TENTATIVAS`,
+  `MAIL_BACKOFF_BASE_MS`, `MAIL_TIMEOUT_MS`, `MAIL_FILA_MAXIMA`. O desligue do servidor drena a fila com teto de
+  5 s — o teto existe para o desligue não virar uma segunda falha.
+- **Três vermelhos no caminho, e a origem de cada um foi conferida.** Um era do código: `aguardarFilaDeMail()`
+  acordava com o worker ainda no laço (`trabalhando: true` numa fila que o teste acabou de esvaziar), e um teste
+  que passasse nesse estado diria "esvaziou" enquanto a última entrega ainda estava no `await` do SMTP —
+  corrigido no `fila.ts`, não no teste, com o despertador conferindo as três condições e o religamento do worker
+  deixado de propósito fora do mesmo turno (erro que se repete viraria laço quente). Dois eram meus: o nome
+  `dataTimeout` não existe nos tipos do nodemailer 10.1.0 (`TS2769`, e o `.env.example` tinha repetido o nome
+  errado), e o primeiro contato do processo com Prisma e HTTP carrega um custo frio de **1 269 ms** e
+  **1 708 ms** medidos, que nada tem a ver com a fila — o caso de tempo aquece a rota antes de medir, o atraso de
+  prova subiu para 600 ms, e a asserção de tempo nunca anda sozinha.
+- **O preço de não persistir a fila está declarado antes de ser pago (N74, `docs/adr/0020`)**: processo que morre
+  leva a fila, a entrega é *pelo menos uma vez* com duplicata possível, e cada réplica tem a sua fila e o seu
+  teto — o que não é problema na topologia de uma réplica entregue pela T5.1, e é a linha a ser lida antes de
+  haver duas.
+- **Suíte e portões.** **API 48 arquivos / 442 casos** (5 novos em `test/fila-de-mail.test.ts`) e **web
+  18 / 140**, zero falha e zero skip, ambos contra `nexusbusinessmanager_teste`; typecheck e build limpos nos
+  mesmos números de bundle da T4. Os quatro arquivos que leem caixa de e-mail ganharam dreno no `beforeEach`/
+  `afterEach` sem perder uma asserção. Nenhuma tela mudou: **0 capturas novas**. Ficam abertos o chamador de
+  e-mail do sino e do relatório diário (N59) e a porta administrativa de confirmação (N61).
+
 ### O banco da pilha tem backup, e a restauração foi feita de verdade (2026-10-14)
 
 - **Três peças, e elas se conferem (T5.2 / F6, seção 45 do prompt).** `deploy/backup-mysql.cjs` faz o dump,

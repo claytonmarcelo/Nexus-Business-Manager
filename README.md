@@ -605,7 +605,7 @@ importa só o CSS do AdminLTE) e `sweetalert2` (substituído pelo diálogo de co
     AUDITORIA.md               auditoria comercial: achados por severidade e o que foi feito de cada um
     STATUS-AJUSTES.md          situação de cada tarefa do prompt de mercado, com a prova apontada
     PRODUCAO.md                a ordem de subida de uma instalação real: pilha Docker, migrations, bootstrap,
-                               logs e o backup com restauração testada
+                               logs, a fila de e-mail do processo e o backup com restauração testada
     decisoes/                  G1 a G6 e G8 — SMTP, cobrança, fiscal, cadastro aberto, hospedagem,
                                licença e o administrador da plataforma
     adr/                       0001 persistência única · 0002 multiempresa e RBAC · 0003 AdminLTE + design
@@ -615,7 +615,7 @@ importa só o CSS do AdminLTE) e `sweetalert2` (substituído pelo diálogo de co
                                prova separado · 0011 casa que abre no login · 0012 motivo escrito para cancelar ·
                                0013 autenticação reforçada · 0014 code splitting · 0015 alvo de toque · 0016 tema ·
                                0017 pilha de prova com porta própria · 0018 produção em container com uma porta ·
-                               0019 backup com restauração conferida
+                               0019 backup com restauração conferida · 0020 e-mail por fila de memória
     design/palette.md          paleta oficial extraída da logo
     screenshots/               as capturas desta página
   tools/                       provas de navegador, recaptura de telas e utilitários do repo
@@ -815,7 +815,10 @@ decisão em `docs/adr/0006-bootstrap-do-administrador-da-plataforma.md`. A pilha
 pela rede interna do compose. O banco dessa pilha tem backup com restauração conferida (`npm run docker:backup`,
 `docker:restaurar` e a régua de 56 verificações `docker:provar-backup`), com o roteiro na seção 8 de
 `docs/PRODUCAO.md` e a decisão em `docs/adr/0019-backup-com-mysqldump-dentro-do-container-e-restauracao-conferida.md`;
-repetir o comando em agenda e copiar para fora da máquina são decisões de instalação (N71). O pipeline de CI ainda não está no repositório (F8), e a escolha de hospedagem é
+repetir o comando em agenda e copiar para fora da máquina são decisões de instalação (N71). A entrega de e-mail
+também é de operação: três chamadores (recuperação de senha, verificação de cadastro e aviso de segundo fator)
+entregam um código numa fila de memória e um worker do processo fala com o SMTP, com retentativa, timeout de
+socket e dreno no desligue — a seção 10 de `docs/PRODUCAO.md` e o ADR-0020 têm o resto. O pipeline de CI ainda não está no repositório (F8), e a escolha de hospedagem é
 do dono (`docs/decisoes/G5-hospedagem-e-backup.md`); a decisão de topologia está em
 `docs/adr/0018-producao-em-container-com-uma-porta.md`.
 
@@ -905,7 +908,7 @@ o processo na inicialização com a lista completa na mensagem. O código dessa 
 | Disponibilidade | modo manutenção fecha a API de negócio com 503 e deixa `/api/health`, `/api/auth`, `/api/public`, `/api/cms` e `/api/notifications` abertos (o sino continua pedindo sessão); quem entra com o token de pulso (comparação em tempo constante) ou o IP permitido |
 | Auditoria | toda escrita relevante grava autor, empresa, ação, entidade, metadados e IP; tela somente leitura; marcação de alteração sensível feita no servidor; eventos da plataforma perdem a empresa dona e ganham trilha reservada (`scope` no banco, `docs/adr/0007-escopo-da-auditoria.md`) |
 | Respostas de erro | handler central com códigos coerentes (400/401/403/404/409/429/500) e sem stack em produção |
-| Terceiros | **nenhuma integração inventada**: os gateways de pagamento continuam sem uma chamada de saída enquanto não houver credencial real e a decisão G2 — `payment_gateways` é lida e escrita só pela configuração do MANUAL, e `charge-adapters.ts` não conhece URL, chave ou SDK de provedor nenhum. O e-mail já é diferente: `nodemailer` entrega quando `SMTP_HOST`, `SMTP_PORT` e `MAIL_FROM` existem, grava no console fora de produção quando não existem, e a suíte de testes usa a caixa em memória; o servidor real nunca foi tocado por teste, e a entrega ainda espera dentro do request (N58) |
+| Terceiros | **nenhuma integração inventada**: os gateways de pagamento continuam sem uma chamada de saída enquanto não houver credencial real e a decisão G2 — `payment_gateways` é lida e escrita só pela configuração do MANUAL, e `charge-adapters.ts` não conhece URL, chave ou SDK de provedor nenhum. O e-mail já é diferente: `nodemailer` entrega quando `SMTP_HOST`, `SMTP_PORT` e `MAIL_FROM` existem, grava no console fora de produção quando não existem, e a suíte de testes usa a caixa em memória; o servidor real nunca foi tocado por teste. Desde a T5.3 a entrega não espera dentro do request: o handler devolve e um worker do processo entrega, com retentativa de recuo exponencial e teto (`src/lib/mail/fila.ts`, `docs/adr/0020-entrega-de-email-por-fila-de-memoria.md`) |
 
 ---
 
@@ -1064,7 +1067,11 @@ O detalhamento está em [`CHANGELOG.md`](CHANGELOG.md) (Keep a Changelog, mais n
 | `agora → T1` | As provas e os testes ganharam banco próprio (`nexusbusinessmanager_teste`, declarado em `DATABASE_URL_TESTE`): `npm run db:prova` monta e semeia, `npm run dev:api:teste` sobe a API nele, e toda `tools/verify-*.cjs` confere o servidor pelo login antes de abrir o navegador — servidor no banco errado é HTTP 401 com a instrução do comando. Medido com `diff` tabela por tabela: o banco de desenvolvimento saiu idêntico da rodada inteira (541 usuários, 45 empresas, 2.186 sessões, 67.722 auditorias) enquanto o de prova crescia. Suíte em 354 + 77, e a cadeia de migrations abriu o achado N54 (em MySQL zerado ela para na segunda migration) |
 | `T1 → T2` | Duas decisões do dono viraram código. A casa que abre no login deixou de ser sorteio do índice: **pedida > lembrada (`users.last_company_id`) > vínculo mais antigo**, com desempate por `createdAt` e `id`, lembrança escrita por `switch-company` e respeitada pelo refresh (ADR-0011). E cancelar ordem, estornar ordem concluída e cancelar cobrança passaram a exigir **motivo escrito** em diálogo novo e aditivo (`confirmActionComMotivo`, ADR-0012) — sem motivo nada sai pela rede, e o texto digitado sobrevive ao erro da rota. Provas de navegador em 107 e 137 checagens, suíte em 361 + 79 |
 | `T2 → T3` | A F4 inteira (D1, D2, D3): porta `MailerPort` com SMTP real, console fora de produção e caixa em memória na suíte; verificação de cadastro atrás de `REQUIRE_EMAIL_VERIFICATION`, com a tela pública `/verificar-e-mail`; segundo fator TOTP com segredo cifrado em repouso (AES-256-GCM) e dez códigos de recuperação guardados só em hash; bloqueio por conta que não entrega no tempo se o endereço existe; destino pós-login aceito apenas como caminho interno. A superfície foi de 120 para **129 rotas**, as tabelas de 32 para 35, e a suíte para **434 + 87** (ADR-0013) |
-| `T4 → T5` | A operação começou a existir fora da máquina do dono. A pilha de prova ganhou porta própria (3002/5174) e a 3001/5173 deixou de ser disputada (N65, ADR-0017), a **pilha Docker** nasceu com quatro serviços e **uma única porta publicada** — MySQL e API sem porta nenhuma no host, painel servindo `/api` por proxy na mesma origem (29 verificações, ADR-0018) — e o **backup do banco passou a ter restauração testada**: `mysqldump` dentro do container, gzip com `.sha256` e `.meta.json`, retenção GFS 7/4/12 com semana ISO, e a régua que restaura num banco separado e confere tabela por tabela antes de chamar aquilo de backup (56 verificações, ADR-0019). A suíte continua em **437 + 140**; o que falta da T5 é e-mail fora do request (N58), o chamador do sino (N59) e a porta administrativa de confirmação (N61) |
+| `T4 → T5` | A operação começou a existir fora da máquina do dono. A pilha de prova ganhou porta própria (3002/5174) e a 3001/5173 deixou de ser disputada (N65, ADR-0017), a **pilha Docker** nasceu com quatro serviços e **uma única porta publicada** — MySQL e API sem porta nenhuma no host, painel servindo `/api` por proxy na mesma origem (29 verificações, ADR-0018) — e o **backup do banco passou a ter restauração testada**: `mysqldump` dentro do container, gzip com `.sha256` e `.meta.json`, retenção GFS 7/4/12 com semana ISO, e a régua que restaura num banco separado e confere tabela por tabela antes de chamar aquilo de backup (56 verificações, ADR-0019). A suíte foi de **437 + 140** para **442 + 140** com a T5.3, que tirou a entrega de e-mail de dentro do request:
+os três chamadores agora entregam um código numa **fila de memória do processo**, e um worker fala com o SMTP com
+retentativa de recuo exponencial, timeout de socket e dreno no desligue — medido em 7,43 ms de resposta contra os
+600 ms do entregador injetado (N58 fechado, ADR-0020). O que falta da T5 é o chamador do sino (N59) e a porta
+administrativa de confirmação (N61) |
 | `T3 → T4` | A F5 inteira. Cinco listas pararam de aceitar resposta atrasada (N51), a tela de entrada zerou a senha nos três momentos em que ela sobrava — envio recusado, desmontagem e `pageshow` do histórico — e ganhou rótulo associado de verdade (Problema C). O painel passou a escrever `data-bs-theme` no `<html>` que o Bootstrap 4 lê (N7), a casa ganhou `ErrorBoundary` na raiz e por rota com registro do erro, e o `npm run verify` abriu a fumaça: **63 telas** percorridas no navegador, com HTTP, conteúdo montado e zero erro de console. As duas telas novas da F4 saíram dos 0% de cobertura (N62), o JavaScript deixou de ser um arquivo só — **964,31 kB / 283,61 kB gzip viraram 354,85 kB / 121,62 kB em 37 pedaços**, com a Agenda carregando a pé (D8, ADR-0014) — e a acessibilidade ganhou régua: **22 checagens, 0 falhas** em rótulo, foco, teclado, movimento reduzido e alvo de toque (ADR-0015). A suíte fechou em **437 + 140** |
 
 ---

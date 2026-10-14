@@ -1,6 +1,22 @@
 # G1 — Envio de e-mail (SMTP)
 
-**Situação:** PARCIALMENTE FECHADO · **Década:** 2026-10-11 · **Re-medido:** 2026-10-13 (decisão D1, tarefa T3/F4) · **Nenhuma integração foi inventada.**
+**Situação:** PARCIALMENTE FECHADO · **Década:** 2026-10-11 · **Re-medido:** 2026-10-14 (fila de entrega, tarefa T5.3; antes: decisão D1, tarefa T3/F4) · **Nenhuma integração foi inventada.**
+
+## O que mudou em 2026-10-14 (tarefa T5.3, achado N58)
+
+A regra 2 desta página estava marcada como **não cumprida**, e deixou de estar. Os três envios
+(`auth.service.ts`, `verificacao.service.ts`, `segundo-fator.service.ts`) agora empurram a mensagem para a fila
+do processo (`apps/api/src/lib/mail/fila.ts`) e devolvem; quem espera o provedor é a fila, com retentativa,
+recuo exponencial, teto por tentativa e teto de tamanho. A decisão está escrita em
+`docs/adr/0020-entrega-de-email-por-fila-de-memoria.md`, e os números do operador estão na seção 10 de
+`docs/PRODUCAO.md`. Medido antes e depois, com entregador lento injetado: **320 ms** de
+request dentro do handler (entregador de 250 ms) contra **7,43 ms** com a fila (entregador de 600 ms; a
+mensagem ainda viva, `vivas: 1`, no instante da resposta). O `connectionTimeout`/`greetingTimeout`/`socketTimeout`/`dnsTimeout` do nodemailer, que antes iam
+nos padrões da biblioteca, agora recebem o mesmo teto da tentativa (`MAIL_TIMEOUT_MS`). As quatro chaves da fila
+são opcionais e têm padrão seguro — a régua de produção (A9) não passou a cobrar nenhuma delas.
+
+O que **não** mudou: a fila é memória do processo, não sobrevive a reinício, e o motivo está escrito na regra 2
+abaixo — persisti-la no banco seria gravar o código de recuperação em texto puro.
 
 ## O que mudou em 2026-10-13 (decisão D1, tarefa T3/F4)
 
@@ -76,6 +92,7 @@ apps/api/src/lib/mail/console.ts  desenvolvimento: imprime assunto e destinatár
 apps/api/src/lib/mail/fake.ts     testes: guarda as mensagens em memória e permite ler o texto recebido
 apps/api/src/lib/mail/mensagens.ts  os três textos reais (recuperação, verificação de cadastro, aviso de 2FA)
 apps/api/src/lib/mail/index.ts    criarMailer(fonte) decide pelo ambiente; mailer() é o ponto dos chamadores
+apps/api/src/lib/mail/fila.ts     desde a T5.3: fila de memória do processo, retentativa, recuo, teto e auditoria da falha
 ```
 
 O nome mudou em relação ao rascunho de 2026-10-11 (`src/integrations/email/` → `apps/api/src/lib/mail/`,
@@ -87,12 +104,19 @@ Regras que a porta carrega, com o estado medido nesta rodada:
 1. **Nunca logar conteúdo nem credencial.** Cumprida. O adaptador SMTP monta erro com o código do protocolo e
    o endereço mascarado (`mascaraEndereco`), e os três chamadores gravam na auditoria só rótulo e resumo da
    falha.
-2. **Fila, não espera.** **NÃO cumprida.** Os três envios são `await mailer().enviar(...)` dentro do request
-   HTTP (`auth.service.ts:615`, `verificacao.service.ts:53`, `segundo-fator.service.ts:357`). Um SMTP que
-   aceita a conexão e demora para entregar segura a requisição junto. O envio continua sendo dentro do pedido
-   por decisão de escopo: o contrato da F4 pedia a entrega funcionando e o código fora da resposta, não pedia
-   assincronismo. **Achado registrado em `docs/AUDITORIA.md`** para a fase de operação (F6), junto do
-   `connectionTimeout`/`greetingTimeout` do nodemailer, que hoje vão nos valores padrão.
+2. **Fila, não espera.** **Cumprida em 2026-10-14 (T5.3, N58).** Os três chamadores agora fazem uma chamada
+   síncrona a `enfileirarMail(...)` e devolvem; quem espera o provedor é `apps/api/src/lib/mail/fila.ts` —
+   consumidor único, FIFO, três tentativas com recuo exponencial, teto de 15 s por tentativa (o mesmo número
+   que vai para `connectionTimeout`/`greetingTimeout`/`socketTimeout`/`dnsTimeout` do nodemailer) e teto de 200
+   mensagens vivas, com recusa auditada. A auditoria de falha saiu do request e passou a ser carimbada pela
+   fila, uma linha por mensagem (`auth.forgot_password_entrega_falhou`, `auth.verificacao_entrega_falhou`,
+   `auth.2fa_aviso_entrega_falhou`), com o resumo do motivo e a contagem de tentativas — nos dois fluxos de
+   código também o rótulo da mensagem. O preço declarado em
+   `docs/adr/0020-entrega-de-email-por-fila-de-memoria.md`: fila é memória, não sobrevive a reinício, e
+   **persisti-la no banco estava fora de cogitação** — a mensagem de recuperação e a de verificação carregam o
+   código em texto puro (é o que a pessoa digita), e o projeto guarda só o HMAC desses códigos. Por isso a
+   entrega é *pelo menos uma vez*: uma tentativa cortada pelo teto pode chegar depois, e duplicar e-mail de
+   recuperação é preferível a perder a mensagem em silêncio.
 3. **Credencial só no `.env`.** Cumprida. Nada de SMTP no banco nem no `company`; a régua de produção
    (`src/config/producao.ts`) barra subir com credencial de exemplo.
 4. **O adaptador falso não finge sucesso.** Cumprida de outra forma: o `fake` grava o que foi enviado — e os
