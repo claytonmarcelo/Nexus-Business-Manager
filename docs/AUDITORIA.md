@@ -1940,7 +1940,7 @@ da Agenda (`POST /api/agenda/events`), mede, e apaga no fim, imprimindo a contag
 (`6 -> 7` e `7 -> 6`, zero sobra). Sem essa dádiva própria, um mês sem evento faria a checagem da grade passar
 sem olhar nada.
 
-### N65 — aberto, mitigado nesta rodada: o navegador apontado para o banco de prova devolve 401 sem dizer por quê
+### N65 — corrigido na T5.0: a pilha de prova tem porta própria, e a 3001/5173 deixa de ser disputada
 
 As duas janelas que ocupam a porta 3001 (`npm run dev:api` e `npm run dev:api:teste`) não podem rodar juntas, e
 o Vite de 5173 aponta para a 3001 sem saber qual das duas está lá. Como `tools/senha-admin.cjs` resolve primeiro
@@ -1966,6 +1966,27 @@ primeira tarefa da **T5 / F6** (operação): o servidor de prova passa a subir a
 5174, escrevendo um arquivo-ponteiro local ignorado pelo git que as ferramentas de navegador lêem para escolher
 a base. Assim a janela 3001/5173 do dono nunca é tocada por prova nenhuma, e a regra de acesso deixa de depender
 de alguém lembrar de devolver a porta.
+
+Foi feito na T5.0, e medido. `tools/servidor-de-prova.cjs` agora levanta os dois lados da prova — API na
+**3002** e Vite na **5174**, proxy apontando para a 3002 — sob o nome `npm run dev:prova` (o antigo
+`dev:api:teste` continua apontando para o mesmo comando), publica `tools/ponteiro-de-prova.local.json`
+enquanto está de pé, e as 36 ferramentas de navegador passaram a resolver as duas pontas por
+`tools/pilha-de-prova.cjs` (ambiente → ponteiro vivo → casa real). Medida da convivência, com as duas
+janelas abertas: 3001 (pid 18816) e 3002 (14500) escutando juntas, 5173 (18972) e 5174 (17192) também, e
+`/api/health` devolvendo 200 nas duas. A pilha recusa porta ocupada em vez de subir em outra: a segunda
+tentativa devolveu `precisa das portas 3002 (api) e 5174 (navegador) livres, e 3002 e 5174 esta(o)
+ocupada(s)` com saída 1. O ponteiro morto não leva ninguém a lugar nenhum: derrubada a árvore da prova à
+força, `lePonteiro()` devolveu `null` e as ferramentas voltaram sozinhas para 5173/3001, que é onde o dono
+está — a régua `tools/verify-pilha-de-prova.cjs` mede os quatro casos e a varredura das ferramentas, e foi
+escrita vermelha antes de verde: **36 falhas em 39 verificações** contra a árvore antiga, **8 verificações e
+0 falhas** contra a nova. A prova de navegador refeita contra a pilha: `tools/verify-sidebar.cjs` com
+**104 checagens, 0 falhas**, primeira linha do log dizendo `PILHA DE PROVA (banco
+nexusbusinessmanager_teste)`. E o banco do dono continuou intocado enquanto isso: fotografia de leitura pura
+em **35 tabelas / 70.897 linhas**, o mesmo número do fecho da T4, com a conta raiz ainda `active=true`,
+`platformRole=SUPER_ADMIN`, 37 vínculos `OWNER` e nenhum registro de bloqueio. Detalhe que a mudança expôs:
+com a pilha no ar, a mesma prova regrava três capturas canônicas com o dado do banco de prova — agora as
+capturas de corrida vão para `docs/screenshots-prova/`, ignorada pelo git, e `docs/screenshots/` ficou com
+zero arquivos alterados. ADR-0017.
 
 ### N66 — corrigido na T4.10: `npm run dev` não existia na raiz
 

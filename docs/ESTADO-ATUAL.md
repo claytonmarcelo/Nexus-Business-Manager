@@ -100,8 +100,8 @@ continua marcada para a F9.
     com o `npm run dev` de volta no banco de desenvolvimento a conta raiz entra — HTTP 200
     na API com `accessToken` e `refreshToken` (nenhum valor impresso), 37 empresas na
     sessão e **6 verificações / 0 falhas** no navegador. Quando isso não acontece, a
-    primeira suspeita é a porta 3001, não a senha: o roteiro está na seção 12 e o
-    conserto definitivo abre a T5 (N65).
+    primeira suspeita é a porta 3001, não a senha: o roteiro está na seção 12. O N65 foi
+    fechado na T5.0 — a pilha de prova tem porta própria (3002/5174) e não alcança a do produto.
 
 ---
 
@@ -860,41 +860,53 @@ processo, com a saída prefixada por `[api]` e `[web]`, e derruba os dois juntos
 `npm run dev:api` e `npm run dev:web` continuam existindo para quem quer um só dos lados — os dois
 comandos individuais funcionavam antes; o que não existia era a casa.
 
-Para as provas de navegador e para a suíte, o banco é outro, e é a decisão D6:
+Para as provas de navegador e para a suíte, o banco é outro, e é a decisão D6. Desde a T5.0 a pilha de
+prova tem porta própria, e as duas janelas podem ficar abertas ao mesmo tempo:
 
 ```bash
-npm run db:prova                        # cria/atualiza nexusbusinessmanager_teste e semea a conta de prova
-npm run dev:api:teste                   # sobe a API apontada no banco de prova, na MESMA porta 3001
-npm run dev:web                         # o Vite na 5173, que é a porta que as provas abrem
+npm run db:prova                        # cria/atualiza nexusbusinessmanager_teste e semeia a conta de prova
+npm run dev:prova                       # api na 3002 e navegador na 5174, no banco de prova
 npm run verify                          # fumaça: 63 páginas em 360 / 1024 / 1440 px
 node tools/verify-acessibilidade.cjs    # régua de rótulo, foco, teclado, alvo de toque e movimento
 ```
 
-Aqui mora o aviso que a rodada descobriu do jeito difícil (**N65**): `npm run dev:api:teste` e
-`npm run dev` brigam pela porta 3001 porque ambos querem ser "a API". Enquanto o servidor de prova
-está de pé, o `npm run dev` da vida real não sobe, e o painel que aparece no navegador é o do banco de
-prova. O servidor de prova agora avisa isso no banner de arranque, e as ferramentas de prova conferem
-o endereço do banco antes de escrever (`tools/banco-de-prova.cjs`); mesmo assim, a regra de casa é a
-de sempre: **nenhum teste nem nenhuma prova escreve no banco de desenvolvimento** — o que aparece em
-`nexusbusinessmanager` é dado de quem usa a aplicação.
+`npm run dev:api:teste` continua na lista de scripts como alias do `dev:prova`, para não quebrar quem
+decorou o nome antigo. O que a janela do `dev:prova` faz, medido nesta rodada:
+
+1. recusa subir se a 3002 ou a 5174 estiver ocupada — código de saída 1 e a frase "a pilha de prova
+   precisa das portas 3002 (api) e 5174 (navegador) livres". A recusa foi conferida com um servidor
+   segurando a 3002: a API do produto na 3001 seguiu respondendo 200, e nenhum ponteiro ficou em disco.
+2. publica `tools/ponteiro-de-prova.local.json` (ignorado pelo git) com `{web, api, pid, banco}` enquanto
+   está no ar, e apaga o arquivo ao sair — se a janela for derrubada por fora, o pid morto é detectado na
+   leitura e o arquivo se auto-cura.
+3. as 36 ferramentas de navegador (`verify-*`, `shoot-*`, `audit-*`) não carregam porta escrita a mão:
+   o endereço sai de `tools/pilha-de-prova.cjs`, nesta ordem — `NEXUS_WEB`/`NEXUS_API`, ponteiro vivo,
+   casa (5173/3001). A régua `tools/verify-pilha-de-prova.cjs` confere isso arquivo por arquivo.
+4. enquanto a pilha de prova está no ar, as capturas vão para `docs/screenshots-prova/` (também
+   ignorado). A galeria canônica `docs/screenshots/` só é escrita por ferramenta que roda sem pilha de
+   prova no ar — que é o caso das capturas do README.
+5. cada corrida imprime uma linha `[topologia]` dizendo navegador, api e banco, então o log de cada prova
+   registra com qual banco ela falou. `NEXUS_QUIETO=1` desliga a linha.
+
+Regra de casa que continua valendo: **nenhum teste nem nenhuma prova escreve no banco de desenvolvimento**
+— o que aparece em `nexusbusinessmanager` é dado de quem usa a aplicação, e as ferramentas ainda conferem
+o banco antes de escrever (`tools/banco-de-prova.cjs`).
 
 E aqui mora o diagnóstico que a casa agora sabe fazer em ordem, porque ele já aconteceu duas vezes
-(**N65**): se a tela de entrada devolver 401 para a conta de administrador **desta máquina**, a senha não é a
-primeira suspeita — a primeira suspeita é a porta. O roteiro medido:
+(**N65**, fechado na T5.0 com `docs/adr/0017`): se a tela de entrada devolver 401 para a conta de
+administrador **desta máquina**, a primeira suspeita ainda é a porta, mas a disputa acabou — a prova não
+alcança a 3001. O roteiro medido:
 
 ```bash
-netstat -ano | findstr :3001               # quem está segurando a API
-tasklist /FI "PID eq <pid>"                # servidor de prova, ou servidor de desenvolvimento?
-# se for o servidor de prova: derrubar os três processos da árvore dele e devolver a porta
-powershell "Stop-Process -Id <api>,<tsx>,<provedor> -Force"
-npm run dev                                # sobe os dois lados no banco de desenvolvimento
-curl -s -o NUL -w "%{http_code}\n" http://localhost:3001/api/health   # 200
+netstat -ano | findstr ":3001 :3002"     # 3001 = produto, 3002 = pilha de prova
+curl -s -o NUL -w "%{http_code}\n" http://localhost:3001/api/health   # 200 = a API do produto está de pé
+node tools/verify-pilha-de-prova.cjs     # 8 verificações, 0 falhas — endereços e guardas das ferramentas
 ```
 
 A conta raiz continua `active=true` com `platformRole=SUPER_ADMIN` e 37 vínculos `OWNER` no banco de
-desenvolvimento, e não existe no banco de prova — por isso o mesmo par de credenciais entra em um e é recusado
-no outro com a mesma mensagem muda. A regra de acesso do dono não admite essa armadilha, e o fechamento
-definitivo (prova na 3002/5174, porta do dono intocável) é a primeira tarefa da T5.
+desenvolvimento, sem tentativa de login registrada, e não existe no banco de prova — por isso o mesmo par
+de credenciais entra em um e é recusado no outro. A regra de acesso do dono não admite mais a armadilha de
+um processo alheio tomar a porta do produto.
 
 Dois avisos que o passo a passo não pode esconder. O primeiro, novo nesta rodada:
 **`npm test` não roda sem `DATABASE_URL_TESTE`** — o `vitest.config.ts` da API lê a

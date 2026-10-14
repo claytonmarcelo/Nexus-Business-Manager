@@ -1,5 +1,30 @@
 ## [Não lançado]
 
+### A pilha de prova tem porta própria, e a porta de quem trabalha deixou de ser disputada (2026-10-14)
+
+- **O `npm run dev:api:teste` não toma mais a 3001 (N65, fechado na T5.0).** A janela de prova agora é a
+  `npm run dev:prova`: sobe a API na **3002** e o navegador na **5174**, no banco `nexusbusinessmanager_teste`,
+  e recusa arrancar se uma das duas estiver ocupada — com código de saída 1 e o motivo na tela. O nome antigo
+  continua como alias, para não quebrar quem o decorou. Enquanto a prova rodou, o `npm run dev` do produto
+  esteve de pé na 3001/5173: o `GET /api/health` devolveu 200 antes e depois de a pilha descer, e a conta
+  raiz do dono seguiu `active=true`, `SUPER_ADMIN`, com 37 vínculos de proprietária e nenhum bloqueio no banco
+  de desenvolvimento.
+- **Nenhuma ferramenta de navegador carrega porta escrita a mão.** As 36 ferramentas de prova, captura e
+  auditoria passaram a pedir o endereço a `tools/pilha-de-prova.cjs`, que resolve na ordem
+  `NEXUS_WEB`/`NEXUS_API`, ponteiro vivo da pilha de prova, e por fim a casa (5173/3001). O ponteiro
+  (`tools/ponteiro-de-prova.local.json`, ignorado pelo git) carrega o pid de quem o escreveu: se a janela for
+  morta por fora, a leitura seguinte detecta o processo ausente, apaga o arquivo e a ferramenta volta à casa —
+  medido nesta rodada. A régua `tools/verify-pilha-de-prova.cjs` confere isso arquivo por arquivo e as
+  quatro situações de resolução; vermelha contra a árvore antiga com 36 falhas em 39 verificações, verde com
+  8 verificações e 0 falhas. Cada corrida imprime uma linha `[topologia]` com navegador, api e banco, então o
+  log de cada prova diz com quem ela falou.
+- **A galeria do produto parou de ser regravada por prova.** Com a pilha de prova no ar, as capturas vão para
+  `docs/screenshots-prova/` (fora do git); a canônica `docs/screenshots/` só é escrita por ferramenta que roda
+  sem pilha no ar, que é o caso das telas do README. A barra lateral foi reprovada contra o servidor de prova
+  novo — 104 checagens, 0 falhas, nenhum erro de console — e o `/app/cms`, que falhava por esperar 420 ms
+  fixos enquanto o pedaço da rota descia, agora espera o chunk carregar: decisão registrada em
+  `docs/adr/0017-pilha-de-prova-com-porta-propria.md`.
+
 ### A frente do painel ganhou régua: lista que espera a resposta certa, senha que não sobra na tela, erro que não fecha a casa, e JavaScript que chega por partes (2026-10-14)
 
 - **Cinco listas pararam de aceitar resposta atrasada (N51, efeito P14).** Clientes, produtos, financeiro, CRM e

@@ -754,8 +754,8 @@ npm run db:prova              # banco de prova: cria nexusbusinessmanager_teste,
 |---|---|
 | `npm run dev` | a casa inteira numa janela: API na 3001 e painel na 5173, com cada linha prefixada por `[api]` ou `[web]` e os dois derrubados juntos no `Ctrl+C` (`tools/dev.cjs`) |
 | `npm run dev:api` | API em `http://localhost:3001` (prefixo `/api`), com `tsx watch`, no banco de desenvolvimento |
-| `npm run dev:api:teste` | a mesma API apontada para o banco de prova — é assim que as `tools/verify-*.cjs` sobem. Ocupa a mesma 3001 do `dev:api`, e a conta de administrador desta máquina não existe lá: a janela avisa disso ao subir |
-| `npm run dev:web` | painel em `http://localhost:5173`, com proxy para `/api` |
+| `npm run dev:prova` | a pilha de prova num lugar só: API na **3002** e painel na **5174**, ambos no banco `nexusbusinessmanager_teste`. Recusa subir se a 3002 ou a 5174 estiver ocupada e **não toca na 3001/5173** — é assim que as `tools/verify-*.cjs`, `shoot-*.cjs` e `audit-*.cjs` sobem (decisão D6 + N65, `docs/adr/0017`). `npm run dev:api:teste` é o alias do mesmo comando |
+| `npm run dev:web` | painel em `http://localhost:5173`, com proxy para `/api` na 3001; `NEXUS_WEB_PORT` e `NEXUS_PROXY_TARGET` mudam os dois, e é assim que o `dev:prova` sobe a 5174 apontando para a 3002 |
 | `npm run typecheck` | `tsc --noEmit` nos dois apps |
 | `npm test` | suíte de integração da API contra o MySQL real, **no banco de prova** |
 | `npm run verify` | teste de fumaça do painel no navegador: percorre as telas, exige HTTP, conteúdo montado e zero erro de console (`tools/verify-fumaca.cjs`) |
@@ -970,7 +970,7 @@ caminho para uma base apresentável é cadastrar produto, abrir uma venda e conf
 lançamento financeiro; as provas de navegador fazem exatamente isso e devolvem os registros ao estado
 original quando terminam.
 
-Para uma vitrine com dados, suba o banco de prova (`npm run db:prova` + `npm run dev:api:teste`) e rode as
+Para uma vitrine com dados, suba o banco de prova (`npm run db:prova` + `npm run dev:prova`) e rode as
 provas de navegador (`node tools/verify-*.cjs`): elas cadastram cliente, produto, venda, ordem de serviço e
 cobrança de verdade, e devolvem os registros ao estado original no fim. A suíte de testes (`npm test`) também
 escreve no banco de prova — nunca no de desenvolvimento, que é a regra da decisão D6 do dono.
