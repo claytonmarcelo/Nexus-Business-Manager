@@ -23,6 +23,14 @@ import {
 const SEGREDO_A = "0f4c9ba7e2d1488f96b3c5a0de71924f8b0c31ad";
 const SEGREDO_B = "7d21ce984bbf03a5e1d97c640f2a8bd15e3c9746";
 
+// F4: a chave que cifra o segredo de segundo fator são 32 bytes em hexadecimal.
+// Ela é montada aqui a partir dos dois segredos de acima de propósito: são
+// pedaços de texto aleatório, sem nenhuma das palavras de tutorial da régua.
+const CHAVE_TOTP = SEGREDO_A + SEGREDO_B.slice(0, 24);
+
+// O conjunto que a F4 acrescentou à régua de produção: entregador de verdade com
+// servidor, porta e remetente (D1), endereço público https para o link do e-mail,
+// verificação de cadastro ligada (D2) e a chave de cifraçao do segundo fator (D3).
 const base: FonteDeAmbiente = {
   NODE_ENV: "production",
   JWT_ACCESS_SECRET: SEGREDO_A,
@@ -30,6 +38,15 @@ const base: FonteDeAmbiente = {
   CORS_ORIGIN: "https://painel.nexus.com.br",
   DATABASE_URL: "mysql://nexus_app:SenhaDoApp2026@banco.interno:3306/nexus",
   SUPER_ADMIN_EMAIL: "administrador@nexus.com.br",
+  MAIL_TRANSPORT: "smtp",
+  SMTP_HOST: "smtp.nexus.com.br",
+  SMTP_PORT: "587",
+  SMTP_USER: "painel@nexus.com.br",
+  SMTP_PASS: "SenhaDoSmtp2026!",
+  MAIL_FROM: "painel@nexus.com.br",
+  WEB_BASE_URL: "https://painel.nexus.com.br",
+  REQUIRE_EMAIL_VERIFICATION: "1",
+  TOTP_ENCRYPTION_KEY: CHAVE_TOTP,
 };
 
 function configuracao(trocas: FonteDeAmbiente): FonteDeAmbiente {
@@ -119,6 +136,72 @@ describe("Validador de configuração de produção (A9)", () => {
     expect(problemasDeProducao(configuracao({ SUPER_ADMIN_EMAIL: "outra@nexus.com.br" }))).toEqual([]);
   });
 
+  // ---- F4 (D1): o entregador de e-mail ----
+
+  it("produção com entregador que não entrega é recusada", () => {
+    // `memory` é a caixa do teste e `console` é o log do processo: nenhum dos dois
+    // manda mensagem, então a régua não deixa produção subir com eles.
+    expect(contem(problemasDeProducao(configuracao({ MAIL_TRANSPORT: "memory" })), "MAIL_TRANSPORT=memory")).toBe(true);
+    expect(contem(problemasDeProducao(configuracao({ MAIL_TRANSPORT: "console" })), "valor desconhecido")).toBe(true);
+    expect(problemasDeProducao(configuracao({ MAIL_TRANSPORT: undefined }))).toEqual([]);
+  });
+
+  it("produção sem servidor, porta ou remetente de saída é recusada", () => {
+    expect(contem(problemasDeProducao(configuracao({ SMTP_HOST: "" })), "SMTP_HOST")).toBe(true);
+    expect(contem(problemasDeProducao(configuracao({ SMTP_PORT: undefined })), "SMTP_PORT")).toBe(true);
+    expect(contem(problemasDeProducao(configuracao({ SMTP_PORT: "70000" })), "entre 1 e 65535")).toBe(true);
+    expect(contem(problemasDeProducao(configuracao({ MAIL_FROM: "nao-e-endereco" })), "MAIL_FROM não é um endereço")).toBe(true);
+    expect(contem(problemasDeProducao(configuracao({ MAIL_FROM: "" })), "MAIL_FROM não está definido")).toBe(true);
+  });
+
+  it("a senha do SMTP nunca aparece na lista de problemas", () => {
+    const problemas = problemasDeProducao(configuracao({ SMTP_HOST: "", MAIL_FROM: "" }));
+    for (const linha of problemas) expect(linha).not.toContain("SenhaDoSmtp2026!");
+  });
+
+  // ---- F4: o endereço público que vai dentro do e-mail ----
+
+  it("WEB_BASE_URL de máquina local ou sem https é recusada", () => {
+    expect(contem(problemasDeProducao(configuracao({ WEB_BASE_URL: "http://painel.nexus.com.br" })), "https://")).toBe(true);
+    expect(contem(problemasDeProducao(configuracao({ WEB_BASE_URL: "http://localhost:5173" })), "https://")).toBe(true);
+    expect(
+      contem(problemasDeProducao(configuracao({ WEB_BASE_URL: "https://localhost:5173" })), "endereço de máquina local"),
+    ).toBe(true);
+    expect(contem(problemasDeProducao(configuracao({ WEB_BASE_URL: undefined })), "WEB_BASE_URL")).toBe(true);
+  });
+
+  // ---- F4 (D2): cadastro com e-mail confirmado ----
+
+  it("produção com a verificação de cadastro desligada é recusada", () => {
+    expect(contem(problemasDeProducao(configuracao({ REQUIRE_EMAIL_VERIFICATION: "0" })), "REQUIRE_EMAIL_VERIFICATION")).toBe(true);
+    expect(contem(problemasDeProducao(configuracao({ REQUIRE_EMAIL_VERIFICATION: undefined })), "REQUIRE_EMAIL_VERIFICATION")).toBe(true);
+    expect(problemasDeProducao(configuracao({ REQUIRE_EMAIL_VERIFICATION: "1" }))).toEqual([]);
+  });
+
+  // ---- F4 (D3): a chave que cifra o segredo do segundo fator ----
+
+  it("TOTP_ENCRYPTION_KEY ausente, fora de formato ou de exemplo é recusada", () => {
+    expect(contem(problemasDeProducao(configuracao({ TOTP_ENCRYPTION_KEY: undefined })), "TOTP_ENCRYPTION_KEY não está definida")).toBe(true);
+    expect(contem(problemasDeProducao(configuracao({ TOTP_ENCRYPTION_KEY: "abc" })), "64 caracteres hexadecimal")).toBe(true);
+    expect(
+      contem(problemasDeProducao(configuracao({ TOTP_ENCRYPTION_KEY: "g".repeat(64) })), "64 caracteres hexadecimal"),
+    ).toBe(true);
+    expect(
+      contem(
+        problemasDeProducao(configuracao({ TOTP_ENCRYPTION_KEY: "troque" + "0".repeat(58) })),
+        "é valor de exemplo",
+      ),
+    ).toBe(true);
+    // Formato válido, valor de exemplo: 64 zeros passam no regex de hexadecimal
+    // bonitinho, e é exatamente aí que a régua de variedade entra — chave
+    // previsível não cifra segredo nenhum.
+    expect(contem(problemasDeProducao(configuracao({ TOTP_ENCRYPTION_KEY: "0".repeat(64) })), "parece valor de exemplo")).toBe(true);
+    expect(contem(problemasDeProducao(configuracao({ TOTP_ENCRYPTION_KEY: "a1b2".repeat(16) })), "parece valor de exemplo")).toBe(true);
+    // Uma chave de verdade (variedade alta) passa, escrita em minúscula ou maiúscula.
+    expect(problemasDeProducao(configuracao({ TOTP_ENCRYPTION_KEY: CHAVE_TOTP }))).toEqual([]);
+    expect(problemasDeProducao(configuracao({ TOTP_ENCRYPTION_KEY: CHAVE_TOTP.toUpperCase() }))).toEqual([]);
+  });
+
   it("a régua só vale para produção", () => {
     expect(exigeConfiguracaoDeProducao("production")).toBe(true);
     expect(exigeConfiguracaoDeProducao("development")).toBe(false);
@@ -189,14 +272,51 @@ describe("config/env.ts recusa a subida em produção mal configurada (A9)", () 
   });
 
   it("produção bem configurada sobe", () => {
+    // As chaves da F4 são declaradas uma a uma aqui: o processo filho herda o
+    // ambiente do vitest, e a suíte roda com MAIL_TRANSPORT=memory. Sem a
+    // declaração explícita, a prova passaria a depender do `.env` da máquina.
     const r = rodar({
       JWT_ACCESS_SECRET: SEGREDO_A,
       JWT_REFRESH_SECRET: SEGREDO_B,
       CORS_ORIGIN: "https://painel.nexus.com.br",
       DATABASE_URL: "mysql://nexus_app:SenhaDoApp2026@banco.interno:3306/nexus",
       SUPER_ADMIN_EMAIL: "administrador@nexus.com.br",
+      MAIL_TRANSPORT: "smtp",
+      SMTP_HOST: "smtp.nexus.com.br",
+      SMTP_PORT: "587",
+      SMTP_USER: "painel@nexus.com.br",
+      SMTP_PASS: "SenhaDoSmtp2026!",
+      MAIL_FROM: "painel@nexus.com.br",
+      WEB_BASE_URL: "https://painel.nexus.com.br",
+      REQUIRE_EMAIL_VERIFICATION: "1",
+      TOTP_ENCRYPTION_KEY: CHAVE_TOTP,
     });
     expect(r.stdout, r.stderr).toContain("SONDA_SUBIU");
+  });
+
+  it("produção sem a chave do segundo fator e sem SMTP não sobe", () => {
+    // Vazio de propósito nos dois lados novos da régua: herdá-los do `.env` da
+    // máquina faria desta prova uma rotina de desenvolvimento disfarçada.
+    const r = rodar({
+      JWT_ACCESS_SECRET: SEGREDO_A,
+      JWT_REFRESH_SECRET: SEGREDO_B,
+      CORS_ORIGIN: "https://painel.nexus.com.br",
+      DATABASE_URL: "mysql://nexus_app:SenhaDoApp2026@banco.interno:3306/nexus",
+      SUPER_ADMIN_EMAIL: "administrador@nexus.com.br",
+      MAIL_TRANSPORT: "memory",
+      SMTP_HOST: "",
+      SMTP_PORT: "",
+      MAIL_FROM: "",
+      WEB_BASE_URL: "http://localhost:5173",
+      REQUIRE_EMAIL_VERIFICATION: "0",
+      TOTP_ENCRYPTION_KEY: "",
+    });
+    expect(r.stdout).not.toContain("SONDA_SUBIU");
+    expect(r.stderr).toContain("TOTP_ENCRYPTION_KEY");
+    expect(r.stderr).toContain("SMTP_HOST");
+    expect(r.stderr).toContain("REQUIRE_EMAIL_VERIFICATION");
+    // Nenhuma senha do ambiente aparece na mensagem de recusação.
+    expect(r.stderr).not.toContain("SenhaDoSmtp2026!");
   });
 
   it("produção sem o endereço do administrador global não sobe", () => {

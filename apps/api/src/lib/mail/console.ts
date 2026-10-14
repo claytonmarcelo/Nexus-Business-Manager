@@ -1,0 +1,29 @@
+import type { MailerPort, MensagemDeMail } from "./porta";
+import { mascaraEndereco } from "./porta";
+
+type LinhaDeLog = (mensagem: string) => void;
+
+/**
+ * Entrega de desenvolvimento (D1): a mensagem é escrita no log do processo, com o
+ * endereço mascarado e o corpo junto — em dev o corpo É o código, e é assim que
+ * quem programa testa o fluxo sem servidor de e-mail.
+ *
+ * Não é um simulacro silencioso: se alguém apontar produção para este mailer sem
+ * querer, a mensagem também não vai embora, então a escolha dele é sempre
+ * explícita (`SMTP_HOST` ausente fora de produção) e a produção recusa subir sem
+ * SMTP configurado (`config/producao.ts`).
+ */
+export function consoleMailer(log: LinhaDeLog = (m) => console.log(m)): MailerPort {
+  return {
+    nome: "console",
+    async enviar(mensagem: MensagemDeMail): Promise<void> {
+      log(
+        `[mail:console] ${mensagem.rotulo} para ${mascaraEndereco(mensagem.para)} — assunto: ${mensagem.assunto}\n` +
+          mensagem.texto
+            .split("\n")
+            .map((l) => "  | " + l)
+            .join("\n"),
+      );
+    },
+  };
+}

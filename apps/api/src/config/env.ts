@@ -38,6 +38,34 @@ const schema = z.object({
   // padrão de propósito — `passwordPolicy.ts` é quem decide o padrão de
   // desenvolvimento, para produção nunca herdar um valor escrito no código.
   SUPER_ADMIN_EMAIL: z.string().default(""),
+
+  // ---- F4 (D1, D2, D3): entrega de mensagem, verificação e segundo fator ----
+  //
+  // D1: o produto fala com uma porta (`lib/mail`), e o ambiente escolhe o
+  // entregador. Vazio = "decida pelo ambiente" (`criarMailer`): SMTP quando host,
+  // porta e remetente existem; console fora dele. `memory` é a caixa de teste.
+  MAIL_TRANSPORT: z.enum(["", "smtp", "memory"]).default(""),
+  SMTP_HOST: z.string().default(""),
+  SMTP_PORT: z.string().default(""),
+  SMTP_USER: z.string().default(""),
+  SMTP_PASS: z.string().default(""),
+  // "1" força TLS explícito, "0" força texto puro, vazio segue a porta (465 = TLS).
+  SMTP_SECURE: z.enum(["", "0", "1"]).default(""),
+  MAIL_FROM: z.string().default(""),
+  // Base do link que sai no corpo do e-mail (verificação de cadastro,
+  // recuperação). Em produção é https de verdade — um link de e-mail que aponta
+  // para localhost entrega a mensagem a quem abriu a caixa errado.
+  WEB_BASE_URL: z.string().default("http://localhost:5173"),
+
+  // D2: cadastro exige e-mail verificado antes de entrar no painel. Desligado em
+  // dev e teste de propósito: nenhuma suíte depende de ler caixa de e-mail, e a
+  // vitrine local não tem SMTP. A régua de produção cobra o "1".
+  REQUIRE_EMAIL_VERIFICATION: z.enum(["0", "1"]).default("0"),
+
+  // D3: chave de 32 bytes (64 caracteres hexadecimais) que cifra o segredo TOTP
+  // em repouso (AES-256-GCM). Vazia = segundo fator indisponível; em produção a
+  // subida é recusada sem ela, porque 2FA com segredo em claro não é 2FA.
+  TOTP_ENCRYPTION_KEY: z.string().default(""),
 });
 
 const parsed = schema.safeParse(process.env);
