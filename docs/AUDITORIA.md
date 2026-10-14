@@ -657,7 +657,7 @@ payload real do `/api/public/landing`. As respostas:
   `rgb(42, 35, 32)` = **13,72:1**; subtítulo suave no mesmo tema = **5,5:1**; texto do herói no escuro =
   **7,15:1**. Todos acima de 4,5:1.
 
-### N7 — BAIXO, fora do escopo: o tema do produto não é o tema que o AdminLTE olha
+### N7 — BAIXO, **corrigido na T4.3**: o tema do produto não é o tema que o AdminLTE olha
 
 Nenhuma linha de `apps/web/src/` escreve `data-bs-theme` (medido com `grep -rn "data-bs-theme" apps/web/src
 apps/web/index.html` → zero ocorrências), e o `adminlte.min.css` importado em `main.tsx` tem **17** regras
@@ -667,6 +667,16 @@ dropdown, tabela do plugin — fica fora do tema. Não foi corrigido nesta rodad
 chaves muda o desenho de todas as telas do painel, e isso obriga a recapturar as seis telas do `README.md` e
 as oito provas de navegador: trabalho de rodada própria, com aval do dono. Enquanto isso, o que se vê nas
 telas é o que as provas medem, e elas estão verdes.
+
+Fechado na T4/F5 (2026-10-14) pelo caminho reversível, sem pedir escolha nova ao dono: o `ThemeContext`
+passou a escrever `data-bs-theme` no `<html>` **junto** com o `data-theme` que já mandava no produto — nada
+deixou de funcionar pelo caminho antigo, e o que ganhou foi o conjunto de regras do AdminLTE que estava
+morto. O valor é lido do preferido salvo em `apps/web/src/main.tsx`, antes de `createRoot`, para a tela não
+piscar o tema errado — e não por *script* inline no html, porque o CSP de produção é o padrão do helmet e sua
+`script-src` vale `'self'`. Prova: **6 casos** em `apps/web/src/test/tema-sincronizado.test.tsx`, vermelho primeiro
+com as duas chaves desalinhadas, e as duas capturas de tema claro regravadas e conferidas na prova
+`tools/verify-sidebar.cjs` (**104 checagens, 0 falhas**), que agora mede luminância da superfície da barra e o
+contorno do botão no tema claro. Decisão em `docs/adr/0016-tema-do-painel-com-duas-chaves.md`.
 
 ### N8 — ALTO, resolvido nesta rodada: sessões encerradas caiam no login, e duas portas não encerravam nada
 
@@ -1351,6 +1361,20 @@ isso na nota da galeria. As famílias do painel cuja ferramenta roda limpa foram
 galeria saíram dela: entraram no lugar as duas capturas de `tools/verify-parcelamento.cjs`, que mostram as
 mesmas telas com a barra de hoje. Passada completa na F9.
 
+**Re-medido na T4 (2026-10-14).** As provas de navegador desta rodada regravaram **74** PNGs, e a casa agora tem
+como conferir isso sem depender do olho: um comparador decodifica o bitmap do arquivo do `HEAD` e do arquivo da
+árvore (IDAT + inflate + unfilter) e compara pixel a pixel, porque um PNG regravado muda de bytes por metadado do
+codificador mesmo quando a tela é a mesma. Nenhum dos setenta e quatro voltou byte por byte igual, e a diferença
+não é ruína de codificador: `17-agenda.png` e `04-usuarios.png`, por exemplo, mostram no `HEAD` a barra de antes
+da F3.1 - sem "Notificações", sem "Ordens de serviço", sem "Cobranças", sem sino no cabeçalho - e na árvore atual
+a barra de hoje com as dezessete linhas. `02-login.png` do `HEAD` anuncia o placeholder `voce@exemplo.com`, que
+o `Login.tsx:264` não escreve mais desde a T4.2; a regravada mostra `seu@email.com`, que é o que a tela devolve.
+Conferidas visualmente, em pares lado a lado e em montagem, as dez capturas estreitas (o piso de 44 px mudou o
+tamanho de botão, aba, campo e paginação no celular) e as sessenta e quatro de mesa: nenhuma tela quebrada,
+nenhum dado de fora, nenhuma credencial em campo. As setenta e quatro ficam. O N29 continua em aberto - as
+ferramentas de captura continuam consertadas por ninguém - e é justamente por isso que a casa dependeu aqui das
+provas para recapturar.
+
 ### N31 — corrigido nesta rodada porque a recaptura esbarrou nele: `verify-rotinas.cjs` procurava a trilha de plataforma pelo `companyId` da sessão
 
 A F2 (ADR-0007) mudou onde a trilha da plataforma mora: evento com `scope = platform` perde o `companyId`.
@@ -1875,4 +1899,88 @@ a tarefa de robustez do frontend e já devia recapturar as telas: `VerificarEmai
 entram na lista dela com teste de componente e prova de navegador, e a linha 74-90 do `segundoFator.ts` (o ramo
 de erro do cliente) junto. Até lá, `docs/ESTADO-ATUAL.md` §1 item 9, §8 (bullet do web) e §10 (P17) carregam a
 mesma medição, para ninguém ler "F4 feita" como "autenticação testada de ponta a ponta no navegador".
+
+### N63 — corrigido na T4.9: acessibilidade mínima não tinha régua nenhuma no repositório
+
+O item 7 da F5 pede cinco coisas medidas — rótulo, foco visível, navegação por teclado, `prefers-reduced-motion`
+e alvo de toque de 44 px — e nenhuma delas tinha instrumento. Havia layout responsivo (`verify-responsive.cjs`);
+contraste só veio a ter nesta rodada, com `tools/audit-contraste-painel.cjs`, escrito aqui para a dupla chave do
+N7 poder ser conferida na tela e não no fonte. "A tela é operável sem mouse" nunca tinha sido afirmado com
+número em lugar algum.
+
+A régua agora é `tools/verify-acessibilidade.cjs`: **22 verificações, 0 falhas** no navegador real, varrendo as
+telas públicas e as dezessete linhas da barra. O que ela mede, medido na última corrida: **649 controles**
+montados, **0** sem rótulo acessível e **0** sustentados só por `placeholder` ou `title`; **68** paradas de `Tab`
+com **0** sem anel de foco visível; alvo de toque em janela de 360 px com **0** controles principais abaixo de
+44 px; mesma varredura em 1440 px com a régua AA de 24 px, **0** abaixo; teclado sem mouse (abrir o menu com
+`Enter`, fechar a gaveta com `Escape`, percorrer abas, abrir e fechar diálogo); e `prefers-reduced-motion` com
+**0** elementos ainda em animação na vitrine e **0** no painel. O piso de 44 px entrou no CSS em
+`components.css` dentro de `@media (max-width: 820px), (pointer: coarse)` — o `pointer: coarse` é o que pega
+notebook com tela de toque em janela larga — e as linhas de ação ganharam permissão de quebrar para dois botões
+de 44 px não estourarem os 360 px.
+
+### N64 — corrigido na T4.9: a régua nova mediu o vazio nas três primeiras corridas, e isto é achado porque o resultado era "ok"
+
+Vale registrar porque o erro não era de código de produto, era de instrumento, e o instrumento é o que a casa usa
+para dizer a verdade. Três vezes a prova devolveu verde sem ter medido:
+
+1. A janela de 360 px era obtida com `setViewport` numa página montada em 1440 px. O `initialView` do
+   FullCalendar é decidido na montagem, então a grade do mês continuava sendo grade do mês dentro de uma janela
+   de celular, e o caminho "no celular vira lista" nunca foi exercitado. Corrigido re-navegando depois de
+   trocar o viewport.
+2. A lista de controles grandes (`alvosGrandes`) não tinha filtro de tamanho. As seis pílulas de 39x25 px da
+   grade apareciam cobrindo a si mesmas — "6 cobertas pela lista" era autofagia, não exceção do critério 2.5.8.
+   Corrigido filtrando por largura e altura >= 44 px antes de comparar.
+3. `dentroDeTexto()` classificava como prosa todo `<a>` sem classe dentro de `<li>`/`<td>`, e a linha da lista
+   do FullCalendar é exatamente um `<a>` sem classe dentro de `<td>`: as linhas de 144x44 px estavam invisíveis
+   para a prova. Corrigido exigindo texto sobrando na caixa, além do texto do próprio link.
+
+Junto disso a prova deixou de poder medir uma grade vazia: ela cria um compromisso próprio pelo contrato público
+da Agenda (`POST /api/agenda/events`), mede, e apaga no fim, imprimindo a contagem antes e depois
+(`6 -> 7` e `7 -> 6`, zero sobra). Sem essa dádiva própria, um mês sem evento faria a checagem da grade passar
+sem olhar nada.
+
+### N65 — aberto, mitigado nesta rodada: o navegador apontado para o banco de prova devolve 401 sem dizer por quê
+
+As duas janelas que ocupam a porta 3001 (`npm run dev:api` e `npm run dev:api:teste`) não podem rodar juntas, e
+o Vite de 5173 aponta para a 3001 sem saber qual das duas está lá. Como `tools/senha-admin.cjs` resolve primeiro
+a conta de prova (`tools/prova-admin.local.json`), quem abre a tela com o servidor de prova ligado e digita a
+conta desta máquina recebe HTTP 401 mudo — medido nesta rodada, foi o primeiro diagnóstico do "admin não está
+logando". O produto não tem culpa nenhuma: é topologia de desenvolvimento.
+
+Mitigação feita aqui: `tools/servidor-de-prova.cjs` passou a imprimir, ao subir, um aviso dizendo que o
+navegador daquela janela fala com o banco de prova, que a conta de administrador desta máquina não existe nele,
+e qual comando usar para voltar. O que continua aberto é a conveniência — as duas janelas ainda disputam a
+mesma porta, e nada devolve a 3001 ao servidor de desenvolvimento sozinho quando a prova termina.
+
+Aconteceu de novo nesta rodada, e agora com as três medidas na mão. Às 16:58:52 a conta raiz foi digitada na tela
+e o banco de prova registrou `login_attempts` com `failures=1` — no banco de desenvolvimento a mesma conta está
+`active=true`, `platformRole=SUPER_ADMIN`, com 37 vínculos `OWNER` sobre 37 empresas ativas e nenhuma trava; ela
+simplesmente **não existe** no banco de prova. A causa é a topologia: o servidor de prova tinha tomado a 3001, o
+Vite da 5173 aponta para a 3001, e o 401 que a pessoa viu não dizia nada disso. Devolver a porta ao
+`npm run dev` resolveu na hora, e a entrada da conta raiz foi reprovada no navegador logo depois — **6
+verificações, 0 falhas**, com o painel montando 35 blocos de conteúdo sob o cabeçalho "Olá, Administrador".
+
+O que muda o diagnóstico de "aviso" para "não acontece mais" é a separação de portas, e ela foi promovida para a
+primeira tarefa da **T5 / F6** (operação): o servidor de prova passa a subir a API na 3002 e o Vite de prova na
+5174, escrevendo um arquivo-ponteiro local ignorado pelo git que as ferramentas de navegador lêem para escolher
+a base. Assim a janela 3001/5173 do dono nunca é tocada por prova nenhuma, e a regra de acesso deixa de depender
+de alguém lembrar de devolver a porta.
+
+### N66 — corrigido na T4.10: `npm run dev` não existia na raiz
+
+O comando que qualquer pessoa digita ao clonar a casa devolvia `npm ERR! Missing script: "dev"`, porque o
+monorepo só expunha `dev:api` e `dev:web`. Agora `package.json` da raiz tem `dev` apontando para
+`tools/dev.cjs`, que levanta os dois lados na mesma janela, prefixa cada linha com `[api]` ou `[web]`, mostra o
+endereço de cada um, avisa que aquele caminho usa o banco de desenvolvimento e derruba os dois no `Ctrl+C`.
+
+A primeira versão chamava o `npm.cmd` do Windows por `spawn` e morreu na hora com `spawn EINVAL` — desde o
+reforço do Node contra o CVE-2024-27980, um `.cmd` do Windows não sobe sem `shell`. Em vez de abrir um `cmd.exe`
+no meio do caminho (o que deixaria o processo que escuta a porta órfão no `Ctrl+C`), a ferramenta lança os dois
+binários com o mesmo `process.execPath`: `tsx watch src/server.ts` e `vite`, resolvidos na árvore de
+`node_modules` e com recusa clara pedindo `npm install` se algum dia faltarem. Medido na máquina: `GET
+/api/health` devolve 200, a 5173 devolve 200, e o login do administrador desta máquina no banco de
+desenvolvimento devolve HTTP 200 com `accessToken` e `refreshToken` — nenhum valor de segredo impresso em lugar
+algum.
+
 

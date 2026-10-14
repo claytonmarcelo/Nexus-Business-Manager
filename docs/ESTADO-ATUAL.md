@@ -43,11 +43,13 @@ continua marcada para a F9.
    manuais com o recebimento registrado por pessoa e uma única receita no caixa,
    relatórios agregados, notificações, auditoria, rotinas agendadas,
    CMS da vitrine, documentos legais e modo manutenção.
-3. A suíte inteira passa nesta rodada: 46 arquivos / 434 casos na API e 12 arquivos
-   / 87 casos no web, com o banco MySQL de prova da decisão D6 (sem mock).
+3. A suíte inteira passa nesta rodada: 47 arquivos / 437 casos na API e 18 arquivos
+   / 140 casos no web, com o banco MySQL de prova da decisão D6 (sem mock).
 4. É parcial por escolha, não por esquecimento: os relatórios agregados têm teste
    de acesso e de dinheiro, mas nem cada um dos oito tem asserção de valor
-   própria, e o tema escuro do painel ainda é aplicado por nós, não pelo AdminLTE.
+   própria. Saiu dessa lista o tema do painel: desde a T4.3 o `<html>` carrega as
+   duas chaves — a nossa e a `data-bs-theme` que o AdminLTE 4 lê — escritas pela
+   mesma porta, com decisão em `docs/adr/0016`.
 5. Não existe: cobrança automática por gateway com credencial real, assinatura SaaS,
    nota fiscal, upload real de arquivo (a logo é só uma URL), backup e restauração —
    e nem fila de saída de e-mail: a entrega que a F4 montou é síncrona dentro da
@@ -78,20 +80,28 @@ continua marcada para a F9.
    `docs/AUDITORIA.md` N1). A decisão de 2026-10-12 (item 1 do PROMPT MESTRE) é
    que a conta é fictícia: não se rotaciona senha, não se reescreve histórico. O
    N1 deixou de travar o push e passou a risco aceito e registrado.
-9. Cobertura re-medida nesta rodada: API com **87,79%** de instruções
-   (3.274/3.729), 76,01% de ramificações, 87,30% de funções e 90,62% de linhas;
-   web com **29,67%** de instruções (1.370/4.616), contra 27,83% da passada
-   anterior — `Login.tsx` saiu do zero com o teste do segundo fator. Na API agora há
-   **três** arquivos em 0% (eram um): `cron.runner.ts` e os dois transportes de e-mail
-   que a suíte não pode tocar (`lib/mail/smtp.ts` e `lib/mail/console.ts`); no web
-   seguem **38** arquivos em 0%, dois deles estreados aqui — `VerificarEmail.tsx` e
-   `SegundoFatorPanel.tsx` (achado N62, passada marcada para a T4/F5).
-10. Branch `main` igual ao `origin/main` no começo desta passada (`6f97067`, medido com
-    `git rev-parse`): T0, T1 e T2 já estão publicados. O fechamento da T3 é a suíte verde
-    no banco de prova (46 arquivos / 434 casos na API, 12 / 87 no web), o portão de build
-    e commits em lotes — implementação e documentação separados — com push em avanço
+9. Cobertura re-medida na árvore final da T4: API com **87,79%** de instruções
+   (3.274/3.729), 76,01% de ramificações, 87,30% de funções e 90,62% de linhas, com os
+   mesmos **três** arquivos em 0% da F4 (`cron.runner.ts`, `lib/mail/smtp.ts` e
+   `lib/mail/console.ts` — a suíte de API não pode tocar em transporte real, e o
+   agendador só roda com o servidor de produção). No web, com o universo documentado
+   (`--coverage.include="src/**"`, menos `src/test/**`), **38,19%** de instruções,
+   33,11% de ramificações, 30,67% de funções e 41,03% de linhas, e **27** arquivos em
+   0% (eram 38): as duas telas que a F4 estreou saíram do zero — `VerificarEmail.tsx`
+   em 97,22% e `SegundoFatorPanel.tsx` em 96,15%, com `lib/verificacao.ts` e
+   `lib/segundoFator.ts` em 100% (era o achado N62, agora fechado).
+10. Estado da branch medido no encerramento da T4: `origin/main` em `55bbb50` e `HEAD`
+    em `68f0d0d`, descendente direto — dois commits publicados por dentro desta rodada
+    (T4.1 e T4.2) antes dos dois que fecham a T4. O fechamento é a suíte verde no banco
+    de prova (47 arquivos / 437 casos na API, 18 / 140 no web), o portão de build e
+    commits em lotes — implementação e documentação separados — com push em avanço
     direto, sem force, e a prova `git ls-remote origin HEAD` igual a `git rev-parse HEAD`
-    colada no relatório da tarefa.
+    colada no relatório da tarefa. Falta o portão que a regra de acesso do dono cobra:
+    com o `npm run dev` de volta no banco de desenvolvimento a conta raiz entra — HTTP 200
+    na API com `accessToken` e `refreshToken` (nenhum valor impresso), 37 empresas na
+    sessão e **6 verificações / 0 falhas** no navegador. Quando isso não acontece, a
+    primeira suspeita é a porta 3001, não a senha: o roteiro está na seção 12 e o
+    conserto definitivo abre a T5 (N65).
 
 ---
 
@@ -164,48 +174,49 @@ nexusbusinessmanager/
 │   │   │   ├── plugins/           (auth, gate, maintenance, security)
 │   │   │   ├── app.ts
 │   │   │   └── server.ts
-│   │   └── test/                  (37 arquivos .test.ts + helpers.ts)
+│   │   └── test/                  (47 arquivos .test.ts + helpers.ts)
 │   └── web/
 │       ├── public/
 │       └── src/
-│           ├── components/        (12 na raiz + 5 cms/, 12 landing/, 3 layout/,
-│           │                       2 settings/)
+│           ├── components/        (13 na raiz + 5 cms/, 12 landing/, 3 layout/,
+│           │                       3 settings/ — 36 arquivos)
 │           ├── context/           (AuthContext, ThemeContext)
-│           ├── lib/               (22 módulos: api, auditLabels, brand,
-│           │                       cmsApi, confirm, cronApi, csv, format,
+│           ├── lib/               (27 módulos: api, auditLabels, brand,
+│           │                       cmsApi, confirm, cronApi, csv, destino, format,
 │           │                       landingApi, landingEstilo, landingTypes,
-│           │                       masks, metricaVitrine, money, notify,
-│           │                       notificationsApi, papeis, settingsApi,
-│           │                       statusServico, tokenStore, uiCopy,
-│           │                       validators)
-│           ├── pages/             (23 arquivos)
-│           ├── styles/            (7 arquivos CSS, 3.321 linhas no total)
-│           └── test/              (12 arquivos: 10 testes + 2 fábricas;
+│           │                       lembranca, masks, metricaVitrine, money,
+│           │                       notificationsApi, notify, papeis,
+│           │                       registro-erros, segundoFator, settingsApi,
+│           │                       statusServico, tokenStore, uiCopy, validators,
+│           │                       verificacao)
+│           ├── pages/             (24 arquivos)
+│           ├── styles/            (7 arquivos CSS, 3.594 linhas no total)
+│           └── test/              (20 arquivos: 18 testes + 2 fábricas;
 │                                   o jsdom vem do vitest.config, não de setup.ts)
 ├── assets/brand/logo/
 ├── docs/
-│   ├── adr/                       (9 ADRs)
+│   ├── adr/                       (16 ADRs)
 │   ├── decisoes/                  (G1–G6 + G8, em 7 arquivos)
 │   ├── design/palette.md
 │   ├── screenshots/               (116 capturas)
 │   ├── ANALISE.md, ANALISE-LACUNAS.md, AUDITORIA.md, PRODUCAO.md,
 │   │   STATUS-AJUSTES.md
 │   └── ESTADO-ATUAL.md            (este arquivo)
-├── tools/                         (38 arquivos rastreados nesta rodada: 11
-│                                   shoot-* + shoot.cjs, 14 verify-*, 4 patch-*,
-│                                   3 audit-*, conta-de-captura.cjs,
-│                                   senha-admin.cjs, para-innodb.cjs, wf.cjs,
-│                                   make-favicon.ps1)
-├── README.md, CHANGELOG.md
+├── tools/                         (48 arquivos versionados nesta rodada: 19 verify-*,
+│                                   11 shoot-* + shoot.cjs, 4 patch-*, 4 audit-*,
+│                                   dev.cjs, servidor-de-prova.cjs,
+│                                   preparar-banco-de-prova.cjs, banco-de-prova.cjs,
+│                                   conta-de-captura.cjs, senha-admin.cjs,
+│                                   para-innodb.cjs, wf.cjs, make-favicon.ps1)
+├── README.md, CHANGELOG.md, CREDENCIAIS.md
 └── package.json, package-lock.json, .gitignore, .gitattributes, .editorconfig
 ```
 
 Arquivos da árvore versionada nesta rodada, medidos com
 `git ls-files --cached --others --exclude-standard` — ou seja, o que está no commit de
 agora mais os arquivos novos deste módulo, que ainda não aparecem no `git ls-files` puro:
-**450**, distribuídos em `apps` 265, `docs` 139, `tools` 38, `assets` 1 e 7 na raiz.
-Código: 82 arquivos `.ts` em `apps/api/src` e 96 `.ts`/`.tsx` em `apps/web/src`.
-Não há `.github/` — ou seja, **nenhum CI versionado**.
+**506**. Código: 93 arquivos `.ts` em `apps/api/src` e 112 `.ts`/`.tsx` em `apps/web/src`.
+Não há `.github/` — ou seja, **nenhum CI versionado** (a pastinha é trabalho da T7/F8).
 
 ---
 
@@ -512,22 +523,21 @@ limpa tudo o que a etapa produziu — medido em
 A gestão do fator no painel é a tela `components/settings/SegundoFatorPanel.tsx`, dentro
 da aba Segurança de `/app/configuracoes`.
 
-São **24 arquivos** em `pages/` e **35 arquivos** de componente (12 na raiz de
+São **24 arquivos** em `pages/` e **36 arquivos** de componente (13 na raiz de
 `components/`, 5 em `components/cms/`, 12 em `components/landing/` — onze `.tsx` mais
-`copy.ts` —, 3 em `components/layout/`, 3 em `components/settings/`, o novo sendo
-`SegundoFatorPanel.tsx`), mais `context/AuthContext` e `context/ThemeContext`, e
-**25 módulos** em `lib/` — entraram `segundoFator.ts`, `destino.ts` e `verificacao.ts`.
-Há **14 arquivos** em `src/test/` (12 de casos e os dois helpers `fabrica-api.ts` e
+`copy.ts` —, 3 em `components/layout/`, 3 em `components/settings/`, entrando
+`ErrorBoundary.tsx` da T4.4 e `SegundoFatorPanel.tsx` da F4), mais `context/AuthContext` e
+`context/ThemeContext`, e **27 módulos** em `lib/` — entraram `segundoFator.ts`, `destino.ts`,
+`verificacao.ts` e, nesta rodada, `registro-erros.ts` com o `lembranca.ts` que a F4 reescreveu.
+Há **20 arquivos** em `src/test/` (18 de casos e os dois helpers `fabrica-api.ts` e
 `fabrica-landing.ts`).
 
 Componentes globais de uso transversal: `ProtectedRoute`, `AdminShell`,
 `NotificationBell`, `Tabs`, `Pagination`, `Modal`, `ConfirmationModal`,
-`StateView`, `PageLoader`, `PasswordInput`, `Logo`, `ThemeToggle`, `ErrorPage` e
-a biblioteca de campos `Fields.tsx`.
+`StateView`, `PageLoader`, `PasswordInput`, `Logo`, `ThemeToggle`, `ErrorPage`,
+`ErrorBoundary` e a biblioteca de campos `Fields.tsx`.
 
-O que é apenas visual hoje: (a) o seletor de tema do painel escreve o atributo no
-elemento, mas o AdminLTE 4 olha `data-bs-theme` — divergência registrada como N7
-em `docs/AUDITORIA.md`, à espera de decisão; (b) a aba Modelos de e-mail não existe
+O que é apenas visual hoje: (a) a aba Modelos de e-mail não existe
 como funcionalidade, e na aba Gateways os três provedores de mercado aparecem
 marcados como indisponíveis, com o motivo — o que aparece na tela é o que a API
 realmente devolve.
@@ -543,17 +553,51 @@ página com título e sem copy de obra, CSS sem o estado apagado, barra montada 
 `tools/verify-sidebar.cjs`, que clica as dezessete linhas uma por uma — reexecutado nesta
 rodada com a linha nova: **104 checagens, 0 falhas** (eram 103 com dezesseis).
 
-Bundle medido no `npm run build` desta rodada (F4), refeito no portão de encerramento:
-`index.js` **961,19 kB** (gzip 282,12 kB) e `index.css` **396,43 kB** (gzip 60,78 kB) num
-único chunk — o Vite voltou a avisar `Some chunks are larger than 500 kB`. Code-splitting
-continua por fazer e entra na F5 (decisão D8), com a medição antes/depois obrigatória. O
-crescimento desde a medição da F3.2 Parte 2 (946,30 kB de JS e 395,16 kB de CSS) é
-**+14,89 kB** de JS e **+1,27 kB** de CSS, e a explicação cabe nos três arquivos novos:
-`Login.tsx` reescrito em quatro passos (13.765 bytes), `VerificarEmail.tsx` (5.099) e
-`SegundoFatorPanel.tsx` (7.536), mais os 39 estilos novos do painel de segundo fator e da
-tela de confirmação no `components.css` (2.123 linhas). Para referência, a maior tela do
-painel continua `Cobrancas.tsx`, com **52.735 bytes** de fonte — e é ela, não a F4, que
-pesa no chunk.
+Bundle medido no `npm run build` desta rodada (T4/F5), refeito no portão de encerramento: o
+JavaScript saiu de **um** chunk para **37 pedaços**. O `index` pesa **354,85 kB** (gzip 121,62 kB),
+o maior pedaço de rota é o da Agenda, **286,34 kB** (gzip 83,52 kB — é o FullCalendar, que só desce
+quando alguém abre `/app/agenda`), e os outros 35 pedaços — telas e módulos compartilhados —
+ficaram entre **0,32 kB** e **29,94 kB** cada um. O aviso `Some chunks are larger than 500 kB`
+**não apareceu mais** — a última vez que ele esteve no build foi a F4, com 961,19 kB / 282,12 kB
+num arquivo só (D8 cumprida, com a medição antes/depois em
+`docs/adr/0014-code-splitting-por-rota.md`). O CSS continua **um arquivo único**,
+`index.css` **398,54 kB** (gzip 61,29 kB) contra 396,43 kB (gzip 60,78 kB) da F4: cresceram 2,11 kB
+com o piso de alvo de toque, a tela de erro e o painel de segundo fator, e dividir o stylesheet por
+rota fica declarado como dívida na mesma ADR. A prova do lado do navegador é
+`tools/verify-code-splitting.cjs` (**44 verificações, 0 falhas**), que abre `/app/dashboard` e confere
+pela lista de rede que nenhum pedaço da Agenda nem o do CMS desceram junto.
+
+Para referência, a maior tela do painel continua `Cobrancas.tsx`, com **52.735 bytes** de fonte —
+e é ela, não a F4, que pesa no pedaço que sobrou para o `index` quando a rota é a primeira da aba.
+
+Acessibilidade deixou de ser adjetivo na T4.9: `tools/verify-acessibilidade.cjs` percorre **22 telas**
+no navegador real e imprime **22 verificações, 0 falhas** sobre **649 controles lidos** — rótulo
+acessível em todo controle (0 sustentados só por `placeholder` ou `title`), anel de foco visível nas
+**68** paradas de `Tab`, alvo de toque, navegação por teclado (menu com `Enter`, gaveta com `Escape`,
+abas, diálogo) e `prefers-reduced-motion` nos dois sentidos (com `reduce`, **0** elementos girando ou
+transicionando na vitrine e **0** no painel). O piso do alvo de toque é duplo, e a razão está em
+`docs/adr/0015-alvo-de-toque-44-24-e-agenda-em-lista-no-celular.md`: **44x44 px** (WCAG 2.5.5, AAA)
+onde o dedo mora — janela estreita ou `pointer: coarse` — e **24x24 px** (2.5.8, AA) na mesa, com a
+exceção de equivalência conferida no elemento, não declarada: a Agenda abre em `listMonth` no celular
+porque é a lista que tem linha de 144x44 px, e a grade do mês só passa na régua enquanto essa lista
+existir. Medido: **0** controles principais abaixo de 44 px em 360 px e **0** abaixo de 24 px em
+1440 px. A régua também não mede vazio — a prova cria um compromisso próprio pelo contrato público da
+Agenda, mede com ele na tela e apaga no `finally`, imprimindo a contagem antes e depois. Ficou de fora,
+declarado: zoom de 200%, leitor de tela e o contraste dos estados desabilitados. O contraste do resto
+tem instrumento próprio: `tools/audit-contraste-painel.cjs` percorre as 17 telas do painel nos dois temas
+e nas duas janelas (68 combinações), resolve o fundo realmente composto por trás de cada texto no
+navegador, e fechou esta árvore com **2.862 textos medidos, 0 abaixo do alvo** (4,5:1; 3:1 para texto
+grande), **14** isentos por componente inativo pela própria WCAG 1.4.3 — e cada linha da saída imprime
+`atributos dark/dark ok` ou `light/light ok`, que é a dupla chave do N7 conferida na tela, não no fonte.
+
+O que a T4.5 acrescentou ao mesmo capítulo é a fumaça: `npm run verify` (`tools/verify-fumaca.cjs`)
+atravessa **63 páginas** no navegador — a vitrine e o `/login` sem sessão, as **14 telas** que a barra
+lateral devolve para a conta de prova (lidas da própria tela, depois de entrar pela tela de entrada), as
+**4 páginas de erro** (`/401`, `/403`, `/500` e o catch-all por caminho inexistente) em 360, 1024 e
+1440 px, mais as **3 telas privativas da plataforma** (editor do CMS, rotinas e trilha da plataforma),
+que só aparecem na janela larga e com o administrador da plataforma. Cada página é conferida por HTTP,
+conteúdo montado e console limpo, e a corrida fecha com **0 problemas**. É ela, e não a memória, que diz
+se uma tela mudou de mãos com a última refatoração.
 
 ---
 
@@ -562,27 +606,33 @@ pesa no chunk.
 Medidos no portão de fechamento desta tarefa (`npm test`, exit 0, saída real colada no
 relatório da rodada), com o banco de prova da decisão D6 ativo (a suíte da API não usa mock): zero
 falha e zero skip nas duas pontas. As durações variam corrida a corrida, e as duas corridas desta
-rodada estão guardadas em arquivo: o portão mediu **415,87 s** (API) e **10,84 s** (web), a corrida
-anterior do mesmo portão, **447,05 s** e **10,26 s**, e a mesma suíte da API com o contador de
-cobertura ligado levou **500,83 s** — a do web com cobertura, **15,39 s**. O que sustenta o
-conteúdo da tabela é o contador de arquivos e casos, que não muda entre corridas.
+rodada estão guardadas em arquivo: o portão mediu **337,87 s** (API) e **16,49 s** (web), e a mesma
+suíte com o contador de cobertura ligado levou **487,10 s** na API; no web a corrida com o contador
+ligado fechou em 20,28 s sem os globais de medição e voltou a dar 18 arquivos / 140 casos com eles.
+Na passada anterior (F4) o portão tinha dado 415,87 s e 10,84 s. O que sustenta o conteúdo da tabela
+é o contador de arquivos e casos, que não muda entre corridas.
 
 | Suíte | Arquivos | Casos | Resultado | Duração |
 | --- | --- | --- | --- | --- |
-| API (`vitest`, forks, serial) | 46 | 434 | 46 passed (46) · 434 passed (434) | 415,87 s |
-| Web (jsdom + Testing Library) | 12 | 87 | 12 passed (12) · 87 passed (87) | 10,84 s |
+| API (`vitest`, forks, serial) | 47 | 437 | 47 passed (47) · 437 passed (437) | 337,87 s |
+| Web (jsdom + Testing Library) | 18 | 140 | 18 passed (18) · 140 passed (140) | 16,49 s |
 
-Na API são **9 arquivos e 84 casos a mais** que a medição da F3.2 Parte 2 (37 / 350). Os dois
+Na API são **10 arquivos e 87 casos a mais** que a medição da F3.2 Parte 2 (37 / 350). Os dois
 primeiros entraram na T1 e na T2 e nunca tinham sido contados aqui
 (`banco-de-teste-separado.test.ts`, `empresa-lembrada.test.ts`); os sete que a T3 estrearam são
 `bloqueio-de-conta.test.ts`, `corrida-de-abas.test.ts`, `criptografia.test.ts`,
 `guardas-herdadas.test.ts`, `recuperacao-por-email.test.ts`, `segundo-fator.test.ts` (16 casos) e
-`verificacao-de-email.test.ts`. Além deles, `isolamento-rotas.test.ts`, `seguranca.test.ts` e
-`validador-de-producao.test.ts` ganharam casos, e a soma dos nove arquivos novos com os três
-reatualizados fecha os 84 — a repartição exata arquivo por arquivo não foi medida nesta passada, e o
-que está garantido aqui é o total do portão (434, todos verdes). No web são **2 arquivos e 10 casos a
-mais** (10 / 77): `login-com-segundo-fator.test.tsx` (4) e `destino-pos-login.test.ts` (4), mais os
-2 casos que entraram em arquivos que já existiam.
+`verificacao-de-email.test.ts`; e o décimo é desta rodada — `zero-placeholder.test.ts` (3 casos),
+que varre o fonte do front e da API procurando porta que devolve `null` de propósito, "em breve" e
+copy de obra. Além deles, `isolamento-rotas.test.ts`, `seguranca.test.ts` e
+`validador-de-producao.test.ts` ganharam casos, e a soma dos dez arquivos novos com os três
+reatualizados fecha os 87 — a repartição exata arquivo por arquivo não foi medida nesta passada, e o
+que está garantido aqui é o total do portão (437, todos verdes). No web são **6 arquivos e 53 casos a
+mais** (12 / 87 na F4): estrearam `resposta-atrasada.test.tsx` (5), `privacidade-do-login.test.tsx` (15),
+`tema-sincronizado.test.tsx` (6), `limite-de-erro.test.tsx` (9), `verificar-e-mail.test.tsx` (8) e
+`segundo-fator-conta.test.tsx` (9) — 52 casos contabilizados pelo próprio relatório —, e o caso que
+falta para fechar os 53 é o oitavo de `fim-de-sessao.test.tsx`, que a T4 acrescentou ao arquivo que
+já existia.
 
 Cobertura real, medida agora com o mesmo comando de medição das duas pontas:
 
@@ -594,8 +644,8 @@ Web:  npm run test --workspace @nexus/web -- --coverage \
 
 | Suíte | Stmts | Branch | Funcs | Lines | Base medida |
 | --- | --- | --- | --- | --- | --- |
-| API | **87,79%** | 76,01% | 87,30% | **90,62%** | saída do `vitest run --coverage` desta rodada: 3.274/3.729 instruções, 1.889/2.485 ramificações, 674/772 funções, 3.006/3.317 linhas — as linhas conferem com o `lcov.info` gerado no mesmo portão (92 arquivos sob `src`, 3.317 de `LF` somados); **3** arquivos com zero alcance, contra 1 da passada anterior |
-| Web | **29,67%** | 24,73% | 25,36% | **31,37%** | percentuais impressos pelo relatório; as bases contadas arquivo por arquivo em `apps/web/coverage/coverage-final.json` são 1.370/4.616 instruções e 365/1.439 funções (a conta de instruções dá 29,68% e o relatório arredonda para 29,67%); **97** entradas no JSON, das quais 9 sem nenhuma instrução mensurável (os sete `.css`, `logo.png` e `vite-env.d.ts`), restando **88** arquivos de código — e **38** deles seguem em 0% |
+| API | **87,79%** | 76,01% | 87,30% | **90,62%** | re-medida na T4 com `npm run test:coverage --workspace @nexus/api` (exit 0, 487,10 s): os mesmos quatro percentuais e o mesmo `lcov.info` da F4 — 3.006/3.317 linhas, 1.889/2.485 ramificações, 674/772 funções em 92 arquivos sob `src`; as instruções ficam em 3.274/3.729 como na passada. A cobertura da API não se moveu porque o arquivo novo da rodada (`zero-placeholder.test.ts`) lê fonte, não executa `src`; **3** arquivos seguem com zero alcance |
+| Web | **38,19%** | 33,11% | 30,67% | **41,03%** | corrida desta rodada com os mesmos globais da passada (`--coverage.include="src/**"`, `exclude="src/test/**"`, 18 arquivos / 140 casos verdes): as bases contadas arquivo por arquivo em `apps/web/coverage/coverage-final.json` são 1.845/4.831 instruções, 1.287/3.886 ramificações e 466/1.519 funções; **100** entradas no JSON, das quais 9 sem nenhuma instrução mensurável (os sete `.css`, `logo.png` e `vite-env.d.ts`), restando **91** arquivos de código — e **27** deles em 0%, contra 38 da passada. A alta de +8,52 pontos de instrução é a T4: saíram do zero `VerificarEmail.tsx` (97,22%), `SegundoFatorPanel.tsx` (96,15%), `ErrorBoundary.tsx` (100%), `lib/verificacao.ts` e `lib/segundoFator.ts` (100% nos dois) |
 
 O que **não** está coberto, dito sem rodeios:
 
@@ -640,32 +690,30 @@ O que **não** está coberto, dito sem rodeios:
   do `lib/mail/index.ts` (33, 37 e 46) são exatamente o ramo que a suíte não pode percorrer: com
   `MAIL_TRANSPORT=memory` fixado no `vitest.config.ts`, `criarMailer` devolve o fake na linha 32 e nunca
   chega a montar o SMTP (33-45) nem o console (46).
-- **Web:** **38 dos 88 arquivos com código mensurável estão em 0%** (97 entradas no
+- **Web:** **27 dos 91 arquivos com código mensurável estão em 0%** (100 entradas no
   `coverage-final.json`, 9 delas sem nenhuma instrução: os sete `.css`, `logo.png` e
-  `vite-env.d.ts`). Contra a passada anterior o numerador não mudou e o denominador subiu de 83 para 88
-  porque entraram cinco arquivos de código. O que a F4 ganhou de cobertura: `destino.ts` **100%**,
-  `AuthContext.tsx` **79,50%** de instruções (83,63% de linhas), `tokenStore.ts` **70,83%**, e — o fato
-  novo da rodada — `Login.tsx` saiu do zero e está em **71,92%** (76,69% de linhas), porque o teste do
-  segundo fator percorre os quatro passos da caixa. O que a F4 deixou descoberto, dito sem maquiagem:
-  `pages/VerificarEmail.tsx` **0%** (0 de 36 linhas), `components/settings/SegundoFatorPanel.tsx` **0%**
-  (28-180), `lib/verificacao.ts` **0%** e `lib/segundoFator.ts` **42,85%** (as linhas 74-90, o painel de
-  códigos, não o caminho do login). Registado como **N62** em `docs/AUDITORIA.md`, com a passada marcada
-  para a T4/F5, que é a tarefa de robustez do frontend. O resto do oco é o de sempre, remedido linha por
-  linha: os doze arquivos de teste montam telas de verdade, e as telas montadas respondem —
-  `Cobrancas.tsx` **82,89%** de instruções (89,71% de linhas), `OrdensDeServico.tsx` **65,80%**,
-  `PlataformaAuditoria.tsx` **54,54%**, `Audit.tsx` **50,86%**, `Landing.tsx` **77,77%**,
-  `AdminShell.tsx` **58,16%**, `ConfirmationModal` **75%**, `Modal` **51,13%**, `Pagination` **55,55%**,
-  `Tabs` **55%**, `PasswordInput` **60%**, `NotificationBell` **44,82%** e `AuthContext` **79,50%**. O
-  que continua em 0% são as **13 das 17 linhas do menu** (Dashboard, Notificações, CRM, Clientes, Vendas,
-  Produtos, Compras, Agenda, Financeiro, Usuários, CMS, Rotinas, Configurações) — as quatro restantes
-  (Ordens de serviço, Cobranças, Auditoria e Auditoria da plataforma) têm teste de tela. Fora do menu,
-  seguem em 0% os cinco painéis do editor CMS, os dois painéis de Configurações que não são o de segundo
-  fator (`ContaPanel`, `EmpresaPanel`), a própria página `Settings.tsx`, `Fields`, `ErrorPage`, as
-  páginas de autenticação que nenhum teste abre (`Register`, `ForgotPassword`, `VerificarEmail`) e sete
-  módulos de `lib/` (`cmsApi`, `cronApi`, `settingsApi`, `landingApi`, `masks`, `papeis`,
-  `verificacao`) — `validators.ts` saiu do zero mas está em **3,70%**. **Treze telas de operação do
-  painel seguem sem teste automatizado** — a garantia delas hoje são as provas de navegador em `tools/`,
-  que não rodam sozinhas.
+  `vite-env.d.ts`). Eram 38 de 88 na passada da F4, e o denominador subiu porque a T4 estreou
+  `registro-erros.ts`. O que saiu do zero nesta rodada: `pages/VerificarEmail.tsx` **97,22%** de
+  instruções (0 de 36 linhas antes), `components/settings/SegundoFatorPanel.tsx` **96,15%** (28-180
+  fora, agora só as linhas 57 e 90), `lib/verificacao.ts` **100%**, `lib/segundoFator.ts` **100%** —
+  as linhas 74-90, o painel de códigos que a F4 deixou de fora, estão batidas —,
+  `components/ErrorBoundary.tsx` **100%** e `lib/registro-erros.ts` **100%** de instruções. Os dois
+  primeiros eram exatamente o achado **N62 / P17**, agora fechado, e a mesma tela foi aberta por
+  navegador de verdade em `tools/verify-verificacao-e-2fa.cjs` (56 verificações, 0 falhas, banco
+  devolvido a zero). Subiram também `Login.tsx` de 71,92% para **79,36%** (os três momentos em que a
+  senha é zerada entraram no teste), `AuthContext.tsx` para **81,14%**, `AdminShell.tsx` para
+  **58,58%** e `validators.ts` de 3,70% para **22,22%**. O que continua em 0%, sem maquiagem: **oito
+  das dezessete linhas do menu** (Dashboard, Notificações, Vendas, Compras, Agenda, CMS, Rotinas e
+  Configurações) mais as quatro telas públicas que nenhum teste abre (Cadastro, Recuperação, Legal e
+  a `pages/errors.tsx`), os cinco painéis do editor CMS, os dois painéis de Configurações que não são
+  o de segundo fator (`ContaPanel`, `EmpresaPanel`), o `Maintenance.tsx` da vitrine, `App.tsx` e
+  `main.tsx`, e cinco módulos de `lib/` (`cmsApi`, `cronApi`, `settingsApi`, `landingApi`, `masks`).
+  No meio-termo, medidos linha a linha: `Cobrancas.tsx` **82,89%** de instruções (89,71% de linhas),
+  `OrdensDeServico.tsx` 65,80%, `Audit.tsx` 50,86%, `Landing.tsx` 77,77%, `ConfirmationModal` 75%,
+  `Modal` 51,13%, `Pagination` 68,88%, `Tabs` 55%, `Fields` 26,31%, `NotificationBell` 44,82%,
+  `csv.ts` 8,33% e `format.ts` 35,29%. **Oito telas de operação do painel seguem sem teste
+  automatizado** — a garantia delas hoje são as provas de navegador em `tools/`, que não rodam
+  sozinhas.
 
 Limitações da medição que o revisor deve saber:
 
@@ -727,19 +775,21 @@ Ligadas ao item correspondente de `docs/AUDITORIA.md`.
 | P3 | Código de recuperação de senha numa captura rastreada (`09-recuperar-senha.png`) | AUDITORIA N2 | média |
 | P4 | Identificador real de empresa/espalhado em arquivos rastreados | AUDITORIA N3 | baixa |
 | P5 | Capturas das outras telas do painel não foram reauditadas uma a uma | AUDITORIA N5 | NÃO VERIFICADO |
-| P6 | Tema do painel x `data-bs-theme` do AdminLTE | AUDITORIA N7 | baixa, espera decisão |
+| P6 | Tema do painel x `data-bs-theme` do AdminLTE | AUDITORIA N7 | **fechado na T4.3**: o painel escreve `data-bs-theme` no `<html>` junto com o atributo próprio do produto, com o valor da preferência lido em `main.tsx` antes de `createRoot` (sem *script* inline, por causa do CSP); 6 casos em `tema-sincronizado.test.tsx`, decisão em `docs/adr/0016`, e as duas capturas de tema claro da barra conferidas no navegador (`verify-sidebar.cjs`, 104 checagens) |
 | P7 | Relatórios sem asserção de valor por relatório | seção F | média |
 | P8 | Sem CI, sem lint, sem threshold de cobertura | seção I / Fase 7 | média |
-| P9 | Bundle único de 961,19 kB (gzip 282,12 kB) sem code-splitting | Fase 7 / F5 (decisão D8) | média — é a primeira tarefa do bloco, com medição antes e depois obrigatórias |
+| P9 | Bundle único de 961,19 kB (gzip 282,12 kB) sem code-splitting | Fase 7 / F5 (decisão D8) | **fechado na T4.8**: 37 pedaços, `index` em 354,85 kB / 121,62 kB gzip, aviso de chunk acima de 500 kB extinto, medição antes/depois em `docs/adr/0014` e prova no navegador (`verify-code-splitting.cjs`, 44 verificações). O que sobrou do item virou P19 |
 | P10 | Auditoria segue em parada: Fase 7 e os blocos B–H do prompt de mercado não foram executados | AUDITORIA, seção I | combinado com o dono |
 | P11 | O movimento de estado feito pela tela não carregava motivo: a rota aceita `note`, o diálogo de confirmação da casa é de sim/não e o campo só aparecia quando a mudança veio pela API | AUDITORIA N36 | **fechado na T2** (decisão D4): `confirmActionComMotivo` — superfície aditiva, contrato dos cinco diálogos existentes intocado — obrigou motivo no cancelamento de ordem, no estorno de ordem concluída e no cancelamento de cobrança (ADR-0012) |
 | P12 | Ordem de serviço concluída não gera lançamento financeiro sozinha | AUDITORIA N37 / ADR-0008 | **fechado na F3.2 Parte 2**: a tela de ordens tem o botão "Gerar cobrança", e a receita entra quando uma pessoa registra o recebimento. O lançamento automático continua não existindo, agora por decisão registrada (N45: com receita automática na venda, a mesma venda cobrada no papel entraria duas vezes no caixa) |
 | P13 | O Financeiro formata coluna de dia a partir de objeto `Date`, a mesma classe de risco do vencimento lido no fuso | AUDITORIA N44 | média — é outra tela, e a passada dela não é desta fase |
-| P14 | Cinco telas ainda pintam a resposta atrasada de uma busca antiga por cima da busca nova (`Clients.tsx`, `Products.tsx`, `Finance.tsx`, `CRM.tsx`, `Users.tsx`) | AUDITORIA N51 | média — a guarda existe em Cobranças, Vendas, Compras, Ordens de serviço e Auditoria; a passada completa é da F5 |
+| P14 | Cinco telas ainda pintam a resposta atrasada de uma busca antiga por cima da busca nova (`Clients.tsx`, `Products.tsx`, `Finance.tsx`, `CRM.tsx`, `Users.tsx`) | AUDITORIA N51 | **fechado na T4.1**: contador de corrida nas cinco telas, mais as quatro listas que nascem em `useEffect` com a escrita desligada na limpeza; varredura do front inteira mede 4 escritas sem guarda no início e **0** no fim; 5 casos em `resposta-atrasada.test.tsx` com vermelho antes do verde |
 | P15 | Cobrança sem pagamento parcial, sem juros e sem estorno; `PAID` não cancela | AUDITORIA N46 | combinado com o dono: estorno é movimento do caixa e o produto ainda não tem |
 | P16 | A entrega de e-mail criada pela F4 é síncrona: a request de cadastro, recuperação e segundo fator espera o SMTP responder, sem fila, sem retry e com os timeouts padrão do nodemailer | AUDITORIA N58 | média — quem segura a resposta é o cliente; o fechamento é a T5/F6 |
-| P17 | As duas telas que a F4 estreou não têm teste de tela nem prova de navegador: `VerificarEmail.tsx` e `SegundoFatorPanel.tsx` estão em 0% de cobertura, e a mensagem de verificação só é lida pelo fake da suíte, nunca por um navegador | AUDITORIA N62 | média — a passada é da T4/F5, que é a tarefa de robustez do frontend |
+| P17 | As duas telas que a F4 estreou não têm teste de tela nem prova de navegador: `VerificarEmail.tsx` e `SegundoFatorPanel.tsx` estão em 0% de cobertura, e a mensagem de verificação só é lida pelo fake da suíte, nunca por um navegador | AUDITORIA N62 | **fechado na T4.7**: 8 + 9 casos novos (`verificar-e-mail.test.tsx`, `segundo-fator-conta.test.tsx`), cobertura das duas em **97,22%** e **96,15%**, `lib/verificacao.ts` e `lib/segundoFator.ts` em 100%, e a prova `tools/verify-verificacao-e-2fa.cjs` abrindo as duas telas no navegador (56 verificações, 0 falhas) |
 | P18 | Bloqueio de conta é, pelo lado da vítima, uma negação de serviço de quinze minutos disparada por quem conhece o endereço | AUDITORIA N60 | risco **aceito e registrado**: janela de contagem, login que limpa o contador, recuperação que limpa o contador e limite de 10 requisições por IP; a divulgação vai em `SECURITY.md` na T6/F7 |
+| P19 | O CSS do painel continua um arquivo único de **398,54 kB** (gzip 61,29 kB), quando o JavaScript já foi dividido por rota | AUDITORIA N62 / `docs/adr/0014` | baixa, dívida declarada: a divisão por rota é do lado do `import`, e o stylesheet entra todo no `<head>`; a passada é de uma rodada de frente que ainda não existiu |
+| P20 | Nove ferramentas de captura (`tools/shoot-*.cjs`) não acompanham a interface de hoje, e 48 PNGs ainda mostram a barra anterior à F3.1 | AUDITORIA N29 e N30 | média — fora do escopo por decisão do dono (D7: nenhuma recaptura em massa); a consertada entra na **T7/F8**, e as famílias regravadas nesta rodada foram conferidas pixel a pixel (N30 re-medido) |
 
 ---
 
@@ -771,7 +821,11 @@ Nada aqui foi inventado; está bloqueado por escolha registrada.
 5. **Hospedagem e backup** (`G5`) — onde roda, quem faz dump, com que frequência.
 6. **Licença** (`G6`) — o `package.json` hoje declara `UNLICENSED`; publicar o
    repositório como público sem licença definida é decisão do dono.
-7. **Tema do painel** (N7) — padronizar em `data-bs-theme` ou manter o nosso.
+7. **Tema do painel** (N7) — **decidido e executado na T4.3**: `data-bs-theme` no `<html>` junto
+   com o atributo próprio do produto, escrito pela mesma porta em `ThemeContext.tsx` e lido da
+   preferência salva em `main.tsx` antes de `createRoot`, com seis casos em
+   `apps/web/src/test/tema-sincronizado.test.tsx`. A decisão registrada está em
+   `docs/adr/0016-tema-do-painel-com-duas-chaves.md`.
 8. **Publicação do histórico** — o repositório remoto é público e já contém a
    captura da seção 1; qualquer decisão de trocar a senha, apagar a imagem ou
    manter o histórico é do dono (reescrever histórico é proibido neste prompt).
@@ -797,9 +851,50 @@ cp apps/api/.env.example apps/api/.env  # 2. ajuste DATABASE_URL, DATABASE_URL_T
 npm run db:migrate -w @nexus/api        # 3. aplica as 22 migrations (veja o aviso abaixo)
 npm run db:seed   -w @nexus/api         # 4. admin global + conta de desenvolvimento
 npm run typecheck && npm run build && npm test   # 5. os três portões
-npm run dev:api                         # 6. http://localhost:3001/api
-npm run dev:web                         # 7. painel em http://localhost:5173
+npm run dev                             # 6. api + web juntos, um comando só
 ```
+
+O passo 6 é novo nesta rodada e é a resposta ao N66: `npm run dev` executa
+`tools/dev.cjs`, que sobe a API (`tsx watch src/server.ts`, porta 3001) e o Vite (5173) no mesmo
+processo, com a saída prefixada por `[api]` e `[web]`, e derruba os dois juntos no `Ctrl+C`.
+`npm run dev:api` e `npm run dev:web` continuam existindo para quem quer um só dos lados — os dois
+comandos individuais funcionavam antes; o que não existia era a casa.
+
+Para as provas de navegador e para a suíte, o banco é outro, e é a decisão D6:
+
+```bash
+npm run db:prova                        # cria/atualiza nexusbusinessmanager_teste e semea a conta de prova
+npm run dev:api:teste                   # sobe a API apontada no banco de prova, na MESMA porta 3001
+npm run dev:web                         # o Vite na 5173, que é a porta que as provas abrem
+npm run verify                          # fumaça: 63 páginas em 360 / 1024 / 1440 px
+node tools/verify-acessibilidade.cjs    # régua de rótulo, foco, teclado, alvo de toque e movimento
+```
+
+Aqui mora o aviso que a rodada descobriu do jeito difícil (**N65**): `npm run dev:api:teste` e
+`npm run dev` brigam pela porta 3001 porque ambos querem ser "a API". Enquanto o servidor de prova
+está de pé, o `npm run dev` da vida real não sobe, e o painel que aparece no navegador é o do banco de
+prova. O servidor de prova agora avisa isso no banner de arranque, e as ferramentas de prova conferem
+o endereço do banco antes de escrever (`tools/banco-de-prova.cjs`); mesmo assim, a regra de casa é a
+de sempre: **nenhum teste nem nenhuma prova escreve no banco de desenvolvimento** — o que aparece em
+`nexusbusinessmanager` é dado de quem usa a aplicação.
+
+E aqui mora o diagnóstico que a casa agora sabe fazer em ordem, porque ele já aconteceu duas vezes
+(**N65**): se a tela de entrada devolver 401 para a conta de administrador **desta máquina**, a senha não é a
+primeira suspeita — a primeira suspeita é a porta. O roteiro medido:
+
+```bash
+netstat -ano | findstr :3001               # quem está segurando a API
+tasklist /FI "PID eq <pid>"                # servidor de prova, ou servidor de desenvolvimento?
+# se for o servidor de prova: derrubar os três processos da árvore dele e devolver a porta
+powershell "Stop-Process -Id <api>,<tsx>,<provedor> -Force"
+npm run dev                                # sobe os dois lados no banco de desenvolvimento
+curl -s -o NUL -w "%{http_code}\n" http://localhost:3001/api/health   # 200
+```
+
+A conta raiz continua `active=true` com `platformRole=SUPER_ADMIN` e 37 vínculos `OWNER` no banco de
+desenvolvimento, e não existe no banco de prova — por isso o mesmo par de credenciais entra em um e é recusado
+no outro com a mesma mensagem muda. A regra de acesso do dono não admite essa armadilha, e o fechamento
+definitivo (prova na 3002/5174, porta do dono intocável) é a primeira tarefa da T5.
 
 Dois avisos que o passo a passo não pode esconder. O primeiro, novo nesta rodada:
 **`npm test` não roda sem `DATABASE_URL_TESTE`** — o `vitest.config.ts` da API lê a
@@ -1010,6 +1105,89 @@ node "$TMPDIR/varredura-segredos-t3.cjs"              # script de bancada desta 
    # foram lidos um por um e classificados como fixture, marca de exemplo ou placeholder
 node "$TMPDIR/varredura-codificacao.cjs"              # tambem de bancada: 361 arquivos de texto,
    # 0 com BOM, 0 com CRLF, 0 com caractere de alfabeto nao latino
+```
+
+**Re-medicao de 2026-10-14 (T4 - F5: robustez do frontend, fumaca, divisao do
+JavaScript e regua de acessibilidade)**. Toda linha abaixo foi executada nesta
+tarefa, na arvore final, com saida real guardada em log desta rodada:
+
+```bash
+npm run typecheck                          # api + web, zero erro
+npm run build                              # 37 pedacos: index 354,85 kB / 121,62 kB gzip,
+                                           # Agenda 286,34 kB / 83,52 kB gzip,
+                                           # CSS unico 398,54 kB / 61,29 kB gzip,
+                                           # 215 modulos, sem aviso de chunk acima de 500 kB
+npm test                                   # api 47 arquivos / 437 casos / 337,87 s
+                                           # web 18 arquivos / 140 casos / 16,49 s
+npm test                                   # de novo na arvore final, agora com o npm run dev e o
+                                           # Chrome das provas rodando junto: 47 / 437 em 521,26 s
+                                           # e 18 / 140 em 26,55 s, EXIT=0, zero falha, zero skip
+npm run test:coverage --workspace @nexus/api
+   # stmts 87,79% (3.274/3.729) - branch 76,01% (1.889/2.485) - funcs 87,30% (674/772)
+   # lines 90,62% (3.006/3.317) - 92 arquivos - duracao 487,10 s - 3 arquivos em zero
+(cd apps/web && npx vitest run --coverage --coverage.include="src/**" --coverage.exclude="src/test/**")
+   # All files 38,19 stmts / 33,11 branch / 30,67 funcs / 41,03 lines - 17,02 s -
+   # 100 entradas no universo, 91 sem instrucao nenhuma (7 css, PNG e d.ts incluidos),
+   # 27 arquivos de codigo em zero. Sem filtro, o mesmo comando mede so o que os testes
+   # importam (68 entradas) e devolve 58,73 / 50,05 / 51,47 / 62,94 - universo diferente,
+   # e por isso a comparacao entre rodadas usa o dos globs
+npm run db:prova                           # 35 tabelas, 124 usuarios, 3 empresas, 7 vinculos
+node tools/verify-fumaca.cjs               # 63 paginas atravessadas, 0 problemas
+node tools/verify-code-splitting.cjs       # 44 verificacoes, 0 falhas
+node tools/verify-acessibilidade.cjs       # 22 telas, 649 controles, 22 verificacoes, 0 falhas
+node tools/verify-verificacao-e-2fa.cjs    # 56 verificacoes, 0 falhas, 0 linhas no banco depois
+node tools/verify-sidebar.cjs              # 104 checagens, 0 falhas
+node tools/verify-privacidade-login.cjs    # 44 verificacoes em Chrome e Edge, 0 falhas
+node tools/audit-contraste-painel.cjs      # 68 de 68 tela/tema/janela, 2.862 textos medidos
+                                           # (34 em degradê), 14 isentos por componente
+                                           # inativo, 0 abaixo do alvo e 0 falhas; cada linha
+                                           # imprime "atributos dark/dark ok" ou
+                                           # "light/light ok" — a dupla chave do N7 conferida
+                                           # no navegador, não no fonte
+find apps/api/src -name '*.ts' | wc -l                        # 93
+ls apps/api/test/*.test.ts | wc -l                            # 47 (48 com helpers.ts)
+find apps/web/src -name '*.ts' -o -name '*.tsx' | wc -l       # 112
+ls apps/web/src/pages | wc -l                                 # 24
+ls apps/web/src/components | grep -c '\.tsx$'                 # 13 na raiz; 36 recursivo
+ls apps/web/src/lib | wc -l                                   # 27
+ls apps/web/src/test | wc -l                                  # 20 (18 testes + 2 fabricas)
+cat apps/web/src/styles/*.css | wc -l                         # 3.594
+ls docs/adr/*.md | wc -l                                      # 16 (entra a 0016 do tema)
+ls docs/screenshots/*.png | wc -l                             # 116 (74 regravadas nesta rodada)
+ls tools/*.cjs | wc -l                                        # 48 no disco (47 versionados +
+                                                              # o senha-admin.local.cjs ignorado);
+                                                              # a pasta tem 48 versionados com o .ps1
+git ls-files --cached --others --exclude-standard | wc -l     # 506 arquivos da arvore
+for f in tools/*.cjs; do node --check "$f"; done              # 48 arquivos, 0 falha de sintaxe
+node "$TMPDIR/varredura-codificacao-t4.cjs"                   # 378 textos lidos dos 506
+   # (128 binarios fora): 0 BOM, 0 CRLF, 0 caractere nao latino, 0 sem newline final
+node "$TMPDIR/varredura-segredos-t4.cjs" 55bbb50              # 6.480 linhas da rodada,
+   # 11 credenciais locais comparadas por hash SHA-256 contra 1.140 tokens literais,
+   # 0 coincidencia, nenhum valor impresso; os 3 literais de chave de segredo e os
+   # 25 enderecos em 5 dominios foram lidos um por um e classificados (nome de chave
+   # de armazenamento, token de prova e marca "Prova"; dominios .teste/.test/exemplo)
+# --- o banco de desenvolvimento, intocado, medido por instantaneo ---
+node "$TMPDIR/instantaneo-banco-dev.cjs" antes.json                 # 35 tabelas / 70.897 linhas
+npm run test --workspace @nexus/api -- run test/auth.test.ts \
+  test/auth-flows.test.ts test/bloqueio-de-conta.test.ts            # 3 arquivos / 20 casos em
+  # 31,98 s, os tres verdes contra o banco de prova
+node "$TMPDIR/instantaneo-banco-dev.cjs" depois.json                # 35 tabelas / 70.897 linhas,
+  # e o diff entre os dois instantaneos nao devolve nenhuma linha. No intervalo maior da rodada
+  # entraram 6 linhas no banco de desenvolvimento, e as seis tem origem identificavel: tres
+  # auth.login das provas de acesso logo abaixo, mais as tres sessoes que eles abriram. No
+  # mesmo intervalo o banco de prova recebeu 1.124 auditorias da suíte.
+# --- a regra de acesso, com o npm run dev apontando para o banco de desenvolvimento ---
+node "$TMPDIR/prova-acesso-admin-raiz.cjs"
+   # POST /api/auth/login -> HTTP 200 (user, accessToken, refreshToken, expiresIn; papel OWNER)
+   # GET  /api/auth/me    -> HTTP 200, 13 campos | GET /api/companies -> HTTP 200, 37 empresas
+node "$TMPDIR/prova-navegador-admin-raiz.cjs"
+   # 6 verificacoes, 0 falhas: /login leva a /app, a chave nexus.refresh fica no navegador ao
+   # lado de nexus.theme e nexus.sidebar.collapsed, a barra monta com 18 links, o painel monta
+   # 35 blocos de conteudo sob o cabecalho "Olá, Administrador", e uma segunda entrada limpa,
+   # sem cache e com o storage zerado, repete o ciclo inteiro. Nenhum valor de segredo — nem
+   # senha, nem token — apareceu em nenhuma dessas linhas.
+git fetch origin && git merge-base --is-ancestor origin/main HEAD   # avanco direto
+git ls-remote origin HEAD && git rev-parse HEAD               # mesma linha, depois do push
 ```
 
 Atualizar este documento é obrigação de quem mexer no projeto: se ele divergir do

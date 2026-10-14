@@ -566,8 +566,8 @@ importa só o CSS do AdminLTE) e `sweetalert2` (substituído pelo diálogo de co
   apps/
     api/
       prisma/
-        schema.prisma          31 models, 21 enums, todas as tabelas com @@map
-        migrations/            20 migrations, da fundação às cobranças manuais
+        schema.prisma          34 models, 21 enums, todas as tabelas com @@map
+        migrations/            22 migrations, da fundação ao reforço de autenticação
         seed.ts                admin global + conta de dev + empresa nexus-demo (vazia)
       src/
         app.ts                 19 módulos + modo manutenção antes das rotas + parser de corpo vazio
@@ -685,26 +685,27 @@ Unicidade que importa: e-mail global; `slug` de empresa; `company_users (user_id
 cliente, SKU de produto, nome de categoria, nome de fornecedor e nome+tipo de categoria financeira são únicos
 **dentro da empresa**, não no banco inteiro. `dedupe_key` segura a duplicação de aviso nas varreduras.
 
-Vinte migrations, na ordem em que chegaram:
+Vinte e duas migrations, na ordem em que chegaram:
 
 ```text
 init_foundation → add_clients → add_auth_flows → add_products_stock → add_sales →
 add_suppliers_purchases → add_finance → add_crm → add_agenda → add_agenda_recorrencia →
 add_admin_cms_ops → add_cms_content → add_platform_role → add_refresh_used_at →
 add_company_allow_negative_stock → add_documento_vinculo_financeiro → add_refresh_token_empresa →
-add_escopo_da_auditoria → add_ordens_de_servico → add_cobrancas_manuais
+add_escopo_da_auditoria → add_ordens_de_servico → add_cobrancas_manuais →
+add_empresa_lembrada → reforco_de_autenticacao
 ```
 
-As seis migrations que chegaram na execução da auditoria trazem as linhas de reversão escritas no próprio
+As sete migrations que chegaram a partir da execução da auditoria trazem as linhas de reversão escritas no próprio
 SQL; nenhuma migration aplicada foi editada depois de sair — correções chegaram como migration nova.
 
 **Limitação medida, com achado aberto (N54 em `docs/AUDITORIA.md`):** a cadeia acima não reergue um MySQL
 zerado. Aplicada num schema de descarte, ela para na segunda migration
-com `P3018` / erro 1826 (`Duplicate foreign key constraint name 'company_users_user_id_fkey'`): 13 das 20
+com `P3018` / erro 1826 (`Duplicate foreign key constraint name 'company_users_user_id_fkey'`): 13 das 22
 declaram de novo as mesmas chaves estrangeiras, e em MySQL o nome de uma constraint é único por banco, não
 por tabela. Enquanto o N54 não fechar, `npm run db:migrate` serve para evoluir um banco que já existe — e o
-banco de prova nasce com `npm run db:prova`, que monta o schema pelo `db push` e marca as vinte migrations
-como aplicadas. O clone limpo de ponta a ponta é trabalho da F8.
+banco de prova nasce com `npm run db:prova`, que monta o schema pelo `db push` e marca as vinte e duas
+migrations como aplicadas. O clone limpo de ponta a ponta é trabalho da F8.
 
 Comandos:
 
@@ -740,7 +741,7 @@ cp apps/api/.env.example apps/api/.env
 # SUPER_ADMIN_EMAIL com o e-mail do administrador definitivo (CREDENCIAIS.md),
 # SEED_ADMIN_PASSWORD com a senha dele e SEED_DEV_PASSWORD com a senha da conta dev
 
-npm run db:migrate            # aplica as 20 migrations
+npm run db:migrate            # aplica as 22 migrations
 npm run db:seed               # desenvolvimento: admin global + admin@nexus.local + empresa nexus-demo (vazia)
 npm run db:prova              # banco de prova: cria nexusbusinessmanager_teste, semente e conta de prova
 # produção não usa o seed para criar o administrador: npm run admin:criar -w @nexus/api
@@ -751,11 +752,13 @@ npm run db:prova              # banco de prova: cria nexusbusinessmanager_teste,
 
 | Comando | O que faz |
 |---|---|
+| `npm run dev` | a casa inteira numa janela: API na 3001 e painel na 5173, com cada linha prefixada por `[api]` ou `[web]` e os dois derrubados juntos no `Ctrl+C` (`tools/dev.cjs`) |
 | `npm run dev:api` | API em `http://localhost:3001` (prefixo `/api`), com `tsx watch`, no banco de desenvolvimento |
-| `npm run dev:api:teste` | a mesma API apontada para o banco de prova — é assim que as `tools/verify-*.cjs` sobem |
+| `npm run dev:api:teste` | a mesma API apontada para o banco de prova — é assim que as `tools/verify-*.cjs` sobem. Ocupa a mesma 3001 do `dev:api`, e a conta de administrador desta máquina não existe lá: a janela avisa disso ao subir |
 | `npm run dev:web` | painel em `http://localhost:5173`, com proxy para `/api` |
 | `npm run typecheck` | `tsc --noEmit` nos dois apps |
 | `npm test` | suíte de integração da API contra o MySQL real, **no banco de prova** |
+| `npm run verify` | teste de fumaça do painel no navegador: percorre as telas, exige HTTP, conteúdo montado e zero erro de console (`tools/verify-fumaca.cjs`) |
 | `npm run test:coverage` | a mesma suíte medindo a própria cobertura (instruções, ramificações, funções, linhas) |
 | `npm run build` | `tsc` da API + `vite build` do painel |
 | `npm run db:migrate` / `db:seed` | Prisma no workspace da API |
@@ -1039,6 +1042,8 @@ O detalhamento está em [`CHANGELOG.md`](CHANGELOG.md) (Keep a Changelog, mais n
 | `Bloco A → agora` | A auditoria virou produto: o menu perdeu as linhas que não abriam porta (F3.1), a trilha de auditoria da plataforma ganhou tela própria (F2), a ordem de serviço desceu do caderno para o estoque (F3.2) e o carnê de cobranças manuais entrou registrando o recebimento por pessoa e escrevendo uma única receita no caixa (F3.2). A barra lateral chegou a 17 linhas, as duas provas novas somam 103 e 137 checagens, e a suíte fechou em 427 testes — 350 na API contra o MySQL real e 77 no jsdom |
 | `agora → T1` | As provas e os testes ganharam banco próprio (`nexusbusinessmanager_teste`, declarado em `DATABASE_URL_TESTE`): `npm run db:prova` monta e semeia, `npm run dev:api:teste` sobe a API nele, e toda `tools/verify-*.cjs` confere o servidor pelo login antes de abrir o navegador — servidor no banco errado é HTTP 401 com a instrução do comando. Medido com `diff` tabela por tabela: o banco de desenvolvimento saiu idêntico da rodada inteira (541 usuários, 45 empresas, 2.186 sessões, 67.722 auditorias) enquanto o de prova crescia. Suíte em 354 + 77, e a cadeia de migrations abriu o achado N54 (em MySQL zerado ela para na segunda migration) |
 | `T1 → T2` | Duas decisões do dono viraram código. A casa que abre no login deixou de ser sorteio do índice: **pedida > lembrada (`users.last_company_id`) > vínculo mais antigo**, com desempate por `createdAt` e `id`, lembrança escrita por `switch-company` e respeitada pelo refresh (ADR-0011). E cancelar ordem, estornar ordem concluída e cancelar cobrança passaram a exigir **motivo escrito** em diálogo novo e aditivo (`confirmActionComMotivo`, ADR-0012) — sem motivo nada sai pela rede, e o texto digitado sobrevive ao erro da rota. Provas de navegador em 107 e 137 checagens, suíte em 361 + 79 |
+| `T2 → T3` | A F4 inteira (D1, D2, D3): porta `MailerPort` com SMTP real, console fora de produção e caixa em memória na suíte; verificação de cadastro atrás de `REQUIRE_EMAIL_VERIFICATION`, com a tela pública `/verificar-e-mail`; segundo fator TOTP com segredo cifrado em repouso (AES-256-GCM) e dez códigos de recuperação guardados só em hash; bloqueio por conta que não entrega no tempo se o endereço existe; destino pós-login aceito apenas como caminho interno. A superfície foi de 120 para **129 rotas**, as tabelas de 32 para 35, e a suíte para **434 + 87** (ADR-0013) |
+| `T3 → T4` | A F5 inteira. Cinco listas pararam de aceitar resposta atrasada (N51), a tela de entrada zerou a senha nos três momentos em que ela sobrava — envio recusado, desmontagem e `pageshow` do histórico — e ganhou rótulo associado de verdade (Problema C). O painel passou a escrever `data-bs-theme` no `<html>` que o Bootstrap 4 lê (N7), a casa ganhou `ErrorBoundary` na raiz e por rota com registro do erro, e o `npm run verify` abriu a fumaça: **63 telas** percorridas no navegador, com HTTP, conteúdo montado e zero erro de console. As duas telas novas da F4 saíram dos 0% de cobertura (N62), o JavaScript deixou de ser um arquivo só — **964,31 kB / 283,61 kB gzip viraram 354,85 kB / 121,62 kB em 37 pedaços**, com a Agenda carregando a pé (D8, ADR-0014) — e a acessibilidade ganhou régua: **22 checagens, 0 falhas** em rótulo, foco, teclado, movimento reduzido e alvo de toque (ADR-0015). A suíte fechou em **437 + 140** |
 
 ---
 

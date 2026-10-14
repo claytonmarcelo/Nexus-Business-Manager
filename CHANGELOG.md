@@ -1,5 +1,97 @@
 ## [Não lançado]
 
+### A frente do painel ganhou régua: lista que espera a resposta certa, senha que não sobra na tela, erro que não fecha a casa, e JavaScript que chega por partes (2026-10-14)
+
+- **Cinco listas pararam de aceitar resposta atrasada (N51, efeito P14).** Clientes, produtos, financeiro, CRM e
+  usuários disparavam a busca seguinte sem olhar se a anterior já tinha sido ultrapassada: digitar "Alfa" e
+  apagar em seguida devolvia a tela pintada com o resultado velho, e o girador de espera podia ser desligado por
+  uma resposta que já não valia nada. A régua é a que a cobrança já usava — contador de corrida por tela, a
+  resposta só escreve se ainda for a última, e o girador pertence ao pedido mais novo. As quatro listas que
+  nascem em `useEffect` (categorias por tipo de conta, clientes e fornecedores do lançamento, opções do
+  formulário da Agenda, histórico de movimentação) ganharam a forma "viva", em que a limpeza do efeito desliga a
+  escrita antes de a tela desmontar. Varredura de todos os blocos de rede do front: 4 chamadas escrevendo lista
+  sem guarda no começo da passada, zero no fim.
+- **A tela de entrada não deixa a senha onde o navegador possa lê-la (Problema C).** O formulário sempre montou
+  vazio de propósito — o e-mail lembrado é regra do dono e fica no navegador, nunca no campo —, mas a senha
+  continuava escrita depois de um envio recusado, permanecia no documento quando a tela desmontava, e o
+  navegador devolvia a página do histórico exatamente como a pessoa a deixou. Os três momentos agora zeram o
+  estado e o nó. O campo passou de `current-password` para `new-password`, os dois ganharam `name`/`id` neutros
+  (sem "email", "user" nem "login", que é o que o gerenciador de senhas lê), e nada disso custou acessibilidade:
+  `PasswordInput` escreve `<label htmlFor>` em vez de `<span>`, e os dez outros usos do componente herdam a
+  associação. `tools/verify-privacidade-login.cjs` percorre Chrome e Edge com perfil novo: 44 verificações, zero
+  falhas, e o caso `pageshow persistida: verdadeira` — que jsdom nenhum alcança — medido nos dois.
+- **O tema do painel voltou a ser lido por quem o lê (N7).** `ThemeContext` passou a escrever `data-bs-theme` no
+  `<html>` junto da classe própria da casa, sincronizado no mesmo ato que troca o tema e restaurado antes do
+  primeiro *flash*. Sem esse atributo, o Bootstrap 4 — e com ele dropdown, modal e cor de texto de componente
+  emprestado — continuava vestido para claro num painel escuro. Guarda: 6 casos em
+  `src/test/tema-sincronizado.test.tsx`.
+- **Erro de tela deixou de ser tela branca (`ErrorBoundary` na raiz e por rota).** `ErrorBoundary.tsx` +
+  `registro-erros.ts` + `ErrorPage`: uma rota que quebra, ou um módulo que não chega, cai numa tela de erro com
+  "voltar", "recarregar" e o endereço que falhou, e o resto do painel continua de pé. O limite de repetição é
+  medido, não prometido: 9 casos em `src/test/limite-de-erro.test.tsx`.
+- **Fumaça virou comando (`npm run verify`).** `tools/verify-fumaca.cjs` sobe no navegador real e percorre as
+  telas públicas e as dezessete linhas da barra, exigindo resposta, conteúdo montado e zero erro de console:
+  **63 telas, zero problema**. É o portão que avisa quando uma rota morreu de pé, antes de qualquer prova
+  específica.
+- **Zero rascunho no lugar de conteúdo.** `apps/api/test/zero-placeholder.test.ts` (3 casos) varre o banco de
+  prova e recusa texto de vitrine com marca de desenvolvedor, `lorem` ou espaço reservado pendurado — a régua que
+  a F5 pediu e a casa não tinha.
+- **As duas telas que nasceram na F4 saíram dos 0% (N62 / P17).** `VerificarEmail.tsx` e
+  `SegundoFatorPanel.tsx` ganharam teste de componente (8 e 9 casos) e prova de navegador
+  (`tools/verify-verificacao-e-2fa.cjs`), e o ramo de erro do cliente de segundo fator entrou na cobertura junto.
+- **O JavaScript deixou de ser um arquivo só (D8, ADR-0014).** Antes, medido no começo do corte: **964,31 kB /
+  283,61 kB gzip** num chunk único, com o aviso do Vite sobre 500 kB em toda build. Depois: **354,85 kB / 121,62
+  kB gzip** de pacote inicial, **37** chunks, e o maior deles — a Agenda com o FullCalendar — a **286,34 kB /
+  83,52 kB gzip**, carregado a pé por quem abre a Agenda. A régua não é contagem de arquivo:
+  `tools/verify-code-splitting.cjs` (44 checagens, zero falhas) abre `/app/dashboard` com a rede gravada e exige
+  que o chunk da Agenda e o do CMS não estejam naquela lista.
+- **Acessibilidade ganhou régua (item 7, ADR-0015).** `tools/verify-acessibilidade.cjs`: **22 verificações, zero
+  falhas** — 649 controles montados, 0 sem rótulo acessível, 0 sustentados só por `placeholder` ou `title`, 68
+  paradas de `Tab` com 0 sem anel de foco, alvo de toque medido em 360 px (0 abaixo de 44 px) e em 1440 px (0
+  abaixo de 24 px), teclado sem mouse e `prefers-reduced-motion` com 0 animação na vitrine e 0 no painel. O piso
+  de 44 px entrou no CSS sob `@media (max-width: 820px), (pointer: coarse)`, com permissão de quebra nas linhas
+  de ação, e a Agenda passou a abrir em lista no celular — a grade do mês tem pílula de 39x25 px, e a exceção de
+  "equivalente" do critério só vale conferindo que o mesmo evento existe de tamanho acessível na mesma tela.
+- **Contraste do painel deixou de ser suposição (N63).** `tools/audit-contraste-painel.cjs` percorre as 17 telas
+  do painel nos dois temas e nas duas janelas que a F5 pede, resolve a cascata no navegador — só ele sabe qual é o
+  fundo de verdade por trás de cada letra — e trata degradê pela parada mais próxima do fundo, que é a pior
+  situação real daquela escrita. Última corrida: **68 de 68** combinações medidas, **2.862 textos** (34 em
+  degradê), 14 isentos por componente inativo pela própria WCAG 1.4.3, **0 abaixo do alvo** e 0 falhas. Cada linha
+  da saída confere a dupla chave do tema no elemento (`dark/dark ok`, `light/light ok`), então a régua do N7 e a
+  régua de contraste são a mesma medição.
+- **Instrumento errado também é achado (N64).** Nas três primeiras corridas a prova nova devolveu verde sem ter
+  medido: o viewport de 360 px era trocado depois da montagem, e o `initialView` do FullCalendar já estava
+  decidido; a lista de controles grandes não tinha filtro de tamanho, então as pílulas curtas cobriam a si
+  mesmas; e o `<a>` sem classe da linha de lista era descartado como prosa. Corrigido, e a prova agora cria e
+  apaga o próprio compromisso na grade (`6 -> 7` e `7 -> 6`, zero sobra) para não poder medir mês vazio.
+- **`npm run dev` passou a existir (N66).** A raiz só tinha `dev:api` e `dev:web`, e o comando que qualquer pessoa
+  digita devolvia `Missing script`. `tools/dev.cjs` levanta os dois lados na mesma janela, prefixa a saída, mostra
+  os endereços e derruba os dois no `Ctrl+C`. A primeira versão morreu com `spawn EINVAL` — o `npm.cmd` do Windows
+  não sobe sem `shell` desde o reforço contra o CVE-2024-27980 — e foi trocada por lançar `tsx` e `vite` com o
+  mesmo `process.execPath`.
+- **O aviso do banco de prova (N65).** Quem abre o painel com `npm run dev:api:teste` no lugar do `dev:api` recebe
+  HTTP 401 mudo ao entrar com a conta desta máquina, porque as ferramentas resolvem primeiro a conta de prova. A
+  janela do servidor de prova agora diz isso ao subir, em letras para quem olha.
+- **A armadilha mordeu de novo, e agora ela tem conserto marcado (N65 recidiva).** Às 16:58 a conta raiz foi
+  digitada na tela enquanto o servidor de prova segurava a 3001: o banco de prova registrou a recusa
+  (`login_attempts` com `failures=1`) e o banco de desenvolvimento mostrava a conta intacta — `active=true`,
+  `platformRole=SUPER_ADMIN`, 37 vínculos `OWNER`, nenhuma trava. A conta não existe no banco de prova; o que
+  faltou foi a porta, não a senha. Devolver a 3001 ao `npm run dev` resolveu na hora, e o acesso foi reprovado
+  duas vezes, no fonte e na tela: `POST /api/auth/login` devolve **200** com `user`, `accessToken`, `refreshToken`
+  e `expiresIn` (papel `OWNER`), `GET /api/auth/me` devolve 200 com 13 campos, `GET /api/companies` devolve as 37
+  empresas, e no Chrome a entrada pelo endereço da casa fecha **6 verificações, zero falhas** — painel montado com
+  35 blocos de conteúdo sob "Olá, Administrador", barra com 18 links e a chave de sessão no navegador. Nenhum valor
+  de segredo foi impresso. O roteiro de diagnóstico entrou no `docs/ESTADO-ATUAL.md`, e o fim da disputa de porta
+  (prova na 3002/5174, porta do dono intocável) é a primeira tarefa da T5.
+- **Setenta e quatro capturas regravadas, conferidas pixel a pixel e mantidas (N30 re-medido).** Um comparador de
+  bitmap — os dois PNGs decodificados e comparados, porque arquivo diferente não significa tela diferente — mostrou
+  que nenhuma das setenta e quatro voltou igual, e a conferência visual explicou por quê: várias ainda mostravam a
+  barra de antes da F3.1, sem "Notificações", "Ordens de serviço" e "Cobranças", e a tela de entrada anunciava um
+  placeholder que o `Login.tsx` não escreve mais. As dez capturas estreitas mudaram de verdade com o piso de 44 px.
+- **Portões da rodada**: typecheck dos dois lados sem saída, build limpa sem aviso de chunk, suíte **API 47
+  arquivos / 437 casos** e **web 18 arquivos / 140 casos**, zero falha e zero skip contra
+  `nexusbusinessmanager_teste`, `npm run verify` com 63 telas e zero problema, e as provas de navegador verdes.
+
 ### A autenticação deixou de ser só senha: e-mail de verdade, cadastro confirmado, segundo fator e conta que tranca (2026-10-13)
 
 - **O que o dono decidiu (D1, D2 e D3 na rodada de continuação).** Entrega de mensagem por SMTP genérico com
