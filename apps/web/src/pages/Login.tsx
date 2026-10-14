@@ -338,8 +338,9 @@ export function Login() {
         {etapa === "codigo" || etapa === "configurar" ? (
           <form onSubmit={onCodigo} className="auth-form" noValidate>
             <div className="field">
-              <span className="field-label">Código</span>
+              <label className="field-label" htmlFor="nx-campo-codigo">Código</label>
               <input
+                id="nx-campo-codigo"
                 className={"neu-input auth-2fa-input" + (error ? " is-error" : "")}
                 inputMode="text"
                 autoComplete="one-time-code"

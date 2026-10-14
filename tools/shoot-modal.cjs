@@ -127,7 +127,11 @@ function ok(nome, valor) {
   }));
 
   // Tema claro: mesmos componentes, tokens trocados
-  await page.evaluate(() => document.documentElement.setAttribute("data-theme", "light"));
+  await page.evaluate(() => {
+    const raiz = document.documentElement;
+    raiz.setAttribute("data-theme", "light");
+    raiz.setAttribute("data-bs-theme", "light");
+  });
   await sleep(300);
   await page.screenshot({ path: path.join(OUT, "15-modal-cliente-light.png") });
   const claro = await page.evaluate(() => {
@@ -150,7 +154,11 @@ function ok(nome, valor) {
   await page.click(".swal2-confirm");
   await sleep(400);
   ok("descartar pelo rodape fecha o modal", (await modalPresente()) === false);
-  await page.evaluate(() => document.documentElement.setAttribute("data-theme", "dark"));
+  await page.evaluate(() => {
+    const raiz = document.documentElement;
+    raiz.setAttribute("data-theme", "dark");
+    raiz.setAttribute("data-bs-theme", "dark");
+  });
 
   // clicando no overlay tambem fecha (sem edicoes)
   await abrirCliente();

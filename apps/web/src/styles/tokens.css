@@ -99,3 +99,42 @@
   --text-2: var(--text-muted);
   --text-3: var(--text-faint);
 }
+
+/* ===== PAINEL (N7) =====
+   Os textos de apoio do painel (subtitulo de pagina, dica de KPI, carimbo de
+   tempo, entidade da auditoria) vivem no degrau mais baixo da escada de leitura,
+   e era ai que a casa perdia a WCAG: sobre o card escuro o cinza da marca dava
+   3,26:1 e sobre o creme do tema dia o marrom claro dava 2,91:1. Os valores
+   abaixo sao os mesmos tokens um degrau acima, medidos no navegador contra todas
+   as superficies do painel (tools/audit-contraste-painel.cjs).
+   A escada e redefinida aqui, e nao no :root, de proposito: vitrine, login e
+   paginas de erro continuam com a paleta que esta nas capturas publicadas.
+   --text-2 e --text-3 vem junto porque resolvem var(--text-muted) e
+   var(--text-faint) ainda no :root; mudar so a fonte nao mudaria o alias.
+   Os tres tokens de faixa (--brand-grad-1, --brand-grad-fim, --btn-brand-1 e
+   --btn-brand-2) pertencem as regras de components.css que hoje tem cor escrita
+   no meio do degradê: no painel do tema dia o nome da marca terminava em 1,51:1
+   e o botao de marca comecava o fim de cobre em 2,35:1. */
+[data-theme="dark"] .admin-shell {
+  --text-faint: #868d9a;
+  --text-3: #868d9a;
+  --danger: #d6766d;
+  --brand-grad-1: #d07870;
+  --btn-brand-1: var(--gold-300);
+  --btn-brand-2: var(--gold-200);
+}
+
+[data-theme="light"] .admin-shell {
+  --text-faint: #6f6357;
+  --text-3: #6f6357;
+  --text-muted: #574c43;
+  --text-2: #574c43;
+  --success: #276e4a;
+  --warning: #8a5a0e;
+  --info: #1f5470;
+  --danger: #963029;
+  --accent: #8a5c2a;
+  --brand-grad-fim: #7a5c26;
+  --btn-brand-1: var(--gold-500);
+  --btn-brand-2: var(--gold-400);
+}

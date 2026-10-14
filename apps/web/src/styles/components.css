@@ -20,8 +20,13 @@
 .btn:disabled { opacity: 0.55; cursor: not-allowed; }
 .btn:not(:disabled):active { transform: translateY(1px); }
 
+/* Os dois degraus do botao de marca viraram token proprio: a letra e escura
+   (cor da casa) sobre uma faixa que ia do ouro ao cobre, e no fim de cobre a
+   escrita ficava a 2,35:1 no tema dia e 3,62:1 no escuro. No painel a faixa
+   passa de ouro a ouro claro; fora dele os tokens caem no var() de sempre, e
+   a vitrine continua exatamente como esta nas capturas. */
 .btn-brand {
-  background: linear-gradient(135deg, var(--accent), var(--brand));
+  background: linear-gradient(135deg, var(--btn-brand-1, var(--accent)), var(--btn-brand-2, var(--brand)));
   color: #1a1208;
   box-shadow: 0 8px 20px -10px var(--accent);
 }
@@ -326,7 +331,9 @@
 .pagination-list button:hover:not(:disabled) { border-color: var(--accent); color: var(--text); }
 .pagination-list button.is-active,
 .pagination-list button[aria-current="page"] {
-  background: linear-gradient(135deg, var(--accent), var(--brand));
+  /* Mesma faixa do botao de marca: o numero da pagina ativa tem a letra
+     escura da casa sobre o fim de cobre. */
+  background: linear-gradient(135deg, var(--btn-brand-1, var(--accent)), var(--btn-brand-2, var(--brand)));
   color: #1a1208;
   border-color: transparent;
   font-weight: 700;
@@ -568,9 +575,13 @@
   padding: 0.55rem clamp(1.25rem, 5vw, 4rem);
 }
 .landing-brand { display: flex; align-items: center; gap: 0.6rem; }
-/* Nome da marca com o degradê cobre-ouro da logo (uso global). */
+/* Nome da marca com o degradê cobre-ouro da logo (uso global).
+   As duas pontas viraram token porque cada uma delas so funciona sobre um tipo
+   de fundo: no painel do tema dia a ponta clara ia a 1,51:1 e, no painel
+   escuro, a ponta de cobre ficava em 3,38:1. Sem token definido cai no valor
+   de hoje, que e o que a vitrine e o login usam. */
 .brand-text, .landing-brand-name, .admin-brand-text {
-  background: linear-gradient(118deg, var(--brand) 0%, var(--accent) 55%, #E8C890 100%);
+  background: linear-gradient(118deg, var(--brand-grad-1, var(--brand)) 0%, var(--accent) 55%, var(--brand-grad-fim, #E8C890) 100%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
@@ -715,6 +726,11 @@ a.nexus-footer-autor:focus-visible { color: var(--text); text-decoration: underl
 
 /* Paginas de erro */
 .error-page { min-height: 100vh; display: grid; place-items: center; padding: 2rem; text-align: center; }
+/* F5, item 3: dentro do painel a pagina de erro mora no conteudo da rota, ao
+   lado da barra lateral. Sem esta variante ela teria altura de navegador
+   inteiro e o interruptor de tema, que e fixo, sairia por cima do cabecalho. */
+.error-page-embutida { min-height: 60vh; }
+.error-page-embutida .error-page-top { position: absolute; }
 .error-page-top { position: fixed; top: 0; right: 0; padding: 1rem 1.5rem; }
 .error-page-body { display: flex; flex-direction: column; align-items: center; gap: 0.9rem; max-width: 480px; }
 .error-code {
@@ -854,8 +870,23 @@ a.nexus-footer-autor:focus-visible { color: var(--text); text-decoration: underl
 .neu-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
 /* Linha de acoes: lembrar + esquecer */
 .auth-row { display: flex; align-items: center; justify-content: space-between; gap: 0.8rem; flex-wrap: wrap; }
-.neu-check { display: inline-flex; align-items: center; gap: 0.5rem; font-size: 0.85rem; color: var(--text-muted); cursor: pointer; user-select: none; }
-.neu-check input { position: absolute; opacity: 0; width: 0; height: 0; }
+.neu-check { display: inline-flex; align-items: center; gap: 0.5rem; font-size: 0.85rem; color: var(--text-muted); cursor: pointer; user-select: none; position: relative; }
+/* O campo nao e apagado da geometria: ele cobre a caixa desenhada, com o
+   tamanho dela, e so perde a tinta (opacity 0). Com width/height 0 o teclado
+   parava num ponto sem area — o anel aparecia na caixa ao lado, mas o elemento
+   focado nao tinha onde existir. Cobrindo a caixa, o foco para onde o olho esta
+   olhando, e o clique continua acionando uma vez so (o input e filho do label). */
+.neu-check input {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  margin-top: -10.5px;
+  width: 21px;
+  height: 21px;
+  opacity: 0;
+  border: 0;
+  cursor: pointer;
+}
 .neu-check-box {
   width: 21px; height: 21px; border-radius: 7px;
   background: var(--bg-elevated);
@@ -868,11 +899,14 @@ a.nexus-footer-autor:focus-visible { color: var(--text); text-decoration: underl
 }
 .neu-check input:checked + .neu-check-box::after { content: "✓"; }
 .neu-check input:focus-visible + .neu-check-box { outline: 2px solid var(--accent); outline-offset: 2px; }
-.auth-link { font-size: 0.85rem; color: var(--brand); text-decoration: none; font-weight: 600; }
+/* F5 (item 7): o link de texto das telas de acesso tambem e alvo. Em 1440 ele
+   sobe para o piso AA de 24 px; em 360 ele chega aos 44 no bloco de toque do fim
+   desta folha. O desenho da palavra continua o mesmo — o que cresce e a caixa. */
+.auth-link { display: inline-flex; align-items: center; min-height: 24px; font-size: 0.85rem; color: var(--brand); text-decoration: none; font-weight: 600; }
 .auth-link:hover { text-decoration: underline; }
 /* Rodape de alternancia login/cadastro */
 .auth-alt { text-align: center; margin-top: 1rem; font-size: 0.83rem; color: var(--text-muted); }
-.auth-alt a { color: var(--brand); font-weight: 700; text-decoration: none; }
+.auth-alt a { display: inline-flex; align-items: center; min-height: 24px; color: var(--brand); font-weight: 700; text-decoration: none; }
 .auth-alt a:hover { text-decoration: underline; }
 /* Dica de senha (regra definitiva) */
 .auth-hint { font-size: 0.76rem; color: var(--text-faint); margin-top: 0.2rem; }
@@ -1416,6 +1450,25 @@ a.nexus-footer-autor:focus-visible { color: var(--text); text-decoration: underl
 .agenda-surface .fc-event.fc-event-selected::after { background: transparent; }
 .agenda-surface .fc .fc-event[style] { cursor: pointer; }
 
+/* F5 (item 7): na grade do mes a pilula do compromisso e o unico jeito de abrir o
+   detalhe, entao ela e controle principal e mede 24 px de altura — o piso AA da
+   WCAG 2.2 para ponteiro de mouse. O crescimento e da caixa de verdade (padding
+   simetrico, sem truque de area sensivel por cima): na grade as pilulas ficam a
+   1 px uma da outra, e camada sobreposta faria o clique cair no dia errado. So a
+   grade do mes: na semana o FullCalendar ja da altura e largura absolutas ao
+   bloco, e na lista quem cresce e a linha inteira (regra abaixo). */
+.agenda-surface .fc .fc-daygrid-event {
+  padding-top: 3px;
+  padding-bottom: 3px;
+}
+/* O clique da lista mora no <a> do titulo, que por padrao e uma linha de texto
+   dentro de uma celula de 57 px. Deixar o link preencher a celula da titulo e
+   transformar a linha toda no alvo — o que a pessoa ve e o que ela acerta. */
+.agenda-surface .fc .fc-list-event-title a {
+  display: block;
+  min-height: 24px;
+}
+
 /* Pildoras de estado/tipo usadas no modal de detalhe. */
 .status-pill.is-scheduled { background: color-mix(in srgb, var(--info) 14%, transparent); color: var(--info); }
 .status-pill.is-done { background: color-mix(in srgb, var(--success) 14%, transparent); color: var(--success); }
@@ -1549,7 +1602,16 @@ a.nexus-footer-autor:focus-visible { color: var(--text); text-decoration: underl
 }
 
 .nx-tabpanel { animation: nx-aba-entra 180ms ease-out; }
-.nx-tabpanel:focus-visible { outline: none; }
+/* F5 (item 7): o painel de aba e focalizavel de proposito (tabIndex 0, para quem
+   navega pelo teclado poder rolar o conteudo com a seta). Um bloco que para o
+   foco e nao mostra nada e um beco sem saida — entao ele recebe o anel do
+   sistema, deslocado para fora da borda: o painel e grande, e um contorno colado
+   na borda competiria com a divisoria do card. */
+.nx-tabpanel:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 4px;
+  border-radius: 12px;
+}
 
 /* Ritmo vertical padrao: titulo -> abas -> cards de resumo -> busca -> tabela.
    O .page ja da 1.5rem entre a barra de abas e o painel; aqui cada bloco do
@@ -2120,4 +2182,121 @@ a.nexus-footer-autor:focus-visible { color: var(--text); text-decoration: underl
   .nx-cb-doc .status-pill { background: transparent !important; border: 1px solid #999 !important; }
   .nx-cb-doc .nx-cb-receber,
   .nx-cb-doc .nx-cb-recibo { border-top: 1px solid #bbb !important; }
+}
+
+/* ============================================================
+   Alvo de toque (F5, item 7) — 44 x 44 px nos controles principais
+   ============================================================
+   O numero pedido e do dedo, nao do mouse. Em 1440 x 900 a casa cobra o piso AA
+   da WCAG 2.2 (24 px), que o desenho atual ja entrega; aqui, no leiaute de
+   gaveta e em qualquer tela com ponteiro grosseiro (tablete), os controles
+   principais crescem ate os 44 px pedidos.
+
+   A caixa e que cresce, nao um truque de medida: cada regra abaixo muda a
+   geometria real do controle. A unica excecao e o alternador de tema, que ja tem
+   a area sensivel de 54 x 45 aberta pelo ::before de inset negativo logo acima
+   (linha 103), com o desenho de 54 x 27 preservado — la o entorno esta livre e
+   nao ha o que esticar.
+
+   O quebra-cabeca e o respiro: um botao de 44 px numa linha de acoes nao pode
+   empurrar a linha para fora da tela de 360, entao as linhas que eram flex
+   passam a ter permissao de quebra. Tabela continua rolando dentro do proprio
+   .table-wrap, que e onde o overflow horizontal ja esta tratado. */
+@media (max-width: 820px), (pointer: coarse) {
+  /* Botoes de acao (page-head, blocos, modal, tabela) e o botao em relevo */
+  .btn,
+  .btn-sm,
+  .btn-lg,
+  .neu-btn {
+    min-height: 44px;
+  }
+  /* Campos: texto, busca, escolha e a entrada relevada do fluxo de acesso */
+  .input,
+  .select,
+  .select-sm,
+  .neu-input {
+    min-height: 44px;
+  }
+  /* O botao olho mora dentro do campo: com 44 px de lado ele precisa do
+     espaco que antes era so o padding direito da entrada. */
+  .eye-toggle {
+    width: 44px;
+    height: 44px;
+    right: 0.1rem;
+  }
+  .password-wrap .input { padding-right: 3.2rem; }
+  .auth-form .password-wrap .neu-input { padding-right: 3.2rem; }
+
+  /* Menu lateral, marca e os controles quadrados do cabecalho */
+  .admin-nav-item { min-height: 44px; }
+  .admin-brand-link { min-height: 44px; }
+  .admin-toggle,
+  .nx-sino-botao,
+  .admin-drawer-close,
+  .nx-modal-close {
+    width: 44px;
+    height: 44px;
+  }
+
+  /* Abas e paginacao: alturas que o dedo acerta, larguras que continuam
+     cabendo na linha (a lista de paginas ja quebra, as abas rolam) */
+  .nx-tab { min-height: 44px; }
+  .pagination-list button {
+    min-width: 44px;
+    min-height: 44px;
+  }
+
+  /* Linhas de acao e cabecalhos de tela: sem esta permissao de quebra, dois
+     botoes de 44 px lado a lado estourariam os 360 px da janela. */
+  .page-head,
+  .nx-bloco-head,
+  .nx-modal-foot,
+  .nx-modal-actions,
+  .nx-2fa-acoes {
+    flex-wrap: wrap;
+  }
+
+  /* O quadrado de cor nativo e o calendario: mesmo tratamento. No seletor de
+     cor a caixa tambem precisa parar de encolher: dentro do .nx-cor-controle
+     ela e item de flex, e sem blindagem ela era espremida pelo campo de
+     hexadecimal ao lado ate 37 px. */
+  .nx-cor-swatch {
+    inline-size: 44px;
+    block-size: 44px;
+    flex: 0 0 auto;
+  }
+  /* Barra do calendario: os botoes de seta tem uma flecha de 16 px dentro de uma
+     caixa que encolhe conforme a largura, e em 360 eles fechavam em 43 x 44. O
+     piso e quadrado, entao min-width entra junto com min-height. */
+  .fc-button {
+    min-width: 44px;
+    min-height: 44px;
+  }
+  /* Na lista do calendario o alvo e a linha: o link do titulo preenche a celula,
+     que ja tem respiro de sobra para os 44 px do toque. */
+  .agenda-surface .fc .fc-list-event-title a {
+    min-height: 44px;
+  }
+
+  /* Linha de ligado/desligado: quem aciona o campo e a linha inteira (o rotulo
+     envolve a caixa), entao e ela que precisa ter 44 px de altura. */
+  .nx-ligado {
+    min-height: 44px;
+    align-items: center;
+  }
+
+  /* A pilastra de voltar das telas de acesso e da pagina de erro */
+  .back-pill { min-height: 44px; }
+
+  /* Link de texto das telas de acesso (entrar / recuperar / reenviar): em cima
+     de um teclado de celular ele e alvo, e nao pode ter 18 px de altura. */
+  .auth-link,
+  .auth-alt a,
+  .auth-2fa-voltar {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 44px;
+    min-height: 44px;
+  }
 }

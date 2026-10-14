@@ -159,7 +159,7 @@ function problemasDoSegundoFator(fonte: FonteDeAmbiente): string[] {
   const variedade = new Set(minusculo).size;
   if (variedade < 8) {
     return [
-      `TOTP_ENCRYPTION_KEY usa só ${variedade} caracteres diferentes nos 64 — parece valor de exemplo; gere uma chave aleatória com node -e "console.log(require('node:crypto').randomBytes(32).toString('hex'))"`,
+      `TOTP_ENCRYPTION_KEY usa só ${variedade} caracteres diferentes nos 64 — parece valor de exemplo; gere uma chave aleatória com node -e "process.stdout.write(require('node:crypto').randomBytes(32).toString('hex'))"`,
     ];
   }
   return [];

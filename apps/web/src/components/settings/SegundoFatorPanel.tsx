@@ -111,9 +111,10 @@ export function SegundoFatorPanel() {
   const sub = !status
     ? "Lendo o estado da sua conta…"
     : status.ligado
-      ? "A senha sozinha não entra mais. Restam " +
-        status.codigosRestantes +
-        (status.codigosRestantes === 1 ? " código de recuperação." : " códigos de recuperação.")
+      ? "A senha sozinha não entra mais. " +
+        (status.codigosRestantes === 1
+          ? "Resta 1 código de recuperação."
+          : "Restam " + status.codigosRestantes + " códigos de recuperação.")
       : "Um aplicativo autenticador no celular é a segunda chave da conta. " +
         (status.obrigatorio
           ? "Para o seu papel, neste ambiente, ela é obrigatória."

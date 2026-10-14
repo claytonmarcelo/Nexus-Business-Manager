@@ -50,7 +50,7 @@ async function bater(log: Log): Promise<void> {
 }
 
 /** Liga o agendador. Idempotente: segundo chamado não cria segundo relógio. */
-export async function iniciarAgendador(log: Log = (m) => console.log(m)): Promise<void> {
+export async function iniciarAgendador(log: Log = (m) => process.stdout.write(m + "\n")): Promise<void> {
   if (timer) return;
   if (env.CRON_ENABLED === "0") {
     log("[cron] desligado por CRON_ENABLED=0 — rotinas só rodam pelo botão da tela");

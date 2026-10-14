@@ -1,6 +1,8 @@
-import { useCallback, useEffect, useRef, useState } from "react";
-import { Link, NavLink, Outlet } from "react-router-dom";
+import { Suspense, useCallback, useEffect, useRef, useState } from "react";
+import { Link, NavLink, Outlet, useLocation } from "react-router-dom";
+import { ErrorBoundary } from "../ErrorBoundary";
 import { Logo } from "../Logo";
+import { PageLoader } from "../PageLoader";
 import { ThemeToggle } from "../ThemeToggle";
 import { NotificationBell } from "./NotificationBell";
 import { useAuth } from "../../context/AuthContext";
@@ -103,6 +105,8 @@ function PanelLeftIcon() {
 
 export function AdminShell() {
   const { user, can, logout } = useAuth();
+  // F5, item 3: a rota ativa rearma o limite de erro do conteudo.
+  const { pathname } = useLocation();
 
   // Estado da gaveta (mobile/tablet).
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -348,7 +352,21 @@ export function AdminShell() {
         </header>
 
         <main className="admin-content">
-          <Outlet />
+          {/* F5, item 3, segundo andar do teto: uma pagina que explode na
+              renderizacao mostra a pagina de erro da casa no lugar do
+              conteudo, e nao leva a barra lateral junto. Trocar de rota ja
+              rearma o limite.
+                  D8 (F5, item 6): o Suspense mora aqui dentro de proposito. Cada
+              pagina do painel e um pedaque que o navegador busca sob demanda, e
+              enquanto ele nao chega quem gira e so o conteudo: a barra lateral,
+              o cabecalho, o sino e o alternador de tema ficam exatamente onde
+              estavam. Sem este limite interno o painel inteiro daria lugar a uma
+              tela de carregamento a cada clique do menu. */}
+          <ErrorBoundary escopo="painel" chave={pathname} embutida>
+            <Suspense fallback={<PageLoader label="Abrindo esta página…" />}>
+              <Outlet />
+            </Suspense>
+          </ErrorBoundary>
         </main>
 
         <AppFooter legais={[]} contexto="painel" />

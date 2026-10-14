@@ -24,6 +24,19 @@ function initialTheme(): Theme {
   return "dark";
 }
 
+// N7: a raiz do documento carrega o tema em dois atributos, e nunca em um só.
+// Os tokens deste projeto lêem data-theme; o CSS do AdminLTE 4 que usamos lê
+// data-bs-theme (sao 21 regras em adminlte.min.css, entre elas as variaveis da
+// barra lateral, a seta do select, o switch, o botao de fechar e o
+// color-scheme). Escrever so o nosso atributo deixava essas regras inertes: o
+// shell ficava escuro sobre um painel claro. A escrita dupla e a unica porta de
+// saida do tema — quem muda o tema muda os dois, sempre no mesmo lugar.
+function escreveTema(tema: Theme): void {
+  const raiz = document.documentElement;
+  raiz.setAttribute("data-theme", tema);
+  raiz.setAttribute("data-bs-theme", tema);
+}
+
 // O atributo vem de index.html como "dark" porque o banco não tem como saber a
 // preferência de quem chega. Sem esta função, quem salvou o tema claro via a
 // página um flash do tema errado antes de o React pintar. Ela é chamada em
@@ -31,7 +44,7 @@ function initialTheme(): Theme {
 // CSP de produção (padrão do helmet) só deixa script de mesma origem.
 export function aplicaTemaSalvo(): Theme {
   const tema = initialTheme();
-  document.documentElement.setAttribute("data-theme", tema);
+  escreveTema(tema);
   return tema;
 }
 
@@ -41,7 +54,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   const [theme, setThemeState] = useState<Theme>(aplicaTemaSalvo);
 
   useEffect(() => {
-    document.documentElement.setAttribute("data-theme", theme);
+    escreveTema(theme);
     try {
       localStorage.setItem(STORAGE_KEY, theme);
     } catch {

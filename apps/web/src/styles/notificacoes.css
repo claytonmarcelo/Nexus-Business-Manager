@@ -239,3 +239,14 @@
 @media (prefers-reduced-motion: reduce) {
   .nx-sino-botao { transition: none; }
 }
+
+/* F5 (item 7): alvo de toque de 44 px no sino do cabecalho. O bloco de toque da
+   folha components.css ja cuida dos outros controles quadrados, mas esta folha e
+   importada depois, entao a regra dela vencera por ordem de origem — o
+   crescimento do sino mora aqui, junto do tamanho que ele desenha. */
+@media (max-width: 820px), (pointer: coarse) {
+  .nx-sino-botao {
+    width: 44px;
+    height: 44px;
+  }
+}

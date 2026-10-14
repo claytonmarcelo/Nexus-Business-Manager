@@ -13,6 +13,7 @@
     "apps/web"
   ],
   "scripts": {
+    "dev": "node tools/dev.cjs",
     "dev:api": "npm run dev --workspace @nexus/api",
     "dev:api:teste": "node tools/servidor-de-prova.cjs",
     "dev:web": "npm run dev --workspace @nexus/web",
@@ -21,6 +22,7 @@
     "test": "npm run test --workspace @nexus/api && npm run test --workspace @nexus/web",
     "test:api": "npm run test --workspace @nexus/api",
     "test:web": "npm run test --workspace @nexus/web",
+    "verify": "node tools/verify-fumaca.cjs",
     "test:coverage": "npm run test:coverage --workspace @nexus/api",
     "db:migrate": "npm run prisma:migrate --workspace @nexus/api",
     "db:prova": "node tools/preparar-banco-de-prova.cjs",

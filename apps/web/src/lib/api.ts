@@ -79,7 +79,20 @@ api.interceptors.response.use(
     // As rotas de autenticação são julgadas por quem as chamou: um 401 no login
     // é senha errada, e um 401 no logout é a renovação que já estava morta —
     // nenhum dos dois é "sessão expirada no meio do trabalho".
-    const isAuthRoute = url.includes("/auth/login") || url.includes("/auth/refresh") || url.includes("/auth/logout");
+    //
+    // N64 (P19): as rotas de segundo fator entraram nesta lista pela mesma razão,
+    // e a prova de navegador foi o que mostrou o buraco. `/2fa/ativar` e
+    // `/2fa/desativar` respondem 401 para o código que a pessoa acabou de digitar
+    // errado. Tratado como sessão morta, o interceptor renovava o refresh token,
+    // repetia a chamada, colhia o mesmo 401 e derrubava a sessão: errar seis
+    // dígitos na tela de segurança mandava a pessoa para a rua. O 401 dessas
+    // rotas fala da credencial apresentada no corpo, nunca da sessão em curso, e é
+    // a tela quem tem de mostrar a frase da API embaixo do campo.
+    const isAuthRoute =
+      url.includes("/auth/login") ||
+      url.includes("/auth/refresh") ||
+      url.includes("/auth/logout") ||
+      url.includes("/auth/2fa/");
     if (status === 401 && original && !isAuthRoute) {
       // Houve sessão em curso e o refresh token continua no disco: renova uma
       // vez e repete a chamada. Sem token de renovação, não há o que tentar.

@@ -478,7 +478,11 @@ describe("A tela está ligada no menu e no roteador (F3.2)", () => {
   it("a rota existe, o item do menu tem permissão e a página existe", () => {
     const app = fonte("src/App.tsx");
     const menu = fonte("src/components/layout/AdminShell.tsx");
-    expect(app).toContain('import { OrdensDeServico } from "./pages/OrdensDeServico";');
+    // D8 (F5, item 6): a pagina virou um pedaço que o navegador busca sob demanda,
+    // entao nao existe mais o `import { ... } from "./pages/..."` no topo do
+    // roteador. A troca nao afrouxa a prova: continua exigindo a declaracao lazy
+    // apontando para o mesmo modulo e a mesma linha de rota.
+    expect(app).toMatch(/const OrdensDeServico = lazy\(\(\) =>[\s\S]{0,90}import\("\.\/pages\/OrdensDeServico"\)/);
     expect(app).toContain('<Route path="ordens-de-servico" element={<OrdensDeServico />} />');
     const linha = menu.split("\n").find((atual) => atual.includes('to: "/app/ordens-de-servico"')) ?? "";
     expect(linha).not.toBe("");

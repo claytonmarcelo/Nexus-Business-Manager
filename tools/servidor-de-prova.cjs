@@ -51,6 +51,18 @@ if (nomeDoBanco(valorDaChave("DATABASE_URL")) === NOME_DO_BANCO_DE_PROVA) {
 
 const alvo = new URL(URL_PROVA);
 console.log("[servidor de prova] API no banco " + NOME_DO_BANCO_DE_PROVA + " (" + alvo.hostname + ":" + (alvo.port || "3306") + ") — o banco de desenvolvimento fica de fora");
+// Aviso que faltou em 2026-10-14, e alguem perdeu o acesso por causa dele: esta
+// janela atende a porta 3001, que e a porta para onde o Vite (5173) manda o
+// /api do navegador. Enquanto ela estiver de pe, quem digitar a senha no login
+// do sistema esta batendo na porta do banco de prova — onde a conta real de
+// administracao nao existe, e onde a unica conta e a ficticia que o
+// `npm run db:prova` criou. Para trabalhar no produto, parar esta janela e
+// rodar `npm run dev:api`.
+console.log(
+  "[servidor de prova] ATENCAO: o navegador (http://localhost:5173) passa a falar com o banco de prova. " +
+    "A conta de administrador desta maquina nao existe aqui. Para usar o sistema de verdade, " +
+    "pare esta janela e rode `npm run dev:api`.",
+);
 
 const filho = spawn(
   process.execPath,

@@ -203,7 +203,9 @@ describe("A tela está ligada no menu e no roteador (F2)", () => {
     const app = fonte("src/App.tsx");
     const menu = fonte("src/components/layout/AdminShell.tsx");
     expect(app).toContain('<Route path="auditoria-plataforma" element={<PlataformaAuditoria />} />');
-    expect(app).toContain('import { PlataformaAuditoria } from "./pages/PlataformaAuditoria";');
+    // D8 (F5, item 6): a pagina e buscada sob demanda, nao importada no topo. A
+    // prova continua conferindo o modulo apontado pelo lazy e a linha de rota.
+    expect(app).toMatch(/const PlataformaAuditoria = lazy\(\(\) =>[\s\S]{0,90}import\("\.\/pages\/PlataformaAuditoria"\)/);
     expect(menu).toContain('to: "/app/auditoria-plataforma"');
     // Item de plataforma: some da barra de quem não responde pela plataforma, e a
     // API ainda confere no banco a cada request.

@@ -618,7 +618,10 @@ describe("A tela está ligada no menu, no roteador e no papel (F3.2 Parte 2)", (
   it("a rota existe, o item do menu tem permissão e a página existe", () => {
     const app = fonte("src/App.tsx");
     const menu = fonte("src/components/layout/AdminShell.tsx");
-    expect(app).toContain('import { Cobrancas } from "./pages/Cobrancas";');
+    // D8 (F5, item 6): sem o import no topo — a cobranca e um dos pedaços que o
+    // navegador so busca quando a pessoa abre a tela. Exigimos a declaracao lazy
+    // com o mesmo caminho de modulo, mais a linha de rota de sempre.
+    expect(app).toMatch(/const Cobrancas = lazy\(\(\) =>\s*import\("\.\/pages\/Cobrancas"\)/);
     expect(app).toContain('<Route path="cobrancas" element={<Cobrancas />} />');
     const linha = menu.split("\n").find((atual) => atual.includes('to: "/app/cobrancas"')) ?? "";
     expect(linha).not.toBe("");

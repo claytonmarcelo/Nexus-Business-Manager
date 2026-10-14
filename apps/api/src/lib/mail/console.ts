@@ -13,7 +13,7 @@ type LinhaDeLog = (mensagem: string) => void;
  * explícita (`SMTP_HOST` ausente fora de produção) e a produção recusa subir sem
  * SMTP configurado (`config/producao.ts`).
  */
-export function consoleMailer(log: LinhaDeLog = (m) => console.log(m)): MailerPort {
+export function consoleMailer(log: LinhaDeLog = (m) => process.stdout.write(m + "\n")): MailerPort {
   return {
     nome: "console",
     async enviar(mensagem: MensagemDeMail): Promise<void> {

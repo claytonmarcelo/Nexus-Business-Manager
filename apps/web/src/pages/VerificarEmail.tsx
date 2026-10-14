@@ -105,8 +105,12 @@ export function VerificarEmail() {
           <div className="auth-form">
             {mensagem ? <p className="form-error" role="alert">{mensagem}</p> : null}
             <div className="field">
-              <span className="field-label">E-mail da conta</span>
+              {/* F5 (item 7): o rotulo vira <label for> de verdade. Um span com a cara do
+                  rotulo nao da nome ao campo — quem usa leitor de tela ouve so o
+                  "seu@email.com" do placeholder, que e exemplo, nao pergunta. */}
+              <label className="field-label" htmlFor="nx-reenvio-email">E-mail da conta</label>
               <input
+                id="nx-reenvio-email"
                 type="email"
                 className="neu-input"
                 placeholder="seu@email.com"

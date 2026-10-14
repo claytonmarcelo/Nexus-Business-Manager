@@ -109,8 +109,9 @@ export function Register() {
 
         <form onSubmit={onSubmit} className="auth-form" noValidate>
           <div className="field">
-            <span className="field-label">Nome completo</span>
+            <label className="field-label" htmlFor="nx-cadastro-nome">Nome completo</label>
             <input
+              id="nx-cadastro-nome"
               type="text"
               className={"neu-input" + (errors.name ? " is-error" : "")}
               autoComplete="name"
@@ -123,8 +124,9 @@ export function Register() {
           </div>
 
           <div className="field">
-            <span className="field-label">E-mail</span>
+            <label className="field-label" htmlFor="nx-cadastro-email">E-mail</label>
             <input
+              id="nx-cadastro-email"
               type="email"
               className={"neu-input" + (errors.email ? " is-error" : "")}
               autoComplete="email"

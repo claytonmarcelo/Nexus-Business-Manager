@@ -57,6 +57,15 @@ const estadoInfo = (v: EventoEstado) => ESTADOS.find((e) => e.value === v) ?? ES
 const recorrenciaInfo = (v: Recorrencia) => RECORRENCIAS.find((r) => r.value === v) ?? RECORRENCIAS[0];
 
 const dois = (n: number) => String(n).padStart(2, "0");
+
+// F5 (item 7): a linha da casa entre o painel largo e a gaveta, a mesma que os
+// @media do alvo de toque usam (components.css, "max-width: 820px").
+const TELEFONE = "(max-width: 820px)";
+function emTelefone(): boolean {
+  // jsdom nao traz matchMedia, e a tela tambem e montada em teste: sem o
+  // perguntador a resposta e "nao", que e o caminho do painel largo.
+  return typeof window !== "undefined" && window.matchMedia?.(TELEFONE).matches === true;
+}
 // datetime-local e date trabalham no horario local do usuario.
 const paraInput = (iso: string | null) => {
   if (!iso) return "";
@@ -76,6 +85,10 @@ export function Agenda() {
   const { can } = useAuth();
   const podeEscrever = can("agenda:write");
   const calendario = useRef<FullCalendar>(null);
+  // A caixa que veste o calendario. E por ela que os botoes de navegar do
+  // FullCalendar sao nomeados abaixo: o ref do componente entrega apenas o
+  // getApi(), e quem precisa de DOM e esta caixa ja existente.
+  const caixaCalendario = useRef<HTMLDivElement>(null);
 
   const [janela, setJanela] = useState<{ de: string; ate: string; rotulo: string } | null>(null);
   const [eventos, setEventos] = useState<Evento[]>([]);
@@ -89,6 +102,22 @@ export function Agenda() {
   const [detalhe, setDetalhe] = useState<Evento | null>(null);
   const [clientes, setClientes] = useState<Opcao[]>([]);
   const [leads, setLeads] = useState<Opcao[]>([]);
+
+  // F5 (item 7): em 360 px a grade do mes sao sete colunas de ~48 px, e a pilula do
+  // compromisso dentro dela mede 39 x 25 — alvo de toque impossivel de alargar sem
+  // estourar a coluna ou esconder o dia inteiro atras de "+ mais". Entao o celular
+  // abre na lista do mes, onde cada compromisso e uma linha de largura inteira e o
+  // toque pega 44 px de verdade. O "Mês" continua na barra para quem quer o
+  // panorama, e a prova de acessibilidade mede as duas caras da tela.
+  const [estreita, setEstreita] = useState(emTelefone);
+  useEffect(() => {
+    const mq = typeof window !== "undefined" && window.matchMedia ? window.matchMedia(TELEFONE) : null;
+    if (!mq) return;
+    const onChange = () => setEstreita(mq.matches);
+    onChange();
+    mq.addEventListener("change", onChange);
+    return () => mq.removeEventListener("change", onChange);
+  }, []);
 
   const carregar = useCallback(async () => {
     setCarregando(true);
@@ -117,6 +146,24 @@ export function Agenda() {
   useEffect(() => {
     void carregar();
   }, [carregar]);
+
+  // F5 (item 7): o FullCalendar veste os botoes de navegar com uma seta e um
+  // `title` em portugues ("Mês Anterior"). Leitor de tela nao le `title` como
+  // nome do botao — ele so fala a seta, que nao e palavra. Copiar o `title` para
+  // o `aria-label` depois de cada troca de periodo da nome ao botao sem mexer
+  // no desenho da barra: o texto visivel que as capturas mostram continua o
+  // mesmo, e a frase continua vindo do proprio calendario, entao "Semana
+  // Anterior" / "Mês Anterior" acompanham a visao sozinhos.
+  useEffect(() => {
+    const raiz = caixaCalendario.current;
+    if (!raiz) return;
+    raiz
+      .querySelectorAll<HTMLButtonElement>(".fc-prev-button, .fc-next-button")
+      .forEach((botao) => {
+        const rotulo = botao.title.trim();
+        if (rotulo) botao.setAttribute("aria-label", rotulo);
+      });
+  }, [janela?.de, janela?.ate, estreita]);
 
   // Clientes e leads apenas alimentam os seletores do formulario.
   useEffect(() => {
@@ -336,14 +383,21 @@ export function Agenda() {
         </span>
       </div>
 
-      <div className="card-surface agenda-surface">
+      <div className="card-surface agenda-surface" ref={caixaCalendario}>
         {erro ? <ErrorState message={erro} onRetry={() => void carregar()} /> : (
           <FullCalendar
             ref={calendario}
             plugins={[dayGridPlugin, timeGridPlugin, listPlugin, interactionPlugin]}
-            initialView="dayGridMonth"
+            initialView={estreita ? "listMonth" : "dayGridMonth"}
             locale={ptBrLocale}
-            headerToolbar={{ left: "prev,next today", center: "title", right: "dayGridMonth,timeGridWeek,listWeek" }}
+            headerToolbar={{
+              left: "prev,next today",
+              center: "title",
+              // Em 360 o botao "Lista" leva para a lista do mes inteiro, que e o
+              // que a pessoa esta vendo na grade; no painel largo a lista semanal
+              // continua mais curta e mais util.
+              right: "dayGridMonth,timeGridWeek," + (estreita ? "listMonth" : "listWeek"),
+            }}
             buttonText={{ today: "Hoje", month: "Mês", week: "Semana", list: "Lista" }}
             height="auto"
             firstDay={1}

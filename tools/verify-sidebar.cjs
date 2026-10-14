@@ -194,13 +194,27 @@ function estado() {
         tamanho: parseFloat(cs.fontSize),
         espaco: cs.letterSpacing,
         cor: cs.color,
+        // N7: o cinza do titulo de camada nao e mais um numero solto na prova, e
+        // o token do painel. Comparar com o proprio token resolvido no elemento faz
+        // a checagem continuar certa se a casa subir ou descer o degrau de novo.
+        token: cs.getPropertyValue("--text-faint").trim(),
       };
     });
     ok("titulo de camada em caixa alta", estiloTitulo.transform === "uppercase" && estiloTitulo.texto === "Visão Geral", estiloTitulo.texto);
     ok("titulo de camada com fonte reduzida (< 12px)", estiloTitulo.tamanho > 0 && estiloTitulo.tamanho < 12, estiloTitulo.tamanho + "px");
     ok("titulo de camada em negrito discreto", estiloTitulo.peso >= 600, "peso " + estiloTitulo.peso);
     ok("titulo de camada com letter-spacing de tracking", parseFloat(estiloTitulo.espaco) > 0, estiloTitulo.espaco);
-    ok("titulo de camada usa o cinz do sistema", estiloTitulo.cor === "rgb(107, 114, 128)", estiloTitulo.cor);
+    const rgbDoToken = (() => {
+      const m = /^#([0-9a-f]{6})$/i.exec(estiloTitulo.token);
+      if (!m) return estiloTitulo.token;
+      const n = parseInt(m[1], 16);
+      return "rgb(" + [(n >> 16) & 255, (n >> 8) & 255, n & 255].join(", ") + ")";
+    })();
+    ok(
+      "titulo de camada usa o cinza do painel (token --text-faint)",
+      estiloTitulo.cor === rgbDoToken && estiloTitulo.cor !== "rgb(107, 114, 128)",
+      estiloTitulo.cor + " | token " + estiloTitulo.token,
+    );
   }
   {
     const semDestino = e.itens.filter((i) => i.tag !== "A" || !i.href || i.href === "#" || i.emObra || /em breve/i.test(i.textoEtiqueta));

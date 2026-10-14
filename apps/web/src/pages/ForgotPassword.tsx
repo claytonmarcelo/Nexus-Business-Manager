@@ -94,8 +94,9 @@ export function ForgotPassword() {
         {step === 1 ? (
           <form onSubmit={request} className="auth-form" noValidate>
             <div className="field">
-              <span className="field-label">E-mail</span>
+              <label className="field-label" htmlFor="nx-recuperacao-email">E-mail</label>
               <input
+                id="nx-recuperacao-email"
                 type="email"
                 className={"neu-input" + (errors.email ? " is-error" : "")}
                 autoComplete="email"
@@ -124,8 +125,9 @@ export function ForgotPassword() {
               </div>
             )}
             <div className="field">
-              <span className="field-label">Código de recuperação</span>
+              <label className="field-label" htmlFor="nx-recuperacao-codigo">Código de recuperação</label>
               <input
+                id="nx-recuperacao-codigo"
                 type="text"
                 className={"neu-input" + (errors.token ? " is-error" : "")}
                 placeholder="Cole o código recebido"

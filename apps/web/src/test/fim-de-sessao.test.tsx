@@ -42,6 +42,12 @@ function PainelDeTeste() {
       <button type="button" onClick={() => void api.get("/sales").catch(() => undefined)}>
         chamar rota de negócio
       </button>
+      <button
+        type="button"
+        onClick={() => void api.post("/auth/2fa/desativar", { codigo: "000000" }).catch(() => undefined)}
+      >
+        desligar o segundo fator com código errado
+      </button>
     </div>
   );
 }
@@ -95,6 +101,7 @@ beforeEach(() => {
   localStorage.clear();
   sessionStorage.clear();
   document.documentElement.removeAttribute("data-theme");
+  document.documentElement.removeAttribute("data-bs-theme");
 });
 
 afterEach(() => {
@@ -143,17 +150,22 @@ describe("Toda sessão encerrada volta para a página de boas-vindas", () => {
     expect(await screen.findByText(VITRINE)).not.toBeNull();
   });
 
+  // N7: a preferência é uma só, mas são dois atributos no documento — o nosso
+  // data-theme e o data-bs-theme que o AdminLTE lê. O fim de sessão não pode
+  // apagar nenhum dos dois, e nenhum deles pode ficar para trás do outro.
   it("sair do sistema não apaga a preferência de tema deste navegador", async () => {
     localStorage.setItem("nexus.theme", "light");
     tokenStore.setRefresh("r0");
     monteApp(rotasDeSessao(), "/app/vendas");
     await screen.findByText("tela de vendas");
     expect(document.documentElement.getAttribute("data-theme")).toBe("light");
+    expect(document.documentElement.getAttribute("data-bs-theme")).toBe("light");
 
     fireEvent.click(screen.getByRole("button", { name: "sair do painel" }));
     await waitFor(() => expect(rotaAtual()).toBe("/"));
     expect(localStorage.getItem("nexus.theme")).toBe("light");
     expect(document.documentElement.getAttribute("data-theme")).toBe("light");
+    expect(document.documentElement.getAttribute("data-bs-theme")).toBe("light");
   });
 
   it("401 sem refresh token salvo é tratado como sessão expirada", async () => {
@@ -187,5 +199,26 @@ describe("Toda sessão encerrada volta para a página de boas-vindas", () => {
       expect(document.body.textContent).toContain("Sua sessão expirou. Entre novamente para continuar."),
     );
     expect(localStorage.getItem("nexus.refresh")).toBeNull();
+  });
+
+  // N64 (P19), achado da prova de navegador das telas da F4: na tela do segundo
+  // fator o 401 é resposta para o que a pessoa digitou, não notícia de sessão
+  // morta. Sem esta distinção, errar os seis dígitos ao desligar o segundo fator
+  // derrubava a sessão inteira — a prova abriu a tela, errou o código de propósito
+  // e acordou na vitrine.
+  it("401 de código errado no segundo fator não encerra a sessão nem gasta o refresh", async () => {
+    await entreNaEmpresa([
+      { caminho: "/auth/2fa/desativar", status: 401, data: { message: "Código inválido. Confira o horário do aparelho e tente de novo." } },
+    ]);
+    // O boot da sessão já renovou uma vez e trouxe o token que está no disco; é
+    // a partir daqui que a contagem vale.
+    const refreshAntes = localStorage.getItem("nexus.refresh");
+    expect(refreshAntes).not.toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "desligar o segundo fator com código errado" }));
+    await new Promise((r) => setTimeout(r, 150));
+    expect(rotaAtual()).toBe("/app/vendas");
+    expect(document.body.textContent).toContain("tela de vendas");
+    // Um erro de digitação não pode rotacionar o refresh token da sessão.
+    expect(localStorage.getItem("nexus.refresh")).toBe(refreshAntes);
   });
 });
