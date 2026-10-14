@@ -764,6 +764,12 @@ npm run db:prova              # banco de prova: cria nexusbusinessmanager_teste,
 | `npm run db:migrate` / `db:seed` | Prisma no workspace da API |
 | `npm run db:prova` | monta e semeia o banco de prova, e grava a conta de prova fora do git |
 | `npm run admin:criar` | bootstrap do administrador da plataforma — endereço de `SUPER_ADMIN_EMAIL`, senha de `ADMIN_CRIAR_SENHA`, nada de demonstração |
+| `npm run docker:subir` | a pilha de instalação num comando: `mysql` + o job que monta o banco + a API + o painel em nginx, com **uma única porta publicada no host** (`PAINEL_PORT`, padrão 8080) e o banco sem porta nenhuma (`docker compose up -d --build`) |
+| `npm run docker:build` / `docker:descer` | constrói as duas imagens / derruba a pilha e deixa o volume `nexus-mysql` no lugar |
+| `npm run docker:migrar` | `prisma migrate deploy` dentro da imagem, contra o banco da pilha |
+| `npm run docker:admin` | o mesmo `admin:criar` de cima, atravessando o container |
+| `npm run docker:logs` | as últimas 40 linhas da API no stdout |
+| `npm run docker:provar` | a régua da topologia (`tools/verify-docker.cjs`): 29 verificações — sem a pilha de pé ela devolve `NAO VERIFICADO` em vez de fechar verde pela metade |
 
 ### Produção
 
@@ -794,9 +800,12 @@ preservada, e quantas empresas ficaram com `OWNER`. Rodar duas vezes não troca 
 reescrever senha de administrador existente, promover uma conta de cliente que por acaso tenha o endereço ou
 reativar uma conta desativada exigem, cada um, o seu consentimento escrito (`ADMIN_CRIAR_RENOVAR_SENHA=1`,
 `ADMIN_CRIAR_PROMOVER=1`, `ADMIN_CRIAR_REATIVAR=1`). A ordem completa de subida está em `docs/PRODUCAO.md` e a
-decisão em `docs/adr/0006-bootstrap-do-administrador-da-plataforma.md`. Não há `Dockerfile` nem pipeline de CI
-no repositório — estão no roadmap (F6 e F8), e as decisões de hospedagem estão em
-`docs/decisoes/G5-hospedagem-e-backup.md`.
+decisão em `docs/adr/0006-bootstrap-do-administrador-da-plataforma.md`. A pilha de instalação existe e é medida: `Dockerfile.api`,
+`Dockerfile.web`, `docker-compose.yml` e `deploy/nginx-painel.conf` descrevem a topologia em que o painel é a
+única porta aberta no host, e o MySQL e a API não publicam porta nenhuma — o tráfego da API entra pelo painel,
+pela rede interna do compose. O pipeline de CI ainda não está no repositório (F8), e a escolha de hospedagem é
+do dono (`docs/decisoes/G5-hospedagem-e-backup.md`); a decisão de topologia está em
+`docs/adr/0018-producao-em-container-com-uma-porta.md`.
 
 ### Contas e acesso
 

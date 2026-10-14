@@ -1,5 +1,57 @@
 ## [Não lançado]
 
+### A instalação em container existe, e o banco não atende fora de casa (2026-10-14)
+
+- **Uma porta publicada, e não é a do banco (T5.1 / F6).** `Dockerfile.api`, `Dockerfile.web`,
+  `docker-compose.yml`, `.dockerignore`, `deploy/nginx-painel.conf` e o job `deploy/preparar-banco-de-dados.cjs`
+  montam a instalação em quatro serviços — MySQL 8.4, o trabalho que prepara o banco, a API e o painel servido por
+  nginx. Só o painel publica porta (`PAINEL_PORT`, padrão `8080:80`; o 80 da máquina tem dono). Medido com a pilha
+  de pé: `docker port` devolve vazio para `mysql`, `api` e `migracoes` e `80/tcp -> 0.0.0.0:8080` para o `web`;
+  `netstat` mostra o 3306 da máquina com o mesmo PID de antes da subida, e as portas do produto (3001 e 5173) com
+  os PIDs que já tinham. O tráfego da API entra pelo nginx, na rede interna — a decisão está em
+  `docs/adr/0018-producao-em-container-com-uma-porta.md`.
+- **Credencial nenhuma tem valor no repositório, nem default no compose.** Todo segredo vem de `${VAR:?defina VAR
+  no .env da maquina}`, e a falta dele faz o `docker compose config` recusar com o nome da variável — vermelho
+  medido antes de qualquer verde. `.env.docker.example` (rastreado) é modelo de formato, com todas as senhas
+  vazias; o `.env` preenchido cai no `.gitignore:12` e fica fora do contexto de build pelo `.dockerignore`.
+- **A régua de produção virou a porta da pilha, e foi provada dos dois lados.** O compose nasce com
+  `NODE_ENV=production`, e dentro do container a A9 derrubou o processo com a lista de quatro problemas
+  (`CORS_ORIGIN` local, `SUPER_ADMIN_EMAIL` e `SMTP_HOST` ausentes, `WEB_BASE_URL` sem https) sem imprimir valor
+  nenhum, e passou com a configuração da máquina — healthcheck verde e a trilha painel → nginx → API → MySQL
+  devolvendo `db: up`.
+- **O banco zerado volta a expor o N54, agora com guarda de dado.** A cadeia versionada para em
+  `P3018 / 1826 / Duplicate foreign key constraint name 'company_users_user_id_fkey'` na
+  `20261010164015_add_clients`, e o job aplica o baseline da casa (estrutura atual do schema + histórico marcado)
+  **só** em banco sem linha de ninguém — conferido com `SELECT COUNT(*)` tabela por tabela, porque
+  `information_schema.table_rows` é estimativa do InnoDB. Medido numa subida do zero: `21 marcada(s) nova(s) + 1
+  ja no historico = 22 migrations` e `Database schema is up to date!`. Nenhuma migration aplicada foi reescrita.
+- **A imagem da API descobriu o próprio motor do Prisma.** `node:20-bookworm-slim` não traz openssl, então o
+  `prisma generate` escolhia `debian-openssl-1.1.x` e o estágio com libssl3 exigia `debian-openssl-3.0.x` — o
+  container nascia em `PrismaClientInitializationError`. O openssl passou a ser instalado antes do generate.
+  Pesos medidos em `docker images`: 969 MB com o install da árvore inteira, **915 MB** com o install restrito ao
+  workspace da API, **76,7 MB** a imagem do painel.
+- **N67: o `start` da API apontava para um arquivo que o compilador nunca gerou.** `dist/server.js` não existe —
+  com `rootDir: "."` o `tsc` escreve `dist/src/server.js` — e o passo de produção de `docs/PRODUCAO.md` mandava
+  rodar exatamente esse caminho. Medido como `MODULE_NOT_FOUND` dentro da imagem; `main` e `start` foram corrigidos.
+- **Régua nova: `npm run docker:provar`.** Metade estática (o que o próprio `docker compose config` declara, os
+  Dockerfiles, o `.dockerignore` e o nginx) e metade de execução (o que o Docker publicou de verdade e a trilha
+  pelo painel). Verde medido: **29 verificações, 0 falhas**; sem pilha de pé ela imprime `NAO VERIFICADO` e sai
+  com código 2, em vez de fechar verde pela metade. Entrou na varredura da T5.0, que agora mede **35** ferramentas.
+  O N68 nasceu e foi consertado aqui: com `fetch` nativo a ferramenta imprimia "0 falhas" e abortava com código
+  **127** no Windows — régua que mede verde e devolve vermelho não serve de portão; a leitura passou a
+  `node:http` com `agent: false`.
+- **Documentação re-escrita com o que foi medido.** `docs/PRODUCAO.md` ganhou as nove seções do caminho real
+  (duas trilhas de subida, o trabalho de migrations, logs e o que ainda não está aqui), a tabela do
+  `docker:*` apareceu nos atalhos do README, e a frase "não há `Dockerfile` no repositório" saiu do ar. Fica
+  declarado: TLS e retenção de log são de ambiente (`NÃO VERIFICADO` como política do repositório), e o N69 abre
+  o ponto do nível de log de produção — `isProd ? { level: "info" } : { level: "info" }`, duas ramas idênticas.
+- **Portões da rodada.** Typecheck e build sem erro e sem aviso de chunk; suíte completa contra
+  `nexusbusinessmanager_teste` sem falha nem skip; guarda de caracteres não latinos em 4/4; BOM e CR zero nos
+  arquivos desta tarefa; varredura de segredo sem valor impresso. Nenhum teste ou prova tocou o banco de
+  desenvolvimento, e o banco da pilha é outro: medido depois da subida do zero, 34 tabelas e 1 linha — a
+  `landing_configs` que o plugin de manutenção cria no primeiro request.
+
+
 ### A pilha de prova tem porta própria, e a porta de quem trabalha deixou de ser disputada (2026-10-14)
 
 - **O `npm run dev:api:teste` não toma mais a 3001 (N65, fechado na T5.0).** A janela de prova agora é a

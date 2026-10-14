@@ -2004,4 +2004,70 @@ binários com o mesmo `process.execPath`: `tsx watch src/server.ts` e `vite`, re
 desenvolvimento devolve HTTP 200 com `accessToken` e `refreshToken` — nenhum valor de segredo impresso em lugar
 algum.
 
+# Adenda da execução — T5.1 (F6: Docker, compose com a porta do banco fechada) encerrada — 2026-10-14
 
+A F6 abriu com a topologia de prova (T5.0, N65) e continuou com a topologia de instalação: `Dockerfile.api`,
+`Dockerfile.web`, `docker-compose.yml`, `.dockerignore`, `deploy/nginx-painel.conf`,
+`deploy/preparar-banco-de-dados.cjs`, `.env.docker.example`, `tools/verify-docker.cjs` e os sete comandos
+`npm run docker:*` na raiz. A regra que a tarefa veio escrever é uma só, e ela foi conferida no host: **quem
+instala o produto expõe uma porta, e não é a do banco**. Medido com a pilha de pé — `docker port` do `mysql`,
+da `api` e do `migracoes` devolve vazio, e o do `web` devolve `80/tcp -> 0.0.0.0:8080`; `netstat -ano` mostra
+um único `0.0.0.0:3306` na máquina, com o PID 4296 que já estava lá antes de qualquer container existir (o
+MySQL do WAMP), e as portas do dono na mesma: 3001 com o PID 18816, 5173 com o PID 18972. A trilha que o
+navegador faz é `painel → nginx → api → mysql` dentro da rede do compose, e a régua nova bate nela pela única
+porta publicada: `29 verificações, 0 falhas`, código de saída 0, com a metade B inconclusiva (código 2, com a
+frase `NAO VERIFICADO`) quando a pilha não está de pé — ela não fecha verde pela metade.
+
+O resto é achado, e a maioria nasceu do próprio caminho de subida.
+
+### N67 — corrigido nesta rodada: o caminho de entrada da API era um arquivo que o compilador nunca produziu
+
+`apps/api/package.json` declarava `main` e `start` em `dist/server.js`. O `tsconfig.json` da API tem
+`rootDir: "."` e inclui `src`, `prisma/seed.ts` e `test`, então o `tsc` despeja a saída em `dist/src/`, e o
+arquivo apontado não existe. Medido antes do conserto, dentro da imagem recém-compilada:
+`node apps/api/dist/server.js` devolve `MODULE_NOT_FOUND`. Ninguém tinha visto porque a casa sempre rodou a API
+por `tsx src/server.ts` — o `start` de produção nunca tinha sido executado, e o item 5 da seção 2 de
+`docs/PRODUCAO.md` mandava exatamente esse comando. É o tipo de dívida que só aparece quando alguém tenta
+servir o produto de verdade, e a F6 é esse alguém. `main` e `start` passaram a apontar para
+`dist/src/server.js`, que é o caminho que o `CMD` do container roda, e a régua de fumaça do painel continua
+falando com a 3001 por `tsx`, como sempre.
+
+### N68 — corrigido nesta rodada: uma régua que mede verde e devolve vermelho é pior que uma régua vermelha
+
+`tools/verify-docker.cjs` foi escrita medindo as duas metades e imprimia `ok: 29 verificacoes, 0 falhas` — com
+código de saída **127** e um `Assertion failed: !(handle->flags & UV_HANDLE_CLOSING)` do Node do Windows logo
+depois da última linha. A causa é o `fetch` nativo: o undici deixa um socket keep-alive vivo, o `process.exit()`
+encontra a alça em fechamento, e o processo aborta **depois** de já ter dito que passou. Um portão que lê o code
+de saída não tem como saber em quem acreditar, e o próximo passo seria confiar na frase impressa — que é como
+uma régua deixa de ser régua. A leitura de rede da ferramenta passou a `node:http` com `agent: false`, a
+conexão morre antes do encerramento, e o código 0 foi conferido duas vezes na mesma máquina (uma com a pilha
+original, outra depois de `down -v` e da subida do zero). O registro fica aqui porque a falha não é do Docker e
+não está em nenhum arquivo de produção: é da ferramenta de prova, e ferramenta de prova que mente tem que virar
+achado.
+
+### N54 recaiu no container, e o conserto agora tem guarda de dado
+
+A cadeia de migrations versionada não reconstitui um MySQL zerado — a T1 descobriu isso no banco de prova, e a
+subida da pilha descobriu de novo no banco do container: `P3018 / Database error code: 1826 / Duplicate foreign
+key constraint name 'company_users_user_id_fkey'` na `20261010164015_add_clients`, porque em MySQL o nome de
+chave é do banco inteiro, não da tabela. O `deploy/preparar-banco-de-dados.cjs` usa o mesmo baseline que a casa
+já aplicava no banco de prova (estrutura atual do schema por `db push` + histórico marcado migration por
+migration), com uma diferença que importa: **o baseline só roda em banco sem linha de ninguém**, conferido com
+`SELECT COUNT(*)` exato tabela por tabela — `information_schema.table_rows` é estimativa do InnoDB e diria
+"vazio" num banco com dados. Medido numa subida do zero: `21 marcada(s) nova(s) + 1 ja no historico = 22
+migrations`, e `prisma migrate status` dentro do container devolve `Database schema is up to date!`. Nenhuma
+migration aplicada foi reescrita para isso; a cadeia continua com o N54 aberto até a F8 (clone limpo), e o
+conserto verdadeiro — regenerar a história das migrations — é decisão que a T7 traz.
+
+### N69 — aberto: o nível de log de produção está fixo, e a rama do ternário não muda nada
+
+`apps/api/src/app.ts` escolhe o logger por `isProd ? { level: "info" } : { level: "info" }` — as duas ramas são
+idênticas, então a condição não faz nada. Não existe `LOG_LEVEL` no ambiente lido por ali, e a régua de produção
+tampouco cobra um. Medido no container: o log é JSON no stdout, nível 30, e uma linha de request traz método,
+URL, endereço remoto, porta remota e tempo de resposta — corpo e cabeçalho não entram, e a varredura do log
+inteiro da pilha não achou **nenhuma** linha com `authorization`, `password`, `secret` ou `token` (0 batidas).
+A parte boa é real e está em `docs/PRODUCAO.md` seção 7. O que fica aberto é a decisão de quem mantém: se
+produção queria nível `warn`, ou se o `LOG_LEVEL` deveria vir do ambiente, e qual é a política de rotação e
+retenção do arquivo que o Docker administra. Rotação e retenção não estão no repositório, e não foram fingidas:
+`docs/PRODUCAO.md` diz `NÃO VERIFICADO` nesse ponto, e a amarração com o roteiro de backup vem na próxima
+tarefa da T5 (seção 45 do prompt).
