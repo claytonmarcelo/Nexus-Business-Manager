@@ -1693,7 +1693,7 @@ o achado já registrado nesta casa (`N...`) e a decisão do dono (`D1`..`D14`). 
 adicionado nem removido por causa disso: quem ler o `docs/STATUS-AJUSTES.md` daqui em diante encontra o
 mesmo contrato, só com numeração diferente.
 
-### N54 — a cadeia versionada de migrations não reergue um banco MySQL vazio (aberto, é trabalho da T7)
+### N54 — a cadeia versionada de migrations não reergue um banco MySQL vazio (FEITO na C1, 2026-10-15)
 
 Medido nesta rodada, com um schema de descarte criado só para isso e apagado no `finally`:
 `prisma migrate deploy` contra um banco sem nenhuma tabela encontra as **20 migrations**, aplica
@@ -1724,6 +1724,17 @@ já aplicada, e qualquer remendo na cadeia existente é exatamente isso. A segun
 limpo é a T7, e a decisão de *como* reescrever a cadeia (baseline única, migrations idempotentes com
 `DROP FOREIGN KEY` antes de criar, ou caminho de bootstrap separado documentado) merece ADR próprio com a
 medição de antes e depois. Fica registrado aqui para a T7 não descobrir isso no escuro.
+
+**Fechado na C1 (2026-10-15).** O histórico recomeçou com um baseline único
+(`prisma/migrations/20261015000000_baseline/migration.sql`), gerado por
+`prisma migrate diff --from-empty --to-schema-datamodel prisma/schema.prisma --script` (828 linhas,
+35 CREATE TABLE). As 23 migrations antigas foram movidas para `docs/legado/migrations-antigas/` — o
+conteúdo fica no repositório para consulta histórica, sem participar do deploy. Em banco vazio separado
+(`nexusbusinessmanager_c1empty`), `migrate deploy` aplicou o baseline e saiu com código 0; a deriva foi
+conferida com `migrate diff --from-migrations ... --exit-code` e devolveu 0. O ADR da decisão está em
+[`docs/adr/0024-baseline-de-migrations.md`](adr/0024-baseline-de-migrations.md). O fallback de `db push`
+foi removido de `deploy/preparar-banco-de-dados.cjs` e `tools/preparar-banco-de-prova.cjs`; `db:push`
+continua na lista de scripts como atalho de desenvolvimento.
 
 ### N55 — fechado na T1: as provas de navegador escreviam no banco de desenvolvimento
 

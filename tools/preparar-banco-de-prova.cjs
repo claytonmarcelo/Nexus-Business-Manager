@@ -13,13 +13,9 @@
 //      banco de desenvolvimento;
 //   2. o banco e criado se nao existir (cliente mysql do WAMP, ou o caminho em
 //      NEXUS_MYSQL_BIN; em CI o servico do MySQL ja cria o banco);
-//   3. `prisma migrate deploy` aplica as migracoes versionadas. Se a cadeia nao
-//      conseguir reconstruir um banco vazio — e hoje ela nao consegue, achado N54:
-//      treze migracoes redeclaram as mesmas chaves `company_users_*_fkey`, e no
-//      MySQL o nome de chave vale para o banco inteiro — a ferramenta avisa, recria
-//      o banco pela estrutura atual do schema (`db push`) e marca o historico de
-//      migraoes como aplicado (baseline), que e exatamente como o banco de
-//      desenvolvimento foi montado;
+//   3. `prisma migrate deploy` aplica a cadeia versionada. Desde a C1 (2026-10-15) o
+//      baseline N54 esta fechado e o caminho e unico: se o deploy falhar, a ferramenta
+//      sai com codigo 1 sem tentar alternativa (docs/adr/0024-baseline-de-migrations.md);
 //   4. sem `--sem-semente`, o seed sobe com SEED_DEV_ACCOUNT=1 e
 //      SEED_DEMO_COMPANY=1: a conta de desenvolvimento e a casa de demonstracao
 //      fixa que as capturas mostram, com administrador de plataforma de endereco
@@ -209,48 +205,16 @@ async function estarVazio() {
       if (!(await responder())) falhar("o banco foi criado mas nao responde");
     }
 
-    // 3. estrutura: primeiro pela cadeia versionada, que e o caminho honesto.
+    // 3. estrutura pela cadeia versionada — caminho único desde a C1 (baseline N54 fechado).
     const deploy = executarPrisma(["migrate", "deploy"]);
     if (deploy.status === 0) {
       const nadaPendente = deploy.saida.includes("No pending migrations to apply");
       const aplicadas = (deploy.saida.match(/Applying migration/gi) || []).length;
       console.log("[banco de prova] migrate deploy: " + (nadaPendente ? "nenhuma migracao pendente" : aplicadas + " aplicada(s)"));
     } else {
-      console.warn(
-        "[banco de prova] ATENCAO (achado N54): a cadeia de migracoes versionada nao reconstitui um banco vazio." +
-          " As migracoes 20261010164015 em diante redeclaram as chaves company_users_user_id_fkey e" +
-          " company_users_company_id_fkey, e no MySQL um nome de chave vale para o banco inteiro."
-      );
-      console.warn("[banco de prova] primeiro erro: " + deploy.saida.split("\n").filter((l) => /Duplicate|error code/i.test(l))[0]);
-      // Descartar o banco so e aceito quando ele nao tem dado de ninguem: as
-      // tabelas que restaram de uma cadeia interrompida podem ser recriadas, uma
-      // casa com linhas dentro nao.
-      const vazio = await estarVazio();
-      if (!vazio && !process.argv.includes("--recriar")) {
-        falhar("o banco de prova tem linhas e a cadeia de migracoes nao fecha; rode de novo com --recriar para descartar e montar pela estrutura atual");
-      }
-      const binario = caminhoDoMysql();
-      const refeito = spawnSync(
-        binario,
-        ["--defaults-file=" + arquivoDeOpcoes, "-e", "DROP DATABASE `" + NOME_DO_BANCO_DE_PROVA + "`; CREATE DATABASE `" + NOME_DO_BANCO_DE_PROVA + "` CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci"],
-        { encoding: "utf8" }
-      );
-      if (refeito.status !== 0) falhar("DROP/CREATE falhou: " + String(refeito.stderr || "").split("\n")[0]);
-      const push = executarPrisma(["db", "push", "--skip-generate"]);
-      if (push.status !== 0) falhar("db push falhou: " + push.saida.split("\n").slice(-3).join(" / "));
-      const pastas = fs
-        .readdirSync(path.join(API, "prisma", "migrations"))
-        .filter((p) => fs.existsSync(path.join(API, "prisma", "migrations", p, "migration.sql")))
-        .sort();
-      let marcadas = 0;
-      for (const pasta of pastas) {
-        if (executarPrisma(["migrate", "resolve", "--applied", pasta]).status === 0) marcadas += 1;
-      }
-      const depois = executarPrisma(["migrate", "deploy"]);
-      if (depois.status !== 0) falhar("o baseline nao fechou a conta: " + depois.saida.split("\n").slice(-3).join(" / "));
-      console.log(
-        "[banco de prova] banco montado pela estrutura atual do schema e historico marcado: " +
-          marcadas + " de " + pastas.length + " migracoes baseline, `migrate deploy` agora nao tem pendencia"
+      falhar(
+        "migrate deploy falhou no banco de prova: " +
+          deploy.saida.split("\n").filter((l) => /error|fail|duplicate/i.test(l))[0]
       );
     }
 

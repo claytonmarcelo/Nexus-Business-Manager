@@ -39,16 +39,16 @@ Pré-requisito: Node.js 20 ou maior e um MySQL 8 com um banco vazio criado.
 
 ```bash
 npm install
-npm run db:push
+npm run db:migrate
 npm run db:seed
 npm run dev
 ```
 
-Antes do `db:push`, copie `apps/api/.env.example` para `apps/api/.env` e ajuste `DATABASE_URL`, os dois segredos de JWT e as senhas que o seed exige (`SUPER_ADMIN_EMAIL`, `SEED_ADMIN_PASSWORD` e `SEED_DEV_PASSWORD`). O `db:push` monta a estrutura atual do schema e gera o cliente Prisma; o `db:seed` cria o administrador da plataforma, a conta de desenvolvimento e a empresa de demonstração. O painel sobe em `http://localhost:5173` e fala com a API em `3001`.
+Antes do `db:migrate`, copie `apps/api/.env.example` para `apps/api/.env` e ajuste `DATABASE_URL`, os dois segredos de JWT e as senhas que o seed exige (`SUPER_ADMIN_EMAIL`, `SEED_ADMIN_PASSWORD` e `SEED_DEV_PASSWORD`). O `db:migrate` aplica o histórico versionado de migrations — desde a C1 (2026-10-15) ele funciona em banco vazio; o baseline está descrito em [`docs/adr/0024-baseline-de-migrations.md`](docs/adr/0024-baseline-de-migrations.md). O `db:seed` cria o administrador da plataforma, a conta de desenvolvimento e a empresa de demonstração. O painel sobe em `http://localhost:5173` e fala com a API em `3001`.
 
-Esses quatro comandos foram rodados num clone novo do repositório, contra um banco MySQL zerado: o `db:push` montou a estrutura do schema, o `db:seed` semeou as contas, e o login da conta de desenvolvimento respondeu pelo proxy do Vite até a API.
+Esses quatro comandos foram rodados num clone novo do repositório, contra um banco MySQL zerado: o `db:migrate` aplicou a cadeia de migrations, o `db:seed` semeou as contas, e o login da conta de desenvolvimento respondeu pelo proxy do Vite até a API.
 
-O `npm run db:migrate` não é o caminho de uma instalação zerada, e isso é achado aberto: treze migrations redeclaram as chaves `company_users_*_fkey`, e no MySQL o nome de uma chave vale para o banco inteiro — a cadeia para em `P3018 / 1826`. Está registrado como **N54** em [`docs/AUDITORIA.md`](docs/AUDITORIA.md), e o fechamento é a fase de operações. Num banco que já tem estrutura a subida continua por `prisma migrate deploy`, que é o que o container tenta primeiro.
+`npm run db:push` é atalho de desenvolvimento para reconstruir a estrutura do schema sem histórico de migrations — não é o caminho de uma instalação limpa.
 
 Subida em container e ordem de produção estão em [`docs/PRODUCAO.md`](docs/PRODUCAO.md).
 

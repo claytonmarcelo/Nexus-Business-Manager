@@ -841,3 +841,28 @@ BOM / CRLF             nenhum nos arquivos tocados
 varredura de segredo   84 linhas adicionadas, 0 correspondencias
 README.md              78 linhas (teto do contrato: 90)
 ```
+
+## Fase C1 — baseline de migrations (N54 fechado, 2026-10-15)
+
+Prompt de conclusao v1.0.0, fase C1. O portao 1 da secao 1 exige `prisma migrate deploy` verde em banco vazio.
+
+| Tarefa | Situacao | O que foi feito, com a prova |
+|---|---|---|
+| C1.1. Reproduzir N54 + backup | FEITO | `prisma migrate deploy` contra `nexusbusinessmanager_c1test` zerado: **P3018 / 1826**, `Duplicate foreign key constraint name 'company_users_user_id_fkey'`, em `20261010164015_add_clients` — copia exata do erro registrado no N54. Backup mysqldump do banco de desenvolvimento em `backup-nexus/nexusbusinessmanager-antes-do-baseline.sql` (14.191.645 bytes, 1.356 linhas, fora do repositorio). |
+| C1.2. ADR + baseline | FEITO | ADR `docs/adr/0024-baseline-de-migrations.md` registrado. Baseline gerado por `prisma migrate diff --from-empty --to-schema-datamodel`: 829 linhas, 35 CREATE TABLE, 97 comandos. 23 migrations antigas movidas para `docs/legado/migrations-antigas/` com node fs.cpSync (o `mv` do Git Bash falhou no mount WAMP, medido). Pasta nova: `prisma/migrations/20261015000000_baseline/`. |
+| C1.3. Registro nos bancos existentes | FEITO | Em copia `nexusbusinessmanager_c1copy` (dump do dev): `migrate resolve --applied` + DELETE dos 23 registros antigos + `migrate deploy` = "nenhuma pendencia". Depois no dev real e no teste: mesma sequencia. `_prisma_migrations` em cada banco agora tem 1 registro: o baseline. |
+| C1.4. Prova em banco vazio + deriva | FEITO | `nexusbusinessmanager_c1empty` zerado, `migrate deploy` aplica baseline com sucesso. Verificacao de deriva com shadow DB (`migrate diff --from-migrations --to-schema-datamodel --exit-code`) devolve **0**, "No difference detected". |
+| C1.5. Trocar db push por migrate deploy | FEITO | `deploy/preparar-banco-de-dados.cjs` reduzido ao caminho `migrate deploy` sem fallback N54 (129 linhas -> 44). `tools/preparar-banco-de-prova.cjs`: bloco else do N54 removido. `package.json` raiz: `db:migrate` agora chama `prisma:deploy` (= `migrate deploy`), nao `prisma:migrate` (= `migrate dev`). README: quickstart troca `db:push` por `db:migrate`; paragrafo N54 removido; `db:push` rotulado como atalho de dev. ESTADO-ATUAL secao 12 atualizada. |
+| C1.6. Clone limpo | PENDENTE | Sera rodado apos o commit e push desta fase. |
+
+Portoes desta fase:
+
+```
+npm run typecheck      ok (api + web, sem saida)
+npm run build          ok (api + web vite build)
+npm test               api 53 arquivos / 474 testes; web 21 arquivos / 163 testes, zero falha, zero skip
+caracteres permitidos  4 casos verdes (dentro dos 474)
+links da documentacao  21 links, 0 quebrados, 0 marcadores
+BOM / CRLF             nenhum (973 arquivos verificados)
+db:prova               migrate deploy: nenhuma migracao pendente, 36 tabelas, 254 usuarios, 6 empresas
+```

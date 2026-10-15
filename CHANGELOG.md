@@ -1,5 +1,24 @@
 ## [Não lançado]
 
+### A migração inicial passou a aplicar em banco vazio, e o deploy usa o histórico de migrations (2026-10-15)
+
+- **O problema.** `prisma migrate deploy` falhava na segunda migration (`20261010164015_add_clients`) com
+  `P3018 / 1826 Duplicate foreign key constraint name` — 13 das 23 migrations redeclaram a mesma FK, e em
+  MySQL nomes de constraint são únicos por banco, não por tabela. Achado N54.
+- **O que foi feito.** O histórico recomeçou com uma migration baseline único
+  (`prisma/migrations/20261015000000_baseline/migration.sql`, 828 linhas, 35 tabelas), gerado por
+  `prisma migrate diff --from-empty --to-schema-datamodel`. As 23 migrations originais foram arquivadas em
+  `docs/legado/migrations-antigas/` sem apagar. A decisão está documentada em
+  `docs/adr/0024-baseline-de-migrations.md`.
+- **Provas medidas.** `migrate deploy` em banco vazio separado: aplicado com sucesso. Verificação de deriva
+  (`migrate diff --from-migrations --to-schema-datamodel --exit-code`): 0, sem diferença. Baseline registrado
+  nos bancos de desenvolvimento e de teste via `migrate resolve --applied`; 23 registros antigos removidos de
+  `_prisma_migrations` em cada banco. `preparar-banco-de-prova.cjs` rodou com `migrate deploy` verde.
+- **Scripts e operação.** `db:migrate` (raiz) agora chama `prisma migrate deploy`, não `prisma migrate dev`.
+  O fallback de `db push` foi removido de `deploy/preparar-banco-de-dados.cjs` e do job do container.
+  `db:push` permanece na lista como atalho de desenvolvimento rotulado. O README troca `db:push` por `db:migrate`
+  no quickstart. A suíte de testes: **53 arquivos / 474 casos** na API, **21 / 163** no web, todos verdes.
+
 ### O README virou texto de recrutador, e a porta de entrada dele foi rodada num clone novo (2026-10-15)
 
 - **O que mudou no `README.md`.** Ele foi reescrito sobre o texto alvo que o dono trouxe: logotipo, badges, uma

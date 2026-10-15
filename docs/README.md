@@ -11,6 +11,7 @@
 | [`adr/`](adr/) | Decisões de arquitetura, uma por arquivo, com o motivo e o que foi recusado |
 | [`decisoes/`](decisoes/) | Decisões que são do dono (e-mail, cobrança, fiscal, licença, hospedagem, administrador da plataforma) |
 | [`design/`](design/) | Fundamentos visuais e de arquitetura que as telas seguem |
+| [`legado/migrations-antigas/`](legado/migrations-antigas/) | As 23 migrations originais, arquivadas pela C1 quando o histórico passou a ter um baseline único |
 | [`screenshots/`](screenshots/) | Capturas de prova, do banco de demonstração, revisadas uma a uma |
 | [`ANALISE.md`](ANALISE.md) e [`ANALISE-LACUNAS.md`](ANALISE-LACUNAS.md) | A leitura inicial do pedido e o que faltava nela |
 

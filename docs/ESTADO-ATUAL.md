@@ -891,11 +891,13 @@ Nada aqui foi inventado; está bloqueado por escolha registrada.
 ## 12. Como rodar o projeto do zero
 
 Ordem testada na rodada do pacote. Na rodada do README os quatro passos de subir a casa
-(`npm install`, `npm run db:push`, `npm run db:seed`, `npm run dev`) foram re-executados num
+(`npm install`, `npm run db:migrate`, `npm run db:seed`, `npm run dev`) foram re-executados num
 clone novo contra um MySQL zerado, e o resultado está na tabela abaixo; o resto da lista
 continua medido na rodada anterior, não nesta. As contagens de arquivos e casos daquela
 tabela são as da suíte de então (28 arquivos / 230 casos na API e 4 / 20 no web) — as medidas
-desta rodada estão na seção 8.
+desta rodada estão na seção 8. A C1 (2026-10-15) fechou o N54 com um baseline único em
+`prisma/migrations/20261015000000_baseline/` (docs/adr/0024); o `db:migrate` voltou a ser o
+caminho de instalação zerada e o `db:push` ficou como atalho de desenvolvimento.
 
 ```bash
 git clone <url> && cd nexusbusinessmanager
@@ -906,7 +908,7 @@ cp apps/api/.env.example apps/api/.env  # 2. ajuste DATABASE_URL, DATABASE_URL_T
                                         #    real, SMTP_HOST/SMTP_PORT/SMTP_USER/
                                         #    SMTP_PASS/MAIL_FROM; em produção também
                                         #    TOTP_ENCRYPTION_KEY e as flags D2/D3
-npm run db:push                         # 3. monta a estrutura atual do schema no banco vazio (N54)
+npm run db:migrate                        # 3. aplica o baseline e as migrations seguintes (N54 fechado na C1)
 npm run db:seed   -w @nexus/api         # 4. admin global + conta de desenvolvimento
 npm run typecheck && npm run build && npm test   # 5. os três portões
 npm run dev                             # 6. api + web juntos, um comando só
@@ -969,14 +971,14 @@ um processo alheio tomar a porta do produto.
 Dois avisos que o passo a passo não pode esconder. O primeiro, novo nesta rodada:
 **`npm test` não roda sem `DATABASE_URL_TESTE`** — o `vitest.config.ts` da API lê a
 variável, confere o nome do banco (`nexusbusinessmanager_teste`) e se recusa a subir
-sem ela, pela decisão D6; a mensagem diz exatamente o que preencher. O segundo, já
-registrado como **N54**: `prisma migrate deploy` contra um MySQL zerado para na segunda
-migration com `P3018 / 1826 Duplicate foreign key constraint name`, porque 13 das 23
-declaram a mesma constraint de novo e, em MySQL, nome de constraint é por banco. Re-medido
-na rodada do README, num clone novo contra banco zerado, o `npm run db:migrate` parou no
-mesmo ponto (`P3006`/`P3018`, `20261010164015_add_clients`). O caminho publicado para um
-banco vazio passou a ser o script novo `npm run db:push`, medido de ponta a ponta no clone
-com resultado verde; o fechamento da cadeia é a T7/F8.
+sem ela, pela decisão D6; a mensagem diz exatamente o que preencher. O segundo, o
+achado **N54**, foi **fechado na C1 (2026-10-15)**: o histórico de migrations recomeça
+com um baseline único (`prisma/migrations/20261015000000_baseline/`), gerado por
+`prisma migrate diff --from-empty --to-schema-datamodel`; as 23 migrations antigas estão
+em `docs/legado/migrations-antigas/` sem participar do deploy. Em banco vazio,
+`migrate deploy` aplicou o baseline com sucesso; a deriva foi conferida com
+`migrate diff --from-migrations ... --exit-code` e devolveu 0. A decisão está em
+[`docs/adr/0024-baseline-de-migrations.md`](adr/0024-baseline-de-migrations.md).
 
 O que foi executado naquela rodada, em `C:/wamp64/www/nexus-verificacao` (clone de
 `git clone . ../nexus-verificacao`, feito a partir do commit `2355f05`, ou seja,
@@ -996,9 +998,10 @@ sem este arquivo e sem os três arquivos ignorados do trabalho (`apps/api/.env`,
 
 - **Medido no clone novo da rodada do README** (`git clone` do commit `3ef45bf` para
   `nexus-clone-readme`, banco `nexusbusinessmanager_clone` criado zerado, 0 tabelas):
-  `npm install` verde; `npm run db:migrate` **vermelho** com `P3006`/`P3018 / 1826 Duplicate
-  foreign key constraint name 'company_users_user_id_fkey'` em `20261010164015_add_clients`
-  (é o **N54**, re-medido com a cadeia de hoje, e continua aberto); `npm run db:push` verde
+  `npm install` verde; `npm run db:migrate` **vermelho** na rodada do README com
+  `P3006`/`P3018 / 1826 Duplicate foreign key constraint name 'company_users_user_id_fkey'`
+  em `20261010164015_add_clients` (era o N54, **fechado na C1 com o baseline**); naquela rodada
+  `npm run db:push` verde
   em 4,30 s com o cliente Prisma gerado; `npm run db:seed` verde; `npm run dev` subiu os dois
   lados — API e Vite — e o login da conta de desenvolvimento respondeu 200 pelo proxy do Vite
   com `role=OWNER`, seguido de `/api/auth/me` 200. As portas do produto (3001/5173) não
