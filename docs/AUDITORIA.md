@@ -2323,25 +2323,39 @@ que a frase velha escondia: daqui a varredura varre **só a empresa ativa**, e p
 Medido, não deduzido: `grep -n "executor existir" apps/web/src` devolve zero depois da mudança, e a suíte web
 fechou verde com a frase nova na tela.
 
-### N76 — aberto: os três textos antigos montam HTML sem escapar, e o `textoSeguro` que nasceu nesta rodada só protege o texto novo
+### N76 — corrigido na T6.1: as quatro mensagens escapam o nome, e o link sai codificado onde precisa
 
 `apps/api/src/lib/mail/mensagens.ts` ganhou `textoSeguro()` (escapa `& < > "`) porque a mensagem de aviso do sino
 carrega nome de produto, de cliente e de fornecedor **digitados por uma pessoa na tela** para ser lida por outra no
 e-mail dela. As três mensagens que já existiam — recuperação, verificação de cadastro e aviso de segundo fator —
-interpolam `primeiroNome` cru no `<p>`, e ficaram como estavam.
+interpolavam `primeiroNome` cru no `<p>`, e ficaram como estavam até a T6 (F7) ser a tarefa delas.
 
-O risco hoje é pequeno, e é por isso que isto é um registro e não um conserto: `primeiroNome` vem do cadastro da
-própria pessoa e a mensagem vai para a caixa postal dela mesma, então o pior caso é alguém quebrar o próprio HTML
-(auto-XSS de mensagem). Não há terceiro envolvido, nenhum cliente de e-mail executa script do HTML que recebe por
-padrão, e o `codigo`/`link` interpolados são gerados pelo servidor. Foi deixado aberto por escopo (§1: a T5.4 é o
-N59), e o conserto é uma linha por mensagem quando alguém quiser fechar — o `textoSeguro` já está escrito e é
-usável. Fica também o lembrete de desenho: `input.link` vai cru dentro de `href="..."`; ele é montado a partir de
-`WEB_BASE_URL` mais um caminho fixo, ou seja, é dado do servidor, e passa a precisar de aspas escapadas no dia em
-que algum link vier de dado digitado.
+O risco medido à época é pequeno, e a proporção do conserto também: `primeiroNome` vem do cadastro da própria
+pessoa e a mensagem vai para a caixa postal dela mesma, então o pior caso é alguém quebrar o próprio HTML (auto-XSS
+de mensagem). Não há terceiro envolvido, e o `codigo` interpolado é gerado pelo servidor. O que faz o conserto
+valer a pena não é o pior caso do nome: é o mesmo recorte chegar por outra porta — a tela de equipe cadastra
+usuário e o nome digitado ali vai na saudação da mensagem daquela conta — e o HTML ser lido **fora** do produto, no
+cliente de e-mail de quem abre.
 
-**Para a T6 (F7)**, que é a tarefa de conformidade e `SECURITY.md`: esta linha é o que responde "o produto injeta
-dado de usuário em mensagem de e-mail?" — a resposta honesta é "na mensagem de aviso, escapado; nas três antigas,
-só com o nome da própria pessoa, sem escape".
+O que mudou, em `mensagens.ts`:
+
+1. **As três mensagens antigas passam pelo `textoSeguro` que já existia**, só no ramo do HTML. O `text/plain`
+   continua com o nome exatamente como foi digitado — escape é regra de markup, e trocar o nome por entidade de
+   texto numa mensagem sem markup seria estragar o texto de quem recebe.
+2. **O link ganhou escape próprio** (`linkSeguro`), porque dentro de `href="..."` entidade HTML não resolve: o que
+   fecha o atributo antes da hora é a aspa. Ela sai como `%22`, e `<`/`>` como `%3C`/`%3E`. Um endereço montado por
+   `WEB_BASE_URL` mais caminho fixo — o caso de sempre — passa por aqui byte por byte igual, que é o que a
+   segunda e a terceira asserções do teste conferem.
+3. **O recorte do primeiro nome virou função** (`primeiroNome()`), em vez de estar escrito quatro vezes. O escape
+   acontece na montagem do HTML, não dentro dela, pela razão do item 1.
+
+Vermelho medido antes do conserto, com o módulo da árvore publicada no lugar e o teste novo escrito:
+**5 failed | 3 passed (8)** — as três que já passavam são justamente as que não dependiam do escape (texto puro,
+aviso do sino, nome vazio). Verde depois: **8 passed (8)**, e a suíte inteira da API fechou
+**52 arquivos / 472 casos** sem falha com o módulo consertado. O teste é puro (`test/mensagens-de-email-escapadas.test.ts`,
+sem banco e sem servidor): ele mede a string que o módulo devolve, e a última asserção é estrutural — nenhuma tag
+fora das seis que o próprio módulo escreve (`div`, `h2`, `p`, `code`, `a`, `strong`) aparece em nenhuma das quatro,
+então retirar um escape no futuro quebra a guarda em vez de passar despercebido.
 
 ### N77 — corrigido nesta rodada: a tabela de módulos do README dizia que backup não existia, e ele existe desde a T5.2
 

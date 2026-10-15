@@ -22,8 +22,10 @@ function paragrafo(texto: string): string {
  * Escapa texto que vem de dado de usuário antes de entrar no HTML. A mensagem de
  * aviso (N59) carrega nome de produto, de cliente e de fornecedor digitados na
  * tela, e um `<` escrito por quem cadastra viraria markup na mensagem de outra
- * pessoa. As três mensagens antigas só interpolam o primeiro nome de quem pediu,
- * que é a própria pessoa; esta interpola o que a equipe digitou.
+ * pessoa. Desde o N76 as outras três também passam por aqui: elas só interpolam o
+ * primeiro nome de quem pediu, mas esse nome é digitado na tela — no cadastro pela
+ * própria pessoa e na tela de equipe por quem cadastra um usuário — e o HTML é
+ * lido fora do produto, no cliente de e-mail de quem abre a mensagem.
  */
 function textoSeguro(valor: string): string {
   return valor
@@ -31,6 +33,32 @@ function textoSeguro(valor: string): string {
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;");
+}
+
+/**
+ * Valor de atributo de link (N76). Aqui não se usa entidade HTML como no texto:
+ * dentro de `href` o que precisa sumir é a aspa, que fecharia o atributo e abriria
+ * um atributo novo ao lado, e o `<`/`>`, que quebram o parser da mensagem. Os três
+ * saem na codificação de URL, que é o que um endereço já deveria carregar — e um
+ * endereço montado por `WEB_BASE_URL` + código, o caso de sempre, passa por aqui
+ * byte por byte igual.
+ */
+function linkSeguro(valor: string): string {
+  return valor
+    .replace(/"/g, "%22")
+    .replace(/</g, "%3C")
+    .replace(/>/g, "%3E");
+}
+
+/**
+ * As mensagens interpõem só o primeiro nome de quem pediu (recortado no espaço), e
+ * é esse recorte que o N76 deixava cru. A função devolve o texto puro: o escape é
+ * regra de HTML e acontece na hora de montar o HTML, não aqui, porque a versão
+ * `text/plain` da mesma mensagem precisa continuar mostrando o nome como ele foi
+ * digitado.
+ */
+function primeiroNome(nome: string): string {
+  return nome.trim().split(/\s+/)[0] || "você";
 }
 
 function html(titulo: string, paragrafos: string[]): string {
@@ -48,9 +76,9 @@ export function mensagemDeRecuperacao(input: {
   codigo: string;
   validadeEmMinutos: number;
 }): MensagemDeMail {
-  const primeiroNome = input.nome.trim().split(/\s+/)[0] || "você";
+  const saudacao = primeiroNome(input.nome);
   const texto = [
-    "Olá, " + primeiroNome + ".",
+    "Olá, " + saudacao + ".",
     "",
     "Recebemos um pedido para redefinir a senha da sua conta no " + NOME_DO_PRODUTO + ".",
     "Use o código abaixo na tela de recuperação:",
@@ -65,7 +93,7 @@ export function mensagemDeRecuperacao(input: {
     assunto: "Código de recuperação de senha",
     texto,
     html: html("Recuperação de senha", [
-      "Olá, " + primeiroNome + ".",
+      "Olá, " + textoSeguro(saudacao) + ".",
       "Recebemos um pedido para redefinir a senha da sua conta no " + NOME_DO_PRODUTO + ".",
       'Use o código abaixo na tela de recuperação: <code style="font-size:16px;letter-spacing:1px">' + input.codigo + "</code>",
       "Ele vale por " + input.validadeEmMinutos + " minutos e só pode ser usado uma vez.",
@@ -88,9 +116,9 @@ export function mensagemDeVerificacao(input: {
   codigo: string;
   validadeEmDias: number;
 }): MensagemDeMail {
-  const primeiroNome = input.nome.trim().split(/\s+/)[0] || "você";
+  const saudacao = primeiroNome(input.nome);
   const texto = [
-    "Olá, " + primeiroNome + ".",
+    "Olá, " + saudacao + ".",
     "",
     "Falta um passo para a sua conta do " + NOME_DO_PRODUTO + " entrar no painel.",
     "Abra o link abaixo para confirmar o seu e-mail:",
@@ -106,9 +134,9 @@ export function mensagemDeVerificacao(input: {
     assunto: "Confirme o seu e-mail",
     texto,
     html: html("Confirme o seu e-mail", [
-      "Olá, " + primeiroNome + ".",
+      "Olá, " + textoSeguro(saudacao) + ".",
       "Falta um passo para a sua conta do " + NOME_DO_PRODUTO + " entrar no painel.",
-      '<a href="' + input.link + '">Confirmar o meu e-mail</a>',
+      '<a href="' + linkSeguro(input.link) + '">Confirmar o meu e-mail</a>',
       "Se o link não abrir, digite este código na tela de confirmação: <code>" + input.codigo + "</code>",
       "Se não foi você que criou a conta, ignore esta mensagem.",
     ]),
@@ -126,10 +154,10 @@ export function avisoDeSegundoFator(input: {
   nome: string;
   acao: "ativado" | "desativado";
 }): MensagemDeMail {
-  const primeiroNome = input.nome.trim().split(/\s+/)[0] || "você";
+  const saudacao = primeiroNome(input.nome);
   const verbo = input.acao === "ativado" ? "ativada" : "desativada";
   const texto = [
-    "Olá, " + primeiroNome + ".",
+    "Olá, " + saudacao + ".",
     "",
     "A verificação em duas etapas da sua conta do " + NOME_DO_PRODUTO + " foi " + verbo + " agora.",
     input.acao === "ativado"
@@ -141,7 +169,7 @@ export function avisoDeSegundoFator(input: {
     assunto: "Verificação em duas etapas " + verbo,
     texto,
     html: html("Verificação em duas etapas " + verbo, [
-      "Olá, " + primeiroNome + ".",
+      "Olá, " + textoSeguro(saudacao) + ".",
       "A verificação em duas etapas da sua conta do " + NOME_DO_PRODUTO + " foi " + verbo + " agora.",
       input.acao === "ativado"
         ? "Guarde os códigos de recuperação em um lugar fora do e-mail."
@@ -173,11 +201,11 @@ export function avisoDeNotificacao(input: {
   corpo?: string | null;
   link?: string | null;
 }): MensagemDeMail {
-  const primeiroNome = input.nome.trim().split(/\s+/)[0] || "você";
+  const saudacao = primeiroNome(input.nome);
   const corpo = input.corpo?.trim() || "";
   const link = input.link?.trim() || "";
   const texto = [
-    "Olá, " + primeiroNome + ".",
+    "Olá, " + saudacao + ".",
     "",
     "Um aviso novo chegou para você na empresa " + input.empresa + " do " + NOME_DO_PRODUTO + ":",
     "",
@@ -190,12 +218,12 @@ export function avisoDeNotificacao(input: {
   ].join("\n");
 
   const paragrafos = [
-    "Olá, " + textoSeguro(primeiroNome) + ".",
+    "Olá, " + textoSeguro(saudacao) + ".",
     "Um aviso novo chegou para você na empresa <strong>" + textoSeguro(input.empresa) + "</strong> do " +
       NOME_DO_PRODUTO + ":",
     "<strong>" + textoSeguro(input.titulo) + "</strong>",
     ...(corpo ? [textoSeguro(corpo)] : []),
-    ...(link ? ['<a href="' + link.replace(/"/g, "%22") + '">Abrir o painel</a>'] : []),
+    ...(link ? ['<a href="' + linkSeguro(link) + '">Abrir o painel</a>'] : []),
     "Você recebe esta mensagem porque ligou o canal de e-mail nas preferências de aviso desta empresa. " +
       "Para parar de receber, desligue o canal na tela Notificações, na aba Preferências.",
   ];
