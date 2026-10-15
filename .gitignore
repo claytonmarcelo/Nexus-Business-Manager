@@ -46,3 +46,7 @@ CREDENCIAIS.md
 tools/senha-admin.local.cjs
 tools/conta-de-captura.local.json
 tools/prova-admin.local.json
+
+# Anotacoes locais de quem trabalha (pedidos, rascunho do README com marcador).
+# Fica so na maquina: a raiz publicada so carrega o que e produto.
+.ia/
