@@ -393,6 +393,12 @@ endereço `http(s)` para o logo), então o backup de hoje é o banco, e é isso 
 - **Rotinas agendadas**: `CRON_ENABLED=1` em um único processo; os demais atendem requisições. Na pilha Docker
   isso significa uma cópia do serviço `api` com a chave ligada e as outras sem ela — o compose de hoje sobe um
   único `api`, e a declaração de replicação é da instalação.
+- **Publicar os textos legais**: em *Site público → Textos legais* do editor do CMS ficam os dois textos que a
+  tela de cadastro apresenta (Termos de uso e Política de privacidade). A caixa de aceite funciona antes disso —
+  uma instalação recém-subida precisa conseguir criar a primeira conta —, mas enquanto o texto não está publicado
+  a linha de aceite registra a versão da prateleira vazia, então a prova de conformidade começa fraca e só fica
+  forte depois desta publicação. O que a pessoa aceitou, em que versão e de onde, se lê em
+  `consent_records` (`docs/adr/0023-o-aceite-dos-textos-legais-nasce-junto-da-conta.md`).
 - **Registro das credenciais desta máquina**: ficam no `CREDENCIAIS.md` local (ignorado pelo git). O
   repositório não guarda senha, token nem `.env`, e `identificadores-fora-do-codigo.test.ts` recusa valor
   literal atribuído a `SEED_ADMIN_PASSWORD`, `SEED_DEV_PASSWORD`, `NEXUS_CAPTURA_SENHA` e `ADMIN_CRIAR_SENHA`

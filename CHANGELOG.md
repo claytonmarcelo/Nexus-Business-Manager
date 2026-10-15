@@ -1,5 +1,67 @@
 ## [Não lançado]
 
+### A conta que nasce do cadastro já nasce com a prova do que a pessoa aceitou — T6.2, primeiro item da F7 (2026-10-14)
+
+- **O que faltava (F7 item 1, Bloco F1 de `docs/STATUS-AJUSTES.md`).** A prateleira de textos existia desde o bloco
+  de CMS — `legal_documents`, editor em *Site público → Textos legais*, leitura pública que recusa o que não foi
+  publicado — e a outra ponta não. Medido na árvore publicada (`68f0d0d`) antes de escrever uma linha: `ConsentRecord`
+  no schema devolvia **0**, a coluna `version` de `legal_documents` devolvia **0**, `aceitaTermos` em `apps/api/src`
+  devolvia **0 ocorrências em todos os arquivos**. À pergunta "mostre o que este usuário aceitou" a resposta era a
+  palavra de quem opera o sistema.
+- **Duas vontades, duas linhas.** Termos de uso é contrato; política de privacidade é consentimento sobre dados
+  pessoais. `POST /api/auth/register` passou a exigir `aceitaTermos` **e** `aceitaPrivacidade`, e a gravação faz duas
+  linhas em `consent_records` (`apps/api/src/modules/lgpd/lgpd.service.ts`), cada uma com o `kind`, a `version` do
+  momento, o `ip` e a data. A recusa existe no esquema da rota e outra vez dentro de `register()`: a segunda é por
+  construção, para quem chamar o serviço por um caminho que não a borda.
+- **A linha guarda a versão daquele momento.** `legal_documents` ganhou `version`, e o editor da plataforma só sobe o
+  número quando o **conteúdo** muda — trocar título, publicar ou despublicar não reescreve o que a pessoa aceitou.
+  Quem aceitou a versão 1 continua registrado na 1 depois que o texto vira a 2; quem chega agora aceita a 2. Caso
+  provado de ponta a ponta no teste que publica, cadastra, reescreve e cadastra de novo.
+- **O aceite é do cadastro, e só dele.** A conta que um ADMIN cria para a equipe continua sendo criada como era, com
+  **zero** linhas de aceite: ninguém marcou caixa por aquela pessoa, e gravar um aceite que ela não deu seria
+  fabricar justamente a prova que o registro existe para ser. O caso está amarrado por teste.
+- **A tela.** `Register.tsx` lê a vitrine pública e mostra "Leia antes de aceitar:" com link só para os textos
+  publicados; sem publicação, a frase some e as duas caixas continuam obrigatórias. O corpo enviado à API ganhou os
+  dois campos, o erro por caixa aparece embaixo da caixa correspondente, e uma falha de servidor mantém as duas
+  marcadas — ninguém refaz o que já marcou. A migração é aditiva e a reversão está escrita na própria SQL.
+- **Vermelho antes, verde depois.** No lado da web, **7 failed (7)** contra a árvore que ainda não tinha as caixas e
+  **7 passed (7)** depois (`apps/web/src/test/aceite-de-termos-no-cadastro.test.tsx`). No lado da API, a corrida
+  vermelha é da janela que escreveu o serviço; o que está medido nesta janela é **5 casos** em
+  `apps/api/test/aceite-de-termos-no-cadastro.test.ts`, e a vizinhança rodando junta — aceite, `auth-flows`,
+  `verificacao-de-email` e `cms` — fechou **4 arquivos / 34 casos em 28,93 s**, corrida conjunta de propósito porque
+  é ela que prova que a prateleira volta ao estado medido no `afterAll`.
+- **O que fica declarado.** A prova de aceite só fica forte depois de publicar os textos — por isso a publicação
+  entrou na seção 9 de `docs/PRODUCAO.md`. Nada hoje pede re-aceite quando a versão muda, não existe tela de consulta
+  do aceite (a ponta de consulta é T6.3), e a leitura anônima da vitrine escreve na tabela de plataforma ao garantir
+  a prateleira: achado **N79** em `docs/AUDITORIA.md`, registrado e não consertado fora do item numerado.
+- **A prova visual, recapturada na pilha de prova.** `docs/screenshots/08-cadastro.png` é a tela nova: as duas caixas
+  e as duas frases de erro, com o dado fictício de sempre. `02-login.png` e `09-recuperar-senha.png` não mudaram — a
+  de recuperação voltou byte por byte igual à que já estava no repositório, e a de entrada não tem diferença visível —
+  então continuam como estavam. O que a captura nova revelou está medido e registrado como **N80**: o cartão em
+  estado de erro passou de 837 px para 1004 px, e a base do botão ficou em 947 px, abaixo da dobra de 900 px. A
+  página rola e o botão volta a aparecer com 152 px de roda, então nada ficou inalcançável; o conserto é do ritmo do
+  cartão, que as três telas de acesso compartilham, e por isso não foi feito aqui.
+- **Suíte e portões.** **API 52 arquivos / 472 casos** e **web 21 / 163**, zero falha e zero skip no banco de prova;
+  typecheck e build limpos; **23** migrations nos dois bancos conferidas por `information_schema`, com **0** linhas de
+  aceite sobrando no banco de prova depois da corrida. Superfície de rotas inalterada em **131** — o aceite entrou no
+  `register` que já existia. Decisão em `docs/adr/0023-o-aceite-dos-textos-legais-nasce-junto-da-conta.md`.
+
+### As quatro mensagens de e-mail escapam o nome, e o link não fecha o atributo antes da hora — T6.1, achado N76 (2026-10-14)
+
+- **O que estava aberto (N76).** `apps/api/src/lib/mail/mensagens.ts` já tinha `textoSeguro()` porque o aviso do sino
+  carrega nome de produto, de cliente e de fornecedor digitados por uma pessoa para ser lido por outra; as três
+  mensagens anteriores — recuperação, verificação de cadastro e aviso de segundo fator — interpolavam o primeiro nome
+  cru no HTML, e o lembrete de desenho era o `input.link` dentro de `href="..."`.
+- **O conserto.** As três passam pelo escape que já existia, só no ramo do HTML: o `text/plain` continua mostrando o
+  nome exatamente como foi digitado, porque entidade de markup numa mensagem sem markup estraga a saudação de quem
+  recebe. O link ganhou `linkSeguro`, que devolve aspa e angulares em percent-encoding — dentro de atributo é isso
+  que fecha a aspa, e não entidade HTML. Um endereço montado por `WEB_BASE_URL` mais caminho fixo passa por ali byte
+  por byte igual. O recorte do primeiro nome virou função em vez de quatro cópias.
+- **Vermelho antes, verde depois.** Rodando o teste novo contra o módulo da árvore publicada: **5 failed | 3 passed
+  (8)** — as três que já passavam são justamente as que não dependiam do escape. Depois: **8 passed (8)**, e a suíte
+  inteira da API fechou **52 arquivos / 472 casos** sem falha. O teste é puro, sem banco nem servidor, e sua última
+  asserção é estrutural: nenhuma tag fora das seis que o próprio módulo escreve aparece em qualquer uma das quatro.
+
 ### Quem responde pela plataforma ganhou a porta que destranca um e-mail — e o administrador raiz nasceu destrancado (2026-10-14)
 
 - **O que estava registrado (T5.5 / F6, N61).** Desde a F4 a única escrita em `users.email_verified_at` era o

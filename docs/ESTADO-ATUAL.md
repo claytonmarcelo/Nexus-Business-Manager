@@ -170,7 +170,7 @@ nexusbusinessmanager/
 ├── apps/
 │   ├── api/
 │   │   ├── prisma/
-│   │   │   ├── migrations/        (22 migrations + migration_lock.toml)
+│   │   │   ├── migrations/        (23 migrations + migration_lock.toml)
 │   │   │   ├── schema.prisma      (34 models, 21 enums)
 │   │   │   └── seed.ts
 │   │   ├── src/
@@ -290,7 +290,7 @@ A lista completa, rota por rota:
 | GET | /api/audit | audit | audit:read |
 | GET | /api/audit/plataforma | audit | plataforma |
 | POST | /api/auth/login | auth | pública |
-| POST | /api/auth/register | auth | pública |
+| POST | /api/auth/register | auth | pública — desde a T6.2 exige `aceitaTermos` e `aceitaPrivacidade`, e grava as duas linhas de aceite na transação que cria a conta |
 | POST | /api/auth/verify-email | auth | pública |
 | POST | /api/auth/resend-verification | auth | pública |
 | POST | /api/auth/2fa/challenge | auth | pública (token no corpo, 5/min) |
@@ -443,14 +443,18 @@ contagem. O que a migration da F4 acrescentou: três colunas em `users` (`email_
 `recovery_codes` e `login_attempts`, esta última sem chave estrangeira de propósito (existe linha para
 endereço que não é de ninguém; ver `src/lib/tentativas.ts`). As três só recebem escrita pelo caminho de
 autenticação, e desde a T1 a suíte inteira e as provas de navegador escrevem no banco de prova.
-Há **22 migrations** versionadas, de `20261010154418_init_foundation` a
-`20261013040000_reforco_de_autenticacao` — as cinco últimas são aditivas: a coluna `scope` da auditoria (F2),
-as três tabelas do atendimento (F3.2 Parte 1), o carnê (F3.2 Parte 2), a empresa lembrada do vínculo (T2/D5)
-e o reforço de autenticação (T3). A cadeia completa continua sem reerguer um MySQL vazio (N54), e é a
-primeira das 22 a ser julgada na T7.
+Há **23 migrations** versionadas, de `20261010154418_init_foundation` a
+`20261014000000_aceite_de_termos_lgpd` — as seis últimas são aditivas: a coluna `scope` da auditoria (F2),
+as três tabelas do atendimento (F3.2 Parte 1), o carnê (F3.2 Parte 2), a empresa lembrada do vínculo (T2/D5),
+o reforço de autenticação (T3) e a tabela de aceite com a coluna `version` dos textos (T6.2). Contagem conferida
+dos dois lados em `information_schema` e pelo diretório: **23** pastas de migration, **23** linhas em
+`_prisma_migrations`, desenvolvimento e prova iguais. A cadeia completa continua sem reerguer um MySQL vazio
+(N54) — a migration nova não foi julgada por esse caminho nesta rodada, e é a primeira das 23 que a T7 vai
+submeter a essa prova.
 
 Classificação por uso real no código da API (contagem de chamadas
-`prisma.<modelo>` / `tx.<modelo>` nos 93 arquivos `.ts` de `src`):
+`prisma.<modelo>` / `tx.<modelo>` nos 93 arquivos `.ts` de `src` — mais um desde a T6.2,
+`modules/lgpd/lgpd.service.ts`, medido com `find apps/api/src -name "*.ts"`):
 
 | Tabela | Status | Evidência |
 | --- | --- | --- |
@@ -459,7 +463,8 @@ Classificação por uso real no código da API (contagem de chamadas
 | FinanceCategory, FinanceEntry, Charge | Em uso | financeiro, carnê da venda e a receita única da cobrança |
 | Lead, AgendaEvent | Em uso | CRM e agenda |
 | Notification, NotificationPreference | Em uso | sino, `/api/notifications` |
-| LandingConfig, LandingItem, LegalDocument | Em uso | vitrine e textos legais |
+| LandingConfig, LandingItem, LegalDocument | Em uso | vitrine e textos legais; `LegalDocument` ganhou `version` na T6.2, e é esse número que a linha de aceite guarda |
+| **ConsentRecord** | Em uso (T6.2) | escrita por `registrarAceites()` dentro da transação do cadastro self-service (`modules/lgpd/lgpd.service.ts`); lida por tela nenhuma ainda — a consulta do aceite é trabalho da T6.3 |
 | CronJob | Em uso | `/api/ops/jobs` e o relógio |
 | ServiceOrder, ServiceOrderItem, ServiceOrderHistory | Em uso | `/api/service-orders`, a baixa de estoque na conclusão e a linha do tempo |
 | EmailVerificationToken, RecoveryCode, LoginAttempt | Em uso (F4) | `verificacao.service.ts`, `segundo-fator.service.ts` e `lib/tentativas.ts`; as três são lidas e gastas no fluxo de entrada |
@@ -504,6 +509,7 @@ Cinco estados possíveis: **Implementado e testado**, **Implementado sem teste**
 | Rotinas agendadas (cron) | Implementado e testado | 3 rotas de plataforma; `cron.test.ts`; prova `tools/verify-rotinas.cjs` |
 | CMS da vitrine | Implementado e testado | 14 rotas; `cms.test.ts`; provas `tools/verify-cms.cjs` e `tools/verify-landing-cms.cjs` |
 | Documentos legais | Implementado e testado | `cms.test.ts` (11 casos, incluindo textos legais) e `settings.test.ts` (21 casos) |
+| Aceite dos textos legais (LGPD, item 1) | Implementado e testado | `modules/lgpd/lgpd.service.ts` + migration `20261014000000_aceite_de_termos_lgpd`; 5 casos em `aceite-de-termos-no-cadastro.test.ts` e 7 em `aceite-de-termos-no-cadastro.test.tsx`; `docs/adr/0023`; sem tela de consulta ainda (T6.3) |
 | Modo manutenção | Implementado e testado | `plugins/maintenance.ts`, bypass público com rate-limit próprio |
 | Painel/Dashboard | Implementado e testado pela API | `/api/reports/overview` + meta de receita; tela `Dashboard.tsx` |
 | Cobranças manuais e catálogo de gateways | Implementado e testado | 6 rotas de cobrança + 2 de gateway; `cobrancas.test.ts` (24 casos) e `cobrancas.test.tsx` (15); prova `tools/verify-cobrancas.cjs` (137); decisão em `docs/adr/0009-cobranca-manual-receita-unica-e-vencida-lida.md`. Os três provedores de mercado param no catálogo com `available: false` e o motivo por escrito — nenhuma chamada de saída |
@@ -835,8 +841,10 @@ Ligadas ao item correspondente de `docs/AUDITORIA.md`.
 | P19 | O CSS do painel continua um arquivo único de **398,54 kB** (gzip 61,29 kB), quando o JavaScript já foi dividido por rota | AUDITORIA N62 / `docs/adr/0014` | baixa, dívida declarada: a divisão por rota é do lado do `import`, e o stylesheet entra todo no `<head>`; a passada é de uma rodada de frente que ainda não existiu |
 | P20 | Nove ferramentas de captura (`tools/shoot-*.cjs`) não acompanham a interface de hoje, e 48 PNGs ainda mostram a barra anterior à F3.1 | AUDITORIA N29 e N30 | média — fora do escopo por decisão do dono (D7: nenhuma recaptura em massa); a consertada entra na **T7/F8**, e as famílias regravadas nesta rodada foram conferidas pixel a pixel (N30 re-medido) |
 | P21 | O sino e o relatório diário das rotinas não tinham chamador de e-mail nenhum, e a caixa "aviso por e-mail" da tela de preferências era desenhada com `disabled` em pedra, sem consultar a instalação | AUDITORIA N59 | **fechado na T5.4**: cada linha nova do sino ganha cópia por e-mail pela mesma fila da T5.3 (`notificarDetalhado()` grava o aviso e depois enfileira, com pré-consulta de `dedupeKey` para que a varredura não reenvie aviso velho), os três handlers de rotina chamam a entrega e fecham a coluna "última execução" com `· N e-mail(s)`, o portão é `entregaDeVerdade` (quem não afirma entrega não enfileira nem simula), a rota responde `{ criadas, emails }`, a falha vira `notification.entrega_falhou` com endereço mascarado, e a caixa passou a ler `estadoDoCanalDeEmail()`. Medido: `avisos-por-email.test.ts` **8 casos** e `avisos-por-email.test.tsx` **4 casos**, vermelhos antes e verdes depois, suítes completas **API 49/450** e **web 19/144**, prova de navegador `verify-notificacoes.cjs` **88 checagens / 0 falhas**; decisão em `docs/adr/0021` |
-| P22 | As três mensagens de e-mail anteriores à T5.4 interpolam `primeiroNome` no HTML sem escape | AUDITORIA N76 | baixa com auto-XSS: o texto vem do próprio cadastro, então não há terceiro envolvido; a sanitização entra na passada de e-mail do `SECURITY.md` da **T6/F7**, registrada em vez de corrigida em silêncio fora do N59 |
+| P22 | As três mensagens de e-mail anteriores à T5.4 interpolam `primeiroNome` no HTML sem escape | AUDITORIA N76 | **fechado na T6.1**: as quatro mensagens passam pelo escape no ramo do HTML (`text/plain` continua com o nome como foi digitado), o `href` da verificação sai com aspa e angulares em percent-encoding, e `test/mensagens-de-email-escapadas.test.ts` amarra as quatro na mesma régua com uma guarda estrutural de tags |
 | P23 | Confirmar o endereço pela porta da plataforma escreve uma coluna, não uma leitura: `email_verified_at` preenchido pelo suporte não afirma que alguém abriu a caixa postal, a fila de pendentes não expira nem chama ninguém quando cresce, e a busca dela é um `contains` em `name`/`email` sem índice | AUDITORIA N61, `docs/adr/0022` | baixa e declarada: a linha de auditoria diz quem, quando, com qual motivo e para qual endereço mascarado, que é a prova de decisão — não de leitura. Um aviso de "N contas aguardando confirmação" é caso de sino, e sino com e-mail já existe desde a T5.4; nada nesta tarefa o pedia. Em banco grande o `contains` vira varredura sequencial |
+| P24 | A leitura anônima da vitrine escreve no banco: `GET /public/landing` e `GET /public/legal/:kind` chamam `obterLegal()`, que é um upsert, e cada visita fora do cache de 10 s resulta em três escritas na tabela de plataforma | AUDITORIA N79 | baixo e limitado por construção (a chave é o enum `LegalKind`, e o upsert não altera coluna nenhuma quando a linha já existe); registrado em vez de corrigido fora do item numerado, e o conserto é trocar o upsert por leitura + criação só na escrita autorizada |
+| P25 | O cadastro em estado de erro não cabe em 1440×900: com as duas caixas de aceite e as suas frases, o cartão mede 1004 px e o botão fica com a base em 947 px | AUDITORIA N80 | nada está inalcançável — a página rola, e 152 px de roda devolvem o botão à tela (base 795 px). O conserto é do ritmo do cartão de acesso, que as três telas de entrada compartilham, e não do aceite; por isso ficou registrado em vez de ser feito nesta tarefa |
 
 ---
 
@@ -896,7 +904,7 @@ cp apps/api/.env.example apps/api/.env  # 2. ajuste DATABASE_URL, DATABASE_URL_T
                                         #    real, SMTP_HOST/SMTP_PORT/SMTP_USER/
                                         #    SMTP_PASS/MAIL_FROM; em produção também
                                         #    TOTP_ENCRYPTION_KEY e as flags D2/D3
-npm run db:migrate -w @nexus/api        # 3. aplica as 22 migrations (veja o aviso abaixo)
+npm run db:migrate -w @nexus/api        # 3. aplica as 23 migrations (veja o aviso abaixo)
 npm run db:seed   -w @nexus/api         # 4. admin global + conta de desenvolvimento
 npm run typecheck && npm run build && npm test   # 5. os três portões
 npm run dev                             # 6. api + web juntos, um comando só

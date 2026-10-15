@@ -2418,6 +2418,52 @@ a conta de prova (`administrador@exemplo.test`) está entre as pendentes do banc
 `tools/preparar-banco-de-prova.cjs`, não o `admin:criar`; com a flag desligada no desenvolvimento isso não morde,
 e é por isso que o achado não aparecia antes.
 
+### N79 — aberto: a vitrine anônima escreve no banco, e o aceite herdou essa porta
+
+`GET /api/public/landing` e `GET /api/public/legal/:kind` são as duas rotas sem sessão que leem a prateleira de
+textos legais, e a leitura é feita por `obterLegal()`, que é um **upsert** (`cms.service.ts:543`): a primeira
+chamada de cada `kind` cria a linha com título padrão, `content` nulo e `published: false`. `listarLegais()` faz
+isso para os três de uma vez, e `payloadPublico()` chama `listarLegais()`. Medido no código, não deduzido: uma
+visita anônima à vitrine, quando o cache de 10 s (`TTL_PUBLICO`) não segura, resulta em **três upserts** numa
+tabela de plataforma.
+
+Por que isto está registrado e não consertado: o dano é limitado por construção — a chave é o enum `LegalKind`,
+então não há como um visitante criar linhas indefinidas, e o `update: {}` do upsert não toca em coluna nenhuma
+quando a linha já existe. O que incomoda é o desenho, não o incidente: rota de leitura, sem sessão, escrevendo; e
+a T6.2 passou a depender dessa mesma função para saber **qual versão oferecer** no cadastro, o que aumenta o
+número de caminhos que chegam até ela. O conserto cabível é trocar o upsert por leitura + criação apenas na
+escrita autorizada (editor da plataforma) e no bootstrap, com a tela de cadastro aceitando a prateleira ausente —
+e isso é mudança no módulo de CMS, fora do item numerado desta tarefa (§1: "sem número, não faça"). Fica para quem
+abrir o bloco de CMS depois: o `version` que a linha de aceite guarda não muda com esse conserto, porque criação
+por leitura e criação por edição produzem a mesma linha na versão 1.
+
+Enquanto aberto, a consequência prática é uma só e é declarada: numa instalação recém-subida, **quem chega antes
+da primeira escrita autorizada** é que cria a prateleira vazia, e não o editor. Isso não afeta prova de aceite
+nenhuma — a linha de aceite grava o número que a coluna tinha naquele instante.
+
+### N80 — aberto: com as duas caixas, o cadastro em estado de erro passa da dobra de 900 px
+
+Medido no navegador da prova (1440×900, `http://localhost:5174/cadastro`), antes e depois de clicar em *CRIAR
+CONTA* com o formulário vazio:
+
+| estado | altura do cartão | base do botão | cabe em 900 px? |
+| --- | --- | --- | --- |
+| vazio, sem erros | 837 px | 786 px | sim |
+| com os seis erros | 1004 px | 947 px | não — 47 px abaixo da dobra |
+
+As duas caixas novas custam ~112 px de cartão e as suas duas linhas de erro, ~55 px. Nada está perdido: a página
+rola. Rodando a roda do mouse a partir do topo, o documento desce 152 px e o botão volta a ficar visível (base em
+795 px), então o caminho de consertar o formulário e reenviar existe. O que mudou é a primeira tela de prova: o
+`docs/screenshots/08-cadastro.png` desta rodada mostra as duas caixas, as duas frases de erro e o botão cortado no
+rodapé da janela — a captura anterior, de cinco campos, cabia inteira.
+
+Por que está registrado e não consertado aqui: o conserto não é do aceite, é do **ritmo do cartão de acesso**, que
+as três telas (entrada, cadastro, recuperação) compartilham. Apertar o espaçamento para caber 900 px mexeria nas
+duas telas que não mudaram nada nesta tarefa — e a régua da rodada é re-capturar o grupo inteiro quando uma tela do
+grupo muda. Também não há porta de saída barata: reduzir as duas frases de erro para uma linha do grupo economiza
+28 px dos 136 necessários, e esconder o rodapé de links não é opção, porque ele é a única porta de leitura na tela.
+Fica para um item de qualidade de tela (F5/F8), com os números acima como linha de base.
+
 ### N61 — o que a porta fez com a superfície
 
 As duas rotas novas (`GET /api/plataforma/contas/sem-confirmacao` e `POST
