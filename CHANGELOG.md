@@ -1,5 +1,46 @@
 ## [Não lançado]
 
+### O README virou texto de recrutador, e a porta de entrada dele foi rodada num clone novo (2026-10-15)
+
+- **O que mudou no `README.md`.** Ele foi reescrito sobre o texto alvo que o dono trouxe: logotipo, badges, uma
+  captura do painel, destaques técnicos, módulos, stack, como rodar, estrutura, estado, autor e licença. Os
+  marcadores do rascunho — arquivo de logotipo, lista de badges e captura do painel — foram resolvidos em
+  arquivos reais, e o que o rascunho afirmava foi conferido na árvore antes de virar frase. Três afirmações não
+  passaram na conferência e foram corrigidas em vez de copiadas: o refresh token **não** vive em cookie httpOnly
+  (ele está em `localStorage` como `nexus.refresh`, com o access token na memória), os papéis **não** são
+  `ANALYST` e `CLIENT` (são `OWNER`, `ADMIN`, `MANAGER`, `STAFF`, mais `SUPER_ADMIN` na plataforma), e não existe
+  tela de Relatórios — os indicadores vêm de rotas `/reports/*` e o CSV nasce no navegador. Também saíram do
+  texto o selo de CI, a linha "ESLint, Prettier, CI" e o link para um `LICENSE` que não existe: nada disso está
+  na árvore, e o README agora diz isso em uma frase em vez de fingir.
+- **A captura que estava velha.** `docs/screenshots/03-dashboard.png` tinha sido feita antes de a barra lateral
+  ganhar a entrada "Contas sem confirmação", então o painel mostrado não era o painel atual. Ela foi recapturada
+  na pilha de prova (3002/5174, banco de prova, porta do produto intacta) e promovida para a galeria canônica.
+  O resto da galeria não mudou de tela, então não mudou de arquivo.
+- **Índice e guarda de link.** Nasceu `docs/README.md`, dezessete linhas dizendo o que é cada documento e qual
+  deles responde "quanto falta". E nasceu a régua que não deixa um link de documentação virar 404:
+  `tools/verifica-links-doc.cjs` varre `README.md` e os Markdown de `docs/`, confere se todo caminho relativo
+  aponta para um arquivo que existe e se não sobrou marcador de rascunho em lugar nenhum; a mesma régua entrou como
+  teste permanente em `apps/api/test/links-da-documentacao.test.ts`. Vermelho primeiro, com saída real: rodado
+  contra um README quebrado de propósito, ele devolveu **2 links quebrados + 1 marcador** e código de saída 1.
+  Verde depois: **21 links relativos**, todos existentes, sem marcador.
+- **A porta de entrada foi medida, não escrita.** O bloco "Como rodar" funcionava só em quem já tinha o banco
+  montado: `npm run db:migrate` num MySQL zerado para com `P3006`/`P3018 / 1826 Duplicate foreign key constraint
+  name 'company_users_user_id_fkey'` — é o achado **N54**, que a casa já tinha registrado e a T7 fecha. Para o
+  README poder dizer "rode estes quatro comandos", foi preciso dar a eles um caminho que fecha: entraram os
+  scripts `db:push` na raiz e `prisma:push` no `@nexus/api`, que é exatamente o `prisma db push` que o banco de
+  prova e o job do container já usam. Rodada no clone: `git clone` do commit publicado, banco
+  `nexusbusinessmanager_clone` criado zerado (0 tabelas), `npm install` verde, `db:migrate` **vermelho com a
+  saída acima**, `db:push` verde em 4,30 s, `db:seed` verde, `npm run dev` subindo os dois lados, e o login da
+  conta do seed respondendo **200** com `role=OWNER` pelo proxy do Vite, seguido de `/api/auth/me` 200. As portas
+  do produto (3001/5173) não foram tocadas — o clone subiu na 3005 e na 5175 por variável.
+- **O que o README agora diz e o que ele não esconde.** A sequência publicada é a que foi rodada, e o parágrafo
+  seguinte explica por que ela não é `db:migrate`, citando o N54 em `docs/AUDITORIA.md`. Re-medido com a cadeia
+  de hoje, o achado está com **23 migrations** (não 20, como foi escrito na rodada da auditoria), e o
+  `docs/ESTADO-ATUAL.md` seção 12 passou a listar o `db:push` no passo 3 com a tabela da medição do clone logo
+  abaixo.
+- **Nada de número que envelhece.** Contagem de rota, de migration e de teste saiu do README e ficou onde é
+  re-medida a cada rodada.
+
 ### A conta que nasce do cadastro já nasce com a prova do que a pessoa aceitou — T6.2, primeiro item da F7 (2026-10-14)
 
 - **O que faltava (F7 item 1, Bloco F1 de `docs/STATUS-AJUSTES.md`).** A prateleira de textos existia desde o bloco

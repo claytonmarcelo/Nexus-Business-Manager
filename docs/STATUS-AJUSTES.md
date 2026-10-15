@@ -811,3 +811,33 @@ Repetidos depois de tirar o texto do cabeçalho (2026-10-11): typecheck e build 
 **push desta rodada está segurado** pelo achado N1 (`docs/AUDITORIA.md`): a senha do administrador está
 publicada nos pixels de uma captura que já está no `origin/main`, e o prompt de fechamento manda parar e
 reportar antes de publicar qualquer coisa por cima disso.
+
+## Rodada do README de recrutador (T1 a T8, 2026-10-15)
+
+Prompt "README objetivo e repositório limpo". O que o texto proposto dizia e a árvore não sustentava foi
+corrigido no README, nunca no código — é a regra 1 do contrato.
+
+| Tarefa | Situação | O que foi ajustado, com a prova |
+|---|---|---|
+| T1. Aplicar o `.ia/README_PROPOSTO.md` | FEITO | Marcadores resolvidos em arquivo real: logotipo `assets/brand/logo/logo.png`, captura `docs/screenshots/03-dashboard.png`, selos de licença/TypeScript/Node lidos dos `package.json` (5.6.3 nos dois workspaces; `UNLICENSED` no da raiz). Sem `.github/workflows/ci.yml` na árvore, nenhum selo de CI foi publicado. Zero `[[` no arquivo final, medido por `tools/verifica-links-doc.cjs`. |
+| T2. Conferir cada afirmação | FEITO | Três linhas do rascunho eram falsas e saíram corrigidas: refresh token **não** fica em cookie httpOnly (`localStorage`, chave `nexus.refresh`, com access token em memória — `apps/web/src/lib/tokenStore.ts`); os papéis **não** são `ANALYST`/`CLIENT` (`OWNER`, `ADMIN`, `MANAGER`, `STAFF`, mais `SUPER_ADMIN` — enum `Role`/`PlatformRole` no schema); **não** existe tela de Relatórios (rotas `/reports/*` na API, CSV gerado no navegador nas listagens). Saíram também a linha "ESLint, Prettier, CI" (nenhum dos três está instalado) e o link para `LICENSE` (o arquivo não existe; a licença é decisão aberta, G6). O `bootstrap` do rascunho nunca foi dependência. |
+| T3. Rodar "Como rodar" em clone novo | FEITO | Clone de `3ef45bf` + banco `nexusbusinessmanager_clone` zerado. `npm run db:migrate` **vermelho** (`P3006`/`P3018 / 1826 Duplicate foreign key constraint name 'company_users_user_id_fkey'`, em `20261010164015_add_clients` — é o **N54**, re-medido com as 23 migrations de hoje). O README passou a publicar `npm run db:push`, script novo na raiz e no `@nexus/api`, e a sequência ficou verde: push 4,30 s, seed, `npm run dev` com API e Vite no ar, login da conta do seed **200** com `role=OWNER` pelo proxy, `/api/auth/me` 200. A medição está registrada na seção 12 de `docs/ESTADO-ATUAL.md`. |
+| T4. README em inglês, opcional | JÁ CORRIGIDO | `git ls-files` filtrado por "readme" devolve **dois** caminhos: `README.md` e `docs/README.md`. Não existe `README.en.md`, `README.en.backup.md` nem duplicado a apagar — nada foi removido, e nada foi criado em inglês. |
+| T5. Raiz limpa | FEITO | `git ls-files` sem subpasta devolve 12 caminhos, todos de produto ou de config (`README.md`, `CHANGELOG.md`, `package.json`, `package-lock.json`, `docker-compose.yml`, os dois `Dockerfile.*`, `.env.docker.example`, `.editorconfig`, `.gitattributes`, `.gitignore`, `.dockerignore`). Nenhum `build_graph.py`, `run_ast.py`, `save_detect.py`, `check_manifest.py`, `estrutura.txt`, `DIAGNOSTICO_DASHBOARD.md` ou `INICIAR_SISTEMA.md` existe ou está rastreado — nada foi movido para `tools/legado/`. `LICENSE` e `SECURITY.md` estão na lista de "mantenha" mas ainda não nasceram: o primeiro é decisão do dono (G6), o segundo é a T6.6 da F7. |
+| T6. Índice `docs/README.md` | FEITO | 17 linhas (teto: 25), uma por documento que existe, com estado, decisões, auditoria e produção. |
+| T7. Guarda de link e imagem | FEITO | `tools/verifica-links-doc.cjs` varre `README.md` e os Markdown de `docs/`, confere caminho relativo e imagem, e falha com código 1 sobrando `[[`. Vermelho primeiro, medido contra um README quebrado de propósito: 2 links quebrados + 1 marcador, saída 1. Verde na árvore real: 21 links relativos, 0 quebrados, 0 marcadores. A régua também roda como teste permanente em `apps/api/test/links-da-documentacao.test.ts`. Sem CI, não há onde "incluir no CI" — item fica para a T8/F8. |
+| T8. CHANGELOG | FEITO | Entrada curta no topo de `CHANGELOG.md`, no formato da casa, sem repetir o texto do README. |
+
+Portões desta rodada, rodados na árvore final:
+
+```
+npm run typecheck      ok (api + web, sem saída)
+npm run build          ok (api tsc + web vite build em 5,69 s)
+npm test               api 53 arquivos / 474 testes em 427,85 s; web 21 arquivos / 163 testes em 26,79 s
+                       zero falha, zero skip
+caracteres permitidos  test/caracteres-permitidos.test.ts — 4 casos verdes
+links da documentacao  test/links-da-documentacao.test.ts — 2 casos verdes
+BOM / CRLF             nenhum nos arquivos tocados
+varredura de segredo   84 linhas adicionadas, 0 correspondencias
+README.md              78 linhas (teto do contrato: 90)
+```
