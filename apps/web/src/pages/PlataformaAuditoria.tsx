@@ -49,6 +49,9 @@ const ENTIDADES: { value: string; label: string }[] = [
   { value: "landing_item", label: "Item da vitrine" },
   { value: "legal_document", label: "Documento legal" },
   { value: "cron_job", label: "Rotina agendada" },
+  // A porta administrativa de confirmação de e-mail (N61): afirma identidade de
+  // conta, e conta não pertence a uma empresa — por isso o evento é de plataforma.
+  { value: "user", label: "Conta da plataforma" },
 ];
 
 function rotuloEntidade(entity: string): string {

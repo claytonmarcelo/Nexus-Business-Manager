@@ -18,7 +18,13 @@ import { PASSWORD_HINT, isStrongPassword } from "../src/lib/passwordPolicy";
 //      reescrever a senha de um administrador que já existe ou reativar uma conta
 //      desativada exigem cada uma o seu consentimento no ambiente;
 //   3. nada de demonstração: este caminho não conhece admin@nexus.local nem
-//      nexus-demo — a vitrine continua sendo decisão exclusiva da semente.
+//      nexus-demo — a vitrine continua sendo decisão exclusiva da semente;
+//   4. ninguém fica do lado de fora: com a régua de verificação ligada (D2,
+//      obrigatória em produção), a conta da plataforma nasce com o e-mail
+//      confirmado. Não é atalho de segurança — é a única porta que existe para
+//      ela, porque o link de verificação nunca é enviado para o administrador da
+//      plataforma (ver `verificacao.service.ts`), e sem confirmação o login
+//      negaria acesso à conta que a regra de acesso do dono protege.
 //
 // O desenho é o mesmo da semente (A8/F1.3): as decisões ficam em funções puras
 // sobre um mapa de variáveis, e a escrita é provada em teste com um cliente que
@@ -44,6 +50,12 @@ const PAPEL_DA_PLATAFORMA = "SUPER_ADMIN";
 export interface ContaEncontrada {
   readonly platformRole: string | null;
   readonly active: boolean;
+  /**
+   * N61/N78: coluna que a régua de produção (`REQUIRE_EMAIL_VERIFICATION=1`)
+   * cobra no login. Opcional porque quem monta o estado em teste pode não saber
+   * dela — ausência vale "não confirmada", que é o lado que tranca.
+   */
+  readonly emailVerifiedAt?: Date | null;
 }
 
 export type AcaoDoBootstrap =
@@ -60,6 +72,15 @@ export interface Decisao {
   readonly motivo: string;
   readonly escreveSenha: boolean;
   readonly reativa: boolean;
+  /**
+   * Regra de acesso do dono: o administrador raiz jamais pode ficar sem entrada.
+   * Com a verificação obrigatória em produção, a conta que nasce (ou é promovida,
+   * ou reativada) por este script precisa nascer confirmada — não existe caixa
+   * postal de verdade atrás dela, o link não é enviado para ela de propósito
+   * (`verificacao.service.ts` recusa SUPER_ADMIN), e sem esta coluna o bootstrap
+   * criaria exatamente a conta que não consegue entrar.
+   */
+  readonly confirmaEmail: boolean;
 }
 
 export interface ResumoDoBootstrap {
@@ -68,6 +89,8 @@ export interface ResumoDoBootstrap {
   readonly acao: string;
   /** Estado da credencial, nunca o valor. */
   readonly senha: string;
+  /** O que a porta fez com a coluna de verificação. */
+  readonly emailConfirmado: string;
   readonly empresasComoOwner: number;
 }
 
@@ -110,13 +133,18 @@ export function errosDoBootstrap(ambiente: FonteDoOperador): string[] {
 export function decisaoDoBootstrap(conta: ContaEncontrada | null, ambiente: FonteDoOperador): Decisao {
   const renova = consentido(ambiente, CONSENTIMENTO_RENOVAR);
   const reativa = consentido(ambiente, CONSENTIMENTO_REATIVAR);
+  // Confirmar o e-mail é o que destranca a conta. Se ela já está confirmada, não
+  // há o que escrever — reescrever o carimbo de quem entrou pelo link seria
+  // falsificar a data em que a caixa postal foi provada.
+  const confirmaEmail = !conta?.emailVerifiedAt;
 
   if (!conta) {
     return {
       acao: "criar",
-      motivo: `a conta ainda não existe; ela nasce como administradora da plataforma com a senha que ${CHAVE_DA_SENHA} acabou de definir`,
+      motivo: `a conta ainda não existe; ela nasce como administradora da plataforma com a senha que ${CHAVE_DA_SENHA} acabou de definir, e com o e-mail confirmado porque a régua de produção trancaria do lado de fora a conta que a regra de acesso diz que jamais pode ficar sem acesso`,
       escreveSenha: true,
       reativa: false,
+      confirmaEmail: true,
     };
   }
 
@@ -129,6 +157,7 @@ export function decisaoDoBootstrap(conta: ContaEncontrada | null, ambiente: Font
         `já existe uma conta com este endereço e ela não é administradora da plataforma — promover a conta de um cliente por engano entrega todas as empresas; se a intenção é promover, declare ${CONSENTIMENTO_PROMOVER}=1`,
       escreveSenha: false,
       reativa: false,
+      confirmaEmail: false,
     };
   }
 
@@ -141,6 +170,7 @@ export function decisaoDoBootstrap(conta: ContaEncontrada | null, ambiente: Font
         `a conta encontrada está desativada — reativar é decisão de quem administra o ambiente; para voltar a usar, declare ${CONSENTIMENTO_REATIVAR}=1`,
       escreveSenha: false,
       reativa: false,
+      confirmaEmail: false,
     };
   }
 
@@ -150,6 +180,7 @@ export function decisaoDoBootstrap(conta: ContaEncontrada | null, ambiente: Font
       motivo: `promoção com consentimento escrito; a senha é reescrita porque a plataforma inteira não pode ficar nas mãos de uma credencial que este script não acabou de definir`,
       escreveSenha: true,
       reativa,
+      confirmaEmail,
     };
   }
 
@@ -159,6 +190,7 @@ export function decisaoDoBootstrap(conta: ContaEncontrada | null, ambiente: Font
       motivo: `conta da plataforma reativada com consentimento escrito${renova ? " e senha reescrita" : ", com a senha preservada"}`,
       escreveSenha: renova,
       reativa: true,
+      confirmaEmail,
     };
   }
 
@@ -168,6 +200,7 @@ export function decisaoDoBootstrap(conta: ContaEncontrada | null, ambiente: Font
       motivo: `o papel é confirmado e a senha é reescrita porque ${CONSENTIMENTO_RENOVAR}=1 foi declarado`,
       escreveSenha: true,
       reativa: false,
+      confirmaEmail,
     };
   }
 
@@ -177,6 +210,7 @@ export function decisaoDoBootstrap(conta: ContaEncontrada | null, ambiente: Font
       `a conta já é administradora da plataforma: o papel é confirmado e a senha fica preservada — rodar este script duas vezes não troca credencial de ninguém (para trocar, declare ${CONSENTIMENTO_RENOVAR}=1)`,
     escreveSenha: false,
     reativa: false,
+    confirmaEmail,
   };
 }
 
@@ -197,7 +231,7 @@ export async function instalarAdministradorDaPlataforma(
   const email = emailDoBootstrap(ambiente);
   const encontrada = await cliente.user.findUnique({
     where: { email },
-    select: { platformRole: true, active: true },
+    select: { platformRole: true, active: true, emailVerifiedAt: true },
   });
   const decisao = decisaoDoBootstrap(encontrada, ambiente);
   if (decisao.acao === "recusar") {
@@ -208,11 +242,18 @@ export async function instalarAdministradorDaPlataforma(
   const passwordHash = decisao.escreveSenha
     ? await bcrypt.hash(ambiente[CHAVE_DA_SENHA] ?? "", 12)
     : null;
+  const agora = new Date();
 
   const usuario =
     decisao.acao === "criar"
       ? await cliente.user.create({
-          data: { email, name: nome, passwordHash: passwordHash ?? "", platformRole: PAPEL_DA_PLATAFORMA },
+          data: {
+            email,
+            name: nome,
+            passwordHash: passwordHash ?? "",
+            platformRole: PAPEL_DA_PLATAFORMA,
+            ...(decisao.confirmaEmail ? { emailVerifiedAt: agora } : {}),
+          },
         })
       : await cliente.user.update({
           where: { email },
@@ -220,6 +261,7 @@ export async function instalarAdministradorDaPlataforma(
             platformRole: PAPEL_DA_PLATAFORMA,
             ...(passwordHash ? { passwordHash } : {}),
             ...(decisao.reativa ? { active: true } : {}),
+            ...(decisao.confirmaEmail ? { emailVerifiedAt: agora } : {}),
           },
         });
 
@@ -241,6 +283,7 @@ export async function instalarAdministradorDaPlataforma(
     nome,
     acao: decisao.acao,
     senha: decisao.escreveSenha ? "definida agora" : "preservada",
+    emailConfirmado: decisao.confirmaEmail ? "marcado agora" : "já estava",
     empresasComoOwner: companies.length,
   };
   // Sem senha, sem hash, sem token: o log diz o que aconteceu, não o que vale.

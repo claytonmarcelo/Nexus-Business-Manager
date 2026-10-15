@@ -73,6 +73,7 @@ const NAV_GROUPS: NavGroup[] = [
       { to: "/app/cms", label: "CMS & Site Público", icon: "▩", plataforma: true },
       { to: "/app/rotinas", label: "Rotinas agendadas", icon: "◷", plataforma: true },
       { to: "/app/auditoria-plataforma", label: "Auditoria da plataforma", icon: "▦", plataforma: true },
+      { to: "/app/plataforma-contas", label: "Contas sem confirmação", icon: "◈", plataforma: true },
       { to: "/app/configuracoes", label: "Configurações", icon: "⚙" },
     ],
   },

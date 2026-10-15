@@ -40,6 +40,9 @@ const ARQUIVOS_DE_PLATAFORMA = [
   "src/modules/cron/cron.routes.ts",
   "src/modules/cms/cms.routes.ts",
   "src/modules/cms/cms.service.ts",
+  // T5.5 (N61): a confirmação administrativa de e-mail escreve na coluna de
+  // identidade de uma conta de fora do tenant, então o evento é da plataforma.
+  "src/modules/platform-accounts/contas.service.ts",
 ];
 
 // Rotas que podem responder sem token. Lista de exceção declarada, não contagem:
@@ -251,7 +254,14 @@ describe("Matriz de rotas lida do próprio Fastify (F2)", () => {
       .map(chave)
       .filter((linha) => {
         const caminho = linha.split(" ")[1] ?? "";
-        return !caminho.startsWith("/api/cms") && !caminho.startsWith("/api/ops") && caminho !== "/api/audit/plataforma";
+        return !(
+          caminho.startsWith("/api/cms") ||
+          caminho.startsWith("/api/ops") ||
+          // T5.5 (N61): a área de plataforma das contas sem confirmação nasceu
+          // aqui, declarada — porta nova fora deste lista é achado a julgar.
+          caminho.startsWith("/api/plataforma") ||
+          caminho === "/api/audit/plataforma"
+        );
       });
     expect(foraDoPrefixo).toEqual([]);
 

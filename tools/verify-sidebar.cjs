@@ -174,10 +174,12 @@ function estado() {
   ok("aria-expanded verdadeiro com a barra visivel", e.ariaExpanded === "true");
   ok("aria-controls aponta para a sidebar", e.ariaControls === "admin-sidebar" && Boolean(await page.$("#admin-sidebar")));
   const CAMADAS = ["Visão Geral", "Comercial & CRM", "Estoque & Suprimentos", "Serviços & Atendimentos", "Financeiro", "Administração & Sistema"];
-  // As 17 linhas da barra de um administrador da plataforma, na ordem das camadas.
+  // As 18 linhas da barra de um administrador da plataforma, na ordem das camadas.
   // Ordens de servico voltou na F3.2 Parte 1, com tela. Cobrancas entrou na Parte
   // 2, com tela propria; Gateways mora dentro dela, como aba, e nao na barra.
-  const ITENS = ["Dashboard", "Notificações", "CRM", "Clientes", "Vendas", "Produtos", "Compras", "Ordens de serviço", "Agenda", "Financeiro", "Cobranças", "Usuários", "Auditoria", "CMS & Site Público", "Rotinas agendadas", "Auditoria da plataforma", "Configurações"];
+  // "Contas sem confirmacao" entrou na T5.5 (N61), logo depois da auditoria da
+  // plataforma, porque as duas sao area da plataforma e nao de empresa nenhuma.
+  const ITENS = ["Dashboard", "Notificações", "CRM", "Clientes", "Vendas", "Produtos", "Compras", "Ordens de serviço", "Agenda", "Financeiro", "Cobranças", "Usuários", "Auditoria", "CMS & Site Público", "Rotinas agendadas", "Auditoria da plataforma", "Contas sem confirmação", "Configurações"];
   ok("as 6 camadas aparecem na ordem pedida", e.titulosVisiveis.join(" | ") === CAMADAS.join(" | "), e.titulosVisiveis.join(" | "));
   ok("nenhuma camada ficou vazia", e.grupoVazio === false);
   ok("na barra larga quem separa a camada e o titulo, nao o filete", e.temFilete === false);
@@ -357,7 +359,7 @@ function estado() {
         href: a.getAttribute("href"),
       }))
     );
-    ok("a barra larga lista as 17 linhas do produto", linhas.length === 17, String(linhas.length));
+    ok("a barra larga lista as 18 linhas do produto", linhas.length === 18, String(linhas.length));
     for (const linha of linhas) {
       await page.click('.admin-nav-item[aria-label="' + linha.rotulo + '"]');
       await page.waitForFunction(

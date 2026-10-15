@@ -24,6 +24,7 @@ import { reportsRoutes } from "./modules/reports/reports.routes";
 import { notificationsRoutes } from "./modules/notifications/notifications.routes";
 import { cmsRoutes } from "./modules/cms/cms.routes";
 import { cronRoutes } from "./modules/cron/cron.routes";
+import { platformAccountsRoutes } from "./modules/platform-accounts/contas.routes";
 import { healthRoutes } from "./modules/health/health.routes";
 import { env, isProd } from "./config/env";
 import { interpretarTrustProxy } from "./config/producao";
@@ -135,6 +136,7 @@ export function buildApp(): FastifyInstance {
   void app.register(notificationsRoutes, { prefix: "/api" });
   void app.register(cmsRoutes, { prefix: "/api" });
   void app.register(cronRoutes, { prefix: "/api" });
+  void app.register(platformAccountsRoutes, { prefix: "/api" });
 
   return app;
 }

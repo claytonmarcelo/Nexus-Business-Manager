@@ -40,6 +40,9 @@ const ACAO_PRONTA: Record<string, string> = {
   "cms.maintenance.token": "Pulso de manutenção gerado",
   "cron.job.updated": "Rotina agendada alterada",
   "cron.job.run": "Rotina agendada executada",
+  // Porta administrativa de confirmação de e-mail (N61): afirma identidade, por
+  // isso não é "usuário atualizado" — a frase precisa dizer quem confirmou.
+  "admin.email_confirmado": "E-mail confirmado pelo administrador da plataforma",
 };
 
 // Nome de cada origem, para as acoes genericas (create/update/delete).

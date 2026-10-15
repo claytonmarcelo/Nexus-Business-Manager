@@ -49,6 +49,9 @@ const Rotinas = lazy(() => import("./pages/Rotinas").then((m) => ({ default: m.R
 const PlataformaAuditoria = lazy(() =>
   import("./pages/PlataformaAuditoria").then((m) => ({ default: m.PlataformaAuditoria })),
 );
+const PlataformaContas = lazy(() =>
+  import("./pages/PlataformaContas").then((m) => ({ default: m.PlataformaContas })),
+);
 
 // F5, item 3, primeiro andar do teto: nada da aplicação renderiza fora de um
 // limite de erro. Uma exceção de montagem na vitrine, no cadastro ou em qualquer
@@ -109,6 +112,7 @@ function ArvoreComLimite() {
             <Route path="notificacoes" element={<Notifications />} />
             <Route path="rotinas" element={<Rotinas />} />
             <Route path="auditoria-plataforma" element={<PlataformaAuditoria />} />
+            <Route path="plataforma-contas" element={<PlataformaContas />} />
           </Route>
           <Route path="*" element={<NotFound />} />
         </Routes>
