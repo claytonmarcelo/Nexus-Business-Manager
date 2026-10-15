@@ -25,6 +25,8 @@ import {
 // F4 (D3): segunda etapa do login.
 import { TTL_DA_CONFIGURACAO, TTL_DO_DESAFIO, doisFatorObrigatorio } from "../../lib/segundo-fator";
 import { emitirTokenDeVerificacao } from "./verificacao.service";
+// F7 (LGPD, item 1): o aceite dos textos legais nasce junto da conta.
+import { ofertasDoCadastro, registrarAceites } from "../lgpd/lgpd.service";
 
 export interface AuthTokens {
   accessToken: string;
@@ -461,11 +463,27 @@ export type ResultadoDeCadastro =
 
 export async function register(
   app: FastifyInstance,
-  input: { name: string; email: string; password: string },
+  input: {
+    name: string;
+    email: string;
+    password: string;
+    aceitaTermos: boolean;
+    aceitaPrivacidade: boolean;
+  },
   ip?: string,
 ): Promise<ResultadoDeCadastro> {
+  // F7: o esquema da rota já recusa cadastro sem os dois aceites, e esta linha é a
+  // segunda guarda, por construção — quem chamar o serviço por outro caminho não
+  // cria conta sem a pessoa ter aceitado. A régua mora no módulo de LGPD.
+  if (input.aceitaTermos !== true || input.aceitaPrivacidade !== true) {
+    throw badRequest("Leia e aceite os Termos de uso e a Política de privacidade para criar a conta");
+  }
   const exists = await prisma.user.findUnique({ where: { email: input.email } });
   if (exists) throw conflict("Este e-mail já está cadastrado");
+
+  // A versão oferecida é lida antes de abrir a transação: é ela, e não a versão que
+  // o documento tiver amanhã, que vai para a linha de aceite.
+  const ofertas = await ofertasDoCadastro();
 
   const passwordHash = await hashPassword(input.password);
   const firstName = input.name.trim().split(/\s+/)[0] ?? "Empresa";
@@ -475,6 +493,7 @@ export async function register(
     const novo = await tx.user.create({
       data: { email: input.email, name: input.name.trim(), passwordHash },
     });
+    await registrarAceites(tx, { userId: novo.id, ofertas, ip });
     let slug = baseSlug;
     for (let i = 2; await tx.company.findUnique({ where: { slug } }); i++) {
       slug = baseSlug + "-" + i;

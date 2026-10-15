@@ -17,10 +17,26 @@ export const switchCompanySchema = z.object({
 });
 
 // Cadastro self-service: cria usuário + empresa própria (OWNER).
+//
+// F7 (LGPD, item 1): os dois aceites obrigatórios. São duas caixas, não uma,
+// porque os textos têm fundamentos jurídicos diferentes — um é o contrato, o outro
+// é o consentimento sobre os dados pessoais. Aceitar um não aceita o outro, então a
+// tela exige as duas e a gravação faz duas linhas
+// (`modules/lgpd/lgpd.service.ts`).
+//
+// A caixa é `caixaObrigatoria`, e não um `z.boolean().refine(...)`: com o campo
+// ausente o zod falha antes do refine, e a pessoa leria "Required" em inglês numa
+// tela em português. Os dois caminhos — não marcou, ou marcou e tirou — dizem a
+// mesma frase.
+const caixaObrigatoria = (texto: string) =>
+  z.boolean({ errorMap: () => ({ message: texto }) }).refine((v) => v, texto);
+
 export const registerSchema = z.object({
   name: z.string().trim().min(2, "Informe seu nome completo").max(120),
   email: z.string().trim().toLowerCase().email("E-mail inválido"),
   password: strongPassword,
+  aceitaTermos: caixaObrigatoria("Leia e aceite os Termos de uso para criar a conta"),
+  aceitaPrivacidade: caixaObrigatoria("Leia e aceite a Política de privacidade para criar a conta"),
 });
 
 export const forgotPasswordSchema = z.object({

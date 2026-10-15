@@ -114,7 +114,7 @@ async function sessaoDaCaptura() {
   const entrada = await chame("POST", "/auth/login", { email, password: senha });
   if (entrada.status === 200) return { email, nome, senha, tokens: entrada.dados };
 
-  const cadastro = await chame("POST", "/auth/register", { name: nome, email, password: senha });
+  const cadastro = await chame("POST", "/auth/register", { name: nome, email, password: senha, aceitaTermos: true, aceitaPrivacidade: true });
   if (cadastro.status === 201 || cadastro.status === 200) {
     console.log("  [captura] conta ficticia cadastrada pelo fluxo publico: " + email);
     return { email, nome, senha, tokens: cadastro.dados };

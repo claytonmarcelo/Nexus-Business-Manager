@@ -16,7 +16,7 @@ describe("Cadastro e recuperação de senha", () => {
     const email = `${uid("novo")}@nexus.test`;
     const res = await app.inject({
       method: "POST", url: "/api/auth/register",
-      payload: { name: "Novo Empregado", email, password: "Forte@2026x" },
+      payload: { name: "Novo Empregado", email, password: "Forte@2026x", aceitaTermos: true, aceitaPrivacidade: true },
     });
     expect(res.statusCode).toBe(201);
     const body = res.json();
@@ -32,7 +32,7 @@ describe("Cadastro e recuperação de senha", () => {
     // e-mail duplicado -> 409
     const dup = await app.inject({
       method: "POST", url: "/api/auth/register",
-      payload: { name: "Duplicado", email, password: "Forte@2026x" },
+      payload: { name: "Duplicado", email, password: "Forte@2026x", aceitaTermos: true, aceitaPrivacidade: true },
     });
     expect(dup.statusCode).toBe(409);
   });
@@ -40,7 +40,7 @@ describe("Cadastro e recuperação de senha", () => {
   it("cadastro rejeita senha fraca (sem maiúscula/especial) com mensagem da regra", async () => {
     const res = await app.inject({
       method: "POST", url: "/api/auth/register",
-      payload: { name: "Senha Fraca", email: `${uid("fraco")}@nexus.test`, password: "abcdef12" },
+      payload: { name: "Senha Fraca", email: `${uid("fraco")}@nexus.test`, password: "abcdef12", aceitaTermos: true, aceitaPrivacidade: true },
     });
     expect(res.statusCode).toBe(400);
     const body = res.json() as { issues: Array<{ path: string; message: string }> };
@@ -54,7 +54,7 @@ describe("Cadastro e recuperação de senha", () => {
     const email = `${uid("marcos")}@nexus.test`;
     const res = await app.inject({
       method: "POST", url: "/api/auth/register",
-      payload: { name: "  Marcos Silva  ", email, password: "Forte@2026x" },
+      payload: { name: "  Marcos Silva  ", email, password: "Forte@2026x", aceitaTermos: true, aceitaPrivacidade: true },
     });
     expect(res.statusCode).toBe(201);
     const body = res.json();

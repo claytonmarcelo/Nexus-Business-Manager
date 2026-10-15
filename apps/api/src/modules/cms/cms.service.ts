@@ -552,6 +552,9 @@ export async function obterLegal(kind: LegalKind) {
     title: registro.title,
     content: registro.content ?? "",
     published: registro.published,
+    // F7: o número que a linha de aceite guarda. Documento recém-criado pela
+    // prateleira vazia está na versão 1 — o mesmo número que a coluna entrega.
+    version: registro.version,
     updatedAt: registro.updatedAt,
   };
 }
@@ -565,13 +568,18 @@ export async function salvarLegal(
   dados: { title?: string; content?: string; published?: boolean },
   ator: Ator,
 ) {
-  await obterLegal(kind);
+  const atual = await obterLegal(kind);
+  // F7: a versão sobe só quando o texto muda. Trocar o título, ou publicar e
+  // despublicar, não é reescrever o que a pessoa aceitou — e um número que sobe
+  // sem o corpo mudar tornaria inútil a linha de aceite.
+  const textoMudou = dados.content !== undefined && dados.content !== atual.content;
   const salvo = await prisma.legalDocument.update({
     where: { kind },
     data: {
       ...(dados.title !== undefined ? { title: dados.title } : {}),
       ...(dados.content !== undefined ? { content: dados.content } : {}),
       ...(dados.published !== undefined ? { published: dados.published } : {}),
+      ...(textoMudou ? { version: { increment: 1 } } : {}),
     },
   });
   invalidarCaches();
@@ -591,6 +599,7 @@ export async function salvarLegal(
     title: salvo.title,
     content: salvo.content ?? "",
     published: salvo.published,
+    version: salvo.version,
     updatedAt: salvo.updatedAt,
   };
 }

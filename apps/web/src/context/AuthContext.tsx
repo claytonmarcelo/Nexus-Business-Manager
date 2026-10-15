@@ -38,6 +38,19 @@ export type ResultadoDeLogin =
 
 export type ResultadoDeCadastro = { estado: "sessao" } | { estado: "verificacao-pendente" };
 
+/**
+ * F7 (item 1, LGPD): as duas declarações que a pessoa marca para criar conta.
+ *
+ * Vem como objeto e não como dois booleanos soltos porque a ordem dos dois é a
+ * única coisa que distingue um aceite do outro, e ordem trocada aqui seria a
+ * gravação de um aceite que ninguém deu. A API recusa qualquer par que não seja
+ * os dois verdadeiros — a tela também barra antes de mandar.
+ */
+export interface AceitesDeCadastro {
+  readonly aceitaTermos: boolean;
+  readonly aceitaPrivacidade: boolean;
+}
+
 interface AuthCtx {
   user: SessionUser | null;
   status: "loading" | "authenticated" | "anonymous";
@@ -53,7 +66,12 @@ interface AuthCtx {
     setupToken: string,
     codigo: string,
   ) => Promise<{ codigosDeRecuperacao: string[]; entrou: boolean }>;
-  register: (name: string, email: string, password: string) => Promise<ResultadoDeCadastro>;
+  register: (
+    name: string,
+    email: string,
+    password: string,
+    aceite: AceitesDeCadastro,
+  ) => Promise<ResultadoDeCadastro>;
   logout: () => Promise<void>;
   switchCompany: (companyId: string) => Promise<void>;
   reload: () => Promise<void>;
@@ -262,12 +280,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Cadastro self-service: sem verificação, a API cria usuario + empresa (OWNER) e
   // ja devolve sessao. Com a verificação ligada (D2), ela devolve 201 sem sessão
   // nenhuma, e a tela é o "confirme seu e-mail", não o painel.
+  //
+  // F7 (item 1): os dois aceites vão no mesmo corpo. Não há cadastro sem eles — a
+  // API recusa, e a linha que ela grava em `consent_records` é a declaração que a
+  // pessoa acabou de marcar nesta tela.
   const register = useCallback(
-    async (name: string, email: string, password: string): Promise<ResultadoDeCadastro> => {
+    async (
+      name: string,
+      email: string,
+      password: string,
+      aceite: AceitesDeCadastro,
+    ): Promise<ResultadoDeCadastro> => {
       const { data } = await api.post<Record<string, unknown>>("/auth/register", {
         name,
         email,
         password,
+        ...aceite,
       });
       if (data.verificationRequired === true) return { estado: "verificacao-pendente" };
       aplicarSessao(data);

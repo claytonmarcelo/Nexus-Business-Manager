@@ -33,6 +33,36 @@ export function monteAdaptador(rotas: Rota[]): AxiosAdapter {
   };
 }
 
+/**
+ * A mesma rede acima, registrando o corpo de cada chamada que encontrou uma rota
+ * conhecida. É o que as provas de formulário precisam para não assertar em
+ * "nenhum erro apareceu na tela" e ficar sem a única coisa que importa: o que
+ * saiu do navegador para a API. Uma rota que não está na lista não é registrada,
+ * senão o `GET /public/landing` da tela entraria na conta do envio.
+ */
+export interface ChamadaRegistrada {
+  readonly caminho: string;
+  readonly corpo: Record<string, unknown>;
+}
+
+export function monteAdaptadorQueRegistra(rotas: Rota[]) {
+  const chamadas: ChamadaRegistrada[] = [];
+  const interna = monteAdaptador(rotas);
+  const adaptador: AxiosAdapter = async (config) => {
+    const url = config.url ?? "";
+    const achada = rotas.find((rota) => url.includes(rota.caminho));
+    if (achada && (config.method ?? "get").toLowerCase() !== "get") {
+      const corpo = typeof config.data === "string" ? JSON.parse(config.data) : config.data;
+      chamadas.push({
+        caminho: achada.caminho,
+        corpo: (corpo ?? {}) as Record<string, unknown>,
+      });
+    }
+    return interna(config);
+  };
+  return { adaptador, chamadas };
+}
+
 export const USUARIO_DE_TESTE: SessionUser = {
   id: "00000000-0000-4000-8000-000000000001",
   email: "dono@empresa.teste",

@@ -73,7 +73,7 @@ async function cadastrar(email: string, nome = "Conta de Prova") {
     method: "POST",
     url: "/api/auth/register",
     remoteAddress: novoIp(),
-    payload: { name: nome, email, password: SENHA },
+    payload: { name: nome, email, password: SENHA, aceitaTermos: true, aceitaPrivacidade: true },
   });
   // Drenamos a fila depois do que enfileira mensagem (N58): este arquivo prova o
   // conteúdo da mensagem e o que o banco guarda, não o tempo do request — que é

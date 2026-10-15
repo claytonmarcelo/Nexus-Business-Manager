@@ -597,7 +597,7 @@ async function limpeza() {
   // A conta nasce pelo fluxo público de cadastro — o mesmo que uma pessoa usa.
   const senha = "Prova" + crypto.randomBytes(5).toString("hex").toUpperCase() + "#A";
   const email = "prova-verificacao-" + Date.now().toString(36) + "@exemplo.test";
-  const cadastro = await chame("POST", "/auth/register", { name: "Prova Verificacao", email, password: senha });
+  const cadastro = await chame("POST", "/auth/register", { name: "Prova Verificacao", email, password: senha, aceitaTermos: true, aceitaPrivacidade: true });
   if (cadastro.status !== 201) {
     throw new Error("[prova] o cadastro de prova falhou (HTTP " + cadastro.status + "): " + cadastro.texto.slice(0, 160));
   }

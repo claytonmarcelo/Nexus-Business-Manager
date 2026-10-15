@@ -90,6 +90,10 @@ model User {
   // chave órfã de quem saiu do sistema não tem dono nem utilidade.
   verificationTokens      EmailVerificationToken[]
   recoveryCodes           RecoveryCode[]
+  // F7 (LGPD): os aceites dos textos legais, na mesma lógica das chaves de acesso —
+  // caem junto da conta, porque um registro de quem não existe mais no sistema não
+  // tem a quem apontar.
+  consentRecords          ConsentRecord[]
 
   @@map("users")
 }
@@ -748,9 +752,40 @@ model LegalDocument {
   title     String    @db.VarChar(160)
   content   String?   @db.Text
   published Boolean   @default(false)
+  // F7 (LGPD): qual texto a pessoa aceitou. O número sobe de um a cada mudança de
+  // conteúdo gravada pelo editor da plataforma (`cms.service.ts`), e é ele que a
+  // linha de aceite guarda. Sem esta coluna, "ele aceitou os termos" seria uma
+  // afirmação sobre um texto que já não existe.
+  version   Int       @default(1)
   updatedAt DateTime  @updatedAt @map("updated_at")
 
   @@map("legal_documents")
+}
+
+// F7 (LGPD, item 1): registro de aceite dos textos legais.
+//
+// Uma linha por aceite, e o histórico não se sobrescreve: quando a versão muda e a
+// pessoa aceita de novo, a linha antiga continua contando o que estava em vigor
+// naquela data. É isto que responde a um pedido de "mostre o que este usuário
+// aceitou" — a resposta é a data, o endereço de onde ele aceitou e a versão do
+// documento, e nada mais.
+//
+// `kind` e `version` são cópia do momento do aceite, e não uma junção viva com
+// `legal_documents`, de propósito: o documento pode ser reescrito amanhã, e a
+// prova do que foi aceito ontem não pode mudar com ele. A relação é só com o
+// usuário, e cai junto da conta.
+model ConsentRecord {
+  id         String    @id @default(uuid()) @db.VarChar(36)
+  userId     String    @map("user_id") @db.VarChar(36)
+  kind       LegalKind
+  version    Int
+  ip         String?   @db.VarChar(64)
+  acceptedAt DateTime  @default(now()) @map("accepted_at")
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, kind, version])
+  @@index([kind, version])
+  @@map("consent_records")
 }
 
 // ===== Operacoes: modelos de e-mail transacional e rotinas agendadas =====

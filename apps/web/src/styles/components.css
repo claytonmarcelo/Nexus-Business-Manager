@@ -899,6 +899,24 @@ a.nexus-footer-autor:focus-visible { color: var(--text); text-decoration: underl
 }
 .neu-check input:checked + .neu-check-box::after { content: "✓"; }
 .neu-check input:focus-visible + .neu-check-box { outline: 2px solid var(--accent); outline-offset: 2px; }
+/* F7 (item 1, LGPD): as duas caixas de aceite do cadastro. É a mesma caixa do
+   "lembrar de mim", empilhada - dois textos, duas declarações, uma linha gravada
+   por texto na API. O erro pinta só a borda da caixa: a frase do erro ja aparece
+   embaixo em vermelho, e texto vermelho sobre rótulo vermelho não se lê. */
+.auth-consent { gap: 0.45rem; }
+.neu-check.is-error .neu-check-box { border-color: var(--danger); }
+.neu-check.is-error { color: var(--text); }
+/* Linha de endereços: só existe com documento publicado (mesma regra do rodapé). */
+.auth-consent-links {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.1rem 0.3rem;
+  margin: 0.1rem 0 0;
+  font-size: 0.76rem;
+  color: var(--text-faint);
+}
+.auth-consent-links .auth-link { font-size: 0.78rem; }
 /* F5 (item 7): o link de texto das telas de acesso tambem e alvo. Em 1440 ele
    sobe para o piso AA de 24 px; em 360 ele chega aos 44 no bloco de toque do fim
    desta folha. O desenho da palavra continua o mesmo — o que cresce e a caixa. */
