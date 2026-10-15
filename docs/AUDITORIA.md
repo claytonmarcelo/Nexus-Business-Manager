@@ -1706,9 +1706,18 @@ banco novo. Em PostgreSQL o nome da constraint é por tabela; em MySQL é **por 
 migration já criou a constraint, e a segunda não consegue criar uma com o mesmo nome.
 
 Por que isso importa fora do curiosidade: a F8 exige "clone limpo reproduzível", e o caminho publicado no
-`README.md` é `npm run db:migrate`. Ele não funciona num MySQL zerado hoje. Também é o motivo pelo qual o
+`README.md` era `npm run db:migrate`. Ele não funciona num MySQL zerado hoje. Também é o motivo pelo qual o
 banco de prova da decisão D6 nasceu de `prisma db push --skip-generate` com as vinte migrations marcadas
 como aplicadas (`migrate resolve --applied`) — ver `docs/adr/0010-banco-de-prova-separado.md`, item 5.
+
+Re-medido na rodada do README, agora com a cadeia inteira: **23 migrations**, e o `migrate dev` de um clone
+novo contra o banco `nexusbusinessmanager_clone` zerado para exatamente no mesmo ponto — `P3006` envolvendo
+`P3018`, `Database error code: 1826`, `Duplicate foreign key constraint name 'company_users_user_id_fkey'`,
+em `20261010164015_add_clients`. O README deixou de publicar esse caminho: a porta de entrada de um banco
+zerado passou a ser `npm run db:push` (script novo na raiz e no `@nexus/api`, que é o mesmo `db push` que a
+casa já usa no banco de prova e no job do container), rodada no clone com saída real: estrutura montada,
+seed verde, API e Vite no ar, login da conta de desenvolvimento respondendo pelo proxy. Nada aqui fecha o
+achado — o fechamento continua sendo o trabalho da T7, com ADR próprio.
 
 O fechamento não foi improvisado aqui por duas razões. A primeira: a §5 do contrato proíbe editar migration
 já aplicada, e qualquer remendo na cadeia existente é exatamente isso. A segunda: a tarefa que pede o clone

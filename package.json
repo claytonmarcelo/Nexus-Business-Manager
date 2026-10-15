@@ -26,6 +26,7 @@
     "verify": "node tools/verify-fumaca.cjs",
     "test:coverage": "npm run test:coverage --workspace @nexus/api",
     "db:migrate": "npm run prisma:migrate --workspace @nexus/api",
+    "db:push": "npm run prisma:push --workspace @nexus/api",
     "db:prova": "node tools/preparar-banco-de-prova.cjs",
     "db:seed": "npm run prisma:seed --workspace @nexus/api",
     "admin:criar": "npm run admin:criar --workspace @nexus/api",
