@@ -499,6 +499,7 @@ se o site está aberto ou em manutenção. A vitrine é única para toda a plata
 | Ordens de serviço (atendimento, peças e baixa de estoque) | ✅ 3 tabelas | ✅ 6 rotas | ✅ | no ar: `/app/ordens-de-servico` com os oito indicadores do resumo, busca, filtros e paginação no servidor, documento para imprimir, tabela que vira cartão no celular e estoque que só baixa na conclusão |
 | Painel e relatórios agregados | ✅ | ✅ 8 rotas | ✅ | no ar |
 | Auditoria (trilha da empresa e trilha da plataforma) | ✅ | ✅ 2 rotas | ✅ 2 telas | no ar: `/app/auditoria` com as três abas de sempre, e `/app/auditoria-plataforma` reservada a quem responde pela plataforma |
+| Contas sem confirmação (suporte da plataforma) | ✅ coluna `users.email_verified_at` | ✅ 2 rotas | ✅ | no ar: `/app/plataforma-contas` lista quem nunca confirmou o endereço — da mais antiga para a mais nova, com o número de empresas de cada conta — e o botão marca a coluna e gasta o link de verificação na mesma transação, exigindo motivo escrito na tela e deixando a linha na trilha da plataforma (N61, ADR-0022) |
 | Usuários e membros de empresa | ✅ | ✅ 6 rotas | ✅ | no ar |
 | Notificações e preferências | ✅ | ✅ 7 rotas | ✅ | no ar: sino no cabeçalho em toda tela do painel e `/app/notificacoes` com abas, filtros por tipo, paginação no servidor e preferências |
 | Configurações da conta e da empresa | ✅ | ✅ 5 rotas | ✅ | no ar: `/app/configuracoes` em quatro abas — conta, cadastro e endereço da empresa, moeda/fuso/idioma, logo, meta de receita e troca de empresa |
@@ -582,9 +583,9 @@ importa só o CSS do AdminLTE) e `sweetalert2` (substituído pelo diálogo de co
                                    maintenance.ts (gancho global com allowlist de volta)
         modules/               auth, companies, users, audit, clients, products, sales,
                                purchases, finance, charges, gateways, crm, agenda, reports,
-                               notifications, cms, cron, service-orders, health
+                               notifications, cms, cron, service-orders, health, platform-accounts
                                — cada módulo com <x>.routes.ts e <x>.service.ts
-        test/                  37 arquivos de integração contra MySQL real + helpers.ts
+        test/                  50 arquivos de integração contra MySQL real + helpers.ts
     web/
       src/
         App.tsx                rotas públicas, /app/* protegida e as páginas de erro
@@ -599,8 +600,8 @@ importa só o CSS do AdminLTE) e `sweetalert2` (substituído pelo diálogo de co
                                layout/ (AdminShell, NotificationBell)
         pages/                 Landing, Legal, Login, Register, ForgotPassword, Dashboard, Clients,
                                Products, Sales, Purchases, Finance, CRM, Agenda, Users, Audit,
-                               PlataformaAuditoria, Settings, OrdensDeServico, Cobrancas,
-                               Cms, Notifications, Rotinas, erros
+                               PlataformaAuditoria, PlataformaContas, Settings, OrdensDeServico,
+                               Cobrancas, Cms, Notifications, Rotinas, erros
   assets/brand/logo/           logo oficial e os recortes usados pelo favicon
   docs/
     ANALISE.md                 matriz de análise da fase 1, com evidências
@@ -619,7 +620,8 @@ importa só o CSS do AdminLTE) e `sweetalert2` (substituído pelo diálogo de co
                                0013 autenticação reforçada · 0014 code splitting · 0015 alvo de toque · 0016 tema ·
                                0017 pilha de prova com porta própria · 0018 produção em container com uma porta ·
                                0019 backup com restauração conferida · 0020 e-mail por fila de memória ·
-                               0021 o e-mail é cópia do aviso do sino
+                               0021 o e-mail é cópia do aviso do sino · 0022 a porta de plataforma que confirma
+                               um endereço
     design/palette.md          paleta oficial extraída da logo
     screenshots/               as capturas desta página
   tools/                       provas de navegador, recaptura de telas e utilitários do repo
@@ -941,7 +943,7 @@ npm run build              # produção (tsc + vite build)
 | `segundo-fator.test.ts` | sem chave de cifraçao o fator não é oferecido; o segredo sai uma vez para a tela e o banco só vê o envelope cifrado; ligar exige código do aplicativo dentro do período; os dez códigos de recuperação são mostrados uma única vez e só o hash fica no banco; código de recuperação abre a porta uma vez e se gasta; desligar exige um código válido, não a senha; em produção OWNER e administrador da plataforma são obrigados a ligar antes de entrar |
 | `criptografia.test.ts` | cifra e devolve o mesmo texto sem nunca entregar o texto dentro do envelope, dois envelopes do mesmo segredo são diferentes e os dois abrem, chave errada e envelope adulterado devolvem erro sem citar chave nem segredo, e em produção a chave faltante ou malformada é recusada pelo nome sem imprimir valor |
 | `corrida-de-abas.test.ts` | a segunda aba que chega com o token velho dentro da janela renova e a corrida fica na auditoria, fora da janela o mesmo token é tratado como roubo (401, alarme, nenhuma sessão viva), a corrida mantém a empresa ativa da sessão, e a troca de senha fecha até a janela de corrida do token rotacionado (N57) |
-| `isolamento-rotas.test.ts` | a matriz das 129 rotas lida do próprio Fastify: nenhuma rota nasce sem `app.authenticate` e sem carimbo de pública, as públicas e as de etapa são exatamente a lista declarada, e a contagem medida bate com a declarada |
+| `isolamento-rotas.test.ts` | a matriz das 131 rotas lida do próprio Fastify: nenhuma rota nasce sem `app.authenticate` e sem carimbo de pública, as públicas e as de etapa são exatamente a lista declarada, e a contagem medida bate com a declarada |
 | `guardas-herdadas.test.ts` | as proteções antigas re-aprovadas sob o regime da F4: ADMIN não cria nem rebaixa OWNER, empresa não fica sem proprietário, refresh devolve a empresa ativa mesmo com a corrida de abas, conta desativada perde o acesso com o segundo fator ligado, sessões respondem só pela empresa ativa, pedir recuperação não derruba sessão nenhuma, aviso não atravessa empresa e o estoque continua atômico |
 | `multiempresa.test.ts` | nenhum dado vaza entre empresas do mesmo usuário e de usuários diferentes |
 | `pagination.test.ts` | `{data, meta}` coerente e `pageSize` acima do limite → 400 |
@@ -957,6 +959,7 @@ npm run build              # produção (tsc + vite build)
 | `seed-seguro.test.ts` | o seed abortando em produção sem `ALLOW_DEV_SEED` sem escrever usuário nenhum, o motivo dito inteiro, a ausência de `SEED_ADMIN_PASSWORD` parando qualquer ambiente, e a prova de que nenhuma senha de conta de desenvolvimento mora no código |
 | `garantias-conta-de-demonstracao.test.ts` | o plano de escrita do seed em produção, medido com um cliente que só anota: nem a conta de desenvolvimento nem a `nexus-demo` são pedidas, o administrador da plataforma e as rotinas continuam, a conta dev sem casa de demonstração é recusa, nenhuma senha sai no log, e a recusa sem `ALLOW_DEV_SEED` não escreve usuário nem empresa no banco real |
 | `administrador-da-plataforma.test.ts` | o bootstrap do administrador de produção recusando antes da primeira consulta quando falta o endereço ou a senha, a senha fraca barrada pela regra de acesso, o administrador que já existe tendo o papel confirmado com a senha preservada, a conta de cliente que não é promovida sem consentimento escrito, a conta desativada que não volta sozinha, o `OWNER` dado a toda empresa que já existe sem criar empresa nenhuma, nenhum segredo no log e a recusa medida no banco real |
+| `confirmacao-administrativa-de-email.test.ts` | a porta de plataforma que destranca o e-mail (9 casos): o ADMIN de uma empresa leva 403 nas duas portas e sem token leva 401, a fila só mostra quem tem `emailVerifiedAt` nulo, pagina e ordena da mais antiga, e a busca pega nome **ou** endereço; confirmar marca a coluna **e** gasta o link vivo na mesma transação, com a trilha da plataforma nascendo sem empresa e com o endereço mascarado; repetir devolve `alterado: false` sem segunda linha de auditoria; identificador inexistente é 404; com a régua da D2 ligada a mesma conta é negada antes da senha e entra depois do clique; e o `admin:criar` nasce com o endereço confirmado quando a coluna está vazia (N61 e N78) |
 | `estoque-politica.test.ts` | a saída barrada enquanto a empresa não autorizou, o negativo visível depois de ligar a chave, e a política lida por empresa nas três portas de saída |
 | `fuso-dia.test.ts` | meia-noite de São Paulo, Tóquio e Calcutá calculadas à mão, borda de calendário contra borda de instante, série diária e contas vencidas no dia da empresa, e o fuso quebrado que não derruba painel nem sino |
 | `dinheiro-decimal.test.ts` | meio centavo que sobe na base 10, a armadilha do `round` do decimal embutido no Prisma, 2026 parcelas de R$ 0,10 fechando em 20 260 centavos, a porta nos três formatos de digitação e a invariante total = soma das linhas em nota real |
@@ -967,6 +970,7 @@ npm run build              # produção (tsc + vite build)
 | `tema-landing.test.tsx` (web) | o alternador na vitrine montada pelo CMS: os dois sentidos, as cores da vitrine mudando junto, a escolha que volta ao remontar a página, o teclado com rótulo acessível e o tema aplicado antes do primeiro paint do React |
 | `paleta-da-vitrine.test.ts` (web) | a luminância WCAG que decide se a paleta cadastrada é escura ou clara, e o que entra e o que sai do elemento quando ela veste — ou não — o tema ativo, inclusive com cor vazia ou fora do formato |
 | `cores-da-landing.test.ts` (web) | a varredura de cor fixa nos estilos da vitrine: nenhum `#` fora dos tokens do tema, com a única exceção listada e justificada |
+| `porta-administrativa-de-email.test.tsx` (web) | `/app/plataforma-contas` montada do lado do cliente, em 12 casos: quem não responde pela plataforma não vê linha nenhuma e não dispara chamada; a fila pinta nome, endereço e o número de empresas sem imprimir identificador interno; a busca vai para a API em vez de filtrar no navegador; o botão "Confirmar e-mail" **sem motivo escrito não sai do lugar** — nenhuma requisição é disparada; com motivo o corpo é exatamente `{ motivo }` e a linha sai da fila; conta que já estava confirmada também sai, e a tela diz por quê; se a porta falhar a linha fica na fila com a mensagem do servidor **dentro do diálogo**; o evento tem rótulo em português; a rota é montada sob demanda e o item do menu é área da plataforma; o rótulo do menu e o título da tela dizem a mesma coisa; e o cliente de API fala com as duas portas sem empresa no caminho |
 
 Além da suíte, o repositório guarda provas que dirigem o navegador (Puppeteer) e medem pixels, com as
 capturas desta página como subproduto:
@@ -981,7 +985,8 @@ capturas desta página como subproduto:
 | `tools/verify-ordens-de-servico.cjs` | 102 — a ordem de serviço de ponta a ponta, sobre a casa de demonstração: os oito indicadores batidos contra o resumo do servidor, a ordem criada pela aba Nova ordem com a prévia do rodapé conferida centavo a centavo, o caminho Iniciar → Aguardar peça → Concluir com o **saldo lido no banco antes e depois de cada movimento**, o estorno da concluída devolvendo exatamente o que saiu, o documento aberto e enviado à impressora, busca, filtro, ordenação e o rodapé que conta o recorte, os dois temas, a tabela que vira cartão em 390px e a sessão de um atendente de prova — 403 nas duas portas de escrita, sem aba de criação, sem botão de cancelar, sem chamada à equipe e sem caixa nativa — com a ordem devolvida ao dono e o atendente apagado no fim |
 | `tools/verify-rotinas.cjs` | 37 — a tela `/app/rotinas` com as três varreduras, agenda traduzida e próxima execução conferidas contra a API; "Executar agora" que grava o aviso no banco e mostra no toast a mensagem da rotina; pausar pelo diálogo de confirmação e retomar; o atendente sem permissão; o tema claro e os 390px — jobs, avisos e usuário de prova devolvidos ao estado de antes |
 | `tools/verify-logout.cjs` | 22 — as cinco portas de saída da sessão, cada uma pelo caminho de verdade: o botão "Sair" do painel, o 401 de uma chamada de negócio sem refresh token em disco (com o aviso de Toastr medido na tela), o logout feito na segunda aba aberta nesta prova, a renovação recusada pelo servidor no reload e — para não confundir as duas coisas — quem abre `/app` sem sessão nenhuma, que continua indo ao login. Junto: o tema claro atravessando entrar e sair, o refresh que sai do disco, o "voltar" do navegador batendo em tela sem painel e nenhum `alert()` no caminho |
-| `tools/verify-sidebar.cjs` | 102 — ordem e tipografia das seis camadas, itens por permissão, modo trilha, peek e o cabeçalho sem repetir a marca, tudo com o contrato novo da F3.1: nenhuma linha da barra larga está sem destino, toda linha é link de uma rota que existe no painel, a barra não escreve "em breve" em lugar nenhum, e as dezesseis linhas são clicadas uma a uma com o endereço e o título da tela conferidos depois de cada clique |
+| `tools/verify-sidebar.cjs` | 105 — ordem e tipografia das seis camadas, itens por permissão, modo trilha, peek e o cabeçalho sem repetir a marca, tudo com o contrato novo da F3.1: nenhuma linha da barra larga está sem destino, toda linha é link de uma rota que existe no painel, a barra não escreve "em breve" em lugar nenhum, e as **dezoito** linhas — incluindo a da plataforma que nasceu na T5.5 — são clicadas uma a uma com o endereço e o título da tela conferidos depois de cada clique |
+| `tools/verify-contas-plataforma.cjs` | 40 — a porta administrativa de confirmação de e-mail na pilha de prova: a fila da tela bate com a contagem do banco, o endereço e o número de empresas aparecem e nenhum identificador interno é impresso no navegador, o ADMIN de uma empresa leva **403** nas duas portas sem escrever nada, a ausência de motivo é barrada **antes** de sair qualquer requisição (medido por `performance.getEntriesByType("resource")`, não pela cara da tela), a escrita marca a coluna e gasta o link na mesma transação, o evento nasce com `companyId` nulo, endereço mascarado e o motivo, ele não aparece na trilha da empresa e aparece na da plataforma, repetir devolve `alterado: false` sem segunda linha, `userId` inexistente é 404, e o `finally` devolve o banco — pendentes **205 → 206 → 205**, eventos desta janela **1 → 0**, duas contas de prova apagadas |
 | `tools/verify-acoes-confirm.cjs` | 88 — coluna de ações de nove tabelas, anatomia do diálogo, trava de duplo clique, Esc durante a requisição, tema claro e celular |
 | `tools/shoot-tabs.cjs` | 447 — abas, paginação, respiro medido e legibilidade do histórico em 9 páginas, desktop e celular |
 | `tools/shoot-crm.cjs` | 42 — funil, KPIs, filtros, mudança de estágio, conversão conferida na tela de Clientes e celular sem overflow |
@@ -1077,8 +1082,13 @@ retentativa de recuo exponencial, timeout de socket e dreno no desligue — medi
 600 ms do entregador injetado (N58 fechado, ADR-0020). Na mesma tarefa o sino ganhou chamador: cada aviso novo
 do sino tem **cópia por e-mail** para quem ligou o canal, as três rotinas fecham a frase de execução com
 `· N e-mail(s)`, e a caixa da tela de preferências passou a obedecer ao estado que a API declara em vez de um
-`disabled` escrito em pedra (N59 fechado, ADR-0021). O que falta da T5 é a porta administrativa de confirmação
-(N61) |
+`disabled` escrito em pedra (N59 fechado, ADR-0021). A tarefa fechou com a **porta administrativa de confirmação
+de e-mail**: `/app/plataforma-contas` mostra a fila de quem nunca confirmou — ordenada da mais antiga para a mais
+nova, com o número de empresas de cada conta — e o botão marca a coluna e gasta o link de verificação na mesma
+transação, com motivo obrigatório na tela e auditoria de plataforma (N61 fechado, ADR-0022). No caminho apareceu o
+N78, mais grave: com `REQUIRE_EMAIL_VERIFICATION=1` o `admin:criar` criava a conta raiz **sem** a coluna marcada,
+e o login dela é negado antes da senha — hoje o bootstrap confirma o próprio endereço quando a coluna está vazia.
+A superfície foi de **129 para 131 rotas**, a barra de **17 para 18 linhas**, e a suíte para **459 + 156** |
 | `T3 → T4` | A F5 inteira. Cinco listas pararam de aceitar resposta atrasada (N51), a tela de entrada zerou a senha nos três momentos em que ela sobrava — envio recusado, desmontagem e `pageshow` do histórico — e ganhou rótulo associado de verdade (Problema C). O painel passou a escrever `data-bs-theme` no `<html>` que o Bootstrap 4 lê (N7), a casa ganhou `ErrorBoundary` na raiz e por rota com registro do erro, e o `npm run verify` abriu a fumaça: **63 telas** percorridas no navegador, com HTTP, conteúdo montado e zero erro de console. As duas telas novas da F4 saíram dos 0% de cobertura (N62), o JavaScript deixou de ser um arquivo só — **964,31 kB / 283,61 kB gzip viraram 354,85 kB / 121,62 kB em 37 pedaços**, com a Agenda carregando a pé (D8, ADR-0014) — e a acessibilidade ganhou régua: **22 checagens, 0 falhas** em rótulo, foco, teclado, movimento reduzido e alvo de toque (ADR-0015). A suíte fechou em **437 + 140** |
 
 ---

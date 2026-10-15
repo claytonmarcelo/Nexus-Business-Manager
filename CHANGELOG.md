@@ -1,5 +1,58 @@
 ## [Não lançado]
 
+### Quem responde pela plataforma ganhou a porta que destranca um e-mail — e o administrador raiz nasceu destrancado (2026-10-14)
+
+- **O que estava registrado (T5.5 / F6, N61).** Desde a F4 a única escrita em `users.email_verified_at` era o
+  clique no link ou o código digitado na tela pública. Nenhum endpoint, nenhuma rota de plataforma, nenhum script
+  de linha de comando marcava a coluna. Enquanto `REQUIRE_EMAIL_VERIFICATION` estava desligada ninguém sentia; com
+  a decisão D2 obrigando verificação em produção, o cenário virou real — o SMTP falha justamente no cadastro
+  (`auth.verificacao_entrega_falhou`), a pessoa fica sem link, sem confirmação e sem painel, e quem atende não tem
+  botão. A saída documentada era escrever no banco à mão, que é exatamente o que um runbook existe para evitar.
+- **A porta é da plataforma, e a matriz confere isso.** `GET /api/plataforma/contas/sem-confirmacao` e
+  `POST /api/plataforma/contas/:userId/confirmar-email`, as duas com `assertPlatformAdmin` como único cadeado. A
+  régua de rotas levou o prefixo `/api/plataforma` na conta das portas de plataforma e passou a exigir que
+  `platform-accounts/contas.service.ts` esteja na lista — exatamente o conjunto, nos dois sentidos — dos arquivos
+  que carimbam a trilha da plataforma. A superfície foi de **129 para 131 rotas**, plataforma de **15 para 17**, e
+  as duas portas novas respondem **401** na varredura anônima.
+- **Uma escrita, um link a menos.** Confirmar marca a coluna e gasta todo token de verificação vivo da conta na
+  mesma transação: não há por que um link que chegou atrasado abrir uma porta já destrancada por fora. Repetir
+  devolve `alterado: false` sem segunda escrita e sem segunda linha de auditoria, e `userId` inexistente é 404
+  honesto. O motivo é obrigatório na tela e opcional no corpo, e a linha nasce com `companyId` nulo e o endereço
+  mascarado — a fila mostra o endereço inteiro para quem atende; a trilha, não.
+- **N78, o achado mais grave do caminho.** `verificacao.service.ts:147` **recusa** enviar link de verificação para
+  `SUPER_ADMIN` — a conta da plataforma não é conta de cliente —, e o `npm run admin:criar` nunca escrevia a
+  coluna. Com a régua da D2 ligada, o script que a regra de acesso do dono manda rodar criava a conta que **não
+  consegue entrar**: a negação vem antes da senha e não havia porta nenhuma para abri-la. O bootstrap agora decide
+  `confirmaEmail = !conta?.emailVerifiedAt` e aplica aos três caminhos que escrevem; a coluna só é tocada quando
+  está vazia, porque reescrever o carimbo de quem entrou pelo próprio link seria falsificar a data em que a caixa
+  postal foi provada. O resumo do script devolve `emailConfirmado: "marcado agora" | "já estava"`. Em ambiente onde
+  ele já rodou trancado, o remédio é rerodá-lo — ele é idempotente por decisão, e isso está no runbook de
+  `docs/PRODUCAO.md`.
+- **A tela.** `/app/plataforma-contas`: fila da mais antiga para a mais nova, com nome, endereço e **quantas
+  empresas** a conta serve, busca por nome ou endereço feita na API, estado vazio, paginação e o diálogo de motivo
+  que segura o erro do servidor dentro do modal. O item entrou na barra da plataforma — **17 linhas viraram 18** —
+  e o rótulo `admin.email_confirmado` foi traduzido para a linguagem do negócio.
+- **Vermelho antes, verde depois.** `apps/api/test/confirmacao-administrativa-de-email.test.ts` marcou **8 failed |
+  1 passed** contra a árvore de antes (o único verde era o caso que confere que a porta não existia) e fechou **9
+  passed (9)**; `apps/web/src/test/porta-administrativa-de-email.test.tsx` fechou **12 passed (12)**, com o caso que
+  prova que sem motivo escrito **nenhuma requisição sai do navegador**.
+- **Suíte e portões.** **API 50 arquivos / 459 casos** e **web 20 / 156**, zero falha e zero skip contra
+  `nexusbusinessmanager_teste`; typecheck sem erro e build com **38 pedaços**, `index` em **355,36 kB / 121,78 kB
+  gzip** e o pedaço novo da tela em **6,15 kB / 2,49 kB** — a D8 continua de pé: a tela entra sob demanda e não
+  aumenta o primeiro carregamento. Prova de navegador na pilha de prova: `tools/verify-contas-plataforma.cjs` com
+  **40 checagens, 0 falhas** e o banco devolvido (pendentes **205 → 206 → 205**, eventos desta janela **1 → 0**,
+  duas contas de prova apagadas no `finally`); `tools/verify-sidebar.cjs` recontado com as dezoito linhas — **105
+  checagens, 0 falhas**; `npm run verify` atravessando **64 telas** em 360, 1024 e 1440 px com **0 problemas**.
+- **Um erro meu, medido.** Duas suítes da API rodaram sobrepostas neste turno no mesmo banco de prova, e a primeira
+  fechou com 3 arquivos / 2 casos em falha — contagem relativa entre dois processos concorrentes, não defeito do
+  produto. A corrida solitária refez os 50 arquivos / 459 casos verdes. Fica a regra: uma suíte por vez no banco de
+  prova.
+- Decisão em `docs/adr/0022-a-porta-de-plataforma-que-confirma-um-endereco.md`, com as cinco alternativas recusadas
+  (CLI, abrir para o ADMIN da empresa, desligar a D2, apagar o link, coluna `emailVerifiedBy`) e as dívidas
+  declaradas: nada avisa quando a fila de pendentes cresce (P23), a busca é `contains` sem índice, e a coluna
+  marcada pelo suporte registra uma decisão, não a leitura de alguém. **Com esta tarefa a T5 fecha**, e a F6 vai a
+  FEITA; o que sobrou da fase está declarado na tabela de fases.
+
 ### Cada aviso do sino agora tem cópia por e-mail, e a caixa da tela obedece à instalação (2026-10-14)
 
 - **O que estava registrado (T5.4 / F6, N59).** Depois da F4 existiam exatamente três caminhos que chamavam o

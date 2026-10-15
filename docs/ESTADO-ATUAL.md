@@ -28,13 +28,21 @@ D6) e T2 (N32 e P11, decisões D4 e D5) já estão publicadas — `origin/main` 
 falha que a regra "quem mexer reatualiza" existe para evitar. A passada completa do resto do arquivo
 continua marcada para a F9.
 
+Nas tarefas da F6 publicadas antes desta (T5.0 a T5.4 — pilha de prova, Docker, backup, fila de e-mail e a
+cópia do aviso do sino) a superfície de rotas não se moveu, e este arquivo ficou como estava. A T5.5 moveu, e
+por isso as seções 1, 4, 7, 9 e 12 foram re-medidas agora: as rotas eram **129** e são **131**, em **20**
+arquivos `*.routes.ts` (eram 19), as rotas de plataforma eram 15 e são **17**, os elementos de rota do painel
+eram 27 e são **29** (a linha estava atrasada desde a T4, que somou o `/500` sem re-medir o §7 — ver seção 7),
+e o menu voltou a ter **18 linhas**. Nada de banco mudou: nenhuma tabela, nenhuma
+coluna, nenhuma migration — a porta escreve na coluna `users.email_verified_at`, que já existia desde a F4.
+
 ---
 
 ## 1. Resumo executivo
 
 1. O produto é um ERP SaaS multiempresa que funciona de ponta a ponta no ambiente
-   local: 129 rotas de API sobre Fastify 5 + Prisma 6 + MySQL 8.4.7, painel React com
-   27 elementos de rota (17 telas atrás do menu) e uma vitrine pública montada pelo banco.
+   local: 131 rotas de API sobre Fastify 5 + Prisma 6 + MySQL 8.4.7, painel React com
+   29 elementos de rota (18 telas atrás do menu) e uma vitrine pública montada pelo banco.
 2. Funciona e tem teste automatizado: autenticação com verificação de e-mail, segundo
    fator TOTP e bloqueio por conta, recuperação e renovação de sessão, RBAC com
    hierarquia de papéis, isolamento multiempresa, clientes,
@@ -70,7 +78,7 @@ continua marcada para a F9.
    ter serviço, duas rotas e aba no carnê — gravando só a configuração do MANUAL,
    com as três colunas de credencial nulas por construção e fora da resposta.
 7. Segurança: nenhuma rota nasce aberta (gate estrutural derruba o boot), e as
-   **129** rotas estão particionadas por teste em 13 públicas, 2 de etapa de login e 114
+   **131** rotas estão particionadas por teste em 13 públicas, 2 de etapa de login e 116
    autenticadas, sem nenhuma sem cadeado (`isolamento-rotas.test.ts`). Desde a F4 a
    autenticação tem três camadas novas: o link de verificação do cadastro atrás de
    `REQUIRE_EMAIL_VERIFICATION` (D2, ligada em produção), o segundo fator TOTP com o
@@ -162,46 +170,49 @@ nexusbusinessmanager/
 ├── apps/
 │   ├── api/
 │   │   ├── prisma/
-│   │   │   ├── migrations/        (20 migrations + migration_lock.toml)
-│   │   │   ├── schema.prisma      (31 models, 21 enums)
+│   │   │   ├── migrations/        (22 migrations + migration_lock.toml)
+│   │   │   ├── schema.prisma      (34 models, 21 enums)
 │   │   │   └── seed.ts
 │   │   ├── src/
 │   │   │   ├── config/            (env.ts, producao.ts)
-│   │   │   ├── lib/               (18 arquivos: audit, auth, brFields,
-│   │   │   │                       company-context, errors, installments,
-│   │   │   │                       money, pagination, password,
+│   │   │   ├── lib/               (21 arquivos: audit, auth, brFields,
+│   │   │   │                       company-context, criptografia, errors,
+│   │   │   │                       installments, money, pagination, password,
 │   │   │   │                       passwordPolicy, pix, platform, prisma,
-│   │   │   │                       rbac, stock, time, tokens, tx)
-│   │   │   ├── modules/           (19 módulos: auth, companies, users, audit,
+│   │   │   │                       rbac, segundo-fator, stock, tentativas, time,
+│   │   │   │                       tokens, tx) + mail/ (7 arquivos: porta, smtp,
+│   │   │   │                       console, fake, fila, mensagens, index)
+│   │   │   ├── modules/           (20 módulos: auth, companies, users, audit,
 │   │   │   │                       clients, products, sales, purchases,
 │   │   │   │                       finance, charges, gateways, crm, agenda,
 │   │   │   │                       reports, notifications, cms, cron, health,
-│   │   │   │                       service-orders)
+│   │   │   │                       service-orders, platform-accounts)
 │   │   │   ├── plugins/           (auth, gate, maintenance, security)
 │   │   │   ├── app.ts
 │   │   │   └── server.ts
-│   │   └── test/                  (47 arquivos .test.ts + helpers.ts)
+│   │   └── test/                  (50 arquivos .test.ts + helpers.ts)
 │   └── web/
 │       ├── public/
 │       └── src/
 │           ├── components/        (13 na raiz + 5 cms/, 12 landing/, 3 layout/,
 │           │                       3 settings/ — 36 arquivos)
 │           ├── context/           (AuthContext, ThemeContext)
-│           ├── lib/               (27 módulos: api, auditLabels, brand,
-│           │                       cmsApi, confirm, cronApi, csv, destino, format,
+│           ├── lib/               (28 módulos: api, auditLabels, brand,
+│           │                       cmsApi, confirm, contasPlataformaApi, cronApi,
+│           │                       csv, destino, format,
 │           │                       landingApi, landingEstilo, landingTypes,
 │           │                       lembranca, masks, metricaVitrine, money,
 │           │                       notificationsApi, notify, papeis,
 │           │                       registro-erros, segundoFator, settingsApi,
 │           │                       statusServico, tokenStore, uiCopy, validators,
 │           │                       verificacao)
-│           ├── pages/             (24 arquivos)
+│           ├── pages/             (25 arquivos)
 │           ├── styles/            (7 arquivos CSS, 3.594 linhas no total)
-│           └── test/              (20 arquivos: 18 testes + 2 fábricas;
+│           └── test/              (22 arquivos: 20 testes + 2 fábricas;
 │                                   o jsdom vem do vitest.config, não de setup.ts)
 ├── assets/brand/logo/
 ├── docs/
-│   ├── adr/                       (16 ADRs)
+│   ├── adr/                       (22 ADRs)
 │   ├── decisoes/                  (G1–G6 + G8, em 7 arquivos)
 │   ├── design/palette.md
 │   ├── screenshots/               (116 capturas)
@@ -228,7 +239,7 @@ Não há `.github/` — ou seja, **nenhum CI versionado** (a pastinha é trabalh
 
 ## 4. Rotas da API
 
-Fonte: leitura estática dos 19 arquivos `*.routes.ts`, conferida contra o servidor em
+Fonte: leitura estática dos 20 arquivos `*.routes.ts`, conferida contra o servidor em
 execução e contra a regra 4 de `apps/api/test/isolamento-rotas.test.ts`, que exige que a
 contagem medida pelo gancho `onRoute` do Fastify bata com a contagem declarada nos
 arquivos de rota. Não existe `tools/inventario-rotas.cjs` no repositório: a medição da
@@ -237,28 +248,29 @@ foi corrigida para apontar no comando que qualquer um repete.
 
 | Recorte | Quantidade |
 | --- | --- |
-| Rotas declaradas | **129** |
+| Rotas declaradas | **131** |
 | Públicas de propósito (`config.public`) | 13 |
 | De etapa (decorador `app.authenticateSegundoFator`, sem sessão) | 2 |
-| Da plataforma (`assertPlatformAdmin`) | 15 |
+| Da plataforma (`assertPlatformAdmin`) | 17 |
 | De empresa, com `app.authenticate` + permissão RBAC | 91 |
 | De conta (falam com a pessoa, não com uma empresa do contexto) | 8 |
 | Registradas sem gate | **0** |
 
-As cinco linhas acima da contagem são a partição da regra 6 de `isolamento-rotas.test.ts`, medida nesta
-rodada com a mesma régua do teste: as quatro novas públicas e as duas de etapa entraram na F4 (D2 e D3), e as
-quatro rotas de segundo fator do caminho da conta entraram em "de conta" — 13 + 2 + 15 + 91 + 8 = 129.
+As cinco linhas acima da contagem são a partição da regra 6 de `isolamento-rotas.test.ts`, re-medida nesta
+rodada com a mesma régua do teste: as duas rotas novas são de plataforma (`GET /api/plataforma/contas/sem-confirmacao`
+e `POST /api/plataforma/contas/:userId/confirmar-email`, a porta do N61), e nada mais se moveu — 13 + 2 + 17 + 91 + 8 = 131.
 
 Prova de que nenhuma delas nasceu aberta, executada nesta rodada: a regra 8 de `isolamento-rotas.test.ts`
-varre as **116** rotas não públicas sem token (129 menos as 13 públicas) e exige 401 em todas, com o modo de
+varre as **118** rotas não públicas sem token (131 menos as 13 públicas) e exige 401 em todas, com o modo de
 manutenção conferido antes de medir. A amostra manual contra o servidor de dev — `/api/health` 200,
 `/api/leads` 401, `/api/clients` 401 e mais catorze caminhos — foi medida na passada da F3.2 Parte 2 e continua
 válida como retrato; o que prova o gate hoje é a varredura, não a lista.
 
 Por módulo: agenda 7 · audit 2 · auth 19 · charges 6 · clients 5 · cms 14 ·
 companies 5 · crm 6 · cron 3 · finance 9 · gateways 2 · health 1 ·
-notifications 7 · products 11 · purchases 8 · reports 8 · sales 4 ·
-service-orders 6 · users 6 — somando 129. As nove rotas novas de `auth` são as três públicas da verificação e
+notifications 7 · **platform-accounts 2** · products 11 · purchases 8 · reports 8 · sales 4 ·
+service-orders 6 · users 6 — somando 131. As duas rotas novas de `platform-accounts` são a porta do N61
+(`docs/AUDITORIA.md`), e as nove rotas novas de `auth` são as três públicas da verificação e
 do desafio (`/verify-email`, `/resend-verification`, `/2fa/challenge`), as duas de etapa (`/2fa/setup`,
 `/2fa/activate`) e as quatro do caminho da conta (`/2fa/status`, `/2fa/preparar`, `/2fa/ativar`,
 `/2fa/desativar`). O `/register` não é novo e não mudou de caminho: o que mudou nele foi a resposta, quando a
@@ -354,6 +366,8 @@ A lista completa, rota por rota:
 | GET | /api/notifications/preferences | notifications | autenticada |
 | PUT | /api/notifications/preferences | notifications | autenticada |
 | POST | /api/notifications/scan | notifications | settings:write |
+| GET | /api/plataforma/contas/sem-confirmacao | platform-accounts | plataforma |
+| POST | /api/plataforma/contas/:userId/confirmar-email | platform-accounts | plataforma |
 | GET | /api/product-categories | products | product:read |
 | POST | /api/product-categories | products | product:write |
 | PATCH | /api/product-categories/:id | products | product:write |
@@ -486,6 +500,7 @@ Cinco estados possíveis: **Implementado e testado**, **Implementado sem teste**
 | Relatórios agregados | **Parcial** | 8 rotas existem e respondem; asserções de valor cobrem overview, financeiro e dinheiro; os seis demais relatórios só têm teste de acesso/intrusão |
 | Notificações e preferências | Implementado e testado | 7 rotas; `notifications.test.ts`, mais os 8 casos de `avisos-por-email.test.ts` (a cópia por e-mail do aviso do sino, o portão do canal e os dois contadores da varredura); prova `tools/verify-notificacoes.cjs` (88 checagens) |
 | Auditoria | Implementado e testado | 2 rotas de leitura (empresa e plataforma); gravação exercitada em 31 dos 46 arquivos de teste (`grep -l "audit\|AuditLog"` em `apps/api/test/*.test.ts`) |
+| Contas sem confirmação (porta de plataforma) | Implementado e testado | 2 rotas de plataforma (`GET /api/plataforma/contas/sem-confirmacao`, `POST /api/plataforma/contas/:userId/confirmar-email`); `confirmacao-administrativa-de-email.test.ts` (9 casos, com o link vivo morrendo junto da escrita e a idempotência provada) e `porta-administrativa-de-email.test.tsx` (12); tela `/app/plataforma-contas` com prova `tools/verify-contas-plataforma.cjs`; decisão em `docs/adr/0022-a-porta-de-plataforma-que-confirma-um-endereco.md`. Fecha o N61 e expõe o N78 |
 | Rotinas agendadas (cron) | Implementado e testado | 3 rotas de plataforma; `cron.test.ts`; prova `tools/verify-rotinas.cjs` |
 | CMS da vitrine | Implementado e testado | 14 rotas; `cms.test.ts`; provas `tools/verify-cms.cjs` e `tools/verify-landing-cms.cjs` |
 | Documentos legais | Implementado e testado | `cms.test.ts` (11 casos, incluindo textos legais) e `settings.test.ts` (21 casos) |
@@ -502,9 +517,15 @@ Cinco estados possíveis: **Implementado e testado**, **Implementado sem teste**
 
 ## 7. Frontend
 
-`apps/web/src/App.tsx` declara **27 elementos de rota** React — **26 com caminho** (`grep -c 'path=' App.tsx`)
-mais o `index` do painel, que não tem caminho. A fonte é a contagem linha a linha, não
-`grep -c "<Route"`, que devolve 28 porque também encaixa a tag `<Routes>`:
+`apps/web/src/App.tsx` declara **29 elementos de rota** React — **28 com caminho** (`grep -c 'path=' App.tsx`)
+mais o `index` do painel, que não tem caminho. A fonte é a contagem linha a linha: `grep -o '<Route'` devolve
+30 ocorrências, e uma delas é a tag `<Routes>` que envolve as outras 29; `grep -c '<Route '` devolve 28 porque
+a rota `/app` abre o tag numa linha e escreve o `path=` na outra.
+
+Estas duas contagens estavam atrasadas **antes** da T5.5, e a correção não é silenciosa: `grep -n 'path=' App.tsx`
+mostra o `/500` que a T4.4 trouxe junto com o `ErrorBoundary`, e o texto deste parágrafo continuava dizendo
+26 caminhos / 27 elementos. A T5.5 soma `plataforma-contas` em cima do que já estava velho: 26 → 27 (T4, não
+re-medida) → **28** agora.
 
 - públicas: `/` (vitrine montada pelo conteúdo do banco), `/login`, `/cadastro`,
   `/recuperar-senha`, **`/verificar-e-mail`** (a rota do link da D2, nova nesta rodada), `/legal/:slug`,
@@ -512,7 +533,7 @@ mais o `index` do painel, que não tem caminho. A fonte é a contagem linha a li
 - protegidas por `ProtectedRoute` sob `/app`: `index` (Dashboard), clientes,
   produtos, vendas, ordens-de-servico, compras, financeiro, cobrancas, crm, agenda,
   usuarios, auditoria, configuracoes, cms, notificacoes, rotinas,
-  auditoria-plataforma — 17 telas atrás do menu;
+  auditoria-plataforma e **plataforma-contas** (a fila do N61, nova nesta rodada) — 18 telas atrás do menu;
 - catch-all `*` com página de erro.
 
 O `/login` deixou de ser um formulário de dois campos e passou a ser **quatro passos
@@ -529,14 +550,14 @@ limpa tudo o que a etapa produziu — medido em
 A gestão do fator no painel é a tela `components/settings/SegundoFatorPanel.tsx`, dentro
 da aba Segurança de `/app/configuracoes`.
 
-São **24 arquivos** em `pages/` e **36 arquivos** de componente (13 na raiz de
+São **25 arquivos** em `pages/` e **36 arquivos** de componente (13 na raiz de
 `components/`, 5 em `components/cms/`, 12 em `components/landing/` — onze `.tsx` mais
 `copy.ts` —, 3 em `components/layout/`, 3 em `components/settings/`, entrando
 `ErrorBoundary.tsx` da T4.4 e `SegundoFatorPanel.tsx` da F4), mais `context/AuthContext` e
-`context/ThemeContext`, e **27 módulos** em `lib/` — entraram `segundoFator.ts`, `destino.ts`,
-`verificacao.ts` e, nesta rodada, `registro-erros.ts` com o `lembranca.ts` que a F4 reescreveu.
-Há **20 arquivos** em `src/test/` (18 de casos e os dois helpers `fabrica-api.ts` e
-`fabrica-landing.ts`).
+`context/ThemeContext`, e **28 módulos** em `lib/` — entraram `segundoFator.ts`, `destino.ts`,
+`verificacao.ts`, `registro-erros.ts` e, nesta rodada, `contasPlataformaApi.ts`, o cliente das
+duas portas de plataforma do N61. Há **22 arquivos** em `src/test/` (20 de casos e os dois
+helpers `fabrica-api.ts` e `fabrica-landing.ts`).
 
 Componentes globais de uso transversal: `ProtectedRoute`, `AdminShell`,
 `NotificationBell`, `Tabs`, `Pagination`, `Modal`, `ConfirmationModal`,
@@ -609,38 +630,48 @@ se uma tela mudou de mãos com a última refatoração.
 
 ## 8. Testes
 
-Medidos no portão de fechamento desta tarefa (`npm test`, exit 0, saída real colada no
-relatório da rodada), com o banco de prova da decisão D6 ativo (a suíte da API não usa mock): zero
-falha e zero skip nas duas pontas. As durações variam corrida a corrida, e as duas corridas desta
-rodada estão guardadas em arquivo: o portão mediu **337,87 s** (API) e **16,49 s** (web), e a mesma
-suíte com o contador de cobertura ligado levou **487,10 s** na API; no web a corrida com o contador
-ligado fechou em 20,28 s sem os globais de medição e voltou a dar 18 arquivos / 140 casos com eles.
-Na passada anterior (F4) o portão tinha dado 415,87 s e 10,84 s. O que sustenta o conteúdo da tabela
-é o contador de arquivos e casos, que não muda entre corridas.
+Medidos no portão de fechamento da T5.5 (`npm test`, exit 0, saída real colada no relatório da
+rodada), com o banco de prova da decisão D6 ativo (a suíte da API não usa mock): zero falha e zero
+skip nas duas pontas, rodadas uma depois da outra e nunca sobrepostas. As durações variam corrida a
+corrida — o portão mediu **303,17 s** (API) e **15,47 s** (web) —, e o que sustenta o conteúdo da
+tabela é o contador de arquivos e casos, que não muda entre corridas.
+
+A tabela estava **duas tarefas atrasada** quando esta rodada começou: ela dizia 47 arquivos / 437
+casos na API e 18 / 140 no web, que são os números da T4, enquanto a T5.3 já tinha estreado
+`fila-de-mail.test.ts` e a T5.4 tinha medido 49 / 450 e 19 / 144 no próprio portão de fechamento.
+Nenhuma das duas tarefas atualizou este arquivo, e a diferença só aparece porque a conta arquivo por
+arquivo fecha: 437 + 5 + 8 = 450, e 450 + 9 = 459. O atraso era de escrita, não de suíte — os casos
+novos existiam e passavam.
 
 | Suíte | Arquivos | Casos | Resultado | Duração |
 | --- | --- | --- | --- | --- |
-| API (`vitest`, forks, serial) | 47 | 437 | 47 passed (47) · 437 passed (437) | 337,87 s |
-| Web (jsdom + Testing Library) | 18 | 140 | 18 passed (18) · 140 passed (140) | 16,49 s |
+| API (`vitest`, forks, serial) | 50 | 459 | 50 passed (50) · 459 passed (459) | 303,17 s |
+| Web (jsdom + Testing Library) | 20 | 156 | 20 passed (20) · 156 passed (156) | 15,47 s |
 
-Na API são **10 arquivos e 87 casos a mais** que a medição da F3.2 Parte 2 (37 / 350). Os dois
+Na API são **13 arquivos e 109 casos a mais** que a medição da F3.2 Parte 2 (37 / 350). Os dois
 primeiros entraram na T1 e na T2 e nunca tinham sido contados aqui
 (`banco-de-teste-separado.test.ts`, `empresa-lembrada.test.ts`); os sete que a T3 estrearam são
 `bloqueio-de-conta.test.ts`, `corrida-de-abas.test.ts`, `criptografia.test.ts`,
 `guardas-herdadas.test.ts`, `recuperacao-por-email.test.ts`, `segundo-fator.test.ts` (16 casos) e
-`verificacao-de-email.test.ts`; e o décimo é desta rodada — `zero-placeholder.test.ts` (3 casos),
-que varre o fonte do front e da API procurando porta que devolve `null` de propósito, "em breve" e
-copy de obra. Além deles, `isolamento-rotas.test.ts`, `seguranca.test.ts` e
-`validador-de-producao.test.ts` ganharam casos, e a soma dos dez arquivos novos com os três
-reatualizados fecha os 87 — a repartição exata arquivo por arquivo não foi medida nesta passada, e o
-que está garantido aqui é o total do portão (437, todos verdes). No web são **6 arquivos e 53 casos a
-mais** (12 / 87 na F4): estrearam `resposta-atrasada.test.tsx` (5), `privacidade-do-login.test.tsx` (15),
-`tema-sincronizado.test.tsx` (6), `limite-de-erro.test.tsx` (9), `verificar-e-mail.test.tsx` (8) e
-`segundo-fator-conta.test.tsx` (9) — 52 casos contabilizados pelo próprio relatório —, e o caso que
-falta para fechar os 53 é o oitavo de `fim-de-sessao.test.tsx`, que a T4 acrescentou ao arquivo que
-já existia.
+`verificacao-de-email.test.ts`; `zero-placeholder.test.ts` (3 casos), que varre o fonte do front e da
+API procurando porta que devolve `null` de propósito, "em breve" e copy de obra, é da T4. Os três
+últimos são da T5, um por tarefa: `fila-de-mail.test.ts` (5 casos, T5.3), `avisos-por-email.test.ts`
+(8 casos, T5.4) e `confirmacao-administrativa-de-email.test.ts` (9 casos, T5.5). Além deles,
+`isolamento-rotas.test.ts`, `seguranca.test.ts` e `validador-de-producao.test.ts` ganharam casos — a
+repartição exata arquivo por arquivo dos 109 não foi medida nesta passada, e o que está garantido
+aqui é o total do portão (459, todos verdes) e a soma dos arquivos nomeados: 437 + 5 + 8 + 9 = 459.
+No web são **8 arquivos e 69 casos a mais** sobre os 12 / 87 da F4: estrearam `resposta-atrasada.test.tsx`
+(5), `privacidade-do-login.test.tsx` (15), `tema-sincronizado.test.tsx` (6), `limite-de-erro.test.tsx` (9),
+`verificar-e-mail.test.tsx` (8) e `segundo-fator-conta.test.tsx` (9) na T4 — 52 casos contabilizados pelo
+próprio relatório —, e o caso que falta para fechar os 53 é o oitavo de `fim-de-sessao.test.tsx`;
+depois vêm `avisos-por-email.test.tsx` (4, T5.4) e `porta-administrativa-de-email.test.tsx` (12, T5.5),
+e 140 + 4 + 12 = 156 fecha a linha da tabela acima.
 
-Cobertura real, medida agora com o mesmo comando de medição das duas pontas:
+Cobertura real. **Esta tabela não é desta tarefa**: ela é a medição da T4, reexecutada lá com os dois
+comandos abaixo, e não foi refeita na T5.3, na T5.4 nem na T5.5. O que mudou de lá para cá são quatro
+arquivos de teste (`fila-de-mail`, `avisos-por-email` nos dois lados, `confirmacao-administrativa-de-email`)
+e uma tela nova (`PlataformaContas.tsx`), então os percentuais aqui são piso do que a suíte alcança
+hoje, não o número atual — e a cobertura da tela nova é **NÃO VERIFICADO**.
 
 ```
 API:  npm run test:coverage --workspace @nexus/api
@@ -651,7 +682,7 @@ Web:  npm run test --workspace @nexus/web -- --coverage \
 | Suíte | Stmts | Branch | Funcs | Lines | Base medida |
 | --- | --- | --- | --- | --- | --- |
 | API | **87,79%** | 76,01% | 87,30% | **90,62%** | re-medida na T4 com `npm run test:coverage --workspace @nexus/api` (exit 0, 487,10 s): os mesmos quatro percentuais e o mesmo `lcov.info` da F4 — 3.006/3.317 linhas, 1.889/2.485 ramificações, 674/772 funções em 92 arquivos sob `src`; as instruções ficam em 3.274/3.729 como na passada. A cobertura da API não se moveu porque o arquivo novo da rodada (`zero-placeholder.test.ts`) lê fonte, não executa `src`; **3** arquivos seguem com zero alcance |
-| Web | **38,19%** | 33,11% | 30,67% | **41,03%** | corrida desta rodada com os mesmos globais da passada (`--coverage.include="src/**"`, `exclude="src/test/**"`, 18 arquivos / 140 casos verdes): as bases contadas arquivo por arquivo em `apps/web/coverage/coverage-final.json` são 1.845/4.831 instruções, 1.287/3.886 ramificações e 466/1.519 funções; **100** entradas no JSON, das quais 9 sem nenhuma instrução mensurável (os sete `.css`, `logo.png` e `vite-env.d.ts`), restando **91** arquivos de código — e **27** deles em 0%, contra 38 da passada. A alta de +8,52 pontos de instrução é a T4: saíram do zero `VerificarEmail.tsx` (97,22%), `SegundoFatorPanel.tsx` (96,15%), `ErrorBoundary.tsx` (100%), `lib/verificacao.ts` e `lib/segundoFator.ts` (100% nos dois) |
+| Web | **38,19%** | 33,11% | 30,67% | **41,03%** | corrida da T4 com os mesmos globais da passada (`--coverage.include="src/**"`, `exclude="src/test/**"`, 18 arquivos / 140 casos verdes): as bases contadas arquivo por arquivo em `apps/web/coverage/coverage-final.json` são 1.845/4.831 instruções, 1.287/3.886 ramificações e 466/1.519 funções; **100** entradas no JSON, das quais 9 sem nenhuma instrução mensurável (os sete `.css`, `logo.png` e `vite-env.d.ts`), restando **91** arquivos de código — e **27** deles em 0%, contra 38 da passada. A alta de +8,52 pontos de instrução é a T4: saíram do zero `VerificarEmail.tsx` (97,22%), `SegundoFatorPanel.tsx` (96,15%), `ErrorBoundary.tsx` (100%), `lib/verificacao.ts` e `lib/segundoFator.ts` (100% nos dois). Desde então a contagem de arquivos de código mensurável subiu (`PlataformaContas.tsx` e `contasPlataformaApi.ts` entraram no rol), e esses dois não estão nesta base |
 
 O que **não** está coberto, dito sem rodeios:
 
@@ -725,7 +756,10 @@ Limitações da medição que o revisor deve saber:
 
 - No web não existe script `test:coverage`; o escopo foi passado por argumento na
   linha de comando. Sem isso o Vite mediria apenas os arquivos alcançados pelos
-  12 arquivos de teste, o que daria um número bonito e falso.
+  arquivos de teste, o que daria um número bonito e falso.
+- A contagem de arquivos e casos da seção 8 é do portão desta tarefa; a de cobertura
+  é a da T4 e não foi refeita aqui. As duas coisas têm idades diferentes, e dizer
+  isso é mais honesto do que colar percentual velho embaixo de número novo.
 - A API não tem threshold de cobertura configurado; fixar meta é decisão da
   Fase 7 do plano de auditoria e depende do dono.
 - Nenhum teste sobe o servidor HTTP da API com TLS nem valida cabeçalhos em
@@ -749,7 +783,7 @@ mentira deste arquivo.
 | D1 | "Autenticação, cadastro e recuperação: 8 rotas", depois 10 | são **19** rotas: as dez de antes mais `POST /verify-email` e `POST /resend-verification` (verificação de cadastro) e sete de segundo fator — `POST /2fa/challenge` (pública), `POST /2fa/setup` e `POST /2fa/activate` (as duas de etapa, sob token de configuração), `GET /2fa/status`, `POST /2fa/preparar`, `POST /2fa/ativar` e `POST /2fa/desativar` (as quatro de sessão) | **corrigido de novo nesta rodada**: a linha 485 do README (re-medida nesta passada, `grep -n` no arquivo) diz 19 rotas e nomeia as peças novas; a fonte é `apps/api/src/modules/auth/auth.routes.ts`, onde as dezenove foram contadas (`grep -cE 'app\.(get\|post\|put\|patch\|delete)\('` → 19) |
 | D2 | `README.md:517` — a tabela de tecnologias dizia "react-router-dom 6" | `^7.18.4` no `package.json` do web | **corrigido nesta rodada**: a linha agora diz 7, conferido no `package.json` e no `node_modules` instalado (7.18.4) |
 | D3 | `README.md:20` e `README.md:505` dizem "MySQL 8" | o servidor local é **8.4.7** (re-medido por `SELECT VERSION()` nesta rodada: 8.4.7) | a série está certa; falta só o número exato onde o documento descreve o ambiente |
-| D4 | Nenhuma tabela do README somava as rotas | **re-medido nesta rodada**: a tabela de módulos (`README.md:483-508`) tem dezoito linhas com contagem explícita, que somam **128** — as 119 de antes mais as nove rotas novas da autenticação —, e falta exatamente uma, `GET /api/health`, que não tem linha própria. 128 + 1 = **129**, a contagem medida | `README.md:483-508` conferido contra a leitura estática dos 19 arquivos `*.routes.ts` (129) e contra a regra 4 de `isolamento-rotas.test.ts` |
+| D4 | Nenhuma tabela do README somava as rotas | **re-medido na T5.5**: a tabela de módulos (`README.md`, bloco "Módulos") tem **19 linhas** com contagem explícita, que somam **130** — os 128 medidos na T3 mais as duas rotas novas de `platform-accounts` —, e falta exatamente uma, `GET /api/health`, que não tem linha própria. 130 + 1 = **131**, a contagem medida | `README.md` conferido contra a leitura estática dos 20 arquivos `*.routes.ts` (131) e contra a regra 4 de `isolamento-rotas.test.ts` |
 | D5 | `docs/ANALISE-LACUNAS.md` e tarefas antigas citam "Módulo Relatórios + exportações" como pendente | os 8 relatórios agregados existem na API e 6 telas exportam CSV pelo navegador | `apps/api/src/modules/reports`, `apps/web/src/pages/*.tsx` |
 | D6 | O passo a passo de instalação do README não mandava gerar o cliente Prisma (hoje manda: `README.md:703-715`, re-medido nesta passada) | um clone novo não compila sem `npm run prisma:generate -w @nexus/api` — 217 erros de tipo por cliente não gerado | **corrigido nesta rodada**; registrado como N9 em `docs/AUDITORIA.md` |
 | D7 | `docs/ANALISE.md` e `docs/ANALISE-LACUNAS.md` são retratos de rodadas anteriores | rotas, tabelas e contagens mudaram desde então | `docs/ANALISE.md`, `docs/ANALISE-LACUNAS.md` — vale neles o mesmo aviso deste arquivo: quem mexer reatualiza |
@@ -802,6 +836,7 @@ Ligadas ao item correspondente de `docs/AUDITORIA.md`.
 | P20 | Nove ferramentas de captura (`tools/shoot-*.cjs`) não acompanham a interface de hoje, e 48 PNGs ainda mostram a barra anterior à F3.1 | AUDITORIA N29 e N30 | média — fora do escopo por decisão do dono (D7: nenhuma recaptura em massa); a consertada entra na **T7/F8**, e as famílias regravadas nesta rodada foram conferidas pixel a pixel (N30 re-medido) |
 | P21 | O sino e o relatório diário das rotinas não tinham chamador de e-mail nenhum, e a caixa "aviso por e-mail" da tela de preferências era desenhada com `disabled` em pedra, sem consultar a instalação | AUDITORIA N59 | **fechado na T5.4**: cada linha nova do sino ganha cópia por e-mail pela mesma fila da T5.3 (`notificarDetalhado()` grava o aviso e depois enfileira, com pré-consulta de `dedupeKey` para que a varredura não reenvie aviso velho), os três handlers de rotina chamam a entrega e fecham a coluna "última execução" com `· N e-mail(s)`, o portão é `entregaDeVerdade` (quem não afirma entrega não enfileira nem simula), a rota responde `{ criadas, emails }`, a falha vira `notification.entrega_falhou` com endereço mascarado, e a caixa passou a ler `estadoDoCanalDeEmail()`. Medido: `avisos-por-email.test.ts` **8 casos** e `avisos-por-email.test.tsx` **4 casos**, vermelhos antes e verdes depois, suítes completas **API 49/450** e **web 19/144**, prova de navegador `verify-notificacoes.cjs` **88 checagens / 0 falhas**; decisão em `docs/adr/0021` |
 | P22 | As três mensagens de e-mail anteriores à T5.4 interpolam `primeiroNome` no HTML sem escape | AUDITORIA N76 | baixa com auto-XSS: o texto vem do próprio cadastro, então não há terceiro envolvido; a sanitização entra na passada de e-mail do `SECURITY.md` da **T6/F7**, registrada em vez de corrigida em silêncio fora do N59 |
+| P23 | Confirmar o endereço pela porta da plataforma escreve uma coluna, não uma leitura: `email_verified_at` preenchido pelo suporte não afirma que alguém abriu a caixa postal, a fila de pendentes não expira nem chama ninguém quando cresce, e a busca dela é um `contains` em `name`/`email` sem índice | AUDITORIA N61, `docs/adr/0022` | baixa e declarada: a linha de auditoria diz quem, quando, com qual motivo e para qual endereço mascarado, que é a prova de decisão — não de leitura. Um aviso de "N contas aguardando confirmação" é caso de sino, e sino com e-mail já existe desde a T5.4; nada nesta tarefa o pedia. Em banco grande o `contains` vira varredura sequencial |
 
 ---
 
@@ -1211,6 +1246,57 @@ node "$TMPDIR/prova-navegador-admin-raiz.cjs"
    # 35 blocos de conteudo sob o cabecalho "Olá, Administrador", e uma segunda entrada limpa,
    # sem cache e com o storage zerado, repete o ciclo inteiro. Nenhum valor de segredo — nem
    # senha, nem token — apareceu em nenhuma dessas linhas.
+**Re-medicao de 2026-10-14 (T5.5 - F6: porta administrativa de confirmacao de email, N61 e N78)**.
+Toda linha abaixo foi executada nesta tarefa, com saida real guardada em log desta rodada; as do
+inventario foram rebatidas na arvore final, depois de todo documento estar escrito:
+
+```bash
+npm run typecheck                          # api + web, zero erro, codigo 0
+npm run build                              # 38 arquivos de JS e 1 de CSS em apps/web/dist/assets,
+                                           # sem aviso de chunk: index em 355,36 kB / 121,78 kB gzip,
+                                           # o chunk novo da tela (PlataformaContas) em
+                                           # 6,15 kB / 2,49 kB gzip, CSS unico 398,54 / 61,29
+npm test                                   # api 50 arquivos / 459 casos / 303,17 s
+                                           # web 20 arquivos / 156 casos / 15,47 s
+                                           # EXIT=0, zero falha, zero skip, uma ponta depois da outra
+(cd apps/api && npx vitest run test/confirmacao-administrativa-de-email.test.ts)
+                                           # 9 passed (9) em 4,85 s
+(cd apps/web && npx vitest run src/test/porta-administrativa-de-email.test.tsx)
+                                           # 12 passed (12) em 2,30 s
+node tools/verify-contas-plataforma.cjs    # 40 checagens, 0 falhas, na pilha 3002 / 5174
+node tools/verify-sidebar.cjs              # 105 checagens, 0 falhas, dezoito linhas clicadas
+npm run verify                             # 64 telas em 360, 1024 e 1440 px, 0 com problema
+# --- inventario re-medido na arvore final ---
+find apps/api/src -name '*.ts' | wc -l                        # 97, dos quais 3 do modulo novo
+ls apps/api/src/modules | wc -l                               # 20 (entra platform-accounts)
+ls apps/api/test/*.test.ts | wc -l                            # 50
+find apps/web/src -name '*.ts' -o -name '*.tsx' | wc -l       # 116
+ls apps/web/src/pages | wc -l                                 # 25 (entra PlataformaContas)
+ls apps/web/src/lib | wc -l                                   # 28 (entra contasPlataformaApi)
+ls apps/web/src/test | wc -l                                  # 22 (20 testes + 2 fabricas)
+ls docs/adr/*.md | wc -l                                      # 22 (entra a 0022)
+find apps/api/prisma/migrations -maxdepth 1 -type d | tail -n +2 | wc -l
+                                                              # 22 migrations; o decimo terceiro
+                                                              # item da pasta e o lock, nao uma
+                                                              # migration, e nenhuma foi editada
+cat apps/web/src/styles/*.css | wc -l                         # 3.594
+ls docs/screenshots/*.png | wc -l                             # 116 capturas canonicas
+git ls-files --cached --others --exclude-standard | wc -l      # 537 arquivos da arvore
+node "$TMPDIR/fotografia-banco.cjs" prova
+   # 35 tabelas / 39.638 linhas antes dos dois arquivos de teste desta tarefa rodarem sozinhos,
+   # e os mesmos 35 / 39.638 depois: o arquivo novo nao deixa sobra no banco de prova
+node "$TMPDIR/instantaneo-banco-dev.cjs" final
+   # 35 tabelas / 70.901 linhas, tabela por tabela identicas ao instantaneo tirado no comeco da
+   # tarefa; a unica linha que difere no arquivo de saida e o horario da coleta
+```
+
+A superfície de rotas tambem foi recontada aqui, e ela saiu de 129 para **131**: as duas novas são
+`GET /api/platform/accounts/pending-email` e `POST /api/platform/accounts/:id/confirm-email`, ambas
+de plataforma, ambas atras do gate de sessao e da guarda `assertPlatformAdmin`, e as duas entram na
+varredura anonima que a regra 8 de `isolamento-rotas.test.ts` exige 401 — medida com o teste rodando,
+nao por conta.
+
+```bash
 git fetch origin && git merge-base --is-ancestor origin/main HEAD   # avanco direto
 git ls-remote origin HEAD && git rev-parse HEAD               # mesma linha, depois do push
 ```

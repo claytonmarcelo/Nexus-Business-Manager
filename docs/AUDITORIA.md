@@ -1924,7 +1924,7 @@ de 10/min por IP (`auth.routes.ts:47`) limita o atacante disperso, não o insist
 entre "não vaza quais endereços existem" e "não tranca quem não atacou nada", e a decisão da casa foi a
 primeira; precisa constar em `SECURITY.md` (**T6 / F7**) em vez de viver só nesta adenda.
 
-### N61 — aberto: não há porta administrativa para confirmar o e-mail de uma conta
+### N61 — corrigido na T5.5: a porta administrativa de confirmação existe, e é da plataforma
 
 A única escrita em `users.email_verified_at` é `confirmarEmail()` (`verificacao.service.ts:118`), disparada
 pelo clique no link ou pelo código digitado na tela pública. Medido por grep em `apps/api/src`: nenhum
@@ -1938,6 +1938,22 @@ Fica para a **T5 / F6** com uma decisão de desenho (CLI `npm run` com o mesmo p
 de plataforma com auditoria e `assertPlatformAdmin`), registrada aqui em vez de improvisada nesta rodada: o
 escopo da T3 era a autenticação, e abrir uma porta de escrita em coluna de identidade sem ela ter sido pedida
 seria a maior mudança da rodada — e a mais arriscada — feita às escondidas.
+
+**Fechado na T5.5 (2026-10-14) pela segunda das duas saídas previstas aqui — rota de plataforma com auditoria e
+`assertPlatformAdmin`.** `apps/api/src/modules/platform-accounts/` traz `GET
+/api/plataforma/contas/sem-confirmacao` (quem espera, com endereço, situação, quantas empresas serve, da conta
+mais antiga para a mais nova, busca pelo nome ou pelo endereço) e `POST
+/api/plataforma/contas/:userId/confirmar-email` (marca a coluna e gasta, na mesma transação, todo link de
+verificação ainda vivo daquela conta). ACLI foi recusada porque suporte não se faz de terminal e a fila
+continuaria invisível; o ADMIN de empresa foi recusado porque confirmar endereço é afirmar identidade — a
+decisão e as alternativas estão em `docs/adr/0022-a-porta-de-plataforma-que-confirma-um-endereco.md`. O evento
+`admin.email_confirmado` nasce na trilha da plataforma (`companyId` nulo por construção, empresa da sessão só em
+`metadata.empresaDaSessao`) com o endereço mascarado por `mascaraEndereco()`, e o motivo, opcional no contrato, é
+obrigatório na tela — sem motivo escrito a rota não é chamada nenhuma vez. A tela `/app/plataforma-contas` tem o
+painel que diz o que a fila não é: confirmar aqui não prova que a pessoa leu mensagem nenhuma. Repetir a
+confirmação devolve `alterado: false` e não escreve nem audita nada de novo. O que o fechamento deste achado
+revelou no caminho é o **N78** abaixo, e a linha de baixo da superfície muda com ele: **129 → 131 rotas** em 20
+arquivos `*.routes.ts`, com 15 → 17 rotas de plataforma.
 
 ### N62 — aberto: as duas telas novas da F4 não têm uma linha de teste, e a medição mostra isso
 
@@ -2361,5 +2377,84 @@ entrou: a diferença entre a captura nova e a canônica é contagem transitória
 mudança não é entregável. As quatro demais do grupo das notificações saíram byte a byte iguais à galeria canônica
 (mesmo sha256), o que confere que a prova está fotografando a mesma tela de sempre.
 
+## Adenda da execução — T5.5 (F6: porta administrativa de confirmação de e-mail) encerrada — 2026-10-14
 
+### N78 — corrigido nesta rodada: com a régua da D2 ligada, o `admin:criar` criava a conta que não consegue entrar
 
+`verificacao.service.ts:147` devolve sem enviar nada quando a conta já está confirmada, está desativada, ou tem
+`platformRole === "SUPER_ADMIN"`. A recusa é de propósito — a conta da plataforma não é conta de cliente, e o
+endereço dela é de operação —, mas o lado que ninguém olhou é o do bootstrap: `apps/api/prisma/administrador-
+da-plataforma.ts` escrevia papel e senha e nunca tocava `emailVerifiedAt`. Com `REQUIRE_EMAIL_VERIFICATION=1`
+(obrigatório em produção desde a D2), o login dessa conta é negado antes da senha, e o `UPDATE` que destranca não
+existe em lugar nenhum — que é exatamente o motivo pelo qual o N61 foi aberto. Em resumo: o script que a regra de
+acesso do dono manda rodar ("jamais deve ficar sem acesso ao sistema") podia produzir a conta trancada fora do
+painel, e a situação só aparece no primeiro boot de produção, que é o pior momento para descobri-la.
+
+Consertado no lugar de origem: a decisão do bootstrap ganhou `confirmaEmail`, que vale **"confirmar se ainda não
+estiver confirmada"** (`!conta?.emailVerifiedAt`) e se aplica aos três caminhos que escrevem — criar, promover com
+consentimento, reativar com consentimento (e o caminho "nada mudou", que não escreve nada). Reescrever o carimbo
+de quem entrou pelo próprio link seria falsificar a data em que a caixa postal foi provada; por isso a coluna só é
+escrita quando está vazia, e o resumo do script passou a devolver `emailConfirmado: "marcado agora" | "já
+estava"`, sem imprimir nada além disso. O caso está provado no penúltimo teste de
+`apps/api/test/confirmacao-administrativa-de-email.test.ts` ("o bootstrap do administrador da plataforma nasce com
+o e-mail confirmado"). Fica declarado o que o conserto no código não conserta sozinho: **ambiente onde o
+`admin:criar` já rodou com a D2 ligada tem hoje uma conta de plataforma pendente, e o remédio é rodar o script de
+novo**, que é idempotente por decisão, não por sorte. Está no runbook de `docs/PRODUCAO.md`. Medido nesta máquina:
+a conta de prova (`administrador@exemplo.test`) está entre as pendentes do banco de prova, porque quem a cria é
+`tools/preparar-banco-de-prova.cjs`, não o `admin:criar`; com a flag desligada no desenvolvimento isso não morde,
+e é por isso que o achado não aparecia antes.
+
+### N61 — o que a porta fez com a superfície
+
+As duas rotas novas (`GET /api/plataforma/contas/sem-confirmacao` e `POST
+/api/plataforma/contas/:userId/confirmar-email`) levaram a régua 4 de `isolamento-rotas.test.ts` de **129 para
+131** rotas em **20** arquivos `*.routes.ts`, e a partição de **15 para 17** rotas de plataforma (13 públicas + 2
+de etapa + 17 plataforma + 91 empresa + 8 de conta = 131). O prefixo `/api/plataforma` entrou na regra 5 ao lado
+de `/api/cms` e `/api/ops`, e `platform-accounts/contas.service.ts` entrou na lista de arquivos que carimbam
+`ESCOPO_PLATAFORMA` — lista que o teste exige ser exata, nos dois sentidos. Evidência lida no log da suíte desta
+rodada: as duas portas aparecem na varredura anônima da regra 8 respondendo **401**, cada uma com o seu
+`statusCode` gravado na saída.
+
+### Prova de navegador desta rodada (N61 e N78), na pilha de prova
+
+`node tools/verify-contas-plataforma.cjs` contra 5174/3002: **40 verificações, 0 falhas**, código de saída 0. A
+prova cria uma conta pendente com vínculo de empresa e um token de verificação vivo, confere que a fila da tela
+bate com a contagem do banco (205 contas, menos a que ela mesma criou), que o endereço e o número de empresas
+aparecem, que nenhum identificador interno é impresso no navegador, que o ADMIN de uma empresa recebe **403** nas
+duas portas sem escrever nada, que a ausência de motivo bloqueia a escrita antes de sair qualquer requisição
+(conferido por `performance.getEntriesByType("resource")`, não pela cara da tela), que a escrita marca a coluna
+**e** gasta o link na mesma transação, que o evento nasce com `companyId` nulo, com endereço mascarado e com o
+motivo, que ele não aparece na trilha da empresa e aparece na da plataforma, que repetir a chamada devolve
+`alterado: false` sem segunda linha de auditoria, e que um `userId` inexistente é 404 honesto. Banco de prova
+medido dentro da própria corrida: pendentes **205 → 206 → 205**, eventos desta janela **1 → 0**, duas contas de
+prova apagadas no `finally`. A tela mudou de verdade (ganhou um painel, uma fila e um diálogo com motivo), então
+a captura de prova foi gravada — em `docs/screenshots-prova/`, pasta fora do repositório, porque a pilha de prova
+não pisa a galeria canônica (regra da T5.0).
+
+`node tools/verify-sidebar.cjs`, recontado porque a barra ganhou uma linha — é o mesmo caso do N50: **105
+checagens, 0 falhas**, com as 18 linhas clicadas uma a uma e nenhuma rota abrindo tela vazia. A lista esperada de
+itens da ferramenta passou a ter "Contas sem confirmação" depois de "Auditoria da plataforma"; a ordem conferida é
+a da barra, e a checagem do número de linhas foi re-escrita de 17 para 18 junto com a frase do rótulo.
+
+Duas coisas medidas neste caminho que valem registro justamente porque não são elogio do trabalho:
+
+- **Duas suítes da API rodaram sobrepostas neste turno, e a primeira medida mostra o que isso estraga.** A
+  corrida aberta às 20:13:49 e a corrida aberta às 20:20:04 bateram no mesmo banco de prova ao mesmo tempo, e a
+  primeira fechou com **3 arquivos / 2 casos em falha** — entre eles o contador "usuário novo nasce com a empresa
+  a mais" e a mensagem de verificação que não chegou à caixa. Nenhum dos dois é defeito do produto: contagem
+  relativa entre dois processos concorrentes não é medição. A corrida solitária de 20:20 fechou **50 arquivos /
+  459 casos, zero falha, zero skip, código de saída 316,16 s depois**, e é essa a número que vale para os
+  portões. Fica a regra para as próximas rodadas: **uma suíte por vez no banco de prova**.
+- **O banco de prova acumula contas que ninguém limpa.** Medido com leitura simples nesta máquina: **205 usuários,
+  todos pendentes**, dos quais **202 com o domínio dos helpers (`@nexus.test`)**. Não é dado de cliente, é resíduo
+  de corrida — inclusive de uma suíte interrompida neste turno, que não chegou a rodar o `finally` —, e o banco é
+  recriável por decisão (`npm run db:prova`). É exatamente por isso que as provas conferem contagem **antes e
+  depois da própria corrida** em vez de conferir número absoluto: a fila mostrando "205 contas" num banco de prova
+  é honesta sobre o banco, não sobre o produto.
+
+Portões desta tarefa, na árvore final: typecheck api+web sem erro; build com **38 chunks**, `index` em **355,36 kB
+/ 121,78 kB gzip** e o chunk novo `PlataformaContas` em **6,15 kB / 2,49 kB gzip** (a D8 continua de pé: a tela
+nova entra sob demanda e não aumenta o carregamento inicial); suíte **API 50 arquivos / 459 casos em 316,16 s** e
+**web 20 arquivos / 156 casos em 14,45 s**, zero falha e zero skip contra `nexusbusinessmanager_teste`; guarda de
+caracteres (`caracteres-permitidos.test.ts`, 4 casos) verde com os arquivos novos já na árvore; captura desta
+corrida conferida antes de registrar, sem dado sensível e sem credencial.

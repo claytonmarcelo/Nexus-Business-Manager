@@ -197,6 +197,57 @@ inteira não pode ficar nas mãos de uma credencial que quem rodou o script não
 Recusa quer dizer código de saída `1`, mensagem com o nome da chave que falta, e **nenhuma** consulta escrita:
 a lista de problemas do ambiente é verificada antes da primeira chamada ao banco.
 
+### A verificação de e-mail trava a porta, e é por isso que o bootstrap a destranca (N78)
+
+Desde a D2, `REQUIRE_EMAIL_VERIFICATION=1` é obrigatório em produção (`apps/api/.env.example`, régua A9 de
+`src/config/producao.ts`). Com ela ligada, o login de uma conta com `users.email_verified_at` nulo é negado
+**antes** da senha, com a mesma resposta de uma conta sem cadastro nenhum. Ou seja: quem instala o produto com
+a régua ligada e cria a conta raiz por um script que nunca escreveu aquela coluna fica do lado de fora do próprio
+sistema — e essa era a situação até a T5.5 (achado N78).
+
+O que o script faz hoje, medido: a decisão do bootstrap ganhou `confirmaEmail`, que vale `!conta?.emailVerifiedAt`
+e se aplica aos três caminhos que escrevem (criar, promover, reativar). A coluna só é escrita quando está vazia —
+reescrever o carimbo de quem entrou pelo próprio link seria falsificar a data em que a caixa postal foi provada.
+O resumo impresso devolve `emailConfirmado: "marcado agora"` ou `"já estava"`, e nada além disso.
+
+Prova: o penúltimo caso de `apps/api/test/confirmacao-administrativa-de-email.test.ts` ("o bootstrap do
+administrador da plataforma nasce com o e-mail confirmado").
+
+**Runbook — conta de plataforma pendente num ambiente onde o `admin:criar` já rodou antes deste conserto.** O
+script é idempotente por decisão, não por sorte: **reexecute `npm run admin:criar`** (ou
+`npm run docker:admin`) com as mesmas duas chaves de ambiente. O caminho "já é `SUPER_ADMIN`, ativa" não escreve
+senha nenhuma, e mesmo assim marca a coluna se ela estiver vazia. Nenhum `UPDATE` manual no banco é necessário,
+e nenhum dos consentimentos (`ADMIN_CRIAR_PROMOVER`, `ADMIN_CRIAR_REATIVAR`, `ADMIN_CRIAR_RENOVAR_SENHA`) é
+preciso para isso.
+
+### Destrancar o e-mail de uma conta de cliente (N61)
+
+O cenário que existe em produção: o SMTP não responde no momento do cadastro (a linha de auditoria
+`auth.verificacao_entrega_falhou` diz isso), a pessoa nunca recebeu o link, e enquanto a coluna estiver vazia ela
+não entra — sem painel, sem recuperação por senha, e sem nada que o suporte possa apertar. A saída é a tela
+**Contas sem confirmação** (`/app/plataforma-contas`), visível só para a conta da plataforma.
+
+- **Quem vê:** só `platformRole === SUPER_ADMIN` (`assertPlatformAdmin`). O `ADMIN` de uma empresa recebe **403**
+  nas duas portas, e isso é provado, não presumido (`tools/verify-contas-plataforma.cjs`).
+- **O que a fila mostra:** contas com `emailVerifiedAt` nulo, com o endereço inteiro e o número de empresas da
+  pessoa — quem atende o chamado precisa saber a quem pertence a conta. A linha de auditoria, essa sim, guarda só
+  a versão mascarada (`mascaraEndereco()` — `no***@exemplo.test`), porque a trilha é lida por muito mais gente do
+  que a fila. A busca é por nome ou endereço, e a ordenação é pela antiguidade do cadastro: quem espera mais sai
+  primeiro.
+- **O que o botão faz:** marca a coluna **e** gasta os tokens de verificação vivos da conta na mesma transação
+  (`$transaction`). O link que porventura chegou atrasado não abre uma porta que já foi destrancada por fora.
+- **Motivo:** a tela exige motivo escrito antes de sair qualquer requisição; na API o campo é opcional, porque a
+  régua é de interface, não de banco. A linha de auditoria nasce em `ESCOPO_PLATAFORMA` — `companyId` nulo,
+  endereço mascarado, `action: admin.email_confirmado`.
+- **Repetir não estraga:** a segunda chamada devolve `alterado: false` e não grava segunda linha de auditoria.
+  Identificador inexistente é 404 honesto, sem diferenciar "não existe" de "já confirmada".
+
+O que a coluna **não** prova está declarado no ADR-0022: marcar `emailVerifiedAt` pela porta administrativa não
+afirma que alguém leu a caixa postal. É um registro de decisão de suporte, com autor e motivo, não uma prova
+material. A decisão toda, com as cinco alternativas recusadas (CLI, `ADMIN` de empresa, desligar a D2, apagar o
+link, coluna de autoria) e as dívidas remanescentes, está em
+`docs/adr/0022-a-porta-de-plataforma-que-confirma-um-endereco.md`.
+
 ## 6. O que produção nunca recebe
 
 Nada desta rota conhece `admin@nexus.local` nem `nexus-demo`. Em produção, a semente só sobe com
@@ -395,9 +446,6 @@ se perde, e é por isso que o desligue limpo e o `docker stop` com folga importa
 
 ## 11. O que ainda não está aqui
 
-- **Porta administrativa de confirmação de e-mail** (N61) — ainda na T5. O que já saiu desta conta: a entrega
-  fora do request desde a T5.3 (N58, seção 10) e o chamador do sino e das rotinas desde a T5.4 (N59, item 5
-  acima).
 - **Pipeline de CI, `npm audit`, portões de cobertura, `postinstall` do Prisma e o conserto da cadeia de
   migrations para clone limpo** (N54) — F8 (T7).
 - **Política de logs com rotação e retenção** — o backup do banco existe desde a T5.2, a rotação de log ainda não.
