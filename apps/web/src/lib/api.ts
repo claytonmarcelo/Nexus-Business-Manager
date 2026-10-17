@@ -1,7 +1,8 @@
 import axios, { AxiosError, type InternalAxiosRequestConfig } from "axios";
 import { tokenStore } from "./tokenStore";
+import { urlBaseDaApi } from "./apiBase";
 
-const baseURL = import.meta.env.VITE_API_URL || "/api";
+const baseURL = urlBaseDaApi(import.meta.env.VITE_API_URL);
 
 export const api = axios.create({ baseURL, withCredentials: false });
 

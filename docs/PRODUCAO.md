@@ -450,11 +450,47 @@ o servidor), com teto de 5 segundos. Se não esvaziar a tempo, o processo regist
 `a fila de e-mail não esvaziou antes do desligue` no log e fecha — uma mensagem no meio da terceira tentativa
 se perde, e é por isso que o desligue limpo e o `docker stop` com folga importam.
 
-## 11. O que ainda não está aqui
+## 11. Painel em hospedagem estática e API em container
+
+É a trilha que este projeto tem hoje publicado: o painel servido por um host estático (a Vercel, no caso do
+dono) e a API com o MySQL num host de container. As seções 2 e 3 descrevem a pilha inteira num host só, onde o
+nginx do `Dockerfile.web` faz o proxy de `/api` com a mesma origem. Separando os dois lados de casa, o proxy
+deixa de existir, e é exatamente aí que a primeira publicação quebrou — o achado **N81** (`docs/AUDITORIA.md`)
+tem a medição: o painel chamou `/health` e `/public/landing` num host que não tem API nenhuma, e a função do
+outro projeto respondeu `500 FUNCTION_INVOCATION_FAILED` porque não há MySQL dentro de uma função serverless.
+
+O que o repositório garante agora, do lado do painel:
+
+- `apps/web/src/lib/apiBase.ts` lê `VITE_API_URL` e **completa a origem nua com `/api`**, porque o backend monta
+  toda rota sob esse prefixo. `https://api.exemplo.test` vira `https://api.exemplo.test/api`; quem já escreve o
+  caminho inteiro passa reto; variável ausente ou vazia continua significando a mesma origem (o proxy do Vite em
+  desenvolvimento e o nginx em produção). Cinco casos em `apps/web/src/test/url-base-da-api.test.ts`.
+- `vercel.json` na raiz declara o build do workspace web (`npm run build --workspace @nexus/web`), a saída
+  `apps/web/dist`, o rewrite de SPA (sem ele `/login` e `/app` são 404) e o cache imutável de `/assets/*`.
+  O projeto na Vercel tem de ter **Root Directory na raiz do repositório**, senão o arquivo não é lido.
+
+O que cada lado precisa do dono do deploy, e nada disso tem default:
+
+| Variável | Onde se define | O que tem de ser |
+|---|---|---|
+| `VITE_API_URL` | build do painel | a origem pública da API. Com ou sem `/api` no fim, os dois funcionam desde esta rodada |
+| `CORS_ORIGIN` | ambiente da API | o endereço público do painel, `https`, sem barra final. Aceita lista separada por vírgula, então o painel de preview e o de produção podem morar na mesma linha |
+| `WEB_BASE_URL` | ambiente da API | o mesmo endereço público do painel — é o que sai nos links de verificação e de recuperação por e-mail |
+| `DATABASE_URL` | ambiente da API | um MySQL alcançável de fora do container da API. O `localhost:3306` do WAMP não existe lá fora, e a régua de produção derruba o processo antes da primeira requisição |
+| as outras da tabela da seção 1 | ambiente da API | `JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET`, `SUPER_ADMIN_EMAIL`, `TOTP_ENCRYPTION_KEY`, `SMTP_*`, `MAIL_FROM`, `TRUST_PROXY`, `AUTH_EXPOSE_RESET_TOKEN=0` |
+
+Ordem de subida que a casa já conhece: o container da API roda
+`node deploy/preparar-banco-de-dados.cjs` uma vez (é o `migrate deploy`, desde a C1 com o baseline aplicado em
+banco zerado), depois `npm run admin:criar` para nascer o administrador da plataforma, e só então o painel
+aponta para lá. O `docker-compose.yml` faz os três passos na mesma sequência com o job `migracoes`.
+
+## 12. O que ainda não está aqui
 
 - **Pipeline de CI, `npm audit`, portões de cobertura, `postinstall` do Prisma e o conserto da cadeia de
   migrations para clone limpo** (N54) — F8 (T7).
 - **Política de logs com rotação e retenção** — o backup do banco existe desde a T5.2, a rotação de log ainda não.
   O nível de log de produção (N69, seção 7) está na mesma conta.
 - **Hospedagem recomendada**: não existe no repositório, e a decisão é do dono
-  (`docs/decisoes/G5-hospedagem-e-backup.md`).
+  (`docs/decisoes/G5-hospedagem-e-backup.md`). A seção 11 descreve a topologia separada que o dono escolheu
+  publicar — painel em host estático, API e banco em container —, mas nome de host, tamanho de instância e o
+  provedor do MySQL continuam sendo conta dele.

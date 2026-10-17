@@ -887,3 +887,36 @@ db:prova               migrate deploy: nenhuma migracao pendente, 36 tabelas, 27
 portas                 3001/5173 do produto e 3002/5174 da prova conferidas em netstat antes e depois da
                        medicao do clone; a pilha do clone morou so na 3006/5176 e foi derrubada
 ```
+
+## Rodada V — o painel publicado na Vercel (N81, 2026-10-17)
+
+O dono publicou o projeto na Vercel e ele não abre a vitrine nem faz login. A rodada começou medindo o que está
+lá fora, antes de tocar em qualquer arquivo.
+
+| Tarefa | Situação | O que foi feito, com a prova |
+|---|---|---|
+| V1. Diagnóstico medido | FEITO | `GET …/` no projeto `nexus-business-manager-a6fa` devolve o `index.html` — hospedagem estática, só. `…/health`, `…/public/landing` e `…/api/health`: **404** com `X-Vercel-Error: NOT_FOUND`. `…/login` e `…/app`: **404**, sem rewrite de SPA. O bundle publicado (`index-JpOCgEsb.js`, 197.121 bytes baixados e lidos) traz `bh="https://nexus-business-manager.vercel.app"` e `tt.create({baseURL:bh})`: a `VITE_API_URL` foi escrita sem o `/api` e apontando para o OUTRO projeto, que responde **500** com `FUNCTION_INVOCATION_FAILED` em qualquer caminho. Achado **N81** registrado. |
+| V2. Endereço da API no painel | FEITO | Nasce `apps/web/src/lib/apiBase.ts`: origem nua completa com `/api`, caminho inteiro passa reto, ausente ou vazio volta ao padrão da casa. `api.ts` passa a usar a função, e ela é a ÚNICA leitura de `VITE_API_URL` no painel (medido com grep: um uso em `src/`, fora dos testes). Cinco casos em `url-base-da-api.test.ts`. Medido no artefato: o build com `VITE_API_URL=https://api.exemplo.test` publica `function Y0(i){…J0.test(s)&&!/\/api$/i.test(s)?s+Rp:s:Rp}` e `Ih=Y0("https://api.exemplo.test")` — a normalização acontece no que vai para o ar, não só no teste. |
+| V3. `vercel.json` na raiz | FEITO no repositório; **NÃO VERIFICADO** no host | Arquivo novo com `framework: vite`, `installCommand: npm ci`, `buildCommand: npm run build --workspace @nexus/web`, `outputDirectory: apps/web/dist`, rewrite de SPA e cache imutável de `/assets/*`. O que não pôde ser verificado daqui: publicar. A CLI desta máquina está deslogada (`vercel whoami` → Logged out), e o dono escolheu rodar o `vercel login` nesta sessão. Até lá o arquivo é aposta bem fundada, não prova. |
+| V4. Documentação da topologia separada | FEITO | `docs/PRODUCAO.md` ganha a seção 11 — painel em host estático, API e banco em container — com a tabela do que cada lado recebe de ambiente (`VITE_API_URL`, `CORS_ORIGIN` aceitando lista, `WEB_BASE_URL`, um `DATABASE_URL` que não seja o `localhost` da máquina, mais as da seção 1) e a ordem de subida que a casa já conhece. A seção que era 11 virou 12. |
+| V5. API + MySQL num host de container | PENDENTE | A trilha escolhida. Depende de duas coisas que são do dono: o host e o MySQL dele. O `docker-compose.yml` da F6 já faz os três passos (migrações, api, painel), e o caminho de migração está verde em banco zerado desde a C1. |
+| V6. Republicar o painel e provar no navegador | PENDENTE | Depois do `vercel login`: apontar o projeto para a raiz do repositório, definir `VITE_API_URL`, republicar e conferir no navegador que a vitrine monta e que o login fala com a API. Sem isso o N81 continua aberto no ar, com o código consertado embaixo. |
+
+Portões desta rodada:
+
+```
+npm run typecheck      ok (api + web, sem saída)
+npm run build          ok (web em 3,18 s, 38 chunks)
+npm run test:web       22 arquivos / 168 casos verdes (antes: 21 / 163 — os cinco novos são o teste do endereço)
+npm test               api 53 arquivos / 474 casos; web 22 arquivos / 168 casos — zero falha, zero skip
+links da documentacao  tools/verifica-links-doc.cjs — 23 links conferidos, 0 quebrados, 0 marcadores
+BOM / CRLF             548 arquivos rastreados (423 de texto, 125 binarios): 0 BOM, 0 CR. Os cinco arquivos da
+                       rodada medidos um a um: todos LF, sem BOM
+varredura de segredo   10 valores de `apps/api/.env` e dos arquivos locais de credencial conferidos contra o
+                       patch preparado e os tres arquivos novos: 0 credencial
+```
+
+Um tropeco do ambiente, registrado para a conta fechar: a primeira rodada completa da suíte devolveu 46 arquivos
+falhando com Can't reach database server at localhost:3306, e a causa era o servico MySQL do WAMP parado (wampmysqld64
+Stopped), nao o codigo. Subido o mysqld contra o mesmo datadir, sem tocar no banco de desenvolvimento, api e web
+voltaram verdes na contagem acima.

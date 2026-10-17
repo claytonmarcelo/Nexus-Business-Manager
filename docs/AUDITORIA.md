@@ -2538,3 +2538,40 @@ nova entra sob demanda e não aumenta o carregamento inicial); suíte **API 50 a
 **web 20 arquivos / 156 casos em 14,45 s**, zero falha e zero skip contra `nexusbusinessmanager_teste`; guarda de
 caracteres (`caracteres-permitidos.test.ts`, 4 casos) verde com os arquivos novos já na árvore; captura desta
 corrida conferida antes de registrar, sem dado sensível e sem credencial.
+
+---
+
+### N81 — publicado na Vercel: o painel chama a API num endereço que não existe, e não há backend no host
+
+Medido em 2026-10-17 nos dois deployments que existem hoje, sem mexer em nada antes de conferir.
+
+| O que foi chamado | O que voltou |
+| --- | --- |
+| `GET https://nexus-business-manager-a6fa.vercel.app/` | 200, o `index.html` do painel — é hospedagem estática, só |
+| `GET …/assets/index-JpOCgEsb.js` | 200 (197.121 bytes baixados e lidos) |
+| `GET …/health`, `…/public/landing`, `…/api/health` | **404** com `X-Vercel-Error: NOT_FOUND` — não há API naquele projeto |
+| `GET …/login` e `…/app` (link direto) | **404** — sem rewrite de SPA, só a raiz serve |
+| `GET https://nexus-business-manager.vercel.app/api/health` | **500** com `X-Vercel-Error: FUNCTION_INVOCATION_FAILED`, em `…/` também 500 — a função existe e morre ao nascer |
+
+No bundle publicado a origem está gravada no build: `bh="https://nexus-business-manager.vercel.app"` e
+`ct=tt.create({baseURL:bh,…})`. Ou seja, `VITE_API_URL` foi preenchida com a origem da API **sem o `/api`**, e
+apontando para o *outro* projeto — por isso o console mostra `/health` e `/public/landing` cross-origin e o
+navegador reclama de CORS antes de reclamar do 404. A consequência visível é a da captura do dono: a vitrine não
+monta, e o login não tem com quem falar.
+
+O 500 da função tem a mesma causa do resto: a API é um processo Fastify que exige um MySQL alcançável, e a única
+string de conexão que existe nesta casa aponta para o `localhost:3306` do WAMP. Dentro da Vercel não há esse
+banco, e a régua de produção (`apps/api/src/config/producao.ts`) derruba o processo antes da primeira requisição
+— que é exatamente o `FUNCTION_INVOCATION_FAILED` medido acima.
+
+**O que esta rodada consertou no repositório.** (1) `apps/web/src/lib/apiBase.ts` completa a origem nua com o
+prefixo que o backend monta, então `VITE_API_URL=https://api.exemplo.test` vira `…/api` no bundle; medido no
+build desta árvore, com a função presente no artefato e os cinco casos de `url-base-da-api.test.ts` verdes.
+(2) `vercel.json` na raiz declara o build do workspace web, o `apps/web/dist` como saída e o rewrite de SPA, que
+é o que devolve `/login` e `/app` em vez de 404.
+
+**O que não é consertável no código.** O produto são dois processos e um banco. Enquanto o backend não tiver onde
+rodar com um MySQL de verdade, nenhum valor de variável faz o login funcionar. A trilha escolhida pelo dono foi
+`API + MySQL em host de container`, e o painel continua publicado onde já está, chamando a API pela URL pública
+com `CORS_ORIGIN` apontando de volta. Até essa subida existir, o painel publicado fica quebrado — registrado aqui
+em vez de escondido atrás de um `NÃO VERIFICADO`.

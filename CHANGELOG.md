@@ -1,5 +1,25 @@
 ## [Não lançado]
 
+### O painel publicado voltou a apontar para onde a API realmente está, e a Vercel ganhou rewrite de SPA (2026-10-17)
+
+- **O que o dono trouxe.** Uma publicação na Vercel que não abre a vitrine nem faz login. Medido antes de
+  mexer: o projeto `nexus-business-manager-a6fa` serve **só o estático** (`/health`, `/public/landing` e
+  `/api/health` respondem 404 com `X-Vercel-Error: NOT_FOUND`), e o bundle publicado carrega a origem
+  `https://nexus-business-manager.vercel.app` como `baseURL` — sem o `/api`, chamando o **outro** projeto, que
+  devolve `500 FUNCTION_INVOCATION_FAILED` em qualquer caminho. Link direto em `/login` e `/app` também era 404.
+  Registrado como achado **N81** em `docs/AUDITORIA.md`.
+- **O que mudou no código.** `apps/web/src/lib/apiBase.ts` passa a decidir o endereço da API: origem nua ganha o
+  prefixo `/api` que o backend monta, caminho completo passa reto, e variável ausente continua significando a
+  mesma origem (proxy do Vite no desenvolvimento, nginx na pilha Docker). Cinco casos novos em
+  `apps/web/src/test/url-base-da-api.test.ts`; medido no artefato, a função está no bundle e é ela que recebe o
+  valor de build. `vercel.json` na raiz declara o build do workspace web, a saída `apps/web/dist`, o rewrite de
+  SPA e o cache imutável de `/assets/*`.
+- **O que nada disso resolve sozinho.** O produto são dois processos e um MySQL. A trilha escolhida foi publicar
+  o painel onde já está e subir a API com o banco num host de container; enquanto esse segundo lado não existir,
+  o painel publicado continua quebrado, e a seção 11 de `docs/PRODUCAO.md` diz o que cada lado precisa receber de
+  ambiente — `VITE_API_URL`, `CORS_ORIGIN`, `WEB_BASE_URL` e um `DATABASE_URL` que não seja o `localhost` desta
+  máquina.
+
 ### A migração inicial passou a aplicar em banco vazio, e o deploy usa o histórico de migrations (2026-10-15)
 
 - **O problema.** `prisma migrate deploy` falhava na segunda migration (`20261010164015_add_clients`) com

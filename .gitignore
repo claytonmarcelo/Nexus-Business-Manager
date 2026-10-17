@@ -35,6 +35,9 @@ apps/api/prisma/*.db
 # Artefatos temporários
 tools/wf.cjs.bak
 
+# O que a CLI da Vercel escreve ao vincular o projeto (id do projeto, org)
+.vercel/
+
 # O endereco da pilha de prova enquanto ela esta de pe (tools/pilha-de-prova.cjs)
 tools/ponteiro-de-prova.local.json
 
