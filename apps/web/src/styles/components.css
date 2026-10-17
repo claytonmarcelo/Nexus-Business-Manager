@@ -1782,6 +1782,19 @@ a.nexus-footer-autor:focus-visible { color: var(--text); text-decoration: underl
   gap: 1.1rem 1.25rem;
 }
 
+/* A lista de leitura da aba de privacidade: uma linha por registro aceito ou por
+   empresa, sem borda de tabela — é consulta, não cadastro. */
+.nx-lista-dados {
+  margin: 0;
+  padding-left: 1.15rem;
+  display: grid;
+  gap: 0.45rem;
+  color: var(--text-2);
+  font-size: 0.88rem;
+}
+
+.nx-lista-dados strong { color: var(--text-1); font-weight: 600; }
+
 .nx-grade .field-full,
 .nx-grade > .field.field-full {
   grid-column: 1 / -1;

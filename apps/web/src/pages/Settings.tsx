@@ -10,6 +10,7 @@ import { ErrorState } from "../components/StateView";
 import { Bloco } from "../components/Fields";
 import { ContaPanel, SenhaPanel } from "../components/settings/ContaPanel";
 import { SegundoFatorPanel } from "../components/settings/SegundoFatorPanel";
+import { PrivacidadePanel } from "../components/settings/PrivacidadePanel";
 import { EmpresaPanel } from "../components/settings/EmpresaPanel";
 import { formatDate, formatDateTime, formatCurrency } from "../lib/format";
 import {
@@ -24,6 +25,7 @@ import {
 
 const ABAS: TabItem[] = [
   { id: "conta", label: "Minha conta", hint: "Nome, telefone, segundo fator e senha de acesso" },
+  { id: "privacidade", label: "Seus dados", hint: "O que a casa guarda sobre você, com cópia em JSON" },
   { id: "empresa", label: "Empresa", hint: "Cadastro, endereço, formato e meta de receita" },
   { id: "aparencia", label: "Aparência", hint: "Tema deste navegador e o formato em uso no painel" },
   { id: "acesso", label: "Empresas", hint: "Listar as empresas da conta e trocar a ativa" },
@@ -41,9 +43,10 @@ interface CompanyRef {
 // a cada re-render e ninguém saberia o que foi formatado com qual fuso.
 const AMOSTRA = new Date(2026, 2, 5, 14, 30);
 
-// Tela de Configurações em quatro abas. A divisão é por dono do dado: a conta é
-// de quem está logado, a empresa é de quem administra, o tema é deste navegador
-// e a lista de empresas é a porta entre os contextos.
+// Tela de Configurações em cinco abas. A divisão é por dono do dado: a conta é
+// de quem está logado, o que a casa guarda dela é dela mesma (LGPD), a empresa é
+// de quem administra, o tema é deste navegador e a lista de empresas é a porta
+// entre os contextos.
 export function Settings() {
   const { user, can, reload } = useAuth();
   const { active, onSelect } = useTabState(ABAS, "conta");
@@ -109,6 +112,13 @@ export function Settings() {
           <SegundoFatorPanel />
           <SenhaPanel />
         </div>
+      </TabPanel>
+
+      {/* O `TabPanel` não monta o que não está na tela, então a leitura dos dados
+          do titular — uma rota cara e auditada — só acontece quando a pessoa abre
+          a aba. Sem isso, entrar em Configurações registraria um export por visita. */}
+      <TabPanel id="privacidade" active={active}>
+        <PrivacidadePanel />
       </TabPanel>
 
       <TabPanel id="empresa" active={active}>
