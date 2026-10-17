@@ -14,11 +14,18 @@
   `apps/web/src/test/url-base-da-api.test.ts`; medido no artefato, a função está no bundle e é ela que recebe o
   valor de build. `vercel.json` na raiz declara o build do workspace web, a saída `apps/web/dist`, o rewrite de
   SPA e o cache imutável de `/assets/*`.
+- **O que foi medido no ar, depois de publicar.** O Root Directory do projeto estava em `apps/web`, e por isso o
+  `vercel.json` da raiz não era lido; a pasta foi trocada para a raiz do repositório pela API da Vercel e o painel
+  republicado (`vercel deploy --prod`, pronto em 35 s). Na mesma URL do dono: `/`, `/login` e `/app` respondem **200**
+  (antes, 404), `/api/health` responde **404** limpo porque o rewrite deixou `/api/*` de fora, e o bundle publicado
+  (`index-C404XGY4.js`, 355.413 bytes) traz `Rp="/api"` e a função que normaliza o endereço. No navegador, `/login`
+  monta a tela de acesso e `/` mostra o estado de erro do CMS — exatamente o comportamento esperado sem backend.
 - **O que nada disso resolve sozinho.** O produto são dois processos e um MySQL. A trilha escolhida foi publicar
   o painel onde já está e subir a API com o banco num host de container; enquanto esse segundo lado não existir,
   o painel publicado continua quebrado, e a seção 11 de `docs/PRODUCAO.md` diz o que cada lado precisa receber de
   ambiente — `VITE_API_URL`, `CORS_ORIGIN`, `WEB_BASE_URL` e um `DATABASE_URL` que não seja o `localhost` desta
-  máquina.
+  máquina. O projeto que tentou rodar a API como função serverless na Vercel não tem como nascer: falta o MySQL que
+  o processo procura.
 
 ### A migração inicial passou a aplicar em banco vazio, e o deploy usa o histórico de migrations (2026-10-15)
 

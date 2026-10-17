@@ -2572,6 +2572,23 @@ build desta árvore, com a função presente no artefato e os cinco casos de `ur
 
 **O que não é consertável no código.** O produto são dois processos e um banco. Enquanto o backend não tiver onde
 rodar com um MySQL de verdade, nenhum valor de variável faz o login funcionar. A trilha escolhida pelo dono foi
-`API + MySQL em host de container`, e o painel continua publicado onde já está, chamando a API pela URL pública
-com `CORS_ORIGIN` apontando de volta. Até essa subida existir, o painel publicado fica quebrado — registrado aqui
-em vez de escondido atrás de um `NÃO VERIFICADO`.
+`API + MySQL em host de container`, e o painel continua publicado onde já está. Até essa subida existir, a vitrine
+publicada fica no estado de erro e o login não tem com quem falar — registrado aqui em vez de escondido atrás de um
+`NÃO VERIFICADO`.
+
+**O que mudou no ar, medido depois de publicar (2026-10-17).** O projeto `nexus-business-manager-a6fa` tinha Root
+Directory em `apps/web`, e por isso o `vercel.json` da raiz não era lido; a pasta foi trocada para a raiz do
+repositório pela API da Vercel (`rootDirectory: null`) e o projeto foi republicado com `vercel deploy --prod`.
+Depois da publicação, na mesma URL do dono:
+
+| O que foi chamado | O que voltou |
+| --- | --- |
+| `GET …/`, `…/login`, `…/app` | **200** nos três — o rewrite de SPA devolve o `index.html`, e antes eram 404 |
+| `GET …/api/health` | **404** limpo — o rewrite deixa `/api/*` de fora, para a chamada não receber HTML |
+| `GET …/assets/index-C404XGY4.js` | 200, 355.413 bytes, e o artefato traz `Rp="/api"`, `J0=/^https?:\/\//i`, `function Y0(i){…}` e `ct=tt.create({baseURL:Ih` — o normalizador está no que vai ao ar |
+| navegador em `…/login` | a tela monta: logo, "Seja bem-vindo", campos de e-mail e senha, "ENTRAR" |
+| navegador em `…/` | a vitrine mostra o estado de erro "Não foi possível concluir / Não foi possível carregar o conteúdo do site agora", porque o conteúdo do CMS vem de `/api/public/landing` e não há API atrás |
+
+Sobrou o outro lado da casa, e ele não é uma variável de ambiente do painel: o projeto
+`nexus-business-manager` (Root Directory `apps/api`, preset `fastify`) continua sem como nascer, porque função
+serverless não tem o MySQL que o processo procura. A peça que falta é a da seção 11 de `docs/PRODUCAO.md`.
