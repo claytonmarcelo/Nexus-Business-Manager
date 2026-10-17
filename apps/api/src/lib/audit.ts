@@ -94,6 +94,10 @@ export function sensivelWhere() {
             "auth.login.failed",
             "auth.password_changed",
             "company.settings.updated",
+            // T6.3 (F7): levar os próprios dados embora é acesso em larga escala e
+            // sai do comum. A aba "Alterações Sensíveis" passa a mostrar cada
+            // exportação de titular, com data, empresa e endereço de origem.
+            "lgpd.export",
           ],
         },
       },
