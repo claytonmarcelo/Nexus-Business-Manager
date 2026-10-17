@@ -853,7 +853,9 @@ Prompt de conclusao v1.0.0, fase C1. O portao 1 da secao 1 exige `prisma migrate
 | C1.3. Registro nos bancos existentes | FEITO | Em copia `nexusbusinessmanager_c1copy` (dump do dev): `migrate resolve --applied` + DELETE dos 23 registros antigos + `migrate deploy` = "nenhuma pendencia". Depois no dev real e no teste: mesma sequencia. `_prisma_migrations` em cada banco agora tem 1 registro: o baseline. |
 | C1.4. Prova em banco vazio + deriva | FEITO | `nexusbusinessmanager_c1empty` zerado, `migrate deploy` aplica baseline com sucesso. Verificacao de deriva com shadow DB (`migrate diff --from-migrations --to-schema-datamodel --exit-code`) devolve **0**, "No difference detected". |
 | C1.5. Trocar db push por migrate deploy | FEITO | `deploy/preparar-banco-de-dados.cjs` reduzido ao caminho `migrate deploy` sem fallback N54 (129 linhas -> 44). `tools/preparar-banco-de-prova.cjs`: bloco else do N54 removido. `package.json` raiz: `db:migrate` agora chama `prisma:deploy` (= `migrate deploy`), nao `prisma:migrate` (= `migrate dev`). README: quickstart troca `db:push` por `db:migrate`; paragrafo N54 removido; `db:push` rotulado como atalho de dev. ESTADO-ATUAL secao 12 atualizada. |
-| C1.6. Clone limpo | PENDENTE | Sera rodado apos o commit e push desta fase. |
+| C1.6. Clone limpo | FEITO | `git clone file:///c/wamp64/www/nexusbusinessmanager ../nexus-clone-c1` no commit `0e59006`: **548 arquivos rastreados**, sem `.env`, sem `CREDENCIAIS.md`, sem `node_modules`. Na ordem do README: `npm ci` (ok, com os dois bloqueios de scripts do N9), `npm run prisma:generate -w @nexus/api` (ok), `.env` escrito a partir do `.env.example` apontando para `nexusbusinessmanager_c1empty2` criado zerado, `npm run db:migrate` -> "1 migration found in prisma/migrations / Applying migration `20261015000000_baseline` / All migrations have been successfully applied", exit **0**. `npm run db:seed` -> admin@exemplo.test, admin@nexus.local, empresa demo nexus-demo, 1 empresa com OWNER, 3 rotinas. `npm run dev` com `PORT=3006 NEXUS_WEB_PORT=5176 NEXUS_PROXY_TARGET=http://localhost:3006`: API ouvindo na 3006, Vite pronto na 5176. Prova pelo proxy do painel: `/api/health` **200** `{"status":"ok","db":"up"}`, `POST /api/auth/login` **200** com `role=OWNER`, `GET /api/auth/me` **200**, `GET /api/companies/current` **200**. Nenhum valor de segredo impresso — o script de prova leu a senha do `.env` do clone e devolveu so status e papel. |
+| C1.6a. O que o clone descobriu | FEITO | O `.env.example` vem com `SEED_DEV_ACCOUNT=0` e `SEED_DEMO_COMPANY=0`, e sem ligar as duas o `db:seed` **nao** cria a conta de desenvolvimento nem a empresa de demonstracao — que e exatamente o que o paragrafo do README prometia. O README foi corrigido nesta rodada para pedir as duas variaveis, e passou a registrar o passo extra do `prisma:generate` (o **N9**) no caminho do clone. |
+| C1.6b. Limpeza da medicao | FEITO | Pilha do clone derrubada pelos PIDs da 3006 e da 5176 (a 3001 e a 5173 do produto, e a 3002/5174 da prova, nunca foram tocadas — conferido em `netstat` antes e depois). Bancos de trabalho descartados: `nexusbusinessmanager_c1empty`, `_c1empty2` e `_c1copy`; sobram o de desenvolvimento e o de teste. O clone `C:/wamp64/www/nexus-clone-c1` foi apagado com `fs.rmSync` (o `rm` do mount WAMP nao consegue). |
 
 Portoes desta fase:
 
@@ -865,4 +867,23 @@ caracteres permitidos  4 casos verdes (dentro dos 474)
 links da documentacao  21 links, 0 quebrados, 0 marcadores
 BOM / CRLF             nenhum (973 arquivos verificados)
 db:prova               migrate deploy: nenhuma migracao pendente, 36 tabelas, 254 usuarios, 6 empresas
+```
+
+Portoes re-medidos no fechamento da fase, depois da prova do clone (mudaram so README, CHANGELOG e os tres
+arquivos de `docs/`; nenhum codigo de produto foi tocado):
+
+```
+npm run typecheck      ok (api + web, sem saida)
+npm run build          ok (vite em 4,49 s)
+npm test               api 53 arquivos / 474 casos; web 21 arquivos / 163 casos — zero falha, zero skip
+caracteres permitidos  dentro dos 474, verdes (a guarda do proprio teste, nao uma conta minha)
+links da documentacao  tools/verifica-links-doc.cjs — 23 links conferidos, 0 quebrados, 0 marcadores
+BOM / CRLF             0 BOM e 0 CR nos 423 arquivos de texto rastreados (548 no total, 125 binarios)
+varredura de segredo   27 linhas adicionadas contra os valores de .env, .env.docker, CREDENCIAIS.md e dos
+                       arquivos locais de prova: 0 credencial. A unica casa e o CORS_ORIGIN, que e um
+                       endereco http://localhost — endereco de desenvolvimento, nao segredo.
+README.md              78 linhas (teto do contrato: 90)
+db:prova               migrate deploy: nenhuma migracao pendente, 36 tabelas, 272 usuarios, 6 empresas
+portas                 3001/5173 do produto e 3002/5174 da prova conferidas em netstat antes e depois da
+                       medicao do clone; a pilha do clone morou so na 3006/5176 e foi derrubada
 ```

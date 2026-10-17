@@ -1008,6 +1008,21 @@ sem este arquivo e sem os três arquivos ignorados do trabalho (`apps/api/.env`,
   foram tocadas: o clone subiu na 3005 e na 5175 por variável de ambiente, e as duas foram
   liberadas no fim. O `.env` continua sendo o que a casa sempre disse: ele não é versionado
   de propósito, e a medição usa um arquivo escrito a partir do `.env.example`, fora do git.
+- **Re-medido no clone novo da C1** (`git clone` do commit `0e59006` para `nexus-clone-c1`,
+  548 arquivos rastreados, banco `nexusbusinessmanager_c1empty2` criado zerado, 0 tabelas):
+  `npm ci` verde com os dois bloqueios de scripts do **N9**; `npm run prisma:generate -w @nexus/api`
+  ok; `npm run db:migrate` **verde** — "1 migration found in prisma/migrations", aplicou
+  `20261015000000_baseline`, "All migrations have been successfully applied", exit 0. É a
+  diferença que fecha o N54: na rodada do README o mesmo comando parava em `P3018` na segunda
+  migration. `npm run db:seed` verde (admin da plataforma, conta de desenvolvimento, empresa de
+  demonstração, 3 rotinas), depois `npm run dev` na 3006/5176 por variável de ambiente — as portas
+  do produto e as da prova não foram tocadas — e a prova pelo proxy do painel: `/api/health` 200,
+  `POST /api/auth/login` 200 com `role=OWNER`, `/api/auth/me` 200, `/api/companies/current` 200.
+  A medição também obrigou a corrigir o "Como rodar": sem `SEED_DEV_ACCOUNT=1` e
+  `SEED_DEMO_COMPANY=1` no `.env` o seed não cria a conta de desenvolvimento nem a empresa de
+  demonstração, que é o que o texto prometia; o README agora pede as duas variáveis. Clone e os
+  três bancos de trabalho (`c1empty`, `c1empty2`, `c1copy`) foram desfeitos depois da medição; o
+  arquivo de prova lê a senha do `.env` do clone e não imprime segredo nenhum.
 - **Não verificado:** montagem em máquina sem WAMP, `npm ci` em Linux, e
   qualquer deploy real (a hospedagem é a decisão 5 da seção 11).
 - A linha extra `npm run prisma:generate` acima está registrada como achado **N9**

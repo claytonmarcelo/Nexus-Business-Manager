@@ -18,6 +18,13 @@
   O fallback de `db push` foi removido de `deploy/preparar-banco-de-dados.cjs` e do job do container.
   `db:push` permanece na lista como atalho de desenvolvimento rotulado. O README troca `db:push` por `db:migrate`
   no quickstart. A suíte de testes: **53 arquivos / 474 casos** na API, **21 / 163** no web, todos verdes.
+- **O "Como rodar" foi rodado num clone novo, de verdade.** Clone do commit da fase, 548 arquivos rastreados,
+  `.env` montado a partir do `.env.example` contra um MySQL zerado: `npm ci`, `prisma:generate`, `db:migrate`
+  aplicando o baseline, `db:seed`, `npm run dev` na 3006/5176 (as portas do produto e as da prova intactas),
+  `/api/health` 200, login da conta de desenvolvimento 200 pelo proxy do Vite com `role=OWNER`, `/api/auth/me`
+  e `/api/companies/current` 200. A medição pegou duas coisas que o texto do README não dizia: a conta de
+  desenvolvimento e a empresa de demonstração só nascem com `SEED_DEV_ACCOUNT=1` e `SEED_DEMO_COMPANY=1`, e o
+  clone exige o passo extra do `prisma:generate` (é o **N9**). O parágrafo foi corrigido com as duas informações.
 
 ### O README virou texto de recrutador, e a porta de entrada dele foi rodada num clone novo (2026-10-15)
 
