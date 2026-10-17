@@ -1,5 +1,42 @@
 ## [Não lançado]
 
+### A pessoa pede, e o sistema mostra: a cópia dos dados dela sai em JSON, com trilha e com tela (2026-10-17)
+
+- **O que faltava.** LGPD art. 18, II é direito de acesso, e até aqui a resposta à pergunta "o que vocês guardam
+  sobre mim?" dependia de alguém do suporte abrir Auditoria, Equipe, Configurações e sessões e juntar os pedaços.
+  O aceite dos textos já era gravado desde a T6.2, mas nenhuma tela do produto o lia.
+- **O que mudou no código.** `GET /api/lgpd/meus-dados` (`apps/api/src/modules/lgpd/lgpd.routes.ts`, o vigésimo
+  primeiro arquivo de rota da árvore) responde pela **pessoa**, com o contexto da empresa ativa vindo do token,
+  teto de cinco pedidos por minuto por endereço e uma linha `lgpd.export` na trilha por pedido — ação que entrou
+  em `sensivelWhere()`, então cada exportação aparece em "Alterações sensíveis" da Auditoria.
+  `exportarDadosDoTitular()` (`lgpd.service.ts`) monta cadastro, vínculos, aceites, sessões, avisos,
+  preferências, trilha e tentativas de login num só JSON, com tetos declarados (500 eventos, 200 avisos, sempre
+  com o total real ao lado) e com `O_QUE_NAO_SAI`: quatro ausências nomeadas com motivo — senha e segundo fator,
+  hash de token, o `metadata` da trilha e os registros de negócio da empresa. As três primeiras são ausências por
+  construção: as colunas não entram no `select`. Na tela, `/app/configuracoes` ganhou a quinta aba, **"Seus
+  dados"** (`PrivacidadePanel.tsx`), com quatro blocos de leitura e o botão "Baixar cópia em JSON" escrevendo o
+  arquivo no navegador pelo mesmo idioma do CSV da casa.
+- **O detalhe que só a tela tinha.** O `TabPanel` não monta o que está fora da tela, e a leitura foi posta dentro
+  do painel — não no `useEffect` da página — para que entrar em Configurações não grave um evento de exportação a
+  cada visita. Um caso de teste amarra isso: renderizada a página inteira na aba "Minha conta", a rota é chamada
+  **zero** vezes; aberta a aba, **uma**.
+- **Provas medidas.** Vermelho primeiro nos dois lados; verde: **9 casos** em
+  `apps/api/test/export-dos-dados-do-titular.test.ts` e **10** em `apps/web/src/test/meus-dados-lgpd.test.tsx`,
+  com suítes inteiras fechando **API 54 arquivos / 483 casos** e **web 23 / 178**, exit 0, zero skip, contra
+  `nexusbusinessmanager_teste`. No navegador da pilha de prova (5174/3002), `tools/verify-configuracoes.cjs`
+  fechou **145 checagens, 0 falhas**, e confere o arquivo que sai do clique: **217.502 bytes**, o mesmo JSON da
+  rota, `naoIncluidos` dentro, nenhuma coluna de credencial no texto e a linha de auditoria assinada pela conta
+  que pediu. O STAFF da mesma empresa lê a própria conta, com o próprio papel.
+- **Capturas.** A família de Configurações mudou de verdade — a barra passou a ter cinco abas —, então as doze
+  imagens que a prova regrava foram conferidas uma a uma e **onze** entraram na galeria, incluindo a nova
+  `22-configuracoes-seus-dados.png`. A do STAFF ficou de fora por carregar o endereço sintético da janela de
+  prova. E um achado declarado, não escondido: `22-configuracoes-lancamento-automatico.png` é byte-idêntica a
+  `22-configuracoes-empresa.png` desde antes desta rodada (N82) — a prova fotografa o topo da aba, não o bloco
+  que acabou de salvar.
+- **O que a T6.3 não entrega.** O direito de retificação continua sendo a aba "Minha conta" (nome, telefone e
+  senha), e os dois que faltam vêm a seguir: anonimização e exclusão do titular (T6.4) e retenção configurável
+  dos logs (T6.5).
+
 ### O painel publicado voltou a apontar para onde a API realmente está, e a Vercel ganhou rewrite de SPA (2026-10-17)
 
 - **O que o dono trouxe.** Uma publicação na Vercel que não abre a vitrine nem faz login. Medido antes de

@@ -1,6 +1,7 @@
-// Prova do /app/configuracoes: as quatro abas gravam de verdade, cada bloco solta
-// só o que mudou, e o que a API reprova aparece embaixo do campo — não num aviso
-// genérico que a pessoa lê e não sabe onde corrigir.
+// Prova do /app/configuracoes: as cinco abas gravam de verdade, cada bloco solta
+// só o que mudou, o que a API reprova aparece embaixo do campo — não num aviso
+// genérico que a pessoa lê e não sabe onde corrigir — e a aba "Seus dados" devolve
+// a cópia que a LGPD promete, no browser e não só no teste de componente.
 //
 // A prova escreve na empresa e na conta da captura fictícia (tools/conta-de-captura.cjs,
 // papel de OWNER) e devolve tudo ao valor que encontrou no início: o administrador real
@@ -75,6 +76,14 @@ async function injetarAjuda(page) {
     window.localDoBloco = function (titulo) {
       return [...document.querySelectorAll(".nx-bloco")].find(
         (b) => (b.querySelector(".panel-title")?.textContent || "").trim() === titulo) || null;
+    };
+    // A cópia em JSON desce por blob e link oculto. Para conferir o arquivo de
+    // verdade — e não a prévia da tela — o blob é guardado aqui antes de virar URL.
+    window.copias = [];
+    const criarOriginal = URL.createObjectURL.bind(URL);
+    URL.createObjectURL = function (blob) {
+      window.copias.push(blob);
+      return criarOriginal(blob);
     };
   });
 }
@@ -291,7 +300,7 @@ function diferencas(antes, depois) {
     pagina.on("console", (m) => { if (m.type() === "error") errosDeConsole.push(m.text()); });
     pagina.on("pageerror", (e) => errosDeConsole.push(String(e)));
 
-    // == 1) Entrada e as quatro abas ==
+    // == 1) Entrada e as cinco abas ==
     console.log("== 1) Entrar em Configurações ==");
     await entrarNoPainel(pagina, CAPTA.email, CAPTA.senha);
     await pagina.goto(BASE + "/app/configuracoes", { waitUntil: "networkidle0" });
@@ -303,8 +312,8 @@ function diferencas(antes, depois) {
     ok("o menu tem o link de Configurações", linkMenu === "/app/configuracoes", String(linkMenu));
 
     const abas = await pagina.$$eval(".nx-tab", (els) => els.map((e) => e.dataset.tab));
-    ok("Minha conta, Empresa, Aparência e Empresas",
-      abas.join(",") === "conta,empresa,aparencia,acesso", abas.join(","));
+    ok("Minha conta, Seus dados, Empresa, Aparência e Empresas",
+      abas.join(",") === "conta,privacidade,empresa,aparencia,acesso", abas.join(","));
 
     const cabecalho = await textoDaPagina(pagina);
     ok("o cabeçalho diz quem está na tela", /OWNER/.test(cabecalho));
@@ -363,6 +372,132 @@ function diferencas(antes, depois) {
     await salvarBloco(pagina, "Seus dados");
     await avisoDe(pagina, "Seus dados foram atualizados.");
     ok("esvaziar o campo limpa o telefone", vazio((await chame("GET", "/auth/me")).dados.phone));
+
+    // == 2b) Aba Seus dados: o direito de acesso na tela (T6.3) ==
+    // A leitura é cara e fica auditada, então a prova confere três coisas que o
+    // teste de componente não pode conferir sozinho: a tela é montada pela resposta
+    // real da API, o arquivo baixado é o corpo inteiro dela, e cada export deixa
+    // uma linha na trilha de auditoria desta conta.
+    console.log("== 2b) Aba Seus dados: a foto que a casa dá da pessoa ==");
+    const exportosAntes = await prisma.auditLog.count({
+      where: { action: "lgpd.export", userId: contaAntes.id },
+    });
+    const referencia = (await chame("GET", "/lgpd/meus-dados")).dados;
+
+    await irParaAba(pagina, "privacidade");
+    await pagina.waitForSelector(".nx-bloco", { timeout: 15000 });
+
+    const titulosPrivacidade = await pagina.$$eval(".nx-bloco .panel-title", (els) =>
+      els.map((e) => e.textContent.trim()));
+    ok("quatro blocos de leitura, nenhum de gravação",
+      titulosPrivacidade.join(",") ===
+        "Seus dados,O que você aceitou,Onde mais você está,O que a casa guarda e não entrega",
+      titulosPrivacidade.join(","));
+
+    const fotoTela = await pagina.evaluate((t) => {
+      const bloco = window.localDoBloco(t);
+      return {
+        linhas: [...(bloco?.querySelectorAll(".nx-grade .field") || [])].map((f) => {
+          const rotulo = (f.querySelector(".field-label")?.textContent || "").trim();
+          const valor = (f.querySelector(".field-label")?.nextElementSibling?.textContent || "").trim();
+          return rotulo + "=" + valor;
+        }),
+        botao: bloco?.querySelector(".nx-bloco-acao button")?.textContent.trim() ?? null,
+      };
+    }, "Seus dados");
+    ok("a tela escreve a conta que está logada",
+      fotoTela.linhas.includes("E-mail de acesso=" + CAPTA.email)
+        && fotoTela.linhas.includes("Nome=" + CAPTA.nome),
+      fotoTela.linhas.join(" | "));
+    ok("o papel exibido é o da empresa ativa do token",
+      fotoTela.linhas.includes("Papel na empresa ativa=" + referencia.empresaAtiva.papel),
+      fotoTela.linhas.join(" | "));
+    ok("as sessões são contadas a partir da resposta",
+      fotoTela.linhas.includes(
+        "Sessões abertas=" + referencia.sessoes.filter((s) => !s.revogadaEm && !s.usadaEm).length
+          + " de " + referencia.sessoes.length),
+      fotoTela.linhas.join(" | "));
+    ok("o botão oferece a cópia, não uma gravação",
+      fotoTela.botao === "Baixar cópia em JSON", String(fotoTela.botao));
+
+    const leituras = await pagina.evaluate(() => {
+      const bloco = window.localDoBloco("O que você aceitou");
+      return {
+        itens: [...(bloco?.querySelectorAll("li") || [])].map((li) => li.textContent.trim()),
+        texto: (bloco?.textContent || "").trim(),
+      };
+    });
+    // A conta fictícia de captura nasceu em 13/10, antes do aceite existir na porta
+    // de cadastro: o que ela tem é o estado vazio, e é ele que a tela mostra. As
+    // duas pontas — linha por aceite e a frase de "ninguém marcou por ela" — são
+    // conferidas contra o mesmo corpo que a API devolve, então a tela não pode
+    // inventar nem esconder linha.
+    ok("a lista de aceites segue o que a API devolve",
+      referencia.aceites.length === 0
+        ? leituras.itens.length === 0 && /Nenhuma caixa marcada registrada/.test(leituras.texto)
+        : leituras.itens.length === referencia.aceites.length
+          && /versão \d+/.test(leituras.itens[0]),
+      JSON.stringify({ itens: leituras.itens.length, naApi: referencia.aceites.length }));
+    ok("as outras empresas aparecem com o papel de cada uma",
+      (await pagina.evaluate(() =>
+        window.localDoBloco("Onde mais você está")?.querySelectorAll("li").length ?? 0))
+        === referencia.vinculos.length,
+      "vinculos na API: " + referencia.vinculos.length);
+
+    await pagina.evaluate(() => {
+      const botao = window.localDoBloco("Seus dados")?.querySelector(".nx-bloco-acao button");
+      botao?.click();
+    });
+    await avisoDe(pagina, "Cópia gerada");
+    await espera(250);
+
+    const arquivo = await pagina.evaluate(async () => {
+      const blob = window.copias[window.copias.length - 1];
+      if (!blob) return null;
+      const texto = await blob.text();
+      return { tamanho: texto.length, corpo: JSON.parse(texto) };
+    });
+    ok("o navegador produziu um arquivo para baixar", Boolean(arquivo),
+      arquivo ? arquivo.tamanho + " bytes" : "nenhum blob criado");
+    ok("o arquivo traz a mesma conta que a API devolve",
+      arquivo?.corpo.titular.email === referencia.titular.email
+        && arquivo?.corpo.aceites.length === referencia.aceites.length
+        && arquivo?.corpo.naoIncluidos.length === referencia.naoIncluidos.length,
+      JSON.stringify({
+        email: arquivo?.corpo.titular.email,
+        aceites: arquivo?.corpo.aceites.length,
+        ausencias: arquivo?.corpo.naoIncluidos.length,
+      }));
+    const corpoDoArquivo = JSON.stringify(arquivo?.corpo ?? {});
+    ok("credencial nenhuma desce no arquivo",
+      !/passwordHash|tokenHash|totpSecret|recoveryCode/.test(corpoDoArquivo),
+      corpoDoArquivo.slice(0, 80));
+    ok("a tela declara o que fica de fora, com motivo",
+      (await pagina.evaluate(() =>
+        [...(window.localDoBloco("O que a casa guarda e não entrega")?.querySelectorAll("li") || [])]
+          .map((li) => li.textContent.trim())))
+        .length === referencia.naoIncluidos.length,
+      "ausências declaradas: " + referencia.naoIncluidos.length);
+    await foto(pagina, "22-configuracoes-seus-dados");
+
+    const exportosDepois = await prisma.auditLog.count({
+      where: { action: "lgpd.export", userId: contaAntes.id },
+    });
+    const ultimoExporto = await prisma.auditLog.findFirst({
+      where: { action: "lgpd.export", userId: contaAntes.id },
+      orderBy: { createdAt: "desc" },
+    });
+    // Mais de uma linha por visita é esperado e não é defeito: em desenvolvimento o
+    // React monta o painel duas vezes, e a leitura da referência feita aqui pelo
+    // próprio script também passa pela porta. O que se prova é o contrato — cada
+    // leitura assina a conta, a empresa e a entidade "user".
+    ok("cada leitura da cópia fica na trilha, assinada por esta conta",
+      exportosDepois > exportosAntes
+        && ultimoExporto?.entity === "user"
+        && ultimoExporto?.entityId === contaAntes.id
+        && ultimoExporto?.companyId === empresaAntes.id,
+      exportosAntes + " -> " + exportosDepois + " · última: "
+        + JSON.stringify({ e: ultimoExporto?.entity, id: ultimoExporto?.entityId, c: ultimoExporto?.companyId }));
 
     // == 3) Empresa ==
     console.log("== 3) Aba Empresa: cadastro, endereço, formato, logo, meta e as duas políticas ==");
@@ -656,6 +791,27 @@ function diferencas(antes, depois) {
     ok("o próprio nome, ele pode mudar",
       (await campoDesabilitado(paginaStaff, "Seus dados", "Nome")) === false);
 
+    // A mesma aba, vista por quem não administra: o dado lido é o dela, e o do dono
+    // da empresa não aparece. É o isolamento do artigo 18 conferido na tela.
+    await irParaAba(paginaStaff, "privacidade");
+    await paginaStaff.waitForSelector(".nx-bloco", { timeout: 15000 });
+    const fotoStaff = await paginaStaff.evaluate((t) => {
+      const bloco = window.localDoBloco(t);
+      return [...(bloco?.querySelectorAll(".nx-grade .field") || [])].map((f) => {
+        const rotulo = (f.querySelector(".field-label")?.textContent || "").trim();
+        const valor = (f.querySelector(".field-label")?.nextElementSibling?.textContent || "").trim();
+        return rotulo + "=" + valor;
+      });
+    }, "Seus dados");
+    ok("o STAFF lê a própria conta, não a de quem administra",
+      fotoStaff.includes("E-mail de acesso=" + staff.email)
+        && !fotoStaff.some((l) => l.includes(CAPTA.email)),
+      fotoStaff.join(" | "));
+    ok("o papel exibido é o dele nesta empresa",
+      fotoStaff.includes("Papel na empresa ativa=STAFF"), fotoStaff.join(" | "));
+    await foto(paginaStaff, "22-configuracoes-seus-dados-staff");
+    await irParaAba(paginaStaff, "conta");
+
     await escreverCampo(paginaStaff, "Senha de acesso", "Senha atual", staff.senha);
     await escreverCampo(paginaStaff, "Senha de acesso", "Nova senha", "abc");
     await escreverCampo(paginaStaff, "Senha de acesso", "Confirme a nova senha", "abc");
@@ -747,5 +903,5 @@ function diferencas(antes, depois) {
     console.log(falhas.map((f) => "  - " + f).join("\n"));
     process.exit(1);
   }
-  console.log("Configurações provadas: quatro abas, gravação bloco a bloco, validação no campo e leitura travada.");
+  console.log("Configurações provadas: cinco abas, gravação bloco a bloco, validação no campo, leitura travada e a cópia da LGPD no navegador.");
 })();

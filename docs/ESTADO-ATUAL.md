@@ -36,12 +36,16 @@ eram 27 e são **29** (a linha estava atrasada desde a T4, que somou o `/500` se
 e o menu voltou a ter **18 linhas**. Nada de banco mudou: nenhuma tabela, nenhuma
 coluna, nenhuma migration — a porta escreve na coluna `users.email_verified_at`, que já existia desde a F4.
 
+A T6.3 moveu de novo, e menos ainda: **131 → 132** rotas, em **20 → 21** arquivos, com uma única porta nova
+(`GET /api/lgpd/meus-dados`) e nenhuma tabela, coluna ou migration — a exportação lê o que já existe e escreve
+uma linha na trilha de auditoria que já existia. As seções 1, 4, 6, 7 e 8 foram re-medidas por isso.
+
 ---
 
 ## 1. Resumo executivo
 
 1. O produto é um ERP SaaS multiempresa que funciona de ponta a ponta no ambiente
-   local: 131 rotas de API sobre Fastify 5 + Prisma 6 + MySQL 8.4.7, painel React com
+   local: 132 rotas de API sobre Fastify 5 + Prisma 6 + MySQL 8.4.7, painel React com
    29 elementos de rota (18 telas atrás do menu) e uma vitrine pública montada pelo banco.
 2. Funciona e tem teste automatizado: autenticação com verificação de e-mail, segundo
    fator TOTP e bloqueio por conta, recuperação e renovação de sessão, RBAC com
@@ -78,7 +82,7 @@ coluna, nenhuma migration — a porta escreve na coluna `users.email_verified_at
    ter serviço, duas rotas e aba no carnê — gravando só a configuração do MANUAL,
    com as três colunas de credencial nulas por construção e fora da resposta.
 7. Segurança: nenhuma rota nasce aberta (gate estrutural derruba o boot), e as
-   **131** rotas estão particionadas por teste em 13 públicas, 2 de etapa de login e 116
+   **132** rotas estão particionadas por teste em 13 públicas, 2 de etapa de login e 117
    autenticadas, sem nenhuma sem cadeado (`isolamento-rotas.test.ts`). Desde a F4 a
    autenticação tem três camadas novas: o link de verificação do cadastro atrás de
    `REQUIRE_EMAIL_VERIFICATION` (D2, ligada em produção), o segundo fator TOTP com o
@@ -239,7 +243,7 @@ Não há `.github/` — ou seja, **nenhum CI versionado** (a pastinha é trabalh
 
 ## 4. Rotas da API
 
-Fonte: leitura estática dos 20 arquivos `*.routes.ts`, conferida contra o servidor em
+Fonte: leitura estática dos 21 arquivos `*.routes.ts`, conferida contra o servidor em
 execução e contra a regra 4 de `apps/api/test/isolamento-rotas.test.ts`, que exige que a
 contagem medida pelo gancho `onRoute` do Fastify bata com a contagem declarada nos
 arquivos de rota. Não existe `tools/inventario-rotas.cjs` no repositório: a medição da
@@ -248,28 +252,30 @@ foi corrigida para apontar no comando que qualquer um repete.
 
 | Recorte | Quantidade |
 | --- | --- |
-| Rotas declaradas | **131** |
+| Rotas declaradas | **132** |
 | Públicas de propósito (`config.public`) | 13 |
 | De etapa (decorador `app.authenticateSegundoFator`, sem sessão) | 2 |
 | Da plataforma (`assertPlatformAdmin`) | 17 |
-| De empresa, com `app.authenticate` + permissão RBAC | 91 |
+| De empresa, com `app.authenticate` + permissão RBAC | 92 |
 | De conta (falam com a pessoa, não com uma empresa do contexto) | 8 |
 | Registradas sem gate | **0** |
 
-As cinco linhas acima da contagem são a partição da regra 6 de `isolamento-rotas.test.ts`, re-medida nesta
-rodada com a mesma régua do teste: as duas rotas novas são de plataforma (`GET /api/plataforma/contas/sem-confirmacao`
-e `POST /api/plataforma/contas/:userId/confirmar-email`, a porta do N61), e nada mais se moveu — 13 + 2 + 17 + 91 + 8 = 131.
+As cinco linhas acima da contagem são a partição da regra 6 de `isolamento-rotas.test.ts`, re-medida na T6.3
+com a mesma régua do teste: a rota nova é uma só — `GET /api/lgpd/meus-dados` — e ela cai em **empresa** porque
+tem `app.authenticate` e o `resolveCompanyContext` na fonte, sem prefixo de plataforma e sem estar nas listas
+declaradas de pública, de etapa ou de conta. Nada mais se moveu: 13 + 2 + 17 + 92 + 8 = 132.
 
 Prova de que nenhuma delas nasceu aberta, executada nesta rodada: a regra 8 de `isolamento-rotas.test.ts`
-varre as **118** rotas não públicas sem token (131 menos as 13 públicas) e exige 401 em todas, com o modo de
+varre as **119** rotas não públicas sem token (132 menos as 13 públicas) e exige 401 em todas, com o modo de
 manutenção conferido antes de medir. A amostra manual contra o servidor de dev — `/api/health` 200,
 `/api/leads` 401, `/api/clients` 401 e mais catorze caminhos — foi medida na passada da F3.2 Parte 2 e continua
 válida como retrato; o que prova o gate hoje é a varredura, não a lista.
 
 Por módulo: agenda 7 · audit 2 · auth 19 · charges 6 · clients 5 · cms 14 ·
-companies 5 · crm 6 · cron 3 · finance 9 · gateways 2 · health 1 ·
+companies 5 · crm 6 · cron 3 · finance 9 · gateways 2 · health 1 · lgpd 1 ·
 notifications 7 · **platform-accounts 2** · products 11 · purchases 8 · reports 8 · sales 4 ·
-service-orders 6 · users 6 — somando 131. As duas rotas novas de `platform-accounts` são a porta do N61
+service-orders 6 · users 6 — somando 132 em **21** arquivos `*.routes.ts`. A rota nova de `lgpd` é a porta do
+direito de acesso (T6.3); as duas rotas de `platform-accounts` são a porta do N61
 (`docs/AUDITORIA.md`), e as nove rotas novas de `auth` são as três públicas da verificação e
 do desafio (`/verify-email`, `/resend-verification`, `/2fa/challenge`), as duas de etapa (`/2fa/setup`,
 `/2fa/activate`) e as quatro do caminho da conta (`/2fa/status`, `/2fa/preparar`, `/2fa/ativar`,
@@ -359,6 +365,7 @@ A lista completa, rota por rota:
 | GET | /api/gateways | gateways | settings:read |
 | PUT | /api/gateways/:provider | gateways | settings:write |
 | GET | /api/health | health | pública |
+| GET | /api/lgpd/meus-dados | lgpd | autenticada — 5/min por endereço; cada leitura grava `lgpd.export` na trilha |
 | GET | /api/notifications | notifications | autenticada |
 | GET | /api/notifications/count | notifications | autenticada |
 | PATCH | /api/notifications/:id/read | notifications | autenticada |
@@ -464,7 +471,7 @@ Classificação por uso real no código da API (contagem de chamadas
 | Lead, AgendaEvent | Em uso | CRM e agenda |
 | Notification, NotificationPreference | Em uso | sino, `/api/notifications` |
 | LandingConfig, LandingItem, LegalDocument | Em uso | vitrine e textos legais; `LegalDocument` ganhou `version` na T6.2, e é esse número que a linha de aceite guarda |
-| **ConsentRecord** | Em uso (T6.2) | escrita por `registrarAceites()` dentro da transação do cadastro self-service (`modules/lgpd/lgpd.service.ts`); lida por tela nenhuma ainda — a consulta do aceite é trabalho da T6.3 |
+| **ConsentRecord** | Em uso (T6.2) | escrita por `registrarAceites()` dentro da transação do cadastro self-service (`modules/lgpd/lgpd.service.ts`); lida pela exportação do titular (`exportarDadosDoTitular()`, T6.3) e mostrada na aba "Seus dados" de `/app/configuracoes` |
 | CronJob | Em uso | `/api/ops/jobs` e o relógio |
 | ServiceOrder, ServiceOrderItem, ServiceOrderHistory | Em uso | `/api/service-orders`, a baixa de estoque na conclusão e a linha do tempo |
 | EmailVerificationToken, RecoveryCode, LoginAttempt | Em uso (F4) | `verificacao.service.ts`, `segundo-fator.service.ts` e `lib/tentativas.ts`; as três são lidas e gastas no fluxo de entrada |
@@ -509,7 +516,8 @@ Cinco estados possíveis: **Implementado e testado**, **Implementado sem teste**
 | Rotinas agendadas (cron) | Implementado e testado | 3 rotas de plataforma; `cron.test.ts`; prova `tools/verify-rotinas.cjs` |
 | CMS da vitrine | Implementado e testado | 14 rotas; `cms.test.ts`; provas `tools/verify-cms.cjs` e `tools/verify-landing-cms.cjs` |
 | Documentos legais | Implementado e testado | `cms.test.ts` (11 casos, incluindo textos legais) e `settings.test.ts` (21 casos) |
-| Aceite dos textos legais (LGPD, item 1) | Implementado e testado | `modules/lgpd/lgpd.service.ts` + migration `20261014000000_aceite_de_termos_lgpd`; 5 casos em `aceite-de-termos-no-cadastro.test.ts` e 7 em `aceite-de-termos-no-cadastro.test.tsx`; `docs/adr/0023`; sem tela de consulta ainda (T6.3) |
+| Aceite dos textos legais (LGPD, item 1) | Implementado e testado | `modules/lgpd/lgpd.service.ts` + migration `20261014000000_aceite_de_termos_lgpd`; 5 casos em `aceite-de-termos-no-cadastro.test.ts` e 7 em `aceite-de-termos-no-cadastro.test.tsx`; `docs/adr/0023`; o aceite já é lido pela tela de dados do titular (T6.3) |
+| Direito de acesso do titular (LGPD, item 2) | Implementado e testado | `exportarDadosDoTitular()` no mesmo módulo, na porta `GET /api/lgpd/meus-dados` (autenticada, 5/min, auditada como `lgpd.export`); 9 casos em `apps/api/test/export-dos-dados-do-titular.test.ts` e 10 em `apps/web/src/test/meus-dados-lgpd.test.tsx`; aba "Seus dados" em `/app/configuracoes` com download do JSON. Anonimização e exclusão continuam na T6.4 |
 | Modo manutenção | Implementado e testado | `plugins/maintenance.ts`, bypass público com rate-limit próprio |
 | Painel/Dashboard | Implementado e testado pela API | `/api/reports/overview` + meta de receita; tela `Dashboard.tsx` |
 | Cobranças manuais e catálogo de gateways | Implementado e testado | 6 rotas de cobrança + 2 de gateway; `cobrancas.test.ts` (24 casos) e `cobrancas.test.tsx` (15); prova `tools/verify-cobrancas.cjs` (137); decisão em `docs/adr/0009-cobranca-manual-receita-unica-e-vencida-lida.md`. Os três provedores de mercado param no catálogo com `available: false` e o motivo por escrito — nenhuma chamada de saída |
@@ -554,15 +562,19 @@ limpa tudo o que a etapa produziu — medido em
 `apps/web/src/test/login-com-segundo-fator.test.tsx` (4 casos, com a trilha do
 `from` externo `//dominio.com/painel` provando que o destino continua sendo desta casa).
 A gestão do fator no painel é a tela `components/settings/SegundoFatorPanel.tsx`, dentro
-da aba Segurança de `/app/configuracoes`.
+da aba "Minha conta" de `/app/configuracoes`. A mesma tela ganhou, na T6.3, a aba **"Seus dados"**
+(`components/settings/PrivacidadePanel.tsx`): cinco abas no total — conta, dados, empresa, aparência e
+empresas —, e a leitura do titular só acontece quando a pessoa abre a dela, porque o `TabPanel` não monta
+o que está fora da tela e cada leitura da rota é um evento na trilha.
 
-São **25 arquivos** em `pages/` e **36 arquivos** de componente (13 na raiz de
+São **25 arquivos** em `pages/` e **37 arquivos** de componente (13 na raiz de
 `components/`, 5 em `components/cms/`, 12 em `components/landing/` — onze `.tsx` mais
-`copy.ts` —, 3 em `components/layout/`, 3 em `components/settings/`, entrando
-`ErrorBoundary.tsx` da T4.4 e `SegundoFatorPanel.tsx` da F4), mais `context/AuthContext` e
-`context/ThemeContext`, e **28 módulos** em `lib/` — entraram `segundoFator.ts`, `destino.ts`,
-`verificacao.ts`, `registro-erros.ts` e, nesta rodada, `contasPlataformaApi.ts`, o cliente das
-duas portas de plataforma do N61. Há **22 arquivos** em `src/test/` (20 de casos e os dois
+`copy.ts` —, 3 em `components/layout/`, 4 em `components/settings/`, entrando
+`ErrorBoundary.tsx` da T4.4, `SegundoFatorPanel.tsx` da F4 e `PrivacidadePanel.tsx` da T6.3), mais `context/AuthContext` e
+`context/ThemeContext`, e **30 módulos** em `lib/` — entraram `segundoFator.ts`, `destino.ts`,
+`verificacao.ts`, `registro-erros.ts`, `contasPlataformaApi.ts`, o cliente das
+duas portas de plataforma do N61, `apiBase.ts`, o endereço da API no build publicado, e `lgpdApi.ts`, o
+cliente da exportação do titular. Há **25 arquivos** em `src/test/` (23 de casos e os dois
 helpers `fabrica-api.ts` e `fabrica-landing.ts`).
 
 Componentes globais de uso transversal: `ProtectedRoute`, `AdminShell`,
@@ -636,23 +648,22 @@ se uma tela mudou de mãos com a última refatoração.
 
 ## 8. Testes
 
-Medidos no portão de fechamento da T5.5 (`npm test`, exit 0, saída real colada no relatório da
+Medidos no portão de fechamento da T6.3 (`npm test`, exit 0, saída real colada no relatório da
 rodada), com o banco de prova da decisão D6 ativo (a suíte da API não usa mock): zero falha e zero
 skip nas duas pontas, rodadas uma depois da outra e nunca sobrepostas. As durações variam corrida a
-corrida — o portão mediu **303,17 s** (API) e **15,47 s** (web) —, e o que sustenta o conteúdo da
+corrida — o portão mediu **314,30 s** (API) e **11,49 s** (web) —, e o que sustenta o conteúdo da
 tabela é o contador de arquivos e casos, que não muda entre corridas.
 
-A tabela estava **duas tarefas atrasada** quando esta rodada começou: ela dizia 47 arquivos / 437
-casos na API e 18 / 140 no web, que são os números da T4, enquanto a T5.3 já tinha estreado
-`fila-de-mail.test.ts` e a T5.4 tinha medido 49 / 450 e 19 / 144 no próprio portão de fechamento.
-Nenhuma das duas tarefas atualizou este arquivo, e a diferença só aparece porque a conta arquivo por
-arquivo fecha: 437 + 5 + 8 = 450, e 450 + 9 = 459. O atraso era de escrita, não de suíte — os casos
-novos existiam e passavam.
+A tabela estava **três tarefas atrasada** quando esta rodada começou: ela dizia 50 arquivos / 459 casos
+na API e 20 / 156 no web, que são os números da T5.5, enquanto a T6.1, a T6.2 e a rodada do README/da
+Vercel já tinham estreado arquivos. Nenhuma delas atualizou este arquivo. A diferença só aparece porque
+a conta arquivo por arquivo fecha: **459 + 8 + 5 + 2 + 9 = 483** na API, e **156 + 7 + 5 + 10 = 178** no
+web. O atraso era de escrita, não de suíte — os casos novos existiam e passavam.
 
 | Suíte | Arquivos | Casos | Resultado | Duração |
 | --- | --- | --- | --- | --- |
-| API (`vitest`, forks, serial) | 50 | 459 | 50 passed (50) · 459 passed (459) | 303,17 s |
-| Web (jsdom + Testing Library) | 20 | 156 | 20 passed (20) · 156 passed (156) | 15,47 s |
+| API (`vitest`, forks, serial) | 54 | 483 | 54 passed (54) · 483 passed (483) | 314,30 s |
+| Web (jsdom + Testing Library) | 23 | 178 | 23 passed (23) · 178 passed (178) | 11,49 s |
 
 Na API são **13 arquivos e 109 casos a mais** que a medição da F3.2 Parte 2 (37 / 350). Os dois
 primeiros entraram na T1 e na T2 e nunca tinham sido contados aqui
@@ -666,12 +677,17 @@ API procurando porta que devolve `null` de propósito, "em breve" e copy de obra
 `isolamento-rotas.test.ts`, `seguranca.test.ts` e `validador-de-producao.test.ts` ganharam casos — a
 repartição exata arquivo por arquivo dos 109 não foi medida nesta passada, e o que está garantido
 aqui é o total do portão (459, todos verdes) e a soma dos arquivos nomeados: 437 + 5 + 8 + 9 = 459.
+Depois da T5.5 entraram mais quatro, um por rodada: `mensagens-de-email-escapadas.test.ts` (8 casos, T6.1),
+`aceite-de-termos-no-cadastro.test.ts` (5, T6.2), `links-da-documentacao.test.ts` (2, a guarda de link quebrado
+do README) e `export-dos-dados-do-titular.test.ts` (9, T6.3) — 50 + 4 arquivos e 459 + 24 casos.
 No web são **8 arquivos e 69 casos a mais** sobre os 12 / 87 da F4: estrearam `resposta-atrasada.test.tsx`
 (5), `privacidade-do-login.test.tsx` (15), `tema-sincronizado.test.tsx` (6), `limite-de-erro.test.tsx` (9),
 `verificar-e-mail.test.tsx` (8) e `segundo-fator-conta.test.tsx` (9) na T4 — 52 casos contabilizados pelo
 próprio relatório —, e o caso que falta para fechar os 53 é o oitavo de `fim-de-sessao.test.tsx`;
 depois vêm `avisos-por-email.test.tsx` (4, T5.4) e `porta-administrativa-de-email.test.tsx` (12, T5.5),
-e 140 + 4 + 12 = 156 fecha a linha da tabela acima.
+e 140 + 4 + 12 = 156 fecha a linha da tabela acima. Daqui para frente estrearam mais três:
+`aceite-de-termos-no-cadastro.test.tsx` (7, T6.2), `url-base-da-api.test.ts` (5, o endereço da API no build
+publicado) e `meus-dados-lgpd.test.tsx` (10, T6.3) — 20 + 3 arquivos e 156 + 22 casos.
 
 Cobertura real. **Esta tabela não é desta tarefa**: ela é a medição da T4, reexecutada lá com os dois
 comandos abaixo, e não foi refeita na T5.3, na T5.4 nem na T5.5. O que mudou de lá para cá são quatro
@@ -793,6 +809,7 @@ mentira deste arquivo.
 | D5 | `docs/ANALISE-LACUNAS.md` e tarefas antigas citam "Módulo Relatórios + exportações" como pendente | os 8 relatórios agregados existem na API e 6 telas exportam CSV pelo navegador | `apps/api/src/modules/reports`, `apps/web/src/pages/*.tsx` |
 | D6 | O passo a passo de instalação do README não mandava gerar o cliente Prisma (hoje manda: `README.md:703-715`, re-medido nesta passada) | um clone novo não compila sem `npm run prisma:generate -w @nexus/api` — 217 erros de tipo por cliente não gerado | **corrigido nesta rodada**; registrado como N9 em `docs/AUDITORIA.md` |
 | D7 | `docs/ANALISE.md` e `docs/ANALISE-LACUNAS.md` são retratos de rodadas anteriores | rotas, tabelas e contagens mudaram desde então | `docs/ANALISE.md`, `docs/ANALISE-LACUNAS.md` — vale neles o mesmo aviso deste arquivo: quem mexer reatualiza |
+| D8 | As linhas D1, D2, D3, D4 e D6 acima citam `README.md:20`, `:485`, `:505`, `:517` e `:703-715`, e a D4 descreve "uma tabela de módulos com 19 linhas e contagem por linha" | o `README.md` de hoje tem **78 linhas** e nenhuma tabela com contagem de rotas — o bloco "Módulos" é uma frase, e nenhuma das linhas citadas existe | **aberto na T6.3, não corrigido em silêncio**: a vitrine foi reescrita na rodada do prompt do README e as referências de linha desta seção não foram re-medidas junto. O número que a D4 sustentava (131 rotas somadas pelo README) não soma mais nada; a contagem de rotas deste arquivo passou a ter uma única fonte — a regra 4 de `isolamento-rotas.test.ts` —, e é ela que vale. A re-escrita da seção 9 inteira está marcada para a F9, junto com a passada completa deste arquivo |
 
 Nada no README promete integração de pagamento ou nota fiscal como existente — a
 linha de gateways diz explicitamente "**nenhuma chamada de saída** enquanto não
@@ -845,6 +862,8 @@ Ligadas ao item correspondente de `docs/AUDITORIA.md`.
 | P23 | Confirmar o endereço pela porta da plataforma escreve uma coluna, não uma leitura: `email_verified_at` preenchido pelo suporte não afirma que alguém abriu a caixa postal, a fila de pendentes não expira nem chama ninguém quando cresce, e a busca dela é um `contains` em `name`/`email` sem índice | AUDITORIA N61, `docs/adr/0022` | baixa e declarada: a linha de auditoria diz quem, quando, com qual motivo e para qual endereço mascarado, que é a prova de decisão — não de leitura. Um aviso de "N contas aguardando confirmação" é caso de sino, e sino com e-mail já existe desde a T5.4; nada nesta tarefa o pedia. Em banco grande o `contains` vira varredura sequencial |
 | P24 | A leitura anônima da vitrine escreve no banco: `GET /public/landing` e `GET /public/legal/:kind` chamam `obterLegal()`, que é um upsert, e cada visita fora do cache de 10 s resulta em três escritas na tabela de plataforma | AUDITORIA N79 | baixo e limitado por construção (a chave é o enum `LegalKind`, e o upsert não altera coluna nenhuma quando a linha já existe); registrado em vez de corrigido fora do item numerado, e o conserto é trocar o upsert por leitura + criação só na escrita autorizada |
 | P25 | O cadastro em estado de erro não cabe em 1440×900: com as duas caixas de aceite e as suas frases, o cartão mede 1004 px e o botão fica com a base em 947 px | AUDITORIA N80 | nada está inalcançável — a página rola, e 152 px de roda devolvem o botão à tela (base 795 px). O conserto é do ritmo do cartão de acesso, que as três telas de entrada compartilham, e não do aceite; por isso ficou registrado em vez de ser feito nesta tarefa |
+| P26 | Na galeria canônica, `22-configuracoes-lancamento-automatico.png` e `22-configuracoes-empresa.png` são a mesma imagem (mesmo `md5`, antes e depois da T6.3): a prova fotografa o topo da aba depois de salvar o bloco, não o bloco | AUDITORIA N82 | baixa: nenhuma informação sensível e nenhuma tela errada — é uma captura que diz uma coisa e mostra outra. O conserto é uma linha na ferramenta (`scrollIntoView` antes da `foto()`) e mora na T7/F8, junto de N29, N30 e P20 |
+| P27 | Em desenvolvimento, abrir a aba "Seus dados" grava **duas** linhas de `lgpd.export`: o `StrictMode` do React monta o painel duas vezes | AUDITORIA N83 | baixa e só na janela de dev — em build de produção a leitura é uma. A prova assina crescimento com identidade da última linha, não `+1` exato, por isso. O conserto cabível (deduplicar o evento por conta e janela) mexe na semântica da trilha e não foi pedido por item numerado |
 
 ---
 

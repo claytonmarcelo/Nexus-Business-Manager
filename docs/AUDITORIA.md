@@ -2592,3 +2592,108 @@ Depois da publicação, na mesma URL do dono:
 Sobrou o outro lado da casa, e ele não é uma variável de ambiente do painel: o projeto
 `nexus-business-manager` (Root Directory `apps/api`, preset `fastify`) continua sem como nascer, porque função
 serverless não tem o MySQL que o processo procura. A peça que falta é a da seção 11 de `docs/PRODUCAO.md`.
+
+---
+
+## Adenda da execução — T6.3 (F7: o direito de acesso do titular) encerrada — 2026-10-17
+
+### O que existia antes, e o que passou a existir
+
+Até esta rodada, "o que vocês guardam sobre mim?" era pergunta para quem opera o sistema: abrir Auditoria,
+Equipe, Configurações e a trilha de sessões e juntar pedaço por pedaço, uma consulta de cada vez. O produto
+agora responde sozinho, para a pessoa que autentica.
+
+- **A porta.** `GET /api/lgpd/meus-dados` (`apps/api/src/modules/lgpd/lgpd.routes.ts`, o vigésimo primeiro
+  arquivo de rota da árvore): `preHandler: [app.authenticate]`, teto de **5 pedidos por minuto por endereço** —
+  o mesmo das rotas de segundo fator da F4 — e contexto vindo de `resolveCompanyContext(req)`, nunca do corpo.
+  Não há `requirePermission` nela, e isso é decisão, não esquecimento: não existe papel que autorize alguém a
+  ler os dados de outro titular por essa porta. A matriz de rotas a classifica como rota **de empresa** pela
+  regra 5 (tem `resolveCompanyContext` na fonte), e a varredura anônima da regra 8 a viu responder **401**.
+  Superfície: **131 → 132** rotas em **20 → 21** arquivos, partição 13 públicas + 2 de etapa + 17 de plataforma
+  + **92** de empresa + 8 de conta = 132.
+- **O corpo.** `exportarDadosDoTitular(ctx)` faz oito leituras em paralelo (cadastro, vínculos, aceites, sessões,
+  avisos da empresa ativa, preferências de aviso, trilha e o total da trilha) e uma nona depois delas — a de
+  tentativas de login, que precisa do endereço do titular já lido. Sai um único JSON com `geradoEm`, `aviso`,
+  `titular`, `empresaAtiva`, `vinculos`, `aceites`, `sessoes`, `notificacoes`, `preferenciasDeAviso`,
+  `trilhaDeAuditoria`, `tentativasDeLogin` e `naoIncluidos`.
+- **Os tetos, declarados dentro da resposta.** 500 eventos e 200 avisos, com `total` e `mostrado` lado a lado.
+  Uma conta antiga recebe o recorte mais recente **e** o número do que existe; silêncio sobre o tamanho seria a
+  pior resposta possível aqui.
+- **O que não sai, dito no corpo.** `O_QUE_NAO_SAI` são quatro ausências nomeadas com motivo: senha e segundo
+  fator (hash e segredo cifrado — entregar seria entregar a chave de acesso), tokens de sessão (o hash de uma
+  linha viva é uma sessão aberta), o `metadata` da trilha (texto escrito sobre cliente, fornecedor e colega, que
+  é dado de **outro** titular) e os registros de negócio da empresa. As três primeiras são ausências por
+  construção: o `select` do Prisma não lista as colunas, então não há filtro posterior que alguém esqueça de
+  aplicar. O caso que confere o arquivo baixado no navegador procura os quatro nomes de coluna no texto inteiro.
+- **A trilha.** Cada pedido grava `lgpd.export` (entidade `user`, `entityId` do próprio titular, escopo
+  `tenant`), e a ação entrou em `sensivelWhere()` de `lib/audit.ts` — ou seja, aparece na aba "Alterações
+  sensíveis" da Auditoria, que é onde a empresa mostra o direito exercido para quem perguntar depois. Um direito
+  sem registro não é provável de ter acontecido.
+- **A tela.** `/app/configuracoes` passou de quatro para **cinco abas**: *Minha conta | Seus dados | Empresa |
+  Aparência | Empresas*. `PrivacidadePanel.tsx` monta quatro blocos — "Seus dados" (com o botão "Baixar cópia em
+  JSON"), "O que você aceitou", "Onde mais você está" e "O que a casa guarda e não entrega" — e só lê a rota
+  quando a pessoa abre a aba, porque o `TabPanel` não monta o que está fora da tela. Sem isso, entrar em
+  Configurações registraria um export por visita. O download usa o mesmo idioma do CSV da casa (`lib/csv.ts`):
+  blob, `URL.createObjectURL`, âncora efêmera, `revokeObjectURL`.
+
+### N82 — aberto: duas capturas da galeria de Configurações são a mesma imagem
+
+Medido com `md5sum` na galeria canônica **e** no `git show HEAD` dela: `22-configuracoes-empresa.png` e
+`22-configuracoes-lancamento-automatico.png` têm o mesmo hash (`71c56ccc…` na captura desta rodada,
+`f57d6825…` na que já estava commitada). Não é acidente desta tarefa: é a mesma dupla na árvore de antes.
+
+A causa está na ferramenta. `tools/verify-configuracoes.cjs` salva o bloco de lançamento automático e chama
+`foto(pagina, "22-configuracoes-lancamento-automatico")` sem rolar a página; `foto()` é um
+`page.screenshot()` de viewport, e o viewport estava no topo da aba Empresa — que é exatamente o que
+`22-configuracoes-empresa.png` já mostra. O resultado é uma captura que diz fotografar um bloco e fotografa
+outro.
+
+Por que está registrado e não consertado aqui: o conserto é de uma linha (`scrollIntoView` do bloco antes da
+`foto()`), mas regravar aquela captura sozinha não existe — pela regra de coerência visual, mexer em uma tela do
+grupo é recapturar o grupo, e o grupo já estava sendo recapturado por um motivo legítimo (a aba nova). Fica para
+a T7/F8, a rodada das ferramentas de captura, onde já moram N29, N30 e P20.
+
+### N83 — aberto: no desenvolvimento, abrir a aba grava dois eventos de exportação
+
+Medido na prova: a contagem de `lgpd.export` da conta saiu de **6** para **9** numa única visita da ferramenta —
+duas linhas do `StrictMode` do React (a montagem dupla do painel em desenvolvimento faz a leitura acontecer duas
+vezes) mais a leitura de referência que a própria prova faz direto na API para comparar. Em build de produção o
+`StrictMode` não monta duas vezes, e a leitura é uma só.
+
+O que isso significa na prática: a trilha de desenvolvimento superestima exportos, e a frase da tela — uma linha
+por pedido — vale no ar, não na janela de dev. A asserção da prova foi escrita contra o número real
+(`depois > antes`, mais a identidade da última linha: entidade `user`, `entityId` da conta e `companyId` da
+empresa ativa), porque uma asserção de `+1` exato seria verde por sorte em produção e vermelha sempre em
+desenvolvimento. O conserto cabível — deduplicar por `userId` dentro de uma janela curta na escrita do evento —
+mexe na semântica da trilha e não foi pedido por item numerado nenhum; fica registrado.
+
+### Prova desta rodada
+
+**Testes.** Dois vermelhos medidos no caminho do teste de componente, e os dois eram do teste, não da tela: a
+asserção do texto de vínculos procurava `pedido é feito logado nelas` quando a frase real é "num pedido feito
+logado nelas", e a leitura do arquivo baixado chamava `blob.text()`, que o `Blob` do jsdom não tem — virou leitura
+da primeira parte do blob pelo construtor espionado. Verde medido nesta janela: **9 casos** em
+`apps/api/test/export-dos-dados-do-titular.test.ts` (10,71 s, contra `nexusbusinessmanager_teste`) e **10 casos**
+no arquivo novo do web. Suítes inteiras, uma depois da outra: **API 54 arquivos / 483 casos em 314,30 s** e
+**web 23 / 178 em 11,49 s**, exit 0, zero falha e zero skip. Typecheck sem erro nas duas pontas e build sem
+aviso de chunk (`Settings` em 26,22 kB / 8,58 kB gzip).
+
+**Navegador, na pilha de prova (5174 / 3002, banco `nexusbusinessmanager_teste`).**
+`node tools/verify-configuracoes.cjs` fechou **145 checagens, 0 falhas**, e a frase de encerramento passou a
+dizer "cinco abas". A seção que a tarefa acrescentou (`2b`)
+confere, na tela real: os quatro títulos de bloco; as linhas de identidade batendo com o que a API devolve; o
+papel na empresa ativa; o botão de download existindo; a lista de aceites comparada item a item com a resposta —
+e o estado vazio honesto quando a conta não tem aceite nenhum, que é o caso da conta de captura, anterior à
+T6.2; os vínculos; as quatro ausências declaradas; o clique no botão produzindo um arquivo de **217.502 bytes**
+cujo conteúdo é o mesmo JSON da rota, com `naoIncluidos` presente e nenhuma das quatro colunas de credencial
+aparecendo no texto; o aviso "Cópia gerada"; e a linha de auditoria assinada por esta conta nesta empresa.
+Depois, com o STAFF da mesma empresa logado: a aba lê **a própria conta** — o papel exibido é `STAFF`, não o de
+quem administra a tela.
+
+**Capturas.** Doze imagens foram regravadas pela prova (a família de Configurações inteira mais
+`06-configuracoes-claro.png`), conferidas **uma a uma** antes de entrar. As onze que mostram a barra de cinco abas
+e só dado fictício entraram em `docs/screenshots/`; `22-configuracoes-seus-dados-staff.png` **não** entrou — é a
+única que carrega o endereço sintético da janela de prova (`prova-config-<timestamp>@nexus.prova`), e a asserção
+que a prova faz sobre ela é a entrega; a imagem só acrescentaria ruído.
+`22-configuracoes-lancamento-automatico.png` entrou porque a família entrou, e o N82 acima declara que ela é
+duplicata da captura da aba Empresa.
