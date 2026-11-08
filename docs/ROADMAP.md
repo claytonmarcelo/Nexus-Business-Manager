@@ -7,14 +7,16 @@ Ordem de chegada, mais novo primeiro.
 ## Operação e hospedagem
 
 - **Store compartilhado do limitador de taxa.** Hoje o balde é por processo (ADR 0025, `docs/PRODUCAO.md`
-  seção 12). Com mais de um processo — ou em host serverless com instâncias frias — o teto por endereço vale
+  seção 13). Com mais de um processo — ou em host serverless com instâncias frias — o teto por endereço vale
   por instância, não por instalação. Caminho: store Redis (Marketplace) atrás do `@fastify/rate-limit`.
 - **Relógio das rotinas em host serverless.** O agendador é um `setInterval` no processo da API
   (`cron.runner.ts`); função serverless não tem processo vivo entre pedidos. Na publicação da Vercel as rotinas
   rodam pelo botão da tela (`CRON_ENABLED=0`); o caminho automático é Vercel Cron chamando uma porta protegida
   por segredo, ou host com processo vivo (a pilha docker do repositório já liga o relógio inteiro).
 - **Agenda diária de backup fora da máquina do dono** (N71). `deploy/backup-mysql.cjs` existe e a política
-  7/4/12 é provada; quem repete o comando é o cron do host escolhido, e a hospedagem ainda não tem agenda.
+  7/4/12 é provada; quem repete o comando é o cron do host escolhido. No ar, o banco é o TiDB Cloud Starter,
+  que tem backup e recuperação pontual próprios — o que falta é a prova de restauração no plano do dono (o
+  `npm run docker:provar-backup` provou a pilha local, não a do ar).
 - **Exercício trimestral de restauração em outro host** (regra 1 do G5). O comando de restauração comparada
   existe (`npm run docker:provar-backup`); o "outro host" depende da hospedagem.
 - **Rotação de log e nível de produção** (N69). O backup do banco existe; a política de log ainda não.

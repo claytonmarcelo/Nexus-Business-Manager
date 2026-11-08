@@ -484,7 +484,77 @@ Ordem de subida que a casa já conhece: o container da API roda
 banco zerado), depois `npm run admin:criar` para nascer o administrador da plataforma, e só então o painel
 aponta para lá. O `docker-compose.yml` faz os três passos na mesma sequência com o job `migracoes`.
 
-## 12. O que ainda não está aqui
+## 12. Painel e API na mesma origem, na Vercel (a topologia escolhida em 2026-11-08)
+
+É a trilha que o dono escolheu para o ar: **um projeto Vercel só**, com o painel estático e a API como
+Function no mesmo endereço. A seção 11 descreve a topologia separada (painel em host estático, API e banco em
+container) — ela continua válida e continua sendo a da pilha Docker, mas não é a do ar.
+
+### Por que mesma origem
+
+O N81 nasceu de o painel chamar a API num endereço que não existia. Na mesma origem, o problema não tem como
+voltar: o painel chama `/api/...` na própria origem, e a rota de rewrite da Vercel entrega `/api/*` à função
+sem tocar no resto. Um endereço só, uma regra só, nenhum endereço de API para configurar em build.
+
+### O que a função monta
+
+- `api/[...path].ts` é o entrypoint: ele chama `buildApp()` — **a mesma montagem do container**, uma árvore de
+  rotas só — e entrega o pedido ao servidor do Fastify. Não existe segunda montagem para manter em dia.
+- `vercel.json` declara o build do painel, a saída `apps/web/dist`, o rewrite de SPA, o cache de `/assets/*` e
+  `functions: { "api/*.ts": { "maxDuration": 90 } }`. O `installCommand` roda o `prisma:generate` depois do
+  `npm ci`, porque o npm bloqueia o postinstall do Prisma por política de scripts (achado N9). O teto de 90
+  segundos cabe no plano Hobby, cujo limite de duração é de 300 segundos (padrão e máximo).
+- O `generator` do `schema.prisma` declara `binaryTargets = ["native", "rhel-openssl-3.0.x"]`: o primeiro é o
+  binário da máquina de desenvolvimento, o segundo é o das Functions (Amazon Linux 2023). Sem o segundo, a
+  geração na nuvem baixa um motor que não roda lá — e o erro só apareceria no primeiro pedido, em produção.
+- `tsconfig.serverless.json` é o typecheck do entrypoint (`npm run typecheck:serverless`), ligado ao
+  `typecheck` da raiz: a função entra no portão como o resto.
+- `npm run prova:serverless` sobe o handler da Function num servidor HTTP local — o runtime da Vercel
+  entrega o mesmo par requisição/resposta do node — e mede cinco coisas: `/api/health` responde 200 com o
+  banco em `up`, uma rota inexistente responde 404 no formato do app, um corpo inválido responde 400 de
+  validação, uma rota de tenant sem sessão responde 401 e a resposta traz os cabeçalhos do helmet. A prova
+  roda contra o **banco de prova**, nunca contra o de desenvolvimento.
+
+### O banco
+
+**TiDB Cloud Starter** (protocolo MySQL, porta 4000, TLS `sslaccept=strict`), conta do dono, região AWS
+us-east-1. A connection string mora em `.env.tidb.local` na raiz do repositório, fora do Git, e a régua de
+produção do banco (`DATABASE_URL` alcançável, sem `root` sem senha) continua valendo.
+
+### O ambiente na Vercel, sem vazar segredo
+
+`node deploy/env-vercel.cjs prj_XXXX [--url https://...] [--team team_XXX]` sobe o ambiente do projeto pela
+API da Vercel. Ele lê o `.env` da raiz (SMTP e administrador) e o `.env.tidb.local` (banco), **gera** os
+segredos que não podem ser reaproveitados do desenvolvimento (`JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET` e
+`TOTP_ENCRYPTION_KEY`) e **nunca imprime valor nenhum** — só o nome da chave, o que foi criado e o que foi
+pulado. É idempotente: chave que já existe no projeto é pulada, nunca sobrescrita, para não derrubar sessão de
+ninguém nem trocar segredo no ar.
+
+### O que a função não faz (e por quê)
+
+- **As rotinas não têm relógio.** O agendador é um `setInterval` dentro do processo, e ele só nasce em
+  `src/server.ts` — o entrypoint da Function monta o app sem chamar o agendador, então não há relógio entre um
+  pedido e outro. Some com isso o cron do plano Hobby, que roda 1×/dia, insuficiente para o matcher atual. Na
+  Vercel o ambiente nasce com `CRON_ENABLED=0` e as rotinas andam pelo botão da tela (`/app/rotinas`). A pilha
+  Docker continua sendo o caminho com relógio completo. Registrado no `docs/ROADMAP.md`.
+- **A fila de e-mail é memória da instância.** Como no container, a fila é do processo (N58); a função espera
+  `aguardarFilaDeMail()` **depois** de responder, para a mensagem pendente andar antes de a instância congelar.
+  A entrega é SMTP real, com o que a seção 10 descreve.
+- **O limitador de taxa conta por instância** (seção 13, item do store compartilhado): o teto segura rajadas
+  por instância, e o store compartilhado está no `docs/ROADMAP.md`.
+
+### A ordem de publicação
+
+1. `.env.tidb.local` com a conexão do TiDB (fora do Git).
+2. `node deploy/preparar-banco-de-dados.cjs` contra o banco do TiDB (é o `migrate deploy`) e
+   `npm run admin:criar` para nascer o administrador da plataforma.
+3. `node deploy/env-vercel.cjs prj_XXXX --url https://<painel> --team team_XXXX` para subir o ambiente.
+4. `vercel deploy --prod` com o Root Directory na **raiz** do repositório (o `vercel.json` da raiz não é lido
+   se a pasta for `apps/web`).
+5. Prova no ar: `/`, `/login` e `/app` respondem 200, `/api/health` responde 200 (a rota existe, e o rewrite
+   deixa `/api/*` de fora do SPA), e o login de uma conta fictícia abre o painel.
+
+## 13. O que ainda não está aqui
 
 - **Pipeline de CI, `npm audit`, portões de cobertura, `postinstall` do Prisma e o conserto da cadeia de
   migrations para clone limpo** (N54) — F8 (T7).
@@ -495,7 +565,8 @@ aponta para lá. O `docker-compose.yml` faz os três passos na mesma sequência 
   serverless cada instância fria nasce com o balde zerado. O teto existe e segura rajadas por instância; não é
   um teto global da instalação. O caminho de store compartilhado (Redis do Marketplace, por exemplo) está no
   `docs/ROADMAP.md`; a decisão de desenho dos tetos da LGPD está no ADR 0025.
-- **Hospedagem recomendada**: não existe no repositório, e a decisão é do dono
-  (`docs/decisoes/G5-hospedagem-e-backup.md`). A seção 11 descreve a topologia separada que o dono escolheu
-  publicar — painel em host estático, API e banco em container —, mas nome de host, tamanho de instância e o
-  provedor do MySQL continuam sendo conta dele.
+- **Hospedagem**: a escolha do dono está registrada em `docs/decisoes/G5-hospedagem-e-backup.md` e detalhada na
+  seção 12 — **TiDB Cloud Starter + Vercel na mesma origem** (painel estático e API como Function no mesmo
+  endereço). A seção 11 continua descrevendo a topologia da pilha Docker (painel em host estático, API e banco
+  em container), que é a da casa de desenvolvimento e do servidor próprio. O que ainda não é do repositório: o
+  nome de host, o tamanho da instância e a conta do provedor do MySQL — são do dono.

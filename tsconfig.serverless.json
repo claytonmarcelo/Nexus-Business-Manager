@@ -1,0 +1,9 @@
+{
+  "extends": "./apps/api/tsconfig.json",
+  "compilerOptions": {
+    "rootDir": ".",
+    "noEmit": true
+  },
+  "include": ["api", "tools/prova-serverless.ts"],
+  "exclude": ["node_modules", "dist"]
+}

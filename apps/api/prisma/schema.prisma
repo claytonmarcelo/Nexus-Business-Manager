@@ -5,6 +5,11 @@
 
 generator client {
   provider = "prisma-client-js"
+  // `native` é o binário da máquina de desenvolvimento; `rhel-openssl-3.0.x` é o
+  // binário das Functions da Vercel (Amazon Linux 2023). Sem o segundo alvo, a
+  // geração na nuvem baixa um motor que não roda lá — e o erro só aparece no
+  // primeiro pedido, em produção.
+  binaryTargets = ["native", "rhel-openssl-3.0.x"]
 }
 
 datasource db {

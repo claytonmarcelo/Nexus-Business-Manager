@@ -1,6 +1,7 @@
 # G5 — Hospedagem, domínio, HTTPS e política de backup
 
-**Situação:** BLOQUEADO POR DECISÃO · **Década:** 2026-10-11 · **Nada foi publicado em lugar nenhum.**
+**Situação:** DECIDIDA EM 2026-11-08 (TiDB Cloud Starter + Vercel, mesma origem — veja a adenda no fim) ·
+**Década:** 2026-10-11 · **Nada foi publicado em lugar nenhum.**
 
 ## O que existe hoje
 
@@ -78,3 +79,28 @@ Independente da escolha, estas quatro coisas deixam de ser decisão e viram regr
 - **Regra 4, conferida na subida da pilha** (T5.1): o compose nasce com `NODE_ENV=production`, a A9 recusou a
   subida com `WEB_BASE_URL` sem https e sem `CORS_ORIGIN` público, e TLS termina fora daqui — o container serve
   texto puro na `PAINEL_PORT`; certificado é do ambiente escolhido acima.
+
+## A decisão do dono (2026-11-08): TiDB Cloud Starter + Vercel, mesma origem
+
+- **O que foi decidido.** O painel estático e a API moram **no mesmo projeto Vercel** (`nexus-business-manager`,
+  conta já existente do dono): o painel é o build do Vite, e todo caminho `/api/*` cai numa Vercel Function
+  (`api/[...path].ts`) que monta a mesma árvore de rotas do container — `buildApp()`, sem segunda montagem.
+  O banco é **TiDB Cloud Starter** (compatível com MySQL, porta 4000 com TLS), região **AWS us-east-1**, conta
+  criada pelo dono; a connection string mora em `.env.tidb.local` (fora do Git) e sobe para o projeto pela
+  porta `deploy/env-vercel.cjs`, que não imprime valor de segredo.
+- **Por que este caminho.** O Marketplace da Vercel não tem MySQL gerenciado (catálogo conferido: Postgres,
+  SQLite, NoSQL e Redis), e o dono não quis abrir conta nova em outro PaaS. O TiDB Starter tem cota gratuita
+  (5 GiB + 50M RU/mês por instância) e fala o protocolo que o Prisma já usa — nenhuma linha de query mudou.
+  Mesma origem elimina o achado N81 inteiro: não existe mais "o painel aponta para o host errado da API".
+- **O que esta escolha NÃO cobre, declarado.** (1) O relógio de rotinas (`setInterval` no processo) não roda
+  em serverless: na Vercel `CRON_ENABLED=0` e as rotinas andarão pelo botão da tela; o cron do Hobby é 1×/dia,
+  insuficiente para o matcher atual — registrado no `docs/ROADMAP.md`. (2) O limitador de taxa e a fila de
+  e-mail são memória de instância; a fila é drenada antes de a função congelar (`aguardarFilaDeMail()` depois
+  da resposta), e o store compartilhado do limitador está no ROADMAP e no `docs/PRODUCAO.md` §13. (3) A regra 1
+  (backup diário com retenção) continua sem agenda: no TiDB o caminho é o dump lógico do provedor ou
+  `deploy/backup-mysql.cjs` apontado para lá, e a agenda continua pendência N71. (4) A pilha Docker continua
+  existindo e é o caminho com relógio completo — a decisão do dono escolhe a Vercel para o ar, não apaga o
+  compose.
+- **Estado da pergunta "onde vai morar": respondida** para o primeiro ambiente público. Domínio próprio,
+  quem paga a conta quando a cota gratuita acabar e a janela de backup seguem em aberto — e o ROADMAP guarda
+  as pendências que esta escolha cria.

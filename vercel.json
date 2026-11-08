@@ -1,9 +1,12 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": "vite",
-  "installCommand": "npm ci",
+  "installCommand": "npm ci && npm run prisma:generate --workspace @nexus/api",
   "buildCommand": "npm run build --workspace @nexus/web",
   "outputDirectory": "apps/web/dist",
+  "functions": {
+    "api/*.ts": { "maxDuration": 90 }
+  },
   "rewrites": [{ "source": "/((?!api/).*)", "destination": "/index.html" }],
   "headers": [
     {

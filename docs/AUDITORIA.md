@@ -2808,3 +2808,49 @@ de JavaScript no caminho.
 só dado fictício. As dez imagens da família que a prova regravou voltaram **byte-idênticas** às commitadas
 (`cmp` uma a uma) — o bloco de eliminação nasce abaixo da dobra da aba —, então nenhuma imagem antiga mudou
 e nenhuma recaptura em massa aconteceu.
+
+
+## Adenda da execução — o ar com um endereço só: a Function que a Vercel executa, medida de verdade (2026-11-08)
+
+**A escolha do dono.** O projeto anterior na Vercel foi removido por erro e não abria. A topologia escolhida e
+documentada é **TiDB Cloud Starter + Vercel com o painel e a API na mesma origem**: um projeto, um endereço,
+uma regra de rewrite. O detalhamento está no `docs/PRODUCAO.md` §12 e a decisão, com o que ela não cobre, está
+em `docs/decisoes/G5-hospedagem-e-backup.md`.
+
+**O que entrou no código.** O entrypoint `api/[...path].ts` chama `buildApp()` — a mesma montagem do
+container, uma árvore de rotas só — e entrega o pedido ao servidor do Fastify depois de `app.ready()`. O
+`installCommand` do `vercel.json` roda o `prisma:generate` depois do `npm ci` (o npm bloqueia o postinstall
+do Prisma por política de scripts, achado N9), o `functions` declara `maxDuration: 90`, e o `generator` do
+`schema.prisma` ganhou `binaryTargets = ["native", "rhel-openssl-3.0.x"]` — sem o alvo das Functions (Amazon
+Linux 2023) a geração na nuvem baixa um motor que não roda lá, e o erro só apareceria no primeiro pedido, em
+produção.
+
+**A prova: o handler real, rodando.** `npm run prova:serverless` sobe o entrypoint num servidor HTTP local
+(o runtime da Vercel entrega o mesmo par requisição/resposta do node) e mede **5 checagens, 0 falhas**:
+
+| Checagem | Resultado medido |
+|---|---|
+| `GET /api/health` | 200 — `{"status":"ok","db":"up"}` (a Function monta o app **e** fala com o banco) |
+| `GET /api/rota-que-nao-existe` | 404 — `{"error":"NOT_FOUND","message":"Rota GET /api/rota-que-nao-existe não encontrada"}` (quem respondeu foi o app, não um proxy) |
+| `POST /api/auth/login` sem campos | 400 — `VALIDATION_ERROR` com `email` e `password` exigidos (o parser de corpo sobrevive ao caminho cru) |
+| `GET /api/clients` sem sessão | 401 — `UNAUTHORIZED` (o gate de autenticação está armado antes das rotas) |
+| cabeçalhos de segurança | `x-content-type-options: nosniff`, `x-frame-options: SAMEORIGIN` (os escudos valem aqui também) |
+
+A prova roda contra o **banco de prova** (`nexusbusinessmanager_teste`), nunca contra o de desenvolvimento
+(decisão D6), e não escreve nada: as quatro requisições são de leitura e de recusa. O entrypoint também
+entrou no portão de tipos — `npm run typecheck:serverless`, ligado ao `typecheck` da raiz.
+
+**O que a decisão deixa pendente, declarado no próprio documento.** (1) O agendador das rotinas é um
+`setInterval` dentro do processo: na Function não há relógio entre um pedido e outro, e o cron do plano Hobby
+roda 1×/dia — o ambiente nasce com `CRON_ENABLED=0` e as rotinas andam pelo botão da tela. (2) A fila de
+e-mail é memória da instância (N58): a Function espera `aguardarFilaDeMail()` **depois** de responder, para
+a mensagem pendente andar antes de a instância congelar. (3) O limitador de taxa conta por instância. Os três
+estão no `docs/ROADMAP.md`.
+
+**O que ainda falta para o ar.** A connection string do TiDB mora em `.env.tidb.local` na raiz, fora do Git, e
+é o dono quem a escreve. A ordem de publicação está no `docs/PRODUCAO.md` §12: banco preparado
+(`node deploy/preparar-banco-de-dados.cjs`, é o `migrate deploy`), `npm run admin:criar` para nascer o
+administrador da plataforma, `node deploy/env-vercel.cjs prj_XXXX --url ... --team ...` para subir o ambiente
+sem vazar segredo, `vercel deploy --prod` com o **Root Directory na raiz** do repositório, e a prova no ar:
+`/`, `/login` e `/app` respondendo 200, `/api/health` respondendo 200 e o login de uma conta fictícia
+abrindo o painel. Até lá, a publicação está bloqueada por essa ação do dono.

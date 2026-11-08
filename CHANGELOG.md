@@ -1,5 +1,48 @@
 ## [Não lançado]
 
+### O ar ficou com um endereço só: painel e API na mesma origem, e o banco no TiDB (2026-11-08)
+
+- **A escolha do dono.** O projeto antigo na Vercel foi removido por erro e não abria; a decisão é
+  **TiDB Cloud Starter (MySQL, porta 4000, TLS `sslaccept=strict`, AWS us-east-1) + Vercel com painel e API
+  na mesma origem** — um projeto, um endereço, uma regra. Registrada em
+  `docs/decisoes/G5-hospedagem-e-backup.md` (adenda de 2026-11-08) e detalhada no `docs/PRODUCAO.md` §12.
+- **Por que mesma origem.** O N81 nasceu de o painel chamar a API num endereço que não existia. Com o painel e
+  a API no mesmo endereço, o painel chama `/api/...` na própria origem e a regra de rewrite entrega `/api/*`
+  à função sem tocar no resto do SPA. Não existe endereço de API para configurar em build, nem a chance de
+  apontar o painel para o lugar errado.
+- **O que entrou no código.** `api/[...path].ts` é o entrypoint da Function: ele chama **`buildApp()` — a
+  mesma montagem do container**, uma árvore de rotas só — e entrega o pedido ao servidor do Fastify depois
+  de `app.ready()`. `tsconfig.serverless.json` entra no portão como `npm run typecheck:serverless`, ligado ao
+  `typecheck` da raiz. O `generator` do `schema.prisma` ganhou
+  `binaryTargets = ["native", "rhel-openssl-3.0.x"]`: sem o alvo das Functions (Amazon Linux 2023) a geração na
+  nuvem baixa um motor que não roda lá, e o erro só apareceria no primeiro pedido, em produção. O `vercel.json`
+  ganhou o `installCommand` que roda o `prisma:generate` depois do `npm ci` (o npm bloqueia o postinstall do
+  Prisma por política de scripts — N9) e o `functions: { "api/*.ts": { "maxDuration": 90 } }`.
+- **O ambiente sem vazar segredo.** `node deploy/env-vercel.cjs prj_XXXX [--url ...] [--team ...]` sobe o
+  ambiente do projeto pela API da Vercel: lê o `.env` da raiz (SMTP e administrador) e o `.env.tidb.local`
+  (banco), **gera** os segredos que não podem ser reaproveitados do desenvolvimento (`JWT_ACCESS_SECRET`,
+  `JWT_REFRESH_SECRET`, `TOTP_ENCRYPTION_KEY`) e **nunca imprime valor nenhum** — só o nome da chave e o que
+  foi criado ou pulado. É idempotente: chave que já existe é pulada, nunca sobrescrita, para não derrubar
+  sessão de ninguém nem trocar segredo no ar.
+- **O que a função não faz, e é declarado.** As rotinas **não têm relógio** (o agendador é um `setInterval`
+  dentro do processo; na Function ele não existe entre um pedido e outro, e o cron do Hobby roda 1×/dia), então
+  o ambiente nasce com `CRON_ENABLED=0` e as rotinas andam pelo botão da tela (`/app/rotinas`) — a pilha Docker
+  continua sendo o caminho com relógio completo. A fila de e-mail é memória da instância (N58): a função espera
+  `aguardarFilaDeMail()` **depois** de responder, para a mensagem pendente andar antes de a instância congelar. O
+  limitador de taxa conta por instância. Os três estão no `docs/ROADMAP.md`.
+- **Prova medida.** `npm run prova:serverless` (`tools/verify-serverless.cjs` + `tools/prova-serverless.ts`)
+  sobe o handler da Function num servidor HTTP local e fechou **5 checagens, 0 falhas**: `GET /api/health`
+  → 200 com `db: up`; rota inexistente → 404 no formato do app (`NOT_FOUND`); `POST /api/auth/login` sem
+  campos → 400 `VALIDATION_ERROR`; `GET /api/clients` sem sessão → 401; cabeçalhos do helmet presentes
+  (`x-content-type-options: nosniff`, `x-frame-options: SAMEORIGIN`). A prova roda contra o banco de
+  prova, nunca contra o de desenvolvimento, e não escreve nada.
+- **O que falta para o ar.** A connection string do TiDB mora em `.env.tidb.local` na raiz, **fora do Git**, e
+  é o dono quem a escreve. A ordem de publicação está no `docs/PRODUCAO.md` §12: banco preparado
+  (`node deploy/preparar-banco-de-dados.cjs`, é o `migrate deploy`), `npm run admin:criar` para nascer o
+  administrador da plataforma, ambiente na Vercel, `vercel deploy --prod` com o **Root Directory na raiz** (o
+  `vercel.json` da raiz não é lido se a pasta for `apps/web`), e a prova no ar: `/`, `/login` e `/app`
+  respondendo 200, `/api/health` respondendo 200 e o login de uma conta fictícia abrindo o painel.
+
 ### A pessoa pode apagar o que a identifica: anonimizar preserva a assinatura, excluir apaga a linha (2026-11-08)
 
 - **O que faltava.** LGPD art. 18, VI é direito de eliminação, e até aqui a aba "Seus dados" só mostrava e
@@ -60,7 +103,7 @@
   **55 arquivos / 496 casos**, exit 0.
 - **O que continua declarado.** O store do limitador é memória de processo: numa instância só é exato; em
   várias instâncias (o caminho serverless recém-escolhido) cada uma conta a sua. O store compartilhado está
-  no `docs/ROADMAP.md` e no `docs/PRODUCAO.md` §12.
+  no `docs/ROADMAP.md` e no `docs/PRODUCAO.md` §13.
 
 ### A pessoa pede, e o sistema mostra: a cópia dos dados dela sai em JSON, com trilha e com tela (2026-10-17)
 
