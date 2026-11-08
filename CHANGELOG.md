@@ -1,5 +1,67 @@
 ## [Não lançado]
 
+### A pessoa pode apagar o que a identifica: anonimizar preserva a assinatura, excluir apaga a linha (2026-11-08)
+
+- **O que faltava.** LGPD art. 18, VI é direito de eliminação, e até aqui a aba "Seus dados" só mostrava e
+  exportava. Pedir para sair significava pedir por fora — e a casa ficava sem uma resposta que não quebrasse
+  venda, lançamento nem trilha.
+- **O que mudou no código.** Duas portas novas no mesmo arquivo de rota da T6.3:
+  `POST /api/lgpd/minha-conta/anonimizar` e `POST /api/lgpd/minha-conta/excluir`
+  (`apps/api/src/modules/lgpd/lgpd.routes.ts`), ambas com sessão, **senha no corpo** como cadeado
+  (`lgpd.schemas.ts`), contexto do token e teto de **3 pedidos por minuto por endereço**. A ordem das guardas
+  é a mesma nas duas: **403** para a conta da plataforma (não se elimina por essa porta), **409** quando a
+  pessoa é o último OWNER ativo de uma casa ativa (a empresa não pode ficar sem dono), **400** quando a senha
+  não confere. Anonimizar (`anonimizarTitular()`) preserva a linha como número sem nome — "Titular
+  anonimizado", endereço `titular-anonimizado+<id>@invalid`, conta desativada, sessões e códigos fechados,
+  coluna nova `anonymized_at` (migration `20261017000000_anonimizacao_e_exclusao_do_titular`) — porque venda e
+  trilha apontam para ela. Excluir (`excluirTitular()`) apaga a linha; os documentos da empresa ficam sem
+  referência a ninguém e a trilha permanece como recibo. Cada pedido e cada recusa gravam trilha sensível
+  (`lgpd.anonymize`, `lgpd.delete` e as variantes `.failed`/`.blocked` em `sensivelWhere()`). Decisão completa
+  no ADR `docs/adr/0025-anonimizar-preserva-assinatura-excluir-apaga-linha.md`.
+- **Na tela.** A aba "Seus dados" ganhou o bloco de eliminação: campo de senha, dois botões e diálogo de
+  perigo que nomeia o que cada caminho faz. Exercido o direito, a sessão acaba e a pessoa volta para a porta
+  de entrada. Recusado, a frase do servidor aparece no Toastr e nada muda — nem a conta, nem a sessão.
+- **Provas medidas.** Vermelho primeiro nos dois lados; verde: **13 casos** em
+  `apps/api/test/anonimizacao-e-exclusao-do-titular.test.ts` e **16** em
+  `apps/web/src/test/meus-dados-lgpd.test.tsx` (eram 10), com suítes inteiras fechando **API 55 arquivos /
+  496 casos em 333,19 s** e **web 23 / 184 em 15,73 s**, exit 0, zero skip, contra `nexusbusinessmanager_teste`.
+  Superfície de rotas: **132 → 134** em **21** arquivos, partição 13 + 2 + 17 + **94** + 8 = 134, e a varredura
+  anônima devolve **401** nas duas. No navegador da pilha de prova (5174/3002),
+  `tools/verify-configuracoes.cjs` fechou **189 checagens, 0 falhas** — a seção `2c` prova a recusa por senha
+  na conta de captura, a recusa por casa numa dona solitária de casa descartável, o 409 que desaparece quando
+  ela ganha uma sucessora (o mesmo botão, a mesma senha ainda no campo), a anonimização que volta para "/"
+  com a linha preservada como protocolo, e a exclusão que apaga a linha via API. No banco: **4 contas e 1
+  casa de prova criadas, 0 contas e 0 casas sobrando**.
+- **Capturas.** Cinco imagens novas (`22-configuracoes-eliminar-{dados,dialogo,recusa-senha,recusa-dona,
+  sucesso}.png`), conferidas uma a uma, só dado fictício. As dez da família que a prova regravou voltaram
+  byte-idênticas às da galeria — o bloco novo nasce abaixo da dobra —, então nenhuma imagem antiga mudou.
+- **Achados.** **N84 aberto:** a casa de captura tem **3 OWNERs ativos** (medido no banco de prova) porque os
+  administradores da instalação ainda nascem vinculados como donos das casas de demonstração — o
+  desvinculamento está no `docs/ROADMAP.md` (decisão S do dono). **N85 corrigido nesta rodada:** o limitador
+  de taxa nunca armava; a entrada abaixo conta a causa e a correção.
+
+### O limitador de taxa estava inerte: os escudos entravam na fila depois das rotas (2026-11-08)
+
+- **O que foi medido antes de mexer (N85).** Doze tentativas de senha errada no login, do mesmo endereço,
+  devolviam **doze 401 em série** — nenhum 429, e a resposta não trazia nem o header `x-ratelimit-limit`.
+  Os tetos da F4 e os da LGPD existiam no papel e não existiam no ar.
+- **A causa.** `registerSecurity()` era `async` e dava `await app.register(...)` em cada escudo. A instância
+  Fastify é thenable: o `await` suspendia a função, e helmet, CORS e — principalmente — o limitador eram
+  registrados **depois** que as rotas de negócio já estavam na árvore. O gancho `onRoute` do limitador chega
+  tarde para rota já registrada, e nenhuma rota recebia o contador.
+- **A correção.** `plugins/security.ts` passou a síncrono, registrando os três escudos sem `await` no meio —
+  a ordem de inscrição vira a ordem de carga, e o limitador está armado antes da primeira rota.
+  `app.ts` chama a função direto no contexto raiz (envolver em `app.register` encapsularia os escudos num
+  filho irmão das rotas, e o helmet e o CORS deixariam de valer — medido na sonda: headers sumidos).
+- **O efeito colateral honesto.** Com os tetos valendo de verdade, a suíte — que faz dezenas de logins pelo
+  mesmo endereço do `inject` — começou a tropeçar neles. `test/helpers.ts` passou a dar a cada pedido
+  injetado sem endereço um IP único da faixa privada `10.77.0.0/16`; os testes que **medem** teto ou bloqueio
+  declaram o próprio IP e seguem intocados. Nenhuma asserção foi enfraquecida: a suíte inteira fechou
+  **55 arquivos / 496 casos**, exit 0.
+- **O que continua declarado.** O store do limitador é memória de processo: numa instância só é exato; em
+  várias instâncias (o caminho serverless recém-escolhido) cada uma conta a sua. O store compartilhado está
+  no `docs/ROADMAP.md` e no `docs/PRODUCAO.md` §12.
+
 ### A pessoa pede, e o sistema mostra: a cópia dos dados dela sai em JSON, com trilha e com tela (2026-10-17)
 
 - **O que faltava.** LGPD art. 18, II é direito de acesso, e até aqui a resposta à pergunta "o que vocês guardam

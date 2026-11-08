@@ -1,7 +1,10 @@
 import type { Prisma } from "@prisma/client";
 import { LegalKind } from "@prisma/client";
+import { randomBytes } from "node:crypto";
 import { prisma } from "../../lib/prisma";
-import { notFound } from "../../lib/errors";
+import { badRequest, conflict, forbidden, notFound } from "../../lib/errors";
+import { hashPassword, verifyPassword } from "../../lib/password";
+import { audit } from "../../lib/audit";
 import type { CompanyContext } from "../../lib/company-context";
 import { obterLegal } from "../cms/cms.service";
 
@@ -152,6 +155,7 @@ export async function exportarDadosDoTitular(ctx: CompanyContext) {
           platformRole: true,
           emailVerifiedAt: true,
           totpEnabledAt: true,
+          anonymizedAt: true,
           createdAt: true,
           updatedAt: true,
         },
@@ -207,6 +211,9 @@ export async function exportarDadosDoTitular(ctx: CompanyContext) {
       papelNaPlataforma: titular.platformRole ?? null,
       emailVerificadoEm: iso(titular.emailVerifiedAt),
       segundoFatorDesde: iso(titular.totpEnabledAt),
+      // T6.4: se a pessoa já exerceu a anonimização, a foto diz. Sem esta linha o
+      // estado teria de ser adivinhado pelo nome "Titular anonimizado".
+      anonimizadoEm: iso(titular.anonymizedAt),
       criadoEm: iso(titular.createdAt),
       atualizadoEm: iso(titular.updatedAt),
     },
@@ -268,5 +275,387 @@ export async function exportarDadosDoTitular(ctx: CompanyContext) {
       bloqueadoAte: iso(t.lockedUntil),
     })),
     naoIncluidos: O_QUE_NAO_SAI,
+  };
+}
+
+// ===== T6.4 — o direito de eliminação (LGPD art. 18, VI): a pessoa pede para sair
+//
+// Aqui está o pedaço da conformidade que se escreve com mais cuidado, porque os dois
+// erros possíveis são caros e ficam em lados opostos. Apagar a linha da conta de quem
+// escriturou um lançamento em 2023 destrói documento que a lei manda guardar por
+// cinco anos (Código Civil art. 225 e a legislação tributária), e a empresa responde
+// por isso sozinha. Não apagar nada, "por segurança", nega à pessoa o direito que ela
+// tem. O meio-termo não é opinião: é a divisão entre o que é **dado pessoal dela** e o
+// que é **documento da empresa que ela praticou**.
+//
+// Dois caminhos, e a diferença entre eles está na linha da conta:
+//
+//  - **anonimizar** mantém a linha, mas não sobra nenhum campo que identifique alguém:
+//    nome, endereço eletrônico, telefone, avatar, verificação de caixa postal, segundo
+//    fator e a empresa lembrada vão todos; a senha vira hash de um valor que ninguém
+//    conhece; a conta fica inativa, então nem o token que ainda estava no bolso da
+//    pessoa abre porta alguma (A5). É o caminho de quem quer sair mas precisa que o
+//    histórico da casa continue contável — a assinatura dela nos documentos passa a ser
+//    um número sem nome.
+//  - **excluir** apaga a linha. As chaves estrangeiras de negócio já são `SET NULL`
+//    desde o baseline, então venda, compra, lançamento, cobrança, ordem de serviço,
+//    agenda, lead e trilha de auditoria sobrevivem com o campo de quem praticou a ação
+//    devolvido a nulo. As tabelas de acesso da pessoa (sessões, tokens de recuperação e
+//    de confirmação, códigos do segundo fator, avisos, preferências de aviso, vínculos e
+//    aceites) são `CASCADE` e caem junto — elas só existem para servir àquela conta.
+//
+// As duas guardas, e as duas medem a mesma coisa:
+//
+//  1. **último OWNER de empresa ativa.** Uma casa não pode ficar sem responsável: se a
+//     pessoa é o único OWNER ativo dela, o pedido é recusado com 409 e a frase manda
+//     transferir a propriedade antes. Empresa adormecida não conta — não há propriedade
+//     a transferir numa casa que não opera.
+//  2. **conta da plataforma.** Quem administra a instalação inteira responde pelo
+//     sistema, e a regra de acesso do dono dele está acima de qualquer pedido: essa
+//     conta não se elimina por aqui, em nenhum dos dois caminhos (403).
+//
+// E nada disso acontece sem a senha da pessoa no corpo do pedido. Um direito de
+// eliminação executado por token roubado seria o estrago mais caro que este sistema
+// pode fazer, então a senha é conferida contra o hash antes de qualquer escrita, e a
+// tentativa que não confere fica na trilha.
+
+/** Os dois caminhos de eliminação, com o nome que cada um leva na trilha. */
+type DireitoDeEliminacao = "anonimizacao" | "exclusao";
+const ACAO_DA_TRILHA: Record<DireitoDeEliminacao, string> = {
+  anonimizacao: "lgpd.anonymize",
+  exclusao: "lgpd.delete",
+};
+
+/** O que a anonimização deixa como identidade: um rótulo fixo e um número de protocolo
+ *  no domínio que a RFC 6761 reserva para "não resolve em lugar nenhum". */
+const NOME_ANONIMO = "Titular anonimizado";
+function emailAnonimo(id: string): string {
+  return "titular-anonimizado+" + id + "@invalid";
+}
+
+export interface ResultadoDaEliminacao {
+  feito: true;
+  direito: DireitoDeEliminacao;
+  em: string;
+  /** Só na anonimização: como a pessoa passou a se chamar a partir daqui. */
+  identidade?: { nome: string; email: string };
+  apagado: Record<string, number>;
+  preservado: Record<string, number>;
+  guarda: Array<{ item: string; motivo: string }>;
+  aviso: string;
+}
+
+/**
+ * O que cada eliminação deixa para trás, com o motivo. A lista vem na resposta porque
+ * uma empresa que apaga sem explicar não tem como provar depois por que apagou pouco.
+ */
+function guardaConforme(direito: DireitoDeEliminacao) {
+  const base = [
+    {
+      item: "documentos de negócio da empresa",
+      motivo:
+        "Venda, compra, lançamento, cobrança, ordem de serviço, agenda e lead têm prazo legal de guarda. O documento fica; a referência à pessoa sai (exclusão) ou passa a ser um número sem nome (anonimização).",
+    },
+    {
+      item: "trilha de auditoria",
+      motivo:
+        "As linhas de ação continuam na auditoria da empresa, porque são o registro de que o direito foi exercido e de quem respondeu pelo que aconteceu antes dele.",
+    },
+    {
+      item: "cadastros de terceiros",
+      motivo:
+        "Cliente, fornecedor e colega de trabalho são dados de outras pessoas. O pedido de uma delas não alcança as demais.",
+    },
+  ];
+  return direito === "anonimizacao"
+    ? [
+        ...base,
+        {
+          item: "aceite dos textos legais",
+          motivo:
+            "A linha do aceite continua, sem o endereço de origem: é a prova que a empresa precisa para o fundamento jurídico do tratamento. O número que aponta para ela não identifica mais ninguém.",
+        },
+      ]
+    : [
+        ...base,
+        {
+          item: "aceite dos textos legais",
+          motivo:
+            "A linha do aceite caiu junto da conta. A empresa perde essa prova, e é consequência direta do direito exercido — não existe como conservá-la sem os dados da pessoa.",
+        },
+      ];
+}
+
+/** As três casas que uma conta tem, lidas para a decisão. Empresa inativa não entra:
+ *  numa casa dormente não há propriedade a transferir. */
+async function ultimoDonoDeCasaAtiva(userId: string): Promise<string | null> {
+  const casas = await prisma.companyUser.findMany({
+    where: { userId, role: "OWNER", company: { active: true } },
+    select: { companyId: true, company: { select: { name: true } } },
+  });
+  for (const casa of casas) {
+    const outros = await prisma.companyUser.count({
+      where: { companyId: casa.companyId, role: "OWNER", userId: { not: userId }, user: { active: true } },
+    });
+    if (outros === 0) return casa.company.name;
+  }
+  return null;
+}
+
+/** Guarda compartilhada dos dois caminhos. Cada recusa é registrada: um direito negado
+ *  sem trilha é uma palavra contra a outra. */
+async function titularELiberadoParaEliminacao(
+  ctx: CompanyContext,
+  direito: DireitoDeEliminacao,
+  ip?: string | null,
+) {
+  const titular = await prisma.user.findUnique({
+    where: { id: ctx.userId },
+    select: {
+      id: true,
+      email: true,
+      name: true,
+      passwordHash: true,
+      platformRole: true,
+      anonymizedAt: true,
+    },
+  });
+  if (!titular) throw notFound("Conta não encontrada");
+
+  const motivo = (texto: string) => ({ motivo: texto.slice(0, 200), direito });
+
+  if (titular.platformRole) {
+    await audit({
+      userId: ctx.userId,
+      companyId: ctx.companyId,
+      action: `${ACAO_DA_TRILHA[direito]}.blocked`,
+      entity: "user",
+      entityId: ctx.userId,
+      ip,
+      metadata: motivo("Conta da plataforma: responde pela instalação inteira."),
+    });
+    throw forbidden(
+      "A conta da plataforma não se elimina por aqui: ela responde pela instalação inteira, e o acesso a ela é regra de operação do sistema.",
+    );
+  }
+
+  const empresaSemDono = await ultimoDonoDeCasaAtiva(ctx.userId);
+  if (empresaSemDono) {
+    await audit({
+      userId: ctx.userId,
+      companyId: ctx.companyId,
+      action: `${ACAO_DA_TRILHA[direito]}.blocked`,
+      entity: "user",
+      entityId: ctx.userId,
+      ip,
+      metadata: motivo(`Último responsável ativo pela empresa ${empresaSemDono}.`),
+    });
+    throw conflict(
+      `Você é o último responsável ativo pela empresa ${empresaSemDono}. Transfira a propriedade para outra pessoa antes de eliminar a conta — a empresa não pode ficar sem responsável.`,
+    );
+  }
+
+  return titular;
+}
+
+/** A senha presente no corpo confere contra o hash da conta? Sem ela, nada muda. */
+async function conferirSenhaDeEliminacao(
+  ctx: CompanyContext,
+  direito: DireitoDeEliminacao,
+  senha: string,
+  passwordHash: string,
+  ip?: string | null,
+): Promise<void> {
+  if (await verifyPassword(senha, passwordHash)) return;
+  await audit({
+    userId: ctx.userId,
+    companyId: ctx.companyId,
+    action: `${ACAO_DA_TRILHA[direito]}.failed`,
+    entity: "user",
+    entityId: ctx.userId,
+    ip,
+    metadata: { motivo: "Senha apresentada não confere.", direito },
+  });
+  throw badRequest("A senha não confere. Nenhum dado foi alterado.");
+}
+
+/** O que fica, contado antes de mexer em qualquer linha — os números que a resposta
+ *  devolve são os do pedido, não uma estimativa depois do fato. */
+async function contarOQueFica(userId: string): Promise<Record<string, number>> {
+  const [lancamentos, vendas, compras, leads, eventosDeAgenda, ordensDeServico, historicoDeOrdens, cobrancas, aceites, trilhaDeAuditoria] =
+    await Promise.all([
+      prisma.financeEntry.count({ where: { userId } }),
+      prisma.sale.count({ where: { userId } }),
+      prisma.purchase.count({ where: { userId } }),
+      prisma.lead.count({ where: { userId } }),
+      prisma.agendaEvent.count({ where: { userId } }),
+      prisma.serviceOrder.count({ where: { OR: [{ createdBy: userId }, { assignedUserId: userId }] } }),
+      prisma.serviceOrderHistory.count({ where: { userId } }),
+      prisma.charge.count({ where: { OR: [{ createdBy: userId }, { paidBy: userId }, { cancelledBy: userId }] } }),
+      prisma.consentRecord.count({ where: { userId } }),
+      prisma.auditLog.count({ where: { userId } }),
+    ]);
+  return {
+    lancamentos,
+    vendas,
+    compras,
+    leads,
+    eventosDeAgenda,
+    ordensDeServico,
+    historicoDeOrdens,
+    cobrancas,
+    aceites,
+    trilhaDeAuditoria,
+  };
+}
+
+/**
+ * LGPD art. 18, VI no caminho da **anonimização**: a linha da conta continua existindo
+ * para os documentos que apontam para ela, e nenhum campo que identifique alguém sobra.
+ */
+export async function anonimizarTitular(
+  ctx: CompanyContext,
+  senha: string,
+  ip?: string | null,
+): Promise<ResultadoDaEliminacao> {
+  const titular = await titularELiberadoParaEliminacao(ctx, "anonimizacao", ip);
+  await conferirSenhaDeEliminacao(ctx, "anonimizacao", senha, titular.passwordHash, ip);
+
+  const preservado = await contarOQueFica(ctx.userId);
+  const em = new Date();
+  // Hash de um valor gerado agora e descartado em seguida: a senha não é "zerada"
+  // (a coluna é NOT NULL), ela passa a ser uma porta sem chave em lugar nenhum.
+  const hashSemDono = await hashPassword(randomBytes(24).toString("base64url"));
+  const email = emailAnonimo(ctx.userId);
+
+  const apagado = await prisma.$transaction(async (tx) => {
+    await tx.user.update({
+      where: { id: ctx.userId },
+      data: {
+        name: NOME_ANONIMO,
+        email,
+        phone: null,
+        avatarUrl: null,
+        passwordHash: hashSemDono,
+        active: false,
+        emailVerifiedAt: null,
+        totpSecretCiphertext: null,
+        totpEnabledAt: null,
+        lastCompanyId: null,
+        anonymizedAt: em,
+      },
+    });
+    const sessoes = await tx.refreshToken.deleteMany({ where: { userId: ctx.userId } });
+    const tokens = await tx.passwordResetToken.deleteMany({ where: { userId: ctx.userId } });
+    const confirmacoes = await tx.emailVerificationToken.deleteMany({ where: { userId: ctx.userId } });
+    const recuperacao = await tx.recoveryCode.deleteMany({ where: { userId: ctx.userId } });
+    const avisos = await tx.notification.deleteMany({ where: { userId: ctx.userId } });
+    await tx.notificationPreference.deleteMany({ where: { userId: ctx.userId } });
+    // O aceite continua sendo prova da empresa; o endereço de onde ele foi dado é da
+    // pessoa, e sai.
+    await tx.consentRecord.updateMany({ where: { userId: ctx.userId }, data: { ip: null } });
+    // A contagem de tentativas é chaveada pelo endereço (F4): trocado o endereço, a
+    // linha antiga é dado de alguém que não existe mais aqui.
+    const tentativas = await tx.loginAttempt.deleteMany({ where: { email: titular.email.toLowerCase() } });
+
+    return {
+      conta: 0,
+      vinculos: 0,
+      aceites: 0,
+      sessoes: sessoes.count,
+      tokensDeAcesso: tokens.count + confirmacoes.count + recuperacao.count,
+      avisos: avisos.count,
+      tentativasDeLogin: tentativas.count,
+    };
+  });
+
+  await audit({
+    userId: ctx.userId,
+    companyId: ctx.companyId,
+    action: ACAO_DA_TRILHA.anonimizacao,
+    entity: "user",
+    entityId: ctx.userId,
+    ip,
+    metadata: { direito: "anonimizacao", preservado },
+  });
+
+  return {
+    feito: true,
+    direito: "anonimizacao",
+    em: em.toISOString(),
+    identidade: { nome: NOME_ANONIMO, email },
+    apagado,
+    preservado,
+    guarda: guardaConforme("anonimizacao"),
+    aviso:
+      "Seus dados pessoais foram removidos desta conta. Ela continua existindo como número para os documentos em que você aparece, e não há como voltar: para voltar a usar o sistema é preciso criar uma conta nova.",
+  };
+}
+
+/**
+ * LGPD art. 18, VI no caminho da **exclusão**: a linha da pessoa sai, os documentos da
+ * empresa ficam sem referência a ninguém, e a linha que conta este pedido sobrevive sem
+ * dono — porque foi escrita depois da conta deixar de existir.
+ */
+export async function excluirTitular(
+  ctx: CompanyContext,
+  senha: string,
+  ip?: string | null,
+): Promise<ResultadoDaEliminacao> {
+  const titular = await titularELiberadoParaEliminacao(ctx, "exclusao", ip);
+  await conferirSenhaDeEliminacao(ctx, "exclusao", senha, titular.passwordHash, ip);
+
+  const preservado = await contarOQueFica(ctx.userId);
+  const em = new Date();
+  const emailOriginal = titular.email.toLowerCase();
+
+  const apagado = await prisma.$transaction(async (tx) => {
+    // Contado antes: o `delete` da conta leva isso em cascata, e a resposta teria
+    // zeros honestos sobre linhas que existiam.
+    const sessoes = await tx.refreshToken.count({ where: { userId: ctx.userId } });
+    const tokens = await tx.passwordResetToken.count({ where: { userId: ctx.userId } });
+    const confirmacoes = await tx.emailVerificationToken.count({ where: { userId: ctx.userId } });
+    const recuperacao = await tx.recoveryCode.count({ where: { userId: ctx.userId } });
+    const avisos = await tx.notification.count({ where: { userId: ctx.userId } });
+    const vinculos = await tx.companyUser.count({ where: { userId: ctx.userId } });
+    const aceites = await tx.consentRecord.count({ where: { userId: ctx.userId } });
+    const tentativasDeLogin = await tx.loginAttempt.count({ where: { email: emailOriginal } });
+
+    await tx.loginAttempt.deleteMany({ where: { email: emailOriginal } });
+    await tx.user.delete({ where: { id: ctx.userId } });
+
+    return {
+      conta: 1,
+      sessoes,
+      tokensDeAcesso: tokens + confirmacoes + recuperacao,
+      avisos,
+      vinculos,
+      aceites,
+      tentativasDeLogin,
+    };
+  });
+
+  // Depois da transação de propósito: com a conta já apagada, o `userId` não pode ser
+  // escrito (a chave estrangeira não aceitaria um fantasma). A linha nasce sem dono e
+  // é assim que ela conta o pedido sem recriar a pessoa.
+  await audit({
+    userId: null,
+    companyId: ctx.companyId,
+    action: ACAO_DA_TRILHA.exclusao,
+    entity: "user",
+    entityId: ctx.userId,
+    ip,
+    metadata: { direito: "exclusao", motivo: "Pedido do titular.", preservado },
+  });
+
+  return {
+    feito: true,
+    direito: "exclusao",
+    em: em.toISOString(),
+    apagado,
+    preservado,
+    guarda: guardaConforme("exclusao"),
+    aviso:
+      "Sua conta foi excluída. Os documentos de negócio em que você aparece continuam guardados pela empresa, sem referência a nenhuma pessoa, e a linha que registra este pedido também continua.",
   };
 }

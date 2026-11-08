@@ -65,7 +65,11 @@ export function buildApp(): FastifyInstance {
     }
   });
 
-  void registerSecurity(app);
+  // Seguranca chamada no contexto raiz, e sem `await` no caminho dela: ver o bloco
+  // em `plugins/security.ts`. Envolver em `app.register(registerSecurity)` tambem
+  // nao funciona — encapsula os tres escudos num filho irmao das rotas, e o helmet
+  // e o CORS deixam de valer para elas (medido na sonda: headers sumidos).
+  registerSecurity(app);
   void app.register(authPlugin);
   // Manutencao antes das rotas: o gancho precisa estar na linha antes de
   // qualquer rota de negocio ser registrada no mesmo contexto.

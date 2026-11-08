@@ -1,6 +1,7 @@
 import { api } from "./api";
 
 // T6.3 (F7, LGPD art. 18, II) — a leitura que a pessoa faz de si mesma.
+// T6.4 (F7, LGPD art. 18, VI) — as duas portas de eliminação, no fim do arquivo.
 //
 // O contrato é o corpo que `apps/api/src/modules/lgpd/lgpd.service.ts` monta: uma
 // foto, não uma página paginada. A tela mostra o resumo e oferece o arquivo, porque
@@ -35,6 +36,9 @@ export interface DadosDoTitular {
     papelNaPlataforma: string | null;
     emailVerificadoEm: string | null;
     segundoFatorDesde: string | null;
+    /** T6.4: data em que a pessoa exerceu a anonimização. Nulo = a conta ainda
+     *  identifica alguém. */
+    anonimizadoEm: string | null;
     criadoEm: string | null;
     atualizadoEm: string | null;
   };
@@ -72,4 +76,36 @@ export function baixarMeusDados(corpo: DadosDoTitular): string {
   link.remove();
   setTimeout(() => URL.revokeObjectURL(url), 2000);
   return arquivo;
+}
+
+// ===== T6.4 — o direito de eliminação, nos dois caminhos =====
+//
+// A senha vai no corpo e a conferência é do servidor: um token roubado não pode
+// bastar para apagar uma pessoa. O teto é de três pedidos por minuto por endereço
+// (`lgpd.routes.ts`), então a tela não re-tenta sozinha — um 429 aqui é o teto
+// falando, e a resposta correta é esperar, não insistir.
+//
+// Depois de qualquer um dos dois, a sessão da pessoa acabou: anonimizar desativa a
+// conta e fecha as sessões; excluir apaga a linha. Quem chama é obrigado a derrubar
+// a própria sessão em vez de deixar o 403 aparecer na próxima leitura.
+
+export interface ResultadoDeEliminacao {
+  feito: true;
+  direito: "anonimizacao" | "exclusao";
+  em: string;
+  identidade?: { nome: string; email: string };
+  apagado: Record<string, number>;
+  preservado: Record<string, number>;
+  guarda: Array<{ item: string; motivo: string }>;
+  aviso: string;
+}
+
+export async function anonimizarMinhaConta(senha: string): Promise<ResultadoDeEliminacao> {
+  const { data } = await api.post<ResultadoDeEliminacao>("/lgpd/minha-conta/anonimizar", { senha });
+  return data;
+}
+
+export async function excluirMinhaConta(senha: string): Promise<ResultadoDeEliminacao> {
+  const { data } = await api.post<ResultadoDeEliminacao>("/lgpd/minha-conta/excluir", { senha });
+  return data;
 }

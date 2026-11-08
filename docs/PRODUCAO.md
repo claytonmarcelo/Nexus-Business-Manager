@@ -490,6 +490,11 @@ aponta para lá. O `docker-compose.yml` faz os três passos na mesma sequência 
   migrations para clone limpo** (N54) — F8 (T7).
 - **Política de logs com rotação e retenção** — o backup do banco existe desde a T5.2, a rotação de log ainda não.
   O nível de log de produção (N69, seção 7) está na mesma conta.
+- **Store compartilhado do limitador de taxa.** Os tetos por endereço (`@fastify/rate-limit`, store em memória)
+  valem por processo: com dois processos da API atrás do mesmo endereço, cada um conta o seu balde, e em host
+  serverless cada instância fria nasce com o balde zerado. O teto existe e segura rajadas por instância; não é
+  um teto global da instalação. O caminho de store compartilhado (Redis do Marketplace, por exemplo) está no
+  `docs/ROADMAP.md`; a decisão de desenho dos tetos da LGPD está no ADR 0025.
 - **Hospedagem recomendada**: não existe no repositório, e a decisão é do dono
   (`docs/decisoes/G5-hospedagem-e-backup.md`). A seção 11 descreve a topologia separada que o dono escolheu
   publicar — painel em host estático, API e banco em container —, mas nome de host, tamanho de instância e o

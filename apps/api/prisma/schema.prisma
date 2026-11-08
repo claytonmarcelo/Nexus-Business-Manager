@@ -60,6 +60,11 @@ model User {
   // Segredo gerado e nunca confirmado fica com esta coluna nula e não protege
   // login nenhum.
   totpEnabledAt         DateTime?             @map("totp_enabled_at")
+  // F7 (T6.4): a data em que a pessoa exerceu o direito de eliminação por
+  // anonimização. Nulo = a conta ainda identifica alguém. Não é flag de "apagado":
+  // a linha continua aí de propósito, porque venda, lançamento e trilha apontam
+  // para ela e a guarda fiscal não se quebra com um pedido de titular.
+  anonymizedAt          DateTime?             @map("anonymized_at")
   createdAt             DateTime              @default(now()) @map("created_at")
   updatedAt             DateTime              @updatedAt @map("updated_at")
   memberships           CompanyUser[]

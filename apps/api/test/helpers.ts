@@ -11,6 +11,49 @@ export function uid(prefix = "t"): string {
   return `${prefix}-${Date.now()}-${counter}-${Math.floor(Math.random() * 1e6)}`;
 }
 
+// ===== Endereço de prova para todo pedido injetado =====
+//
+// O limitador de taxa estava inerte — com `await` no registro dos escudos, o
+// `@fastify/rate-limit` entrava na fila depois das rotas e nenhum pedido do
+// planeta recebia um 429 (medido: doze tentativas de senha errada davam doze 401
+// e a resposta não trazia `x-ratelimit-limit`). Corrigido o registro, os tetos por
+// rota passaram a valer de verdade também aqui, e a suíte — que faz dezenas de
+// logins pelo mesmo endereço do `inject`, 127.0.0.1 — começou a tropeçar neles.
+//
+// O endereço de teste não é objeto de prova em nenhum caso: quem mede teto ou
+// bloqueio declara o próprio IP (`bloqueio-de-conta`, `verificacao-de-email`,
+// `segundo-fator`, `corrida-de-abas`, `guardas-herdadas`,
+// `anonimizacao-e-exclusao-do-titular`, e o `203.0.113.7`/`198.51.100.9` da
+// manutenção do CMS). Esses seguem intocados — a linha abaixo só age quando o
+// pedido não traz endereço nenhum. Para os demais, cada `inject` recebe o seu,
+// e o limite deixa de ser um relógio de parede que cresce conforme a velocidade
+// da máquina. A faixa é a privada `10.77.0.0/16`, contada em série: único por
+// pedido durante ~64 mil injeções, sem colidir com os IPs de prova acima.
+type PedidoInjetado = {
+  url: string;
+  method?: string;
+  remoteAddress?: string;
+  [chave: string]: unknown;
+};
+
+const injectReal = app.inject.bind(app) as (opts: PedidoInjetado) => Promise<unknown>;
+let pedidosInjetados = 0;
+
+function enderecoDeTeste(): string {
+  pedidosInjetados += 1;
+  const o4 = (pedidosInjetados % 253) + 1;
+  const o3 = (Math.floor(pedidosInjetados / 253) % 253) + 1;
+  return `10.77.${o3}.${o4}`;
+}
+
+app.inject = ((pedido: string | PedidoInjetado) => {
+  const opts = typeof pedido === "string" ? { url: pedido } : pedido;
+  if (opts.remoteAddress === undefined) {
+    return injectReal({ ...opts, remoteAddress: enderecoDeTeste() });
+  }
+  return injectReal(opts);
+}) as typeof app.inject;
+
 // Liga uma chave de ambiente só dentro de um trecho de teste e devolve o valor
 // anterior no caminho de volta, inclusive quando o trecho lança. `env` é o objeto
 // validado pelo zod de `config/env.ts`, e os serviços o leem na hora da chamada —

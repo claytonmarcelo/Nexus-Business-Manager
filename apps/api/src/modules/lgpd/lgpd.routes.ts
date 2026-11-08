@@ -1,7 +1,8 @@
 import type { FastifyInstance } from "fastify";
 import { resolveCompanyContext } from "../../lib/company-context";
 import { audit } from "../../lib/audit";
-import { exportarDadosDoTitular } from "./lgpd.service";
+import { anonimizarTitular, excluirTitular, exportarDadosDoTitular } from "./lgpd.service";
+import { confirmacaoDeSenhaSchema } from "./lgpd.schemas";
 
 // F7 (LGPD) — a porta de acesso do titular.
 //
@@ -18,6 +19,12 @@ import { exportarDadosDoTitular } from "./lgpd.service";
 // ter acontecido — a linha de `lgpd.export` é o que a empresa mostra para o titular
 // seguinte, para a ANPD e para quem quer que pergunte quando foi que alguém levou os
 // dados de alguém embora daqui.
+//
+// As duas portas de eliminação (T6.4) seguem o mesmo desenho de contexto — a empresa
+// vem do token assinado — e o mesmo registro na trilha sensível, com um degrau a mais:
+// senha no corpo e três pedidos por minuto por endereço. O teto não é burocracia: um
+// pedido desses não tem volta, e um token roubado com quarenta tentativas por minuto
+// seria a destruição em série mais barata que este sistema permite.
 export async function lgpdRoutes(app: FastifyInstance): Promise<void> {
   app.get(
     "/lgpd/meus-dados",
@@ -36,4 +43,25 @@ export async function lgpdRoutes(app: FastifyInstance): Promise<void> {
       return corpo;
     },
   );
+
+  // Os dois caminhos de eliminação tem o mesmo cadeado (sessão + senha no corpo), as
+  // mesmas guardas do serviço e o mesmo teto. O que muda é o que sobra da pessoa: na
+  // anonimização fica a linha como número sem nome; na exclusão ela sai e os
+  // documentos da empresa ficam sem referência a ninguém.
+  const eliminacao = {
+    preHandler: [app.authenticate],
+    config: { rateLimit: { max: 3, timeWindow: "1 minute" } },
+  };
+
+  app.post("/lgpd/minha-conta/anonimizar", eliminacao, async (req) => {
+    const ctx = await resolveCompanyContext(req);
+    const { senha } = confirmacaoDeSenhaSchema.parse(req.body);
+    return anonimizarTitular(ctx, senha, req.ip);
+  });
+
+  app.post("/lgpd/minha-conta/excluir", eliminacao, async (req) => {
+    const ctx = await resolveCompanyContext(req);
+    const { senha } = confirmacaoDeSenhaSchema.parse(req.body);
+    return excluirTitular(ctx, senha, req.ip);
+  });
 }

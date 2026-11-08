@@ -1,0 +1,27 @@
+-- T6.4 (F7) do prompt de continuação: LGPD, item 5 — a eliminação do titular.
+--
+-- A pessoa pode pedir duas coisas diferentes sobre os próprios dados, e as duas
+-- precisam de prova:
+--
+--  - **anonimizar**: a linha da conta continua existindo para o histórico da
+--    empresa não perder o documento a que ela se refere, mas nenhum campo que
+--    identifique alguém sobra;
+--  - **excluir**: a linha da conta sai, e os documentos que apontavam para ela
+--    ficam sem referência a pessoa nenhuma (as chaves estrangeiras de negócio já
+--    são `ON DELETE SET NULL` desde o baseline).
+--
+-- Uma coluna só nasce aqui: `anonymized_at`. Ela é a data do direito exercido — a
+-- resposta para "quando foi que esta conta deixou de identificar alguém" — e o
+-- guarda que impede a tela de oferecer o mesmo pedido duas vezes. Sem ela, o
+-- estado de anonimizado seria inferido do nome "Titular anonimizado", e nome é
+-- texto: um ADMIN poderia ter chamado alguém assim antes de qualquer migration.
+--
+-- Nada de apagar dado alheio em silêncio: nenhuma outra coluna, tabela ou índice
+-- muda. As exclusões e anonimizações são escritas em transação pelo serviço
+-- (`modules/lgpd/lgpd.service.ts`), nunca por `DELETE` em SQL bruto aqui.
+--
+-- Reversao, na ordem inversa:
+--   ALTER TABLE `users` DROP COLUMN `anonymized_at`;
+
+-- AlterTable
+ALTER TABLE `users` ADD COLUMN `anonymized_at` DATETIME(3) NULL;

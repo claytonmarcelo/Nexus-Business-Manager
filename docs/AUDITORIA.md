@@ -2697,3 +2697,114 @@ e só dado fictício entraram em `docs/screenshots/`; `22-configuracoes-seus-dad
 que a prova faz sobre ela é a entrega; a imagem só acrescentaria ruído.
 `22-configuracoes-lancamento-automatico.png` entrou porque a família entrou, e o N82 acima declara que ela é
 duplicata da captura da aba Empresa.
+
+## Adenda da execução — T6.4 (F7: anonimização e exclusão do titular) encerrada — 2026-11-08
+
+### O que existia antes, e o que passou a existir
+
+Até esta rodada, a aba "Seus dados" mostrava e exportava — mas quem quisesse sair dependia de pedir por fora,
+e a casa não tinha uma resposta que não quebrasse venda, lançamento nem trilha. Agora a própria pessoa
+exerce o direito, com a senha dela como cadeado, e cada caminho deixa recibo.
+
+- **As portas.** `POST /api/lgpd/minha-conta/anonimizar` e `POST /api/lgpd/minha-conta/excluir`
+  (`apps/api/src/modules/lgpd/lgpd.routes.ts`, o mesmo arquivo da T6.3): `preHandler: [app.authenticate]`,
+  teto de **3 pedidos por minuto por endereço** em cada uma, contexto de `resolveCompanyContext(req)` e senha
+  no corpo conferida contra o hash (`confirmacaoDeSenhaSchema`, arquivo novo `lgpd.schemas.ts`). Sem
+  `requirePermission`, pela mesma razão da T6.3: nenhum papel autoriza eliminar a conta de outra pessoa.
+  Superfície: **132 → 134** rotas em **21** arquivos (as duas entraram no arquivo que já existia), partição
+  13 públicas + 2 de etapa + 17 de plataforma + **94** de empresa + 8 de conta = 134; a varredura anônima da
+  regra 8 devolve **401** nas duas, e a régua de escritas de sessão as declara com `resolveCompanyContext`.
+- **A ordem das guardas, a mesma nas duas portas.** Primeiro **403** para a conta da plataforma — a régua de
+  acesso do dono não se elimina por porta de titular (trilha `lgpd.*.blocked`). Depois **409** quando a pessoa
+  é o **único OWNER ativo de uma casa ativa** — a empresa não pode ficar sem dono; casa dormente não segura
+  ninguém, e havendo outro OWNER ativo o direito passa. Por último **400** quando a senha não confere
+  (trilha `lgpd.*.failed` com o motivo). A ordem importa: uma recusa de casa ou de plataforma é decisão sobre
+  a casa, e vai para a trilha sensível mesmo sem a senha certa ter sido provada.
+- **Anonimizar preserva a assinatura.** `anonimizarTitular()` mantém a linha como número sem nome: nome
+  "Titular anonimizado", endereço `titular-anonimizado+<id>@invalid`, `active=false`, sessões e códigos
+  fechados, e a coluna nova `anonymized_at` (migration `20261017000000_anonimizacao_e_exclusao_do_titular`,
+  a segunda da árvore depois do baseline da C1). A linha fica porque venda, lançamento e trilha apontam para ela — apagá-la quebraria a
+  guarda fiscal dos documentos da empresa. O vínculo com a casa permanece como registro de que alguém
+  respondeu por ela.
+- **Excluir apaga a linha.** `excluirTitular()` remove a pessoa; os documentos da empresa ficam com a
+  referência a usuário nula, e a trilha permanece como recibo do exercício (com `userId` nulo dali em
+  diante). É o caminho para quem não tem documento nenhum que prenda a linha — e a mesma trava de casa se
+  aplica.
+- **A trilha.** `lgpd.anonymize`, `lgpd.anonymize.failed`, `lgpd.anonymize.blocked`, `lgpd.delete.failed` e
+  `lgpd.delete.blocked` entraram em `sensivelWhere()` (`lgpd.delete` já entrava pela regra do sufixo
+  `.delete`): cada exercício e cada recusa aparecem em "Alterações sensíveis" da Auditoria.
+- **A tela.** `PrivacidadePanel.tsx` ganhou o bloco de eliminação na aba "Seus dados": campo de senha, os
+  dois botões e o diálogo de perigo que nomeia o que cada caminho faz. Exercido o direito, a sessão acaba e
+  a pessoa volta para "/". Recusado, a frase do servidor vai ao Toastr e nada muda — a prova confere que a
+  conta continua ativa, sem `anonymizedAt`, e a sessão de pé.
+
+### N84 — aberto: os administradores da instalação ainda nascem OWNER das casas de demonstração
+
+Medido no banco de prova nesta rodada: a casa de captura ("Demonstracao (minha empresa)") tem **3 OWNERs
+ativos** — a conta de captura e os dois administradores da instalação. É por isso que a prova do 409 corre
+numa casa descartável com dona solitária, e não na de captura: lá o 409 nem chegaria. O achado não é novo em
+folha (a decisão S do dono já manda parar de vincular o admin global como OWNER das empresas dos clientes),
+mas agora tem número e consequência medida: enquanto o vínculo existir, a guarda do "último dono" conta
+gente que não opera a casa. O desvinculamento está no `docs/ROADMAP.md`; nada desta rodada o altera.
+
+### N85 — corrigido nesta rodada: o limitador de taxa nunca armava
+
+**Medido antes:** doze tentativas de senha errada no login, do mesmo endereço, devolviam **doze 401 em
+série** — nenhum 429, nenhum header `x-ratelimit-limit` na resposta. Os tetos da F4 (bloqueio, verificação,
+segundo fator) e os da LGPD existiam no papel e não existiam no ar.
+
+**A causa.** `registerSecurity()` era `async` com `await app.register(...)` em cada escudo. A instância
+Fastify é thenable: o `await` suspendia a função, e helmet, CORS e o limitador eram registrados **depois**
+das rotas de negócio. O gancho `onRoute` do `@fastify/rate-limit` chega tarde para rota já registrada —
+nenhuma rota recebia contador.
+
+**A correção.** `plugins/security.ts` passou a síncrono: os três escudos entram na fila sem `await` no
+meio, e a ordem de inscrição vira a ordem de carga. `app.ts` chama a função direto no contexto raiz —
+envolver em `app.register(registerSecurity)` também não serve, porque encapsula os escudos num filho irmão
+das rotas (medido na sonda: headers de helmet e CORS sumidos das respostas de negócio).
+
+**O efeito colateral, tratado sem enfraquecer teste.** Com os tetos valendo, a suíte tropeçou neles: dezenas
+de logins pelo mesmo endereço do `inject` (127.0.0.1). `test/helpers.ts` passou a dar a cada pedido injetado
+**sem** endereço um IP único da faixa privada `10.77.0.0/16`, contado em série. Os casos que medem teto ou
+bloqueio (`bloqueio-de-conta`, `verificacao-de-email`, `segundo-fator`, `corrida-de-abas`, `guardas-herdadas`,
+`anonimizacao-e-exclusao-do-titular` e a manutenção do CMS) declaram o próprio IP e seguem intocados.
+Nenhuma asserção foi relaxada, nenhum teste pulado.
+
+**O que continua declarado.** O store é memória de processo: exato numa instância, por instância em várias.
+O store compartilhado está no `docs/ROADMAP.md` e no `docs/PRODUCAO.md` §12; a decisão de desenho dos tetos
+da LGPD está no ADR 0025.
+
+### Prova desta rodada
+
+**Testes.** Vermelho primeiro nos dois lados. Verde medido nesta janela: **13 casos** em
+`apps/api/test/anonimizacao-e-exclusao-do-titular.test.ts` (sem token; senha errada na trilha; corpo sem
+senha; anonimização leva identificação; fecha sessões e códigos; documento e trilha permanecem; exclusão
+apaga a pessoa e preserva o documento; último OWNER barrado; casa com outro OWNER libera; casa dormente não
+segura; plataforma não se elimina; trilha sensível; teto de 3/min) e **16 casos** em
+`apps/web/src/test/meus-dados-lgpd.test.tsx` (eram 10). Suítes inteiras, uma depois da outra: **API 55
+arquivos / 496 casos em 333,19 s** e **web 23 / 184 em 15,73 s**, exit 0, zero falha e zero skip, contra
+`nexusbusinessmanager_teste`. Typecheck limpo nas duas pontas e no entrypoint serverless; build sem aviso de
+chunk (`Settings` 29,30 kB / 9,48 kB gzip). A primeira corrida dos portões desta janela reprovou **só** na
+guarda de caracteres: o script novo `deploy/env-vercel.cjs` tinha nascido com um identificador em alfabeto
+não latino — corrigido, e a guarda re-rodada verde antes da corrida completa.
+
+**Navegador, na pilha de prova (5174 / 3002, banco `nexusbusinessmanager_teste`).**
+`node tools/verify-configuracoes.cjs` fechou **189 checagens, 0 falhas**. A seção nova `2c` confere, na tela
+real: a recusa por **senha** na conta de captura (400 com a frase do servidor no Toastr, diálogo de perigo,
+sessão de pé, conta intocada); a recusa por **casa** numa dona solitária de casa descartável (409 "último
+responsável ativo", trilha `lgpd.anonymize.blocked` com o nome da casa, conta sem mudança); o 409 que
+**desaparece** quando a casa ganha uma sucessora — o mesmo botão, com a senha que já estava no campo; o
+sucesso que encerra a sessão e volta para "/", com a linha preservada como protocolo ("Titular anonimizado",
+`titular-anonimizado+<id>@invalid`, `active=false`, `anonymizedAt` preenchido, zero sessões, vínculo
+preservado) e a casa ainda com um responsável ativo; e a **exclusão** pela API numa conta STAFF da mesma
+casa — senha falsa recusada na porta de excluir, linha apagada, documento da casa preservado sem referência
+a ninguém. A recusa da conta da plataforma fica de fora do navegador de propósito (exigiria tocar o
+administrador real) e é provada na suíte da API, com conta de mentira. Limpeza medida: **4 contas e 1 casa
+de prova criadas, 0 contas e 0 casas sobrando**; empresa e conta de captura sem nada alterado; nenhum erro
+de JavaScript no caminho.
+
+**Capturas.** Cinco imagens novas entraram em `docs/screenshots/`
+(`22-configuracoes-eliminar-{dados,dialogo,recusa-senha,recusa-dona,sucesso}.png`), conferidas **uma a uma**,
+só dado fictício. As dez imagens da família que a prova regravou voltaram **byte-idênticas** às commitadas
+(`cmp` uma a uma) — o bloco de eliminação nasce abaixo da dobra da aba —, então nenhuma imagem antiga mudou
+e nenhuma recaptura em massa aconteceu.

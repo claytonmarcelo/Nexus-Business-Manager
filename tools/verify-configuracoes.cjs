@@ -3,6 +3,21 @@
 // genérico que a pessoa lê e não sabe onde corrigir — e a aba "Seus dados" devolve
 // a cópia que a LGPD promete, no browser e não só no teste de componente.
 //
+// A T6.4 acrescentou a esta aba a escrita mais cara do produto (anonimizar e
+// excluir a própria conta). A prova dela é obrigatoriamente dividida, e a divisão
+// mudou depois de medir a casa da captura: ela tem outros responsáveis ativos
+// (os administradores da instalação), então o 409 de "último responsável" nunca
+// chegaria a ela. Ficou assim:
+//  - a recusa por SENHA (400, não destrutiva) corre na conta de captura, porque é
+//    ela que aparece nas telas e o único estrago possível é uma linha de trilha;
+//  - a recusa por EMPRESA (409) e o caminho de SUCESSO de anonimizar correm numa
+//    casa vazia criada por esta prova, com uma única responsável descartável — e
+//    o 409 desaparece quando a prova dá um sucessor a ela, que é a prova de que a
+//    guarda fala por causa da casa, não por causa da conta;
+//  - o caminho de SUCESSO de excluir corre pela API, numa conta STAFF apagada no fim.
+// Nenhuma conta criada aqui é a que aparece nas outras fotos, e tudo que a prova
+// cria — contas e a casa — sai do banco no finally.
+//
 // A prova escreve na empresa e na conta da captura fictícia (tools/conta-de-captura.cjs,
 // papel de OWNER) e devolve tudo ao valor que encontrou no início: o administrador real
 // da plataforma nunca entra nesta tela, então nenhum dado dele vai para o git.
@@ -56,6 +71,37 @@ async function chame(metodo, caminho, corpo) {
     dados = { texto };
   }
   return { status: res.status, dados };
+}
+
+// As contas de prova da T6.4 precisam de sessão própria sem mexer no `token`
+// global (que é o da conta de captura, e a restauração do estado final depende
+// dele). `chameCom` é a mesma chamada, com o endereço e os cabeçalhos à vista —
+// o teto de três por minuto só se mede no cabeçalho que a resposta devolve.
+async function chameCom(accessToken, metodo, caminho, corpo) {
+  const res = await fetch(API + caminho, {
+    method: metodo,
+    headers: {
+      "Content-Type": "application/json",
+      ...(accessToken ? { Authorization: "Bearer " + accessToken } : {}),
+    },
+    body: corpo === undefined ? undefined : JSON.stringify(corpo),
+  });
+  const texto = await res.text();
+  let dados;
+  try {
+    dados = JSON.parse(texto);
+  } catch {
+    dados = { texto };
+  }
+  return { status: res.status, dados, headers: res.headers };
+}
+
+async function tokenDaConta(email, senha) {
+  const resposta = await chameCom(null, "POST", "/auth/login", { email, password: senha });
+  if (resposta.status !== 200) {
+    throw new Error("login da conta de prova falhou (" + resposta.status + "): " + JSON.stringify(resposta.dados).slice(0, 160));
+  }
+  return resposta.dados.accessToken;
 }
 
 // ------------------------------------------------------------------ peça de tela
@@ -154,16 +200,119 @@ async function salvarBloco(page, tituloDoBloco) {
   return clicado;
 }
 
+/**
+ * -------------------------------------------------- painel de eliminação (T6.4)
+ * O título do bloco é o que a pessoa lê e o que a prova procura: se o texto mudar,
+ * a prova quebra junto e avisa que a captura precisa ser refeita. Os dois botões
+ * vivem no corpo do bloco (cada um na sua linha de ação), não no cabeçalho.
+ */
+const TITULO_ELIMINACAO = "Eliminar os seus dados";
+const ANONIMIZAR = "/lgpd/minha-conta/anonimizar";
+const EXCLUIR = "/lgpd/minha-conta/excluir";
+
+const botoesDeEliminacao = (page) =>
+  page.evaluate((titulo) => {
+    const bloco = window.localDoBloco(titulo);
+    return [...(bloco?.querySelectorAll(".nx-bloco-acao button") || [])].map((b) => ({
+      texto: b.textContent.trim(),
+      desabilitado: b.disabled,
+      perigo: b.classList.contains("btn-danger"),
+    }));
+  }, TITULO_ELIMINACAO);
+
+async function clicarEliminacao(page, texto) {
+  const clicado = await page.evaluate((titulo, rotulo) => {
+    const botao = [...(window.localDoBloco(titulo)?.querySelectorAll(".nx-bloco-acao button") || [])]
+      .find((b) => b.textContent.trim() === rotulo);
+    if (!botao) return false;
+    botao.click();
+    return true;
+  }, TITULO_ELIMINACAO, texto);
+  await espera(250);
+  return clicado;
+}
+
+/** O que o diálogo de perigo do sistema mostra, lido do próprio DOM do modal. */
+const dialogo = (page) =>
+  page.evaluate(() => {
+    const d = document.querySelector('.nx-modal[role="dialog"]');
+    if (!d) return null;
+    return {
+      titulo: (d.querySelector(".nx-modal-title")?.textContent || "").trim(),
+      texto: (d.querySelector(".nx-confirm-texto")?.textContent || "").trim(),
+      detalhe: (d.querySelector(".nx-confirm-detalhe")?.textContent || "").trim(),
+      botoes: [...(d.querySelectorAll(".nx-modal-actions button") || [])].map((b) => b.textContent.trim()),
+    };
+  });
+
+async function clicarNoDialogo(page, texto) {
+  const clicado = await page.evaluate((rotulo) => {
+    const botao = [...document.querySelectorAll('.nx-modal[role="dialog"] .nx-modal-actions button')]
+      .find((b) => b.textContent.trim() === rotulo);
+    if (!botao) return false;
+    botao.click();
+    return true;
+  }, texto);
+  await espera(350);
+  return clicado;
+}
+
+/**
+ * Contador de pedidos às duas portas, visto do navegador. É assim que a prova
+ * distingue "o botão estava apagado" de "o botão estava apagado e mesmo assim
+ * saiu um pedido" — o atributo sozinho não diria a segunda parte.
+ */
+function contePedidosDeEliminacao(page) {
+  const vistos = [];
+  page.on("request", (req) => {
+    let caminho;
+    try {
+      caminho = new URL(req.url()).pathname;
+    } catch {
+      return;
+    }
+    if (/\/lgpd\/minha-conta\/(anonimizar|excluir)$/.test(caminho)) {
+      vistos.push(req.method() + " " + caminho);
+    }
+  });
+  return vistos;
+}
+
+/** Janela isolada (contexto novo, sem o token da conta de captura) para uma conta de prova. */
+async function novaJanelaDeProva(browser, rotulo, colecaoDeErros) {
+  const contexto = await (browser.createBrowserContext
+    ? browser.createBrowserContext()
+    : browser.createIncognitoBrowserContext());
+  const pagina = await contexto.newPage();
+  await injetarAjuda(pagina);
+  await pagina.setViewport({ width: 1440, height: 900 });
+  pagina.on("pageerror", (e) => colecaoDeErros.push(rotulo + ": " + String(e)));
+  const pedidos = contePedidosDeEliminacao(pagina);
+  return { contexto, pagina, pedidos };
+}
+
 async function avisoDe(page, trecho) {
-  const visto = await page
-    .waitForFunction((t) => [...document.querySelectorAll(".toast-message")]
-      .some((m) => (m.textContent || "").includes(t)), { timeout: 12000 }, trecho)
-    .then(() => true)
-    .catch(() => false);
+  const visto = await avisoAte(page, trecho);
   const vistos = visto ? [] : await page.evaluate(() =>
     [...document.querySelectorAll(".toast-message")].map((m) => (m.textContent || "").trim()));
   ok("a tela avisa: " + trecho, visto, visto ? undefined : "avisos na tela: " + JSON.stringify(vistos));
   await semToast(page);
+}
+
+/** Igual a `avisoDe`, mas fotografa com o aviso ainda na tela. */
+async function avisoComFoto(page, trecho, nome) {
+  const visto = await avisoAte(page, trecho);
+  if (visto) await foto(page, nome);
+  ok("a tela avisa: " + trecho, visto, visto ? undefined : "nenhum aviso com esse texto apareceu");
+  await semToast(page);
+}
+
+async function avisoAte(page, trecho) {
+  return page
+    .waitForFunction((t) => [...document.querySelectorAll(".toast-message")]
+      .some((m) => (m.textContent || "").includes(t)), { timeout: 12000 }, trecho)
+    .then(() => true)
+    .catch(() => false);
 }
 
 async function semToast(page) {
@@ -213,7 +362,9 @@ async function entrarNoPainel(page, email, senha) {
 }
 
 // ------------------------------------------------------------------------ banco
-// Só o usuário de papel STAFF, criado e apagado por aqui.
+// Só usuários e casas de prova, criados e apagados por aqui: um STAFF segura a
+// leitura de somente leitura (seção 8), os outros exercem os direitos de eliminação
+// da T6.4 — nenhum deles é a conta que aparece nas fotos das outras abas.
 let prisma = null;
 async function abrirBanco() {
   // D6 (tarefa T1): o .env de desenvolvimento fica fora desta prova. O cliente vem de
@@ -221,16 +372,55 @@ async function abrirBanco() {
   prisma = clienteDoBancoDeProva();
 }
 
-async function criarStaff(companyId) {
+const contasDeProva = [];
+let numeroDeProva = 0;
+
+async function criarContaDeProva(companyId, nome, papel = "STAFF") {
   const bcrypt = require("bcryptjs");
-  const email = "prova-config-" + Date.now() + "@nexus.prova";
+  numeroDeProva += 1;
+  const email = "prova-config-" + Date.now() + "-" + numeroDeProva + "@nexus.prova";
   const senha = "ProvaLeitura2026#";
   const user = await prisma.user.create({
-    data: { email, name: "Prova Leitura", passwordHash: await bcrypt.hash(senha, 12) },
+    data: { email, name: nome, passwordHash: await bcrypt.hash(senha, 12) },
   });
-  await prisma.companyUser.create({ data: { userId: user.id, companyId, role: "STAFF" } });
-  console.log("  [banco] STAFF de prova criado: " + email);
-  return { id: user.id, email, senha };
+  await prisma.companyUser.create({ data: { userId: user.id, companyId, role: papel } });
+  const conta = { id: user.id, email, senha, nome, papel };
+  contasDeProva.push(conta);
+  console.log("  [banco] " + papel + " de prova criado: " + email);
+  return conta;
+}
+
+async function criarStaff(companyId) {
+  return criarContaDeProva(companyId, "Prova Leitura");
+}
+
+const casasDeProva = [];
+let numeroDeCasa = 0;
+
+/**
+ * Uma casa vazia, criada só para a guarda do artigo 18 falar: é o único jeito de
+ * provar o 409 de "último responsável ativo" sem tocar em empresa que exista de
+ * verdade. O slug carrega o instante para não colidir com rodada anterior.
+ */
+async function criarCasaDeProva(nome) {
+  numeroDeCasa += 1;
+  const company = await prisma.company.create({
+    data: { name: nome, slug: "prova-config-" + Date.now() + "-" + numeroDeCasa },
+  });
+  casasDeProva.push(company);
+  console.log("  [banco] casa de prova criada: " + company.name + " (" + company.slug + ")");
+  return company;
+}
+
+/** O que sobrou de uma conta de prova, linha por linha, depois do pedido. */
+async function retratoDaConta(id) {
+  const user = await prisma.user.findUnique({ where: { id } });
+  const [vinculos, sessoes, aceites] = await Promise.all([
+    prisma.companyUser.count({ where: { userId: id } }),
+    prisma.refreshToken.count({ where: { userId: id } }),
+    prisma.consentRecord.count({ where: { userId: id } }),
+  ]);
+  return { user, vinculos, sessoes, aceites };
 }
 
 // --------------------------------------------------------------- valores da casa
@@ -291,7 +481,8 @@ function diferencas(antes, depois) {
   });
 
   const errosDeConsole = [];
-  let staffApagado = false;
+  const contasSobrantes = [];
+  const casasSobrantes = [];
 
   try {
     const pagina = await browser.newPage();
@@ -389,9 +580,12 @@ function diferencas(antes, depois) {
 
     const titulosPrivacidade = await pagina.$$eval(".nx-bloco .panel-title", (els) =>
       els.map((e) => e.textContent.trim()));
-    ok("quatro blocos de leitura, nenhum de gravação",
+    // Quatro blocos de leitura e um de escrita (T6.4). A ordem é a da tela, e a
+    // eliminação vem por último de propósito: é o caminho sem volta, não a
+    // primeira coisa que a pessoa vê ao abrir a própria ficha.
+    ok("quatro blocos de leitura e o de eliminação por último",
       titulosPrivacidade.join(",") ===
-        "Seus dados,O que você aceitou,Onde mais você está,O que a casa guarda e não entrega",
+        "Seus dados,O que você aceitou,Onde mais você está,O que a casa guarda e não entrega," + TITULO_ELIMINACAO,
       titulosPrivacidade.join(","));
 
     const fotoTela = await pagina.evaluate((t) => {
@@ -498,6 +692,268 @@ function diferencas(antes, depois) {
         && ultimoExporto?.companyId === empresaAntes.id,
       exportosAntes + " -> " + exportosDepois + " · última: "
         + JSON.stringify({ e: ultimoExporto?.entity, id: ultimoExporto?.entityId, c: ultimoExporto?.companyId }));
+
+    // == 2c) Aba Seus dados: os dois direitos que apagam (T6.4) ==
+    //
+    // Anonimizar e excluir são a escrita mais cara do produto, e a prova se divide
+    // em três pontas:
+    //  - a recusa por SENHA corre na conta de captura: um 400 de "senha não confere"
+    //    não destrói linha nenhuma, e é ele que mostra o diálogo de perigo, a frase
+    //    do servidor na tela e a sessão que continua de pé;
+    //  - a recusa por EMPRESA ("a casa não pode ficar sem dono") corre numa conta que
+    //    é a única responsável ativa de uma casa vazia criada por esta prova, e nunca
+    //    na de captura: medido nesta rodada, a empresa da captura tem mais OWNERs
+    //    ativos (os administradores da instalação), então o 409 nem chegaria a ela;
+    //  - os caminhos de SUCESSO correm numa casa vazia criada por esta prova, com uma
+    //    responsável descartável (e o 409 acima desaparece quando ela ganha um
+    //    sucessor) e com uma conta STAFF apagada pela API.
+    // A terceira recusa — a conta da plataforma — fica de fora de propósito: prová-la
+    // aqui exigiria tocar o administrador real. Ela é conferida na suíte da API
+    // (anonimizacao-e-exclusao-do-titular.test.ts), onde a conta é de mentira, assim
+    // como "a senha antiga não abre mais a conta" e "com um sucessor na casa o 409
+    // desaparece".
+    console.log("== 2c) Aba Seus dados: anonimizar e excluir ==");
+
+    const pedidosDaCaptura = contePedidosDeEliminacao(pagina);
+    // Toda consulta de trilha abaixo é recortada por este instante: o banco de prova
+    // acumula rodadas, e uma contagem sem recorte mediria o resíduo da anterior.
+    const inicioDaEliminacao = new Date(Date.now() - 5000);
+
+    const ondeSeEscreve = await pagina.evaluate(() =>
+      [...document.querySelectorAll(".nx-bloco")].map((b) => ({
+        titulo: (b.querySelector(".panel-title")?.textContent || "").trim(),
+        campos: b.querySelectorAll("input:not([readonly]), textarea, select").length,
+      })));
+    ok("o painel de eliminação é o único que aceita escrita nesta aba",
+      ondeSeEscreve.filter((b) => b.campos > 0).map((b) => b.titulo).join(",") === TITULO_ELIMINACAO,
+      JSON.stringify(ondeSeEscreve));
+
+    const botoesSemSenha = await botoesDeEliminacao(pagina);
+    ok("os dois caminhos, pelo nome que a pessoa lê",
+      botoesSemSenha.map((b) => b.texto).join(",") === "ANONIMIZAR A CONTA,EXCLUIR A CONTA",
+      JSON.stringify(botoesSemSenha));
+    ok("sem senha digitada nenhum dos dois aceita clique",
+      botoesSemSenha.length === 2 && botoesSemSenha.every((b) => b.desabilitado),
+      JSON.stringify(botoesSemSenha));
+    ok("o vermelho de perigo é o da exclusão, e só ele",
+      botoesSemSenha[0]?.perigo === false && botoesSemSenha[1]?.perigo === true,
+      JSON.stringify(botoesSemSenha));
+
+    const campoDeSenha = await pagina.evaluate((t, r) => {
+      const campo = window.localDoCampo(t, r);
+      return {
+        tipo: campo?.querySelector("input")?.type ?? null,
+        valor: campo?.querySelector("input")?.value ?? null,
+        dica: campo?.querySelector(".field-hint")?.textContent.trim() ?? null,
+      };
+    }, TITULO_ELIMINACAO, "Senha para confirmar");
+    ok("a confirmação é uma senha, não um texto qualquer",
+      campoDeSenha.tipo === "password" && campoDeSenha.valor === "", JSON.stringify(campoDeSenha));
+    ok("a tela diz o teto de três por minuto antes do pedido",
+      /três por minuto/.test(campoDeSenha.dica || "") && /trilha de auditoria/.test(campoDeSenha.dica || ""),
+      String(campoDeSenha.dica));
+
+    await clicarEliminacao(pagina, "ANONIMIZAR A CONTA");
+    await espera(400);
+    ok("o botão apagado não dispara pedido nenhum",
+      pedidosDaCaptura.length === 0, JSON.stringify(pedidosDaCaptura));
+
+    await pagina.evaluate((t) => window.localDoBloco(t)?.scrollIntoView({ block: "center" }), TITULO_ELIMINACAO);
+    await espera(250);
+    await foto(pagina, "22-configuracoes-eliminar-dados");
+
+    // A senha digitada aqui não é a da conta de captura: é uma senha falsa, escrita
+    // justamente para que o pedido volte recuse sem que nada seja destruído. O valor
+    // não importa para a guarda da empresa, mas importa para o 400 — e é ele que a
+    // tela mostra.
+    const SENHA_FALSA = "SenhaQueNaoVaiServir2026#";
+    await escreverCampo(pagina, TITULO_ELIMINACAO, "Senha para confirmar", SENHA_FALSA);
+    ok("com a senha digitada os dois botões liberam",
+      (await botoesDeEliminacao(pagina)).every((b) => !b.desabilitado),
+      JSON.stringify(await botoesDeEliminacao(pagina)));
+
+    await clicarEliminacao(pagina, "ANONIMIZAR A CONTA");
+    const dialogoDePerigo = await dialogo(pagina);
+    ok("o pedido passa pelo diálogo de perigo do sistema (nada de confirm nativo)",
+      dialogoDePerigo?.titulo === "Anonimizar a conta", JSON.stringify(dialogoDePerigo));
+    ok("o diálogo escreve a conta que seria destruída",
+      /Deseja realmente anonimizar/.test(dialogoDePerigo?.texto || "")
+        && (dialogoDePerigo?.texto || "").includes(CAPTA.nome), String(dialogoDePerigo?.texto));
+    ok("o segundo parágrafo diz que não há volta",
+      /N[ãa]o h[áa] volta/.test(dialogoDePerigo?.detalhe || ""), String(dialogoDePerigo?.detalhe));
+    ok("os botões do diálogo são Voltar e Anonimizar",
+      dialogoDePerigo?.botoes.join(",") === "Voltar,Anonimizar", JSON.stringify(dialogoDePerigo?.botoes));
+    await foto(pagina, "22-configuracoes-eliminar-dialogo");
+
+    await clicarNoDialogo(pagina, "Voltar");
+    ok("negar no diálogo não manda pedido nenhum",
+      pedidosDaCaptura.length === 0, JSON.stringify(pedidosDaCaptura));
+    ok("fechado o diálogo, a pessoa continua na própria tela",
+      (await dialogo(pagina)) === null && (await pagina.evaluate(() => window.location.pathname)) === "/app/configuracoes");
+
+    await clicarEliminacao(pagina, "ANONIMIZAR A CONTA");
+    await clicarNoDialogo(pagina, "Anonimizar");
+    await avisoComFoto(pagina, "A senha não confere", "22-configuracoes-eliminar-recusa-senha");
+    ok("a tela fez exatamente um pedido, na porta de anonimizar",
+      pedidosDaCaptura.length === 1 && /^POST \/.*lgpd\/minha-conta\/anonimizar$/.test(pedidosDaCaptura[0]),
+      JSON.stringify(pedidosDaCaptura));
+    ok("a recusa não despeja a pessoa da própria sessão",
+      (await pagina.evaluate(() => window.location.pathname)) === "/app/configuracoes");
+    ok("a senha digitada continua no campo, para tentar de novo sem redigitar",
+      (await valorDoCampo(pagina, TITULO_ELIMINACAO, "Senha para confirmar")) === SENHA_FALSA);
+
+    const recusaDeSenhaNaTrilha = await prisma.auditLog.findFirst({
+      where: { action: "lgpd.anonymize.failed", userId: contaAntes.id, createdAt: { gte: inicioDaEliminacao } },
+      orderBy: { createdAt: "desc" },
+    });
+    ok("a tentativa sem senha confere fica na trilha, com o motivo escrito",
+      recusaDeSenhaNaTrilha?.entity === "user" && recusaDeSenhaNaTrilha?.entityId === contaAntes.id
+        && recusaDeSenhaNaTrilha?.companyId === empresaAntes.id
+        && /Senha apresentada n[ãa]o confere/.test(JSON.stringify(recusaDeSenhaNaTrilha?.metadata ?? {})),
+      JSON.stringify(recusaDeSenhaNaTrilha?.metadata ?? null));
+    const contaAposRecusa = await prisma.user.findUnique({ where: { id: contaAntes.id } });
+    ok("nada foi destruído: a conta da captura segue ativa, com o mesmo nome",
+      contaAposRecusa?.active === true && contaAposRecusa?.name === contaAntes.name
+        && contaAposRecusa?.anonymizedAt === null,
+      JSON.stringify({ ativa: contaAposRecusa?.active, nome: contaAposRecusa?.name }));
+
+    // ------------------------------------------------- a casa que não pode ficar sem dono
+    // A espera abaixo não é decoração: a leitura desta aba tem teto de cinco pedidos
+    // por minuto pelo mesmo endereço, e a captura já gastou três (a consulta de
+    // referência acima e as duas montagens do painel, que o React de desenvolvimento
+    // faz). Cada janela nova monta o painel outra vez; sem virar a janela, o quarto
+    // e o quinto pedidos chegariam num 429 e a prova fotografaria um erro de tela.
+    console.log("  [leitura] esperando a janela de cinco por minuto virar (61s)...");
+    await espera(61 * 1000);
+
+    const casaSemSucessor = await criarCasaDeProva("Casa Sem Sucessor");
+    const donaUnica = await criarContaDeProva(casaSemSucessor.id, "Prova Dona Unica", "OWNER");
+    const janelaDaDona = await novaJanelaDeProva(browser, "dona", errosDeConsole);
+    await entrarNoPainel(janelaDaDona.pagina, donaUnica.email, donaUnica.senha);
+    await janelaDaDona.pagina.goto(BASE + "/app/configuracoes?aba=privacidade", { waitUntil: "networkidle0" });
+    await janelaDaDona.pagina.waitForSelector(".nx-bloco", { timeout: 15000 });
+    await semToast(janelaDaDona.pagina);
+    ok("uma conta de outra casa recebe a mesma tela de eliminação",
+      (await botoesDeEliminacao(janelaDaDona.pagina)).length === 2,
+      JSON.stringify(await botoesDeEliminacao(janelaDaDona.pagina)));
+
+    // Aqui a senha é a verdadeira: o que recusa este pedido não é a senha, é a casa.
+    await escreverCampo(janelaDaDona.pagina, TITULO_ELIMINACAO, "Senha para confirmar", donaUnica.senha);
+    await clicarEliminacao(janelaDaDona.pagina, "ANONIMIZAR A CONTA");
+    await clicarNoDialogo(janelaDaDona.pagina, "Anonimizar");
+    await avisoComFoto(janelaDaDona.pagina, "último responsável ativo", "22-configuracoes-eliminar-recusa-dona");
+    ok("a dona solitária fez exatamente um pedido",
+      janelaDaDona.pedidos.length === 1 && /anonimizar$/.test(janelaDaDona.pedidos[0]),
+      JSON.stringify(janelaDaDona.pedidos));
+    ok("recusado o pedido, ela continua logada na própria casa",
+      (await janelaDaDona.pagina.evaluate(() => window.location.pathname)) === "/app/configuracoes");
+    const recusaDaCasaNaTrilha = await prisma.auditLog.findFirst({
+      where: { action: "lgpd.anonymize.blocked", userId: donaUnica.id, createdAt: { gte: inicioDaEliminacao } },
+      orderBy: { createdAt: "desc" },
+    });
+    ok("a recusa da casa fica na trilha, com o nome dela escrito",
+      recusaDaCasaNaTrilha?.companyId === casaSemSucessor.id
+        && /Casa Sem Sucessor/.test(JSON.stringify(recusaDaCasaNaTrilha?.metadata ?? {})),
+      JSON.stringify(recusaDaCasaNaTrilha?.metadata ?? null));
+    const aposRecusaDaCasa = await prisma.user.findUnique({ where: { id: donaUnica.id } });
+    ok("e a conta dela não mudou de nada",
+      aposRecusaDaCasa?.active === true && aposRecusaDaCasa?.anonymizedAt === null);
+
+    // ------------------------------------- o sucessor que destrava o direito, sem redigitar
+    // A regra que recusa mora na casa, não na conta: criada uma segunda responsável
+    // ativa, o mesmo botão — com a mesma senha ainda no campo, como a tela promete —
+    // passa. É o que prova que o 409 acima não era uma porta trancada por ser porta.
+    await criarContaDeProva(casaSemSucessor.id, "Prova Sucessor", "OWNER");
+    await clicarEliminacao(janelaDaDona.pagina, "ANONIMIZAR A CONTA");
+    await clicarNoDialogo(janelaDaDona.pagina, "Anonimizar");
+    await avisoComFoto(janelaDaDona.pagina, "Seus dados pessoais foram removidos", "22-configuracoes-eliminar-sucesso");
+    ok("o segundo pedido saiu do mesmo botão, com a senha que já estava no campo",
+      janelaDaDona.pedidos.length === 2 && /^POST \/.*lgpd\/minha-conta\/anonimizar$/.test(janelaDaDona.pedidos[1]),
+      JSON.stringify(janelaDaDona.pedidos));
+    const saidaDaDona = await janelaDaDona.pagina.evaluate(() => window.location.pathname);
+    ok("exercido o direito, a sessão acaba e a pessoa volta para a porta de entrada",
+      saidaDaDona === "/", saidaDaDona);
+
+    const anonimizada = await retratoDaConta(donaUnica.id);
+    ok("o nome virou rótulo fixo e o endereço virou protocolo",
+      anonimizada.user?.name === "Titular anonimizado"
+        && /^titular-anonimizado\+.+@invalid$/.test(anonimizada.user?.email || ""),
+      JSON.stringify({ nome: anonimizada.user?.name, email: anonimizada.user?.email }));
+    ok("a conta continua existindo como número, e não serve mais para entrar",
+      anonimizada.user?.active === false && anonimizada.user?.anonymizedAt instanceof Date
+        && anonimizada.sessoes === 0 && anonimizada.vinculos === 1,
+      JSON.stringify({ ativa: anonimizada.user?.active, sessoes: anonimizada.sessoes, vinculos: anonimizada.vinculos }));
+    const linhaDaAnonimizacao = await prisma.auditLog.findFirst({
+      where: { action: "lgpd.anonymize", entityId: donaUnica.id, createdAt: { gte: inicioDaEliminacao } },
+      orderBy: { createdAt: "desc" },
+    });
+    ok("a anonimização fica na trilha com a contagem do que sobrou",
+      linhaDaAnonimizacao?.userId === donaUnica.id
+        && /preservado/.test(JSON.stringify(linhaDaAnonimizacao?.metadata ?? {})),
+      JSON.stringify(linhaDaAnonimizacao?.metadata ?? null));
+    ok("e a casa continuou com um responsável ativo: o direito não deixou ninguém órfão",
+      (await prisma.companyUser.count({
+        where: { companyId: casaSemSucessor.id, role: "OWNER", user: { active: true } },
+      })) === 1);
+    await janelaDaDona.pagina.close().catch(() => {});
+    await janelaDaDona.contexto.close().catch(() => {});
+
+    // ------------------------------------------------------------------ a exclusão
+    // O caminho que apaga a linha corre pela API, numa conta STAFF da casa de prova:
+    // a interface dos dois botões já foi provada no navegador acima, e aqui o que
+    // importa é o banco. A senha falsa vai na porta de EXCLUIR porque o teto de três
+    // por minuto é por rota — a de anonimizar já gastou a sua janela.
+    const excluirDe = await criarContaDeProva(casaSemSucessor.id, "Prova Excluir");
+    const tokenExclusao = await tokenDaConta(excluirDe.email, excluirDe.senha);
+
+    const recusaDeSenha = await chameCom(tokenExclusao, "POST", EXCLUIR, { senha: "SenhaTrocada2027#" });
+    ok("senha que não confere devolve 400 com a regra escrita",
+      recusaDeSenha.status === 400 && /senha n[ãa]o confere/.test(recusaDeSenha.dados.message || ""),
+      recusaDeSenha.status + " " + JSON.stringify(recusaDeSenha.dados).slice(0, 160));
+    const intacta = await retratoDaConta(excluirDe.id);
+    ok("a recusa não mexe em linha nenhuma",
+      intacta.user?.name === "Prova Excluir" && intacta.user?.active === true
+        && intacta.user?.anonymizedAt === null && intacta.sessoes > 0,
+      JSON.stringify({ nome: intacta.user?.name, ativa: intacta.user?.active, sessoes: intacta.sessoes }));
+    ok("a tentativa sem senha confere fica na trilha da exclusão",
+      (await prisma.auditLog.count({
+        where: { action: "lgpd.delete.failed", userId: excluirDe.id, createdAt: { gte: inicioDaEliminacao } },
+      })) >= 1);
+
+    const respostaDeExclusao = await chameCom(tokenExclusao, "POST", EXCLUIR, { senha: excluirDe.senha });
+    ok("a exclusão devolve 200 com a frase do servidor",
+      respostaDeExclusao.status === 200 && /exclu[íi]da/.test(respostaDeExclusao.dados.aviso || ""),
+      respostaDeExclusao.status + " " + String(respostaDeExclusao.dados.aviso).slice(0, 120));
+    const sobrouDaExclusao = await retratoDaConta(excluirDe.id);
+    ok("a linha do cadastro saiu, junto do vínculo e das sessões",
+      sobrouDaExclusao.user === null && sobrouDaExclusao.vinculos === 0 && sobrouDaExclusao.sessoes === 0,
+      JSON.stringify({ user: sobrouDaExclusao.user, vinculos: sobrouDaExclusao.vinculos }));
+    const linhaDaExclusao = await prisma.auditLog.findFirst({
+      where: { action: "lgpd.delete", entityId: excluirDe.id, createdAt: { gte: inicioDaEliminacao } },
+      orderBy: { createdAt: "desc" },
+    });
+    ok("a linha que conta o pedido sobrevive sem dono",
+      linhaDaExclusao?.userId === null && linhaDaExclusao?.companyId === casaSemSucessor.id,
+      JSON.stringify({ userId: linhaDaExclusao?.userId, companyId: linhaDaExclusao?.companyId }));
+
+    // ------------------------------------------------------------------ o teto
+    // Três pedidos por minuto por endereço na porta de anonimizar, conferidos com o
+    // balde zerado: os três acima (a recusa de senha da captura, a recusa de casa e o
+    // sucesso) gastariam a janela, e a espera de um minuto é o que transforma a
+    // medição em contagem. Os pedidos são sem sessão de propósito — se o limitador
+    // barra antes do `authenticate`, os três primeiros devolvem 401 e o quarto, 429.
+    console.log("  [teto] esperando a janela de um minuto virar (61s)...");
+    await espera(61 * 1000);
+    const rajada = [];
+    for (let i = 0; i < 4; i++) {
+      const pedido = await chameCom(null, "POST", ANONIMIZAR, { senha: "x" });
+      rajada.push({ status: pedido.status, teto: pedido.headers.get("x-ratelimit-limit") });
+    }
+    ok("três pedidos passam e o quarto é barrado antes de chegar à guarda",
+      rajada.map((r) => r.status).join(",") === "401,401,401,429",
+      JSON.stringify(rajada));
+    ok("o teto anunciado na resposta é três",
+      rajada[3].teto === "3", String(rajada[3].teto));
 
     // == 3) Empresa ==
     console.log("== 3) Aba Empresa: cadastro, endereço, formato, logo, meta e as duas políticas ==");
@@ -876,14 +1332,41 @@ function diferencas(antes, depois) {
     await pagina.close();
   } finally {
     await browser.close().catch(() => {});
-    try {
-      await prisma.user.delete({ where: { id: staff.id } });
-      staffApagado = true;
-      console.log("  [banco] STAFF de prova apagado");
-    } catch (e) {
-      console.log("  [limpeza] falha ao apagar o usuário de prova: " + e.message);
+    // Toda conta criada por aqui sai do banco, inclusive a que a própria prova
+    // anonimizou (ela continua sendo uma linha, agora sem nome) e a que a prova
+    // excluiu (essa já sumiu sozinha, e o delete abaixo reclama em silêncio).
+    // As casas de prova saem depois das contas: enquanto houver membro, a chave
+    // estrangeira não deixa apagar a empresa.
+    if (prisma) {
+      for (const conta of contasDeProva) {
+        // A conta que a própria prova excluiu já não tem linha: apagar de novo
+        // seria reclamar de um trabalho que o produto fez.
+        if ((await prisma.user.count({ where: { id: conta.id } })) === 0) continue;
+        try {
+          await prisma.loginAttempt.deleteMany({ where: { email: conta.email } });
+          await prisma.user.delete({ where: { id: conta.id } });
+        } catch (e) {
+          console.log("  [limpeza] " + conta.email + ": " + e.message);
+        }
+      }
+      for (const casa of casasDeProva) {
+        try {
+          await prisma.company.delete({ where: { id: casa.id } });
+        } catch (e) {
+          console.log("  [limpeza] casa " + casa.slug + ": " + e.message);
+          casasSobrantes.push(casa.slug);
+        }
+      }
+      for (const conta of contasDeProva) {
+        if (await prisma.user.count({ where: { id: conta.id } })) {
+          contasSobrantes.push(conta.email);
+        }
+      }
+      console.log("  [banco] " + contasDeProva.length + " contas e " + casasDeProva.length
+        + " casas de prova criadas, " + contasSobrantes.length + " contas e "
+        + casasSobrantes.length + " casas sobrando");
+      await prisma.$disconnect().catch(() => {});
     }
-    await prisma.$disconnect().catch(() => {});
   }
 
   const empresaFinal = (await chame("GET", "/companies/current")).dados;
@@ -894,7 +1377,8 @@ function diferencas(antes, depois) {
   ok("nada sobrou alterado na empresa", diferencas(empresaAntes, empresaFinal).length === 0);
   ok("nada sobrou alterado na conta",
     contaFinal.name === contaAntes.name && String(contaFinal.phone ?? "") === String(contaAntes.phone ?? ""));
-  ok("o usuário de prova não ficou no banco", staffApagado);
+  ok("nenhuma conta de prova ficou no banco", contasSobrantes.length === 0, contasSobrantes.join(","));
+  ok("nenhuma casa de prova ficou no banco", casasSobrantes.length === 0, casasSobrantes.join(","));
   const soDeVerdade = errosDeConsole.filter((t) => !ruidoDeRede(t));
   ok("nenhum erro de JavaScript no caminho", soDeVerdade.length === 0, soDeVerdade.slice(0, 3).join(" | "));
 
@@ -903,5 +1387,5 @@ function diferencas(antes, depois) {
     console.log(falhas.map((f) => "  - " + f).join("\n"));
     process.exit(1);
   }
-  console.log("Configurações provadas: cinco abas, gravação bloco a bloco, validação no campo, leitura travada e a cópia da LGPD no navegador.");
+  console.log("Configurações provadas: cinco abas, gravação bloco a bloco, validação no campo, leitura travada, a cópia da LGPD e os dois direitos que apagam no navegador.");
 })();

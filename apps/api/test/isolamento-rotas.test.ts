@@ -96,6 +96,11 @@ const ESCRITAS_DE_SESSAO = [
   "PATCH /api/notifications/:id/read",
   "POST /api/notifications/read-all",
   "PUT /api/notifications/preferences",
+  // T6.4 (F7): os dois pedidos de eliminação operam a própria conta, e o cadeado é
+  // a senha no corpo conferida contra o hash — não existe permissão de módulo que
+  // autorize alguém a anonimizar a conta de outra pessoa.
+  "POST /api/lgpd/minha-conta/anonimizar",
+  "POST /api/lgpd/minha-conta/excluir",
 ];
 
 const METODOS_DE_ESCRITA = ["POST", "PATCH", "PUT", "DELETE"];

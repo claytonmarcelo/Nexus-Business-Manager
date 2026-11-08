@@ -26,7 +26,18 @@ import type { DadosDoTitular } from "../lib/lgpdApi";
 //   6. leitura que falha não vira tela branca: diz a frase da API e oferece a nova
 //      tentativa, que volta a chamar a rota.
 //
-// A rede é o adaptador da fábrica, no formato que `exportarDadosDoTitular` devolve hoje.
+// E desde a T6.4, o direito de eliminação (art. 18, VI) na mesma aba:
+//   7. sem senha escrita os dois botões ficam apagados, e nenhum pedido sai;
+//   8. o "sim" do diálogo é o que chama a porta, com `{ senha }` no corpo e nada
+//      mais; negar no diálogo não chama a rota nenhuma vez;
+//   9. depois do sucesso a sessão desta aba não existe mais — o painel encerra a
+//      própria sessão, e a frase mostrada é a do servidor, não uma paráfrase;
+//  10. a recusa do servidor (último responsável ativo da casa) aparece na tela com
+//     a mensagem dele, e a pessoa continua logada para resolver isso;
+//  11. a conta já anonimizada não ganha botão de eliminação: não sobrou nada que
+//     identifique alguém, e a tela diz a data.
+//
+// A rede é o adaptador da fábrica, no formato que `lerMeusDados` devolve hoje.
 
 const SESSAO = {
   user: USUARIO_DE_TESTE,
@@ -34,7 +45,7 @@ const SESSAO = {
   reload: async () => undefined,
   switchCompany: async () => undefined,
   login: async () => ({ estado: "sessao" as const }),
-  logout: async () => undefined,
+  logout: vi.fn(async () => undefined),
 };
 
 vi.mock("../context/AuthContext", () => ({
@@ -47,13 +58,25 @@ vi.mock("../lib/notify", () => ({
 
 interface Chamada {
   url: string;
+  metodo: string;
+  corpo: Record<string, unknown>;
 }
 
 function monteApp(rotas: Rota[]): Chamada[] {
   const chamadas: Chamada[] = [];
   const interior = monteAdaptador(rotas);
   const adaptador = async (config: Parameters<typeof interior>[0]) => {
-    chamadas.push({ url: config.url ?? "" });
+    let corpo: Record<string, unknown> = {};
+    try {
+      corpo = typeof config.data === "string" ? (JSON.parse(config.data) as Record<string, unknown>) : {};
+    } catch {
+      corpo = {};
+    }
+    chamadas.push({
+      url: config.url ?? "",
+      metodo: (config.method ?? "get").toLowerCase(),
+      corpo,
+    });
     return interior(config);
   };
   axios.defaults.adapter = adaptador;
@@ -80,6 +103,7 @@ function dados(complemento: Partial<DadosDoTitular> = {}): DadosDoTitular {
       papelNaPlataforma: null,
       emailVerificadoEm: "2026-01-10T12:00:00.000Z",
       segundoFatorDesde: null,
+      anonimizadoEm: null,
       criadoEm: "2026-01-02T09:00:00.000Z",
       atualizadoEm: "2026-02-20T09:00:00.000Z",
     },
@@ -176,6 +200,7 @@ beforeEach(() => {
   localStorage.clear();
   sessionStorage.clear();
   for (const fn of [notify.success, notify.error, notify.info]) vi.mocked(fn).mockClear();
+  SESSAO.logout.mockClear();
 });
 
 afterEach(() => {
@@ -340,5 +365,227 @@ describe("A tela de dados do titular", () => {
     await waitFor(() =>
       expect(screen.getByRole("heading", { name: "O que a casa guarda e não entrega" })).toBeTruthy(),
     );
+  });
+});
+
+// ===== A eliminação do titular na tela (T6.4, LGPD art. 18, VI) =====
+//
+// As duas portas estão provadas do lado do servidor em
+// apps/api/test/anonimizacao-e-exclusao-do-titular.test.ts: senha que confere,
+// guarda do último OWNER ativo, conta da plataforma, teto de três pedidos por
+// minuto. O que só a tela pode errar é a ordem do pedido:
+//   7. sem senha escrita os dois botões ficam apagados, e nenhum pedido sai;
+//   8. o "sim" do diálogo é o que chama a porta, com `{ senha }` no corpo e nada
+//      mais; negar no diálogo não chama a rota nenhuma vez;
+//   9. depois do sucesso a sessão desta aba não existe mais: o painel encerra a
+//      própria sessão, a frase mostrada é a do servidor, e a senha digitada some;
+//  10. a recusa do servidor aparece com a mensagem dele, e a pessoa continua
+//     logada para resolver o que a regra pediu (transferir a propriedade);
+//  11. a conta já anonimizada não ganha botão: não sobrou campo nenhum que
+//     identifique alguém, e a tela diz a data em que isso aconteceu.
+
+const ANONIMIZAR = "/lgpd/minha-conta/anonimizar";
+const EXCLUIR = "/lgpd/minha-conta/excluir";
+
+/** O corpo que a porta de eliminação devolve hoje, no formato do serviço. */
+function respostaDeEliminacao(direito: "anonimizacao" | "exclusao") {
+  return {
+    feito: true,
+    direito,
+    em: "2026-03-05T15:00:00.000Z",
+    ...(direito === "anonimizacao"
+      ? { identidade: { nome: "Titular anonimizado", email: "titular-anonimizado+id@invalid" } }
+      : {}),
+    apagado: { sessoes: 2, aceites: 2, avisos: 1 },
+    preservado: { lancamentos: 7, leads: 3, trilha: 812 },
+    guarda: [
+      {
+        item: "Os lançamentos e leads desta empresa",
+        motivo: "Documento de negócio tem prazo legal de guarda, e não é da pessoa que sai.",
+      },
+    ],
+    aviso:
+      direito === "anonimizacao"
+        ? "Conta anonimizada: o que a casa guardava sobre você ficou, mas agora sem nome."
+        : "Conta excluída: os documentos da empresa seguem guardados, sem referência a ninguém.",
+  };
+}
+
+function painelDeEliminacao(): HTMLElement {
+  return bloco("Eliminar os seus dados");
+}
+
+/**
+ * O campo é lido por dentro do bloco, não por `getByRole("textbox")`: um
+ * `input[type=password]` não tem esse papel, e a casa não associa `<label>` ao
+ * campo — quem dá o nome acessível é o `aria-label` do `Campo`.
+ */
+function campoDeSenha(painel: HTMLElement = painelDeEliminacao()): HTMLInputElement {
+  const campo = painel.querySelector('input[type="password"]');
+  if (!campo) throw new Error("a tela não tem campo de senha");
+  return campo as HTMLInputElement;
+}
+
+function botao(nome: string): HTMLButtonElement {
+  const painel = painelDeEliminacao();
+  return within(painel).getByRole("button", { name: nome }) as HTMLButtonElement;
+}
+
+function escreveSenha(valor = "SenhaForte123!"): void {
+  fireEvent.change(campoDeSenha(), { target: { value: valor } });
+}
+
+describe("A eliminação do titular na tela", () => {
+  it("sem senha escrita os dois botões ficam apagados, e nenhum pedido sai", async () => {
+    const chamadas = monte([rotaDeDados(dados())]);
+    await waitFor(() =>
+      expect(screen.getByRole("heading", { name: "Eliminar os seus dados" })).toBeTruthy(),
+    );
+
+    const anonimizar = botao("ANONIMIZAR A CONTA");
+    const excluir = botao("EXCLUIR A CONTA");
+    expect(campoDeSenha().type).toBe("password");
+    expect(anonimizar.disabled).toBe(true);
+    expect(excluir.disabled).toBe(true);
+
+    // Clicado apagado, o botão não é um pedido disfarçado: nenhuma porta chama.
+    fireEvent.click(anonimizar);
+    fireEvent.click(excluir);
+    expect(chamadas.filter((c) => c.url.includes("/minha-conta/"))).toEqual([]);
+    expect(screen.queryByRole("dialog")).toBeNull();
+
+    escreveSenha();
+    await waitFor(() => expect(botao("ANONIMIZAR A CONTA").disabled).toBe(false));
+    expect(botao("EXCLUIR A CONTA").disabled).toBe(false);
+  });
+
+  it("o 'sim' do diálogo manda exatamente { senha }, e a frase do servidor é a que aparece", async () => {
+    const chamadas = monte([
+      rotaDeDados(dados()),
+      { caminho: ANONIMIZAR, status: 200, data: respostaDeEliminacao("anonimizacao") },
+    ]);
+    await waitFor(() =>
+      expect(screen.getByRole("heading", { name: "Eliminar os seus dados" })).toBeTruthy(),
+    );
+
+    escreveSenha();
+    fireEvent.click(botao("ANONIMIZAR A CONTA"));
+
+    const dialogo = await screen.findByRole("dialog");
+    expect(within(dialogo).getByRole("heading", { name: "Anonimizar a conta" })).toBeTruthy();
+    // O nome da pessoa vem da leitura, não de um texto fixo: é ele que a tela mostra
+    // na frase de confirmação.
+    expect(dialogo.textContent).toContain("Dono da Empresa");
+    expect(dialogo.textContent).toContain("Não há volta");
+
+    fireEvent.click(within(dialogo).getByRole("button", { name: "Anonimizar" }));
+
+    await waitFor(() => expect(chamadas.filter((c) => c.url.includes(ANONIMIZAR)).length).toBe(1));
+    const chamada = chamadas.find((c) => c.url.includes(ANONIMIZAR))!;
+    expect(chamada.metodo).toBe("post");
+    expect(Object.keys(chamada.corpo).sort()).toEqual(["senha"]);
+    expect(chamada.corpo.senha).toBe("SenhaForte123!");
+    expect(chamadas.some((c) => c.url.includes(EXCLUIR))).toBe(false);
+
+    // A frase é a do corpo da resposta, não uma paráfrase escrita na tela.
+    await waitFor(() =>
+      expect(vi.mocked(notify.success).mock.calls.flat().join(" ")).toContain("Conta anonimizada"),
+    );
+    // A sessão desta aba morreu junto da conta: o painel é quem a encerra, sem
+    // esperar um 403 na próxima leitura.
+    await waitFor(() => expect(SESSAO.logout).toHaveBeenCalledTimes(1));
+    await waitFor(() => expect(campoDeSenha().value).toBe(""));
+  });
+
+  it("excluir é a outra porta, e o diálogo diz o que sai", async () => {
+    const chamadas = monte([
+      rotaDeDados(dados()),
+      { caminho: EXCLUIR, status: 200, data: respostaDeEliminacao("exclusao") },
+    ]);
+    await waitFor(() =>
+      expect(screen.getByRole("heading", { name: "Eliminar os seus dados" })).toBeTruthy(),
+    );
+
+    escreveSenha();
+    fireEvent.click(botao("EXCLUIR A CONTA"));
+
+    const dialogo = await screen.findByRole("dialog");
+    expect(dialogo.textContent).toContain("A linha do seu cadastro sai");
+    // Dentro do diálogo o rótulo do botão é "Excluir a conta" — o mesmo texto do
+    // botão da tela, em caixa diferente. A busca é dentro do diálogo por isso.
+    fireEvent.click(within(dialogo).getByRole("button", { name: "Excluir a conta" }));
+
+    await waitFor(() => expect(chamadas.filter((c) => c.url.includes(EXCLUIR)).length).toBe(1));
+    expect(chamadas.some((c) => c.url.includes(ANONIMIZAR))).toBe(false);
+    await waitFor(() =>
+      expect(vi.mocked(notify.success).mock.calls.flat().join(" ")).toContain("sem referência a ninguém"),
+    );
+    await waitFor(() => expect(SESSAO.logout).toHaveBeenCalledTimes(1));
+  });
+
+  it("negar no diálogo não chama a porta nenhuma vez", async () => {
+    const chamadas = monte([
+      rotaDeDados(dados()),
+      { caminho: ANONIMIZAR, status: 200, data: respostaDeEliminacao("anonimizacao") },
+    ]);
+    await waitFor(() =>
+      expect(screen.getByRole("heading", { name: "Eliminar os seus dados" })).toBeTruthy(),
+    );
+
+    escreveSenha();
+    fireEvent.click(botao("ANONIMIZAR A CONTA"));
+    const dialogo = await screen.findByRole("dialog");
+    fireEvent.click(within(dialogo).getByRole("button", { name: "Voltar" }));
+
+    await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+    expect(chamadas.filter((c) => c.url.includes("/minha-conta/"))).toEqual([]);
+    expect(SESSAO.logout).toHaveBeenCalledTimes(0);
+    expect(vi.mocked(notify.success).mock.calls).toEqual([]);
+  });
+
+  it("a recusa do servidor aparece na tela com a frase dele, e a sessão continua", async () => {
+    const chamadas = monte([
+      rotaDeDados(dados()),
+      {
+        caminho: EXCLUIR,
+        status: 409,
+        data: {
+          message:
+            "Você é o último responsável ativo pela empresa Empresa de Teste. Transfira a propriedade antes de sair.",
+        },
+      },
+    ]);
+    await waitFor(() =>
+      expect(screen.getByRole("heading", { name: "Eliminar os seus dados" })).toBeTruthy(),
+    );
+
+    escreveSenha();
+    fireEvent.click(botao("EXCLUIR A CONTA"));
+    const dialogo = await screen.findByRole("dialog");
+    fireEvent.click(within(dialogo).getByRole("button", { name: "Excluir a conta" }));
+
+    await waitFor(() => expect(chamadas.filter((c) => c.url.includes(EXCLUIR)).length).toBe(1));
+    expect(vi.mocked(notify.error).mock.calls.flat().join(" ")).toContain("último responsável ativo");
+    expect(vi.mocked(notify.success).mock.calls).toEqual([]);
+    // Recusado, não houve eliminação nenhuma: a pessoa continua logada para
+    // transferir a propriedade e tentar de novo com a mesma senha escrita.
+    expect(SESSAO.logout).toHaveBeenCalledTimes(0);
+    expect(screen.getByRole("heading", { name: "Seus dados" })).toBeTruthy();
+    expect(campoDeSenha().value).toBe("SenhaForte123!");
+  });
+
+  it("a conta já anonimizada não ganha botão de eliminação", async () => {
+    const corpo = dados();
+    corpo.titular.anonimizadoEm = "2026-03-01T08:00:00.000Z";
+    monte([rotaDeDados(corpo)]);
+    await waitFor(() =>
+      expect(screen.getByRole("heading", { name: "Eliminar os seus dados" })).toBeTruthy(),
+    );
+
+    const painel = painelDeEliminacao();
+    expect(within(painel).getByText(/Esta conta foi anonimizada em/)).toBeTruthy();
+    expect(within(painel).queryByRole("button", { name: "ANONIMIZAR A CONTA" })).toBeNull();
+    expect(within(painel).queryByRole("button", { name: "EXCLUIR A CONTA" })).toBeNull();
+    expect(painel.querySelector('input[type="password"]')).toBeNull();
   });
 });

@@ -98,6 +98,15 @@ export function sensivelWhere() {
             // sai do comum. A aba "Alterações Sensíveis" passa a mostrar cada
             // exportação de titular, com data, empresa e endereço de origem.
             "lgpd.export",
+            // T6.4 (F7): os três outros jeitos de mexer em dado pessoal irreversível.
+            // `lgpd.delete` já entra pela regra do sufixo `.delete`; o que está aqui
+            // é o que ela não alcança — a anonimização, e as recusas das duas portas,
+            // que também são decisão sobre dado de alguém.
+            "lgpd.anonymize",
+            "lgpd.anonymize.failed",
+            "lgpd.anonymize.blocked",
+            "lgpd.delete.failed",
+            "lgpd.delete.blocked",
           ],
         },
       },
