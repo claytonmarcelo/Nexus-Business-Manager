@@ -1,6 +1,8 @@
 # Nexus Business Manager
 
-![Logotipo do Nexus](assets/brand/logo/logo.png)
+<p align="center">
+  <img src="assets/brand/logo/logo.png" alt="Logotipo do Nexus" width="200">
+</p>
 
 ERP SaaS multiempresa: clientes, produtos e estoque, vendas, compras, financeiro, CRM, agenda, ordens de serviço, cobranças, notificações, rotinas agendadas e a vitrine pública em um só painel.
 
