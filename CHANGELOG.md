@@ -1,5 +1,24 @@
 ## [Não lançado]
 
+### O README voltou a ser o README do projeto: fatos conferidos na árvore, sem número inventado (2026-11-08)
+
+- **O que aconteceu.** A versão do README que o dono publicou no `origin/main` (commit `16d63ef`, integrado em
+  `2c068f3` por merge, sem rebase) trazia fatos que não batem com a árvore: badge de licença **MIT** com
+  arquivo `LICENSE` que não existe (o `package.json` declara `UNLICENSED` e a licença é decisão pendente do
+  dono, L/G6), badge **Fastify 4.28** (a árvore usa Fastify 5.1), badge **React Native 0.76** (o painel é React
+  18 para web), versão **1.1.0** (a raiz está em `0.1.0` e a 1.0.0 é a fase C6 do contrato), caminho de marca
+  `assets/branding/Logo.png` e imagens em `assets/screenshots/` (nenhum existe — a marca está em
+  `assets/brand/logo/logo.png` e as capturas em `docs/screenshots/`) e um `README.en.md` que nunca existiu.
+- **O que foi feito.** O README foi reescrito no padrão do projeto: **72 linhas**, português do Brasil, **seis
+  telas reais** em 1440×900 (vitrine, login, painel, clientes, vendas, financeiro), cada imagem apontando para o
+  arquivo capturado, badges conferidos contra o `package.json` de cada workspace, "Como rodar" com os
+  comandos de verdade (`npm install`, `npm run db:migrate`, `npm run db:seed`, `npm run dev`), as flags de
+  semente explicadas e o `db:push` marcado como atalho de desenvolvimento. A seção "Produção" descreve a
+  topologia escolhida (mesma origem na Vercel, `api/[...path].ts`, TiDB Cloud Starter) e aponta para o
+  `docs/PRODUCAO.md`.
+- **Prova.** `node tools/verifica-links-doc.cjs` fecha **21 links relativos conferidos, 0 quebrado**. Cada badge
+  e cada afirmação de versão foi lido do `package.json` do workspace correspondente, não de memória.
+
 ### O ar ficou com um endereço só: painel e API na mesma origem, e o banco no TiDB (2026-11-08)
 
 - **A escolha do dono.** O projeto antigo na Vercel foi removido por erro e não abria; a decisão é
