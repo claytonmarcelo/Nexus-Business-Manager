@@ -2929,7 +2929,7 @@ de serviço e a retenção da trilha apagando a prova do exercício de direito.
 
 **A guarda permanente.** O `SECURITY.md` entrou na lista do `tools/verifica-links-doc.cjs`, porque o GitHub o
 mostra na aba de segurança do repositório — e um arquivo que aponta para o CHANGELOG ou para uma decisão que
-mudou de nome é exatamente o tipo de link quebrado que ninguém vê. Medido: **27 links relativos conferidos,
+mudou de nome é exatamente o tipo de link quebrado que ninguém vê. Medido: **26 links relativos conferidos,
 0 quebrado, 0 marcador**. A guarda de caracteres conferiu os arquivos de documentação tocados: **0
 caractere de alfabeto não latino, sem BOM, com LF**.
 
@@ -3011,7 +3011,7 @@ inicial de cada um dos três tipos. Nada desta tarefa escreve no banco de desenv
 
 **Os portões, medidos nesta rodada.** Typecheck limpo (API, painel e o entrypoint serverless). Suíte da API
 inteira: **58 arquivos de teste, 511 casos, todos verdes**. Suíte do painel: **24 arquivos, 191 casos, todos
-verdes**. Verificação de links da documentação: **27 links relativos, 0 quebrado, 0 marcador**. Guarda de
+verdes**. Verificação de links da documentação: **26 links relativos, 0 quebrado, 0 marcador**. Guarda de
 caracteres nos arquivos tocados: **0 caractere de alfabeto não latino, sem BOM, com LF**. Nenhum teste foi
 pulado nem enfraquecido.
 

@@ -19,7 +19,7 @@
   `apps/web/src/test/textos-legais-rascunho.test.tsx` (7 casos) amarram o contrato dos dois lados — o
   servidor recusa e a tela avisa, e nenhum dos dois mente sobre o estado do texto. `apps/api/test/auditoria-sem-segredo.test.ts`
   (5 casos) garante que a trilha não carrega senha, token, hash nem corpo sensível. O `SECURITY.md` entrou
-  na guarda de links (`tools/verifica-links-doc.cjs`), que fecha **27 links relativos conferidos, 0 quebrado**,
+  na guarda de links (`tools/verifica-links-doc.cjs`), que fecha **26 links relativos conferidos, 0 quebrado**,
   e a guarda de caracteres conferiu os três arquivos de documentação tocados: **0 caractere de alfabeto não
   latino, sem BOM, com LF**. Suítes inteiras: **API 58 arquivos / 511 casos** e **web 24 arquivos / 191
   casos**, exit 0, zero falha e zero skip, contra o banco de prova.
