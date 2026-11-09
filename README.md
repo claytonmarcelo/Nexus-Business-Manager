@@ -58,7 +58,7 @@ assets/       marca
 
 ## Documentação
 
-Índice: [`docs/README.md`](docs/README.md). Estado medido do produto: [`docs/ESTADO-ATUAL.md`](docs/ESTADO-ATUAL.md). Achados abertos, um por um: [`docs/AUDITORIA.md`](docs/AUDITORIA.md). Decisões de desenho: [`docs/adr/`](docs/adr/) e [`docs/decisoes/`](docs/decisoes/).
+Índice: [`docs/README.md`](docs/README.md). Estado medido do produto: [`docs/ESTADO-ATUAL.md`](docs/ESTADO-ATUAL.md). Achados abertos, um por um: [`docs/AUDITORIA.md`](docs/AUDITORIA.md). Decisões de desenho: [`docs/adr/`](docs/adr/) e [`docs/decisoes/`](docs/decisoes/). Falha de segurança: [`SECURITY.md`](SECURITY.md).
 
 ## Autor
 

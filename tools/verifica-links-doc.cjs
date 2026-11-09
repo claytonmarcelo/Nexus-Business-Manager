@@ -3,8 +3,11 @@
 //
 // O README e o docs/README.md sao as duas portas de quem chega ao repositório sem
 // conhecer a casa: um link quebrado ali nao e detalhe de formatacao, e a pessoa
-// parando na frente de uma porta que nao abre. Este arquivo percorre os dois e
-// falha (codigo de saida 1) em dois casos:
+// parando na frente de uma porta que nao abre. O SECURITY.md entrou na lista
+// na T6.6 porque o GitHub o mostra na aba de seguranca do repositório - e um
+// arquivo que aponta para o CHANGELOG ou para uma decisao que mudou de nome e
+// exatamente o tipo de link quebrado que ninguem ve. Este arquivo percorre os
+// tres e falha (codigo de saida 1) em dois casos:
 //
 //   1. link ou imagem relativa apontando para arquivo que nao existe na arvore;
 //   2. marcador de rascunho `[[` que sobrou do texto proposto pelo dono.
@@ -18,7 +21,7 @@ const fs = require("fs");
 const path = require("path");
 
 const RAIZ = path.join(__dirname, "..");
-const ARQUIVOS = ["README.md", path.join("docs", "README.md")];
+const ARQUIVOS = ["README.md", path.join("docs", "README.md"), "SECURITY.md"];
 
 // `[...]` antes do `(``): o `!` inicial marca imagem, o resto e link. A aspa opcional
 // e o formato que alguns editores geram; o espaco depois do parente fecha e tolerated.

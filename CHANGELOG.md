@@ -1,5 +1,32 @@
 ## [Não lançado]
 
+### O canal de relato e o texto legal que ainda não pode ir ao site (2026-11-08)
+
+- **O que faltava.** Um repositório sem `SECURITY.md` não tem onde a pessoa relatar uma falha de segurança,
+  e o painel de textos legais oferecia "Publicar no site" para um documento que ainda não tinha texto: o
+  botão acendia, o servidor recusava, e o texto recusado era "documento legal" sem nenhum documento.
+- **O que entrou.** O `SECURITY.md` na raiz do repositório, com dois canais — o GitHub Security Advisories
+  (privado) e o e-mail do autor, que fica **em branco de propósito**, porque endereço escrito no
+  repositório é endereço que a varredura de segredo encontra — mais os prazos de resposta, o que **não**
+  é falha de segurança e os **cinco riscos que a casa aceita por escrito**. No servidor, o texto legal
+  que nasce na prateleira vazia passou a ser o marcador `[RASCUNHO — DOCUMENTO SEM TEXTO DEFINITIVO]`, que
+  explica o que falta (escrever o texto, passar por um advogado, decidir as sete perguntas da casa) sem
+  inventar cláusula nenhuma; e `salvarLegal` passou a recusar publicar um texto vazio ou o marcador, olhando
+  o **estado resultante** — nada é gravado quando a recusa acontece. Na tela, o editor avisa antes do
+  clique: o botão "Publicar no site" fica apagado enquanto o texto for o marcador, e o "Salvar rascunho"
+  continua funcionando, porque quem escreve o documento precisa guardar o texto antes de publicá-lo.
+- **Prova.** `apps/api/test/textos-legais-rascunho.test.ts` (6 casos) e
+  `apps/web/src/test/textos-legais-rascunho.test.tsx` (7 casos) amarram o contrato dos dois lados — o
+  servidor recusa e a tela avisa, e nenhum dos dois mente sobre o estado do texto. `apps/api/test/auditoria-sem-segredo.test.ts`
+  (5 casos) garante que a trilha não carrega senha, token, hash nem corpo sensível. O `SECURITY.md` entrou
+  na guarda de links (`tools/verifica-links-doc.cjs`), que fecha **27 links relativos conferidos, 0 quebrado**,
+  e a guarda de caracteres conferiu os três arquivos de documentação tocados: **0 caractere de alfabeto não
+  latino, sem BOM, com LF**. Suítes inteiras: **API 58 arquivos / 511 casos** e **web 24 arquivos / 191
+  casos**, exit 0, zero falha e zero skip, contra o banco de prova.
+- **O que fica com o dono.** Preencher o campo de e-mail do `SECURITY.md` e ligar a opção "Private
+  vulnerability reporting" nas configurações do repositório no GitHub — sem essa opção, o canal privado do
+  GitHub não existe para quem não tem acesso ao repositório.
+
 ### A trilha de auditoria tem janela própria, e o que ela apaga é contado (2026-11-08)
 
 - **O que faltava.** A trilha de auditoria é dado pessoal: cada linha diz quem praticou a ação, de onde a

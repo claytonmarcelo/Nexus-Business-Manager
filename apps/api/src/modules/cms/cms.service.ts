@@ -540,18 +540,81 @@ const TITULOS_LEGAIS: Record<LegalKind, string> = {
   LGPD: "Adequação à LGPD",
 };
 
+// T6.6 (F7): o texto que a prateleira vazia entrega não é um documento legal —
+// é um aviso de que o texto falta. A casa escreve o texto, um advogado revisa,
+// e só depois o documento vai para o site.
+//
+// O marcador carrega duas informações: que o texto ainda não existe, e o que a
+// casa precisa decidir antes de escrever. Ele não afirma obrigação nenhuma:
+// um rascunho com cara de cláusula é pior do que nenhum rascunho, porque
+// alguém pode publicar achando que é o texto final.
+//
+// A assinatura viaja DENTRO do texto, e é ela que amarra as duas pontas: a
+// guarda de publicação reconhece o marcador pelo TEXTO (e não por comparação
+// com uma constante), e a tela mostra o aviso ao administrador. Mudar o
+// marcador quebra as duas de uma vez — por isso ele é uma constante só.
+export const ASSINATURA_DO_RASCUNHO = "[RASCUNHO — DOCUMENTO SEM TEXTO DEFINITIVO]";
+
+export const RASCUNHO_LEGAL = [
+  ASSINATURA_DO_RASCUNHO,
+  "",
+  "Este documento ainda não tem o texto final. O que está escrito aqui é um aviso de que o texto falta, e não uma cláusula: aqui não se cria obrigação, não se concede direito e não se promete nada.",
+  "",
+  "Antes de publicar, a casa precisa:",
+  "",
+  "1. escrever o texto do documento;",
+  "2. submeter o texto à revisão de um advogado;",
+  "3. conferir se o texto responde às decisões abaixo, que ainda são da casa:",
+  "   - quem é o titular do tratamento e quem responde pela instalação;",
+  "   - quais dados de cada categoria de pessoa são tratados, e por quanto tempo ficam guardados;",
+  "   - a base legal de cada tratamento;",
+  "   - quem é o encarregado pelo tratamento, e como a pessoa o encontra;",
+  "   - se há tratamento de dados de crianças ou de dados sensíveis;",
+  "   - a quem os dados são transferidos, se houver, e em que país;",
+  "   - os canais de atendimento e de reclamação.",
+  "",
+  "Enquanto o texto não for escrito e revisado, este documento fica sem publicação: a página pública avisa que o texto ainda não existe, e o aceite do cadastro aponta para a versão do rascunho, não para um texto em vigor.",
+].join("\n");
+
+/**
+ * O texto pode ir para o site? Só se tiver conteúdo E não for o marcador
+ * inicial. Texto vazio é promessa de nada; marcador publicado é promessa de
+ * coisa nenhuma — e as duas coisas precisam de escritor de verdade.
+ */
+export function textoPublicavel(content: string | null | undefined): boolean {
+  const texto = (content ?? "").trim();
+  if (texto.length === 0) return false;
+  return !texto.includes(ASSINATURA_DO_RASCUNHO);
+}
+
+/** Ainda é o rascunho inicial (marcador intacto ou texto vazio)? */
+export function ehRascunho(content: string | null | undefined): boolean {
+  return !textoPublicavel(content);
+}
+
 export async function obterLegal(kind: LegalKind) {
-  const registro = await prisma.legalDocument.upsert({
+  const criado = await prisma.legalDocument.upsert({
     where: { kind },
     update: {},
-    create: { kind, title: TITULOS_LEGAIS[kind], content: null, published: false },
+    create: { kind, title: TITULOS_LEGAIS[kind], content: RASCUNHO_LEGAL, published: false },
   });
+  // Linha antiga, nascida na prateleira vazia antes de o marcador existir: ela
+  // nunca teve texto, e continua sem texto — só que agora carrega o aviso. A
+  // versão NÃO sobe aqui: o marcador não é uma versão do documento, é a
+  // ausência de texto com a explicação escrita dentro.
+  const registro =
+    criado.content === null
+      ? await prisma.legalDocument.update({ where: { kind }, data: { content: RASCUNHO_LEGAL } })
+      : criado;
   return {
     id: registro.id,
     kind: registro.kind,
     title: registro.title,
     content: registro.content ?? "",
     published: registro.published,
+    // T6.6: a tela do editor precisa saber que o texto ainda é o marcador, para
+    // avisar da revisão de advogado e não oferecer a publicação.
+    rascunho: ehRascunho(registro.content),
     // F7: o número que a linha de aceite guarda. Documento recém-criado pela
     // prateleira vazia está na versão 1 — o mesmo número que a coluna entrega.
     version: registro.version,
@@ -569,6 +632,22 @@ export async function salvarLegal(
   ator: Ator,
 ) {
   const atual = await obterLegal(kind);
+  // T6.6 (F7): publicar é a única ação que coloca um texto em vigor para quem
+  // entra na casa. Ela não passa com o texto vazio nem com o marcador inicial:
+  // um documento publicado sem texto é um documento que promete o que não diz.
+  //
+  // A guarda olha o ESTADO RESULTANTE, não o que veio no pedido: um documento
+  // já publicado continua published quando o pedido traz só o título, e apagar
+  // o texto sem despublicar deixaria o site com uma página vazia. A recusa
+  // acontece ANTES de qualquer escrita — nada muda no banco, e a recusa não
+  // vira linha de trilha, porque o documento continua como estava.
+  const publicadoFinal = dados.published !== undefined ? dados.published : atual.published;
+  const conteudoFinal = dados.content !== undefined ? dados.content : atual.content;
+  if (publicadoFinal && !textoPublicavel(conteudoFinal)) {
+    throw badRequest(
+      "Este documento ainda não tem texto publicável: escreva o texto, submeta-o à revisão de um advogado e publique depois.",
+    );
+  }
   // F7: a versão sobe só quando o texto muda. Trocar o título, ou publicar e
   // despublicar, não é reescrever o que a pessoa aceitou — e um número que sobe
   // sem o corpo mudar tornaria inútil a linha de aceite.
@@ -599,6 +678,7 @@ export async function salvarLegal(
     title: salvo.title,
     content: salvo.content ?? "",
     published: salvo.published,
+    rascunho: ehRascunho(salvo.content),
     version: salvo.version,
     updatedAt: salvo.updatedAt,
   };

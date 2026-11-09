@@ -10,10 +10,28 @@ export interface Rota {
   data: unknown;
 }
 
+/**
+ * A rota que responde é a mais específica que o endereço contém.
+ *
+ * `PUT /cms/legal/TERMS` também contém `/cms/legal`, e a lista de rotas de um
+ * teste costuma ter as duas: a da coleção e a do documento. Escolher pela ordem
+ * em que as rotas foram escritas punha a coleção na frente do documento, e o
+ * painel recebia a lista onde esperava o texto salvo — o botão de publicar
+ * quebrava por um motivo que não tinha nada a ver com o que ele provava.
+ */
+function rotaQueResponde(rotas: Rota[], url: string): Rota | undefined {
+  let melhor: Rota | undefined;
+  for (const rota of rotas) {
+    if (!url.includes(rota.caminho)) continue;
+    if (!melhor || rota.caminho.length > melhor.caminho.length) melhor = rota;
+  }
+  return melhor;
+}
+
 export function monteAdaptador(rotas: Rota[]): AxiosAdapter {
   return async (config) => {
     const url = config.url ?? "";
-    const achada = rotas.find((rota) => url.includes(rota.caminho));
+    const achada = rotaQueResponde(rotas, url);
     const status = achada?.status ?? 200;
     const resposta: AxiosResponse = {
       data: achada?.data ?? {},
@@ -50,7 +68,7 @@ export function monteAdaptadorQueRegistra(rotas: Rota[]) {
   const interna = monteAdaptador(rotas);
   const adaptador: AxiosAdapter = async (config) => {
     const url = config.url ?? "";
-    const achada = rotas.find((rota) => url.includes(rota.caminho));
+    const achada = rotaQueResponde(rotas, url);
     if (achada && (config.method ?? "get").toLowerCase() !== "get") {
       const corpo = typeof config.data === "string" ? JSON.parse(config.data) : config.data;
       chamadas.push({

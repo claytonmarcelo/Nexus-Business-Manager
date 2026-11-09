@@ -75,6 +75,11 @@ export interface DocumentoLegal {
   title: string;
   content: string;
   published: boolean;
+  /** T6.6: o texto ainda é o marcador inicial (ou está vazio) e não pode ir ao
+   *  site — falta escrever e falta a revisão de um advogado. */
+  rascunho: boolean;
+  /** O número da versão que a linha de aceite guarda. */
+  version: number;
   updatedAt: string;
 }
 

@@ -8,6 +8,7 @@
 | [`AUDITORIA.md`](AUDITORIA.md) | Todo achado da auditoria comercial, numerado (N..), com a situação de cada um |
 | [`STATUS-AJUSTES.md`](STATUS-AJUSTES.md) | Tarefa por tarefa: o que foi feito, com qual evidência e em qual commit |
 | [`PRODUCAO.md`](PRODUCAO.md) | Subida real: container, variáveis obrigatórias, backup e primeira configuração |
+| [`../SECURITY.md`](../SECURITY.md) | Como relatar uma falha de segurança: canal privado, prazos de resposta e riscos que a casa aceita por escrito |
 | [`adr/`](adr/) | Decisões de arquitetura, uma por arquivo, com o motivo e o que foi recusado |
 | [`decisoes/`](decisoes/) | Decisões que são do dono (e-mail, cobrança, fiscal, licença, hospedagem, administrador da plataforma) |
 | [`design/`](design/) | Fundamentos visuais e de arquitetura que as telas seguem |

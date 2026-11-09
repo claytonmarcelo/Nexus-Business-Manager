@@ -24,6 +24,18 @@ interface Rascunho {
   published: boolean;
 }
 
+// T6.6 (F7): o servidor é a autoridade — ele recusa a publicação de um texto
+// vazio ou do marcador inicial. A tela existe para a pessoa entender o motivo
+// ANTES de clicar, e para não oferecer como normal um botão que vai ser
+// recusado. O prefixo do marcador é o mesmo que a API usa; o servidor continua
+// decidindo, e a recusa dele aparece no aviso de erro.
+const ASSINATURA_DO_RASCUNHO = "[RASCUNHO";
+
+function textoEmRascunho(content: string): boolean {
+  const texto = content.trim();
+  return texto.length === 0 || texto.includes(ASSINATURA_DO_RASCUNHO);
+}
+
 export function LegaisPanel({ podeEscrever }: { podeEscrever: boolean }) {
   const [docs, setDocs] = useState<DocumentoLegal[] | null>(null);
   const [aberto, setAberto] = useState<KindLegal>("TERMS");
@@ -31,6 +43,8 @@ export function LegaisPanel({ podeEscrever }: { podeEscrever: boolean }) {
   const [erro, setErro] = useState<string | null>(null);
   const [carregando, setCarregando] = useState(true);
   const [ocupado, setOcupado] = useState(false);
+
+  const semTextoPublicavel = rascunho ? textoEmRascunho(rascunho.content) : false;
 
   const carregar = useCallback(async () => {
     setCarregando(true);
@@ -119,7 +133,7 @@ export function LegaisPanel({ podeEscrever }: { podeEscrever: boolean }) {
                 aoSalvar={() => void gravar()}
               />
               <BotaoSalvar
-                desabilitado={!podeEscrever}
+                desabilitado={!podeEscrever || semTextoPublicavel}
                 ocupado={ocupado}
                 rotulo={rascunho.published ? "Publicar de novo" : "Publicar no site"}
                 aoSalvar={() => void gravar(true)}
@@ -127,6 +141,18 @@ export function LegaisPanel({ podeEscrever }: { podeEscrever: boolean }) {
             </div>
           }
         >
+          {semTextoPublicavel ? (
+            <div className="nx-alerta is-aviso" role="note">
+              <div>
+                <div className="nx-alerta-titulo">Rascunho sem texto publicável</div>
+                <div className="nx-alerta-texto">
+                  Este documento ainda não tem o texto final: ele precisa ser escrito e passar pela revisão de
+                  um advogado antes de ir para o site. Enquanto isso, a página pública avisa que o texto ainda
+                  não existe.
+                </div>
+              </div>
+            </div>
+          ) : null}
           <div className="nx-grade">
             <Campo
               rotulo="Título do documento"
@@ -155,7 +181,8 @@ export function LegaisPanel({ podeEscrever }: { podeEscrever: boolean }) {
                 onChange={(e) => setRascunho({ ...rascunho, content: e.target.value })}
               />
               <span className="field-hint">
-                {rascunho.content.length} caracteres · linha em branco separa parágrafo
+                {rascunho.content.length} caracteres · linha em branco separa parágrafo · o texto precisa da
+                revisão de um advogado antes de ir para o site
               </span>
             </div>
             <CampoArea rotulo="Endereço público" valor={"/legal/" + slugPeloKind(rascunho.kind)} rows={1}

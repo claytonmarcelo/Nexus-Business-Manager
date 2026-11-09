@@ -2888,8 +2888,8 @@ mesmo tempo e não pertence a nenhum tenant. Decisão em
 **A limitação, declarada e não escondida.** A retenção apaga também as linhas que **provam o exercício de um
 direito da LGPD** (`lgpd.export`, `lgpd.anonymize`, `lgpd.delete`). A trilha é a prova; se a prova precisa
 durar mais que a janela, a janela é a que tem de ser maior. Quem quiser guardar essa prova por mais tempo
-escolhe um prazo maior — ou exporta a auditoria antes. Esse risco está escrito por extenso na tabela de
-riscos aceitos do `SECURITY.md`, que a T6.6 abre no fim desta fase.
+escolhe um prazo maior — ou exporta a auditoria antes. Esse risco está escrito por extenso no `SECURITY.md`,
+na tabela de riscos aceitos.
 
 **Prova desta rodada.** `apps/api/test/retencao-de-auditoria.test.ts` — **4 casos**: a rotina nasce no
 catálogo com a agenda legível ("todos os dias às 03:00") e o executor conhecido; com a janela desligada
@@ -2899,7 +2899,119 @@ dias só as linhas mais velhas caem, a contagem vem exata no metadata e a linha 
 antiga ficam. O corte é `<` estritamente (uma linha que nasceu exatamente no instante do corte é da janela),
 o teto de lotes é 200 e o que sobrou é dito na mensagem.
 
-**Os portões, medidos nesta rodada.** Typecheck limpo (API, painel e o entrypoint serverless). A suíte da API
-inteira rodou verde, sem falha e sem teste pulado; a contagem exata de arquivos e casos é a da árvore final,
-medida depois da T6.6. A guarda de caracteres conferiu os arquivos tocados: **0 caractere de alfabeto não
-latino, sem BOM, com LF**.
+**Os portões, medidos nesta rodada.** Typecheck limpo (API, painel e o entrypoint serverless). Suíte da API
+inteira: **58 arquivos de teste, 511 casos, todos verdes**. Suíte do painel: **24 arquivos, 191 casos, todos
+verdes**. A guarda de caracteres conferiu os arquivos tocados: **0 caractere de alfabeto não latino, sem BOM,
+com LF**. Nenhum teste foi pulado nem enfraquecido.
+
+## Adenda da execução — o canal de relato, a trilha sem segredo e o texto legal que não vai ao site (2026-11-08)
+
+**Três coisas, uma por vez: para onde vai um relato de falha, o que a trilha de auditoria guarda, e o que
+acontece com um texto legal que ninguém escreveu ainda.**
+
+### 1. O canal de relato
+
+**O que faltava.** O repositório não tinha onde uma pessoa relatasse uma falha de segurança. Sem canal
+privado, o achado vaza no fórum e perde o valor que tinha: quem achou precisa de tempo para escrever a
+falha direito, e a casa precisa de tempo para consertar sem atrapalhar quem usa o produto.
+
+**O que entrou.** `SECURITY.md` na raiz, com dois canais — o **GitHub Security Advisories** (privado, o
+preferido) e o **e-mail do autor**, que fica **em branco de propósito**: o endereço que vale é o do dono, e
+o dono é quem escreve nele. Nenhum endereço de e-mail é escrito no repositório, porque endereço escrito no
+repositório é endereço que a varredura de segredo encontra. O arquivo traz também o que colocar no relato
+(seis itens) e o que **não** colocar (senha, token, chave de cifragem, dado de cliente), o que **não** é
+falha de segurança (erro de uso do produto, texto legal sem revisão jurídica, falha de terceiro sem
+agravamento, negação de serviço já aceita, acesso a dado que a pessoa é dona, vulnerabilidade de ambiente
+de terceiro), os **prazos de resposta** que a casa se compromete a cumprir (primeiro contato em 3 dias
+úteis, triagem em 7, atualização a cada 7, correção conforme a gravidade, publicação junto da correção) e
+a tabela dos **cinco riscos que a casa aceita por escrito** — entre eles o bloqueio por conta como negação
+de serviço e a retenção da trilha apagando a prova do exercício de direito.
+
+**A guarda permanente.** O `SECURITY.md` entrou na lista do `tools/verifica-links-doc.cjs`, porque o GitHub o
+mostra na aba de segurança do repositório — e um arquivo que aponta para o CHANGELOG ou para uma decisão que
+mudou de nome é exatamente o tipo de link quebrado que ninguém vê. Medido: **27 links relativos conferidos,
+0 quebrado, 0 marcador**. A guarda de caracteres conferiu os arquivos de documentação tocados: **0
+caractere de alfabeto não latino, sem BOM, com LF**.
+
+**O que fica com o dono.** Preencher o campo de e-mail do `SECURITY.md` e ligar a opção **"Private
+vulnerability reporting"** nas configurações do repositório no GitHub — sem essa opção, o canal privado do
+GitHub não existe para quem não tem acesso ao repositório, e o próprio arquivo avisa isso.
+
+### 2. A trilha sem segredo
+
+**O lugar óbvio para um segredo vazar é o livro de receipts.** A pessoa digita a senha, o servidor registra
+"login falhou" — e o metadata carrega o que veio no corpo. A trilha é onde a casa registra quem fez o quê;
+se ela vira um depósito de credencial, a trilha vira o problema.
+
+**A régua é dupla, e as duas metades se completam.** A **forma**: nenhuma chave de metadata com cara de
+segredo (senha, token, hash, secret, autorização, cookie). O **valor**: nenhum valor que seja o segredo de
+verdade — a senha digitada, a senha antiga, a senha nova, o token de acesso, o token de renovação — e nada
+com o formato de JWT ou de hash bcrypt. A forma pega o descuido do futuro (uma rota nova que comece a
+gravar um segredo); o valor pega o descuido de hoje. Uma frase como "token rotacionado reapresentado" é
+inocente: é um VALOR, não uma chave, e não é o token de ninguém — por isso a régua olha os dois lados em vez
+de procurar a palavra "senha" no texto inteiro.
+
+**Prova.** `apps/api/test/auditoria-sem-segredo.test.ts` — **5 casos**: a falha de senha guarda o endereço
+da pessoa e não a senha; a troca de senha não deixa a antiga nem a nova; a exportação dos dados do titular
+não joga o corpo do pedido na trilha; a publicação de um texto legal não joga o texto do documento; e uma
+varredura do **arquivo inteiro** (não só das linhas dos casos acima), com piso de grandeza — uma varredura
+que não encontra nada não prova nada.
+
+### 3. O texto legal que ninguém escreveu ainda
+
+**O problema.** O painel de textos legais oferecia "Publicar no site" para um documento que ainda não tinha
+texto: o botão acendia, o servidor recusava, e o texto recusado era "documento legal" sem nenhum documento.
+Pior: a prateleira vazia entregava `content: null`, e a tela escrevia o que ninguém havia escrito.
+
+**O que entrou, no servidor.** O texto que a prateleira vazia entrega passou a ser o **marcador**
+`[RASCUNHO — DOCUMENTO SEM TEXTO DEFINITIVO]`, que carrega duas informações: que o texto ainda não existe, e
+o que a casa precisa decidir antes de escrever (escrever o texto, passar pela revisão de um advogado,
+responder às sete perguntas que ainda são da casa: quem é o titular, quais dados são tratados e por quanto
+tempo, a base legal, quem é o encarregado, se há dado de criança ou sensível, a quem os dados são
+transferidos, e os canais de atendimento). Ele **não afirma obrigação nenhuma**: um rascunho com cara de
+cláusula é pior do que nenhum rascunho, porque alguém pode publicar achando que é o texto final. A assinatura
+viaja dentro do texto e é ela que amarra as duas pontas — a guarda de publicação reconhece o marcador pelo
+texto, e a tela mostra o aviso ao administrador. A linha antiga, nascida na prateleira vazia antes do
+marcador existir, continua sem texto e recebe o aviso; a versão **não** sobe, porque o marcador não é uma
+versão do documento — é a ausência de texto com a explicação escrita dentro.
+
+**A guarda de publicação.** `salvarLegal` olha o **estado resultante**, não o que veio no pedido: publicar
+sem texto é recusado; publicar o marcador intacto é recusado; **apagar** o texto de um documento já publicado
+também é recusado (o site ficaria com uma página vazia); e **despublicar** é sempre possível, sem mexer no
+texto nem na versão. A recusa acontece **antes de qualquer escrita** — nada muda no banco, e a recusa não
+vira linha de trilha, porque o documento continua como estava.
+
+**O que entrou, na tela.** O editor avisa **antes do clique**: o botão "Publicar no site" fica apagado
+enquanto o texto for o marcador, e o aviso "Rascunho sem texto publicável" diz o que falta (escrita e
+revisão de um advogado) e o que a pessoa pública vê enquanto isso ("a página pública avisa que o texto
+ainda não existe"). O "Salvar rascunho" **continua funcionando** mesmo sem texto publicável: quem escreve o
+documento precisa guardar o texto antes de publicá-lo. A recusa do servidor aparece com a **frase dele**, não
+com uma paráfrase.
+
+**Prova.** `apps/api/test/textos-legais-rascunho.test.ts` — **6 casos** (a prateleira entrega rascunho
+marcado; publicar sem texto é recusado sem mudar banco nem trilha; publicar o marcador intacto é recusado;
+com texto escrito o documento publica, a versão sobe e o site mostra o texto; apagar o texto de um
+documento publicado é recusado; despublicar é sempre possível). `apps/web/src/test/textos-legais-rascunho.test.tsx`
+— **7 casos** (o aviso aparece e diz as duas coisas que faltam; o botão apagado não chama a API; com texto
+de verdade o botão acende e o aviso some; salvar rascunho funciona sem texto publicável e não leva
+`published`; publicar leva o texto e `published: true`; a recusa 400 aparece com a frase do servidor; sem
+permissão de escrever os dois botões ficam apagados).
+
+**O achado da rodada, corrigido.** O teste do painel nasceu vermelho com `TypeError: Cannot read properties
+of undefined (reading 'trim')` — e a causa não era o painel: era a rede de mentira. A fábrica de adaptadores
+(`apps/web/src/test/fabrica-api.ts`) respondia com a **primeira** rota cujo caminho o endereço continha, e
+`PUT /cms/legal/TERMS` também contém `/cms/legal` — então o salvamento recebia a **lista** no lugar do
+documento salvo, e o `content` chegava indefinido. Os outros arquivos de teste do repositório contornavam a
+armadilha por ordem de escrita da lista de rotas; a correção foi na raiz: a fábrica passa a responder com a
+rota **mais específica** que o endereço contém. Nenhum teste foi enfraquecido, nenhum foi pulado.
+
+**O estado do balcão, conferido.** A prateleira de textos legais do banco de prova foi inspecionada antes e
+depois das provas: ela volta ao que era, inclusive a versão, porque o arquivo de teste devolve o estado
+inicial de cada um dos três tipos. Nada desta tarefa escreve no banco de desenvolvimento (decisão D6).
+
+**Os portões, medidos nesta rodada.** Typecheck limpo (API, painel e o entrypoint serverless). Suíte da API
+inteira: **58 arquivos de teste, 511 casos, todos verdes**. Suíte do painel: **24 arquivos, 191 casos, todos
+verdes**. Verificação de links da documentação: **27 links relativos, 0 quebrado, 0 marcador**. Guarda de
+caracteres nos arquivos tocados: **0 caractere de alfabeto não latino, sem BOM, com LF**. Nenhum teste foi
+pulado nem enfraquecido.
+
