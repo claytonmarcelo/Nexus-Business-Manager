@@ -62,7 +62,7 @@ app.inject = ((pedido: string | PedidoInjetado) => {
 // processo (pool forks + singleFork), então não há corrida com outra suíte.
 export async function comFlag<T>(
   nome: keyof typeof env,
-  valor: string,
+  valor: string | number,
   trecho: () => Promise<T>,
 ): Promise<T> {
   const anterior = env[nome];

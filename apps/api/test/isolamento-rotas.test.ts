@@ -43,6 +43,10 @@ const ARQUIVOS_DE_PLATAFORMA = [
   // T5.5 (N61): a confirmação administrativa de e-mail escreve na coluna de
   // identidade de uma conta de fora do tenant, então o evento é da plataforma.
   "src/modules/platform-accounts/contas.service.ts",
+  // T6.5: o expurgo da trilha apaga linhas de TODAS as empresas ao mesmo tempo
+  // (a janela é da plataforma inteira), então o registro do corte é de
+  // plataforma e não pertence a nenhum tenant.
+  "src/modules/audit/retencao-auditoria.ts",
 ];
 
 // Rotas que podem responder sem token. Lista de exceção declarada, não contagem:

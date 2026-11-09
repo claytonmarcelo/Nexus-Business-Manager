@@ -286,6 +286,39 @@ O que existe hoje, medido no stdout da pilha (não é descrição do que se deve
 backup da seção 45 do prompt (próxima tarefa da T5), que é quem decide quanto tempo uma instalação guarda o
 próprio histórico.
 
+### A trilha de auditoria tem janela própria (T6.5)
+
+O log de linha do container é uma coisa; a **trilha de auditoria** (a tabela `audit_logs`, onde cada ação
+fica com quem praticou, de onde veio e o que mudou) é outra — e é dado pessoal. A retenção dela é
+configurável por variável de ambiente:
+
+| Variável | O que faz |
+| --- | --- |
+| `AUDIT_RETENTION_DIAS=0` | **padrão**: o expurgo não apaga nada. A instalação guarda tudo até alguém decidir o contrário. |
+| `AUDIT_RETENTION_DIAS=90` | a rotina `expurgo-de-auditoria` apaga as linhas de auditoria com mais de 90 dias. |
+
+Onde o expurgo acontece: na rotina `expurgo-de-auditoria` (`/app/rotinas`), que roda às **03:00** quando o
+agendador está ligado (`CRON_ENABLED=1`) e pode ser rodada na hora pelo botão "Executar agora" do
+administrador da plataforma. O corte vai em **lotes de mil linhas**, com teto de duzentas lotes por
+corrida — o que sobrou fica para a corrida do dia seguinte, e a mensagem da última execução diz o número
+exato do que caiu. Nenhuma outra tabela é tocada: conta, aviso, venda e documento de negócio ficam.
+
+A linha do próprio expurgo é gravada na trilha da **plataforma** (`ops.audit_purge`, com `dias`, `apagadas`,
+`corte` e `lotes`) — e só quando o expurgo apagou alguma coisa: uma corrida que não encontrou nada não
+escreve linha, senão a trilha enche de registro de que nada aconteceu.
+
+Duas coisas que quem opera precisa saber antes de ligar a janela:
+
+- **A retenção apaga também a prova do exercício de um direito da LGPD.** As linhas `lgpd.export`,
+  `lgpd.anonymize` e `lgpd.delete` são linhas de auditoria como quaisquer outras. Se a empresa precisa
+  guardar essa prova por mais tempo do que a janela, o prazo é maior.
+- **A janela é da plataforma inteira**, não de cada empresa. A trilha atravessa todas as casas, e a
+  política de guarda também: uma empresa não escolhe por quantos dias fica guardada a prova de que ela
+  mesma mexeu em dado de alguém.
+
+O caminho de origem e a decisão estão em `docs/adr/0026-retencao-configuravel-da-trilha-de-auditoria.md`; a
+prova é `apps/api/test/retencao-de-auditoria.test.ts`.
+
 ## 8. Backup e restauração (seção 45 do prompt, regra 1 do G5)
 
 A decisão `docs/decisoes/G5-hospedagem-e-backup.md` deixou a regra escrita: **backup que nunca foi restaurado

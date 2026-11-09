@@ -34,6 +34,12 @@ const schema = z.object({
   // Limite de corpo dito em uma lugar, em vez de deixar o default do Fastify
   // decidido em outro.
   BODY_LIMIT_BYTES: z.coerce.number().int().positive().default(1048576),
+  // T6.5 (F7): retenção configurável da trilha de auditoria. Zero = desligado
+  // (o padrão: nada é apagado). Com N > 0, a rotina "expurgo-de-auditoria"
+  // apaga as linhas de auditoria com mais de N dias, em lote, e conta o que
+  // caiu. A janela é da plataforma inteira — a trilha atravessa todas as
+  // empresas, e a política de guarda também.
+  AUDIT_RETENTION_DIAS: z.coerce.number().int().min(0).max(3650).default(0),
   // A8: endereço do administrador global (regra definitiva de acesso). Vazio por
   // padrão de propósito — `passwordPolicy.ts` é quem decide o padrão de
   // desenvolvimento, para produção nunca herdar um valor escrito no código.

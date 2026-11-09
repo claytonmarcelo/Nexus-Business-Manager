@@ -2854,3 +2854,52 @@ administrador da plataforma, `node deploy/env-vercel.cjs prj_XXXX --url ... --te
 sem vazar segredo, `vercel deploy --prod` com o **Root Directory na raiz** do repositório, e a prova no ar:
 `/`, `/login` e `/app` respondendo 200, `/api/health` respondendo 200 e o login de uma conta fictícia
 abrindo o painel. Até lá, a publicação está bloqueada por essa ação do dono.
+
+## Adenda da execução — a trilha de auditoria ganha janela, e o que ela apaga é contado (2026-11-08)
+
+**A pergunta que a F7 ia responder.** A trilha de auditoria é dado pessoal: cada linha diz quem praticou a
+ação, de onde a pessoa veio e o que mudou. Conservá-la para sempre é guarda sem fim, e a LGPD (art. 16,
+II e III) pede o contrário — conservar só pelo tempo necessário e eliminar o que passou do prazo. O
+produto não tinha nenhuma forma de dizer "quanto tempo guardamos": a tabela só crescia.
+
+**A decisão, em quatro pontos, todos reversíveis.**
+
+1. **O padrão é desligado.** `AUDIT_RETENTION_DIAS=0` significa "não apaga nada". Uma instalação que não
+   sabe quanto guarda é uma instalação que guarda tudo — e a primeira decisão de quem opera tem de ser
+   reversível sem custo.
+2. **A janela é da plataforma, não da empresa.** A trilha atravessa todas as casas; a política de guarda
+   também. Uma empresa não escolhe por quantos dias a prova de que ela mesma mexeu em dado de alguém fica
+   guardada.
+3. **O expurgo em lote.** A tabela de auditoria é a maior da instalação. Apagar tudo numa instrução só
+   segura a tabela inteira por um instante; o corte vai em lotes de mil, com teto de duzentas lotes por
+   corrida — o que sobrou fica para a corrida do dia seguinte, e a mensagem da última execução diz o número
+   exato do que caiu.
+4. **O apagamento também é auditado — mas só quando apaga.** Uma corrida que não encontrou nada não
+   escreve linha: o registro de que nada aconteceu enche a trilha de ruído e ainda ocupa espaço.
+
+**O que entrou no código.** `apps/api/src/modules/audit/retencao-auditoria.ts` (novo) com
+`janelaDeRetencao()` e `expurgarAuditoria()`; a rotina `expurgo-de-auditoria` no catálogo (`cron.handlers.ts`,
+agenda `0 3 * * *`, executável também pelo botão "Executar agora" em `/app/rotinas`); a variável
+`AUDIT_RETENTION_DIAS` no `env.ts` e no `.env.example`; e a linha do expurgo classificada como **evento de
+plataforma** na matriz de rotas (`isolamento-rotas.test.ts`), porque o corte atravessa todas as empresas ao
+mesmo tempo e não pertence a nenhum tenant. Decisão em
+`docs/adr/0026-retencao-configuravel-da-trilha-de-auditoria.md`; operação em `docs/PRODUCAO.md`.
+
+**A limitação, declarada e não escondida.** A retenção apaga também as linhas que **provam o exercício de um
+direito da LGPD** (`lgpd.export`, `lgpd.anonymize`, `lgpd.delete`). A trilha é a prova; se a prova precisa
+durar mais que a janela, a janela é a que tem de ser maior. Quem quiser guardar essa prova por mais tempo
+escolhe um prazo maior — ou exporta a auditoria antes. Esse risco está escrito por extenso na tabela de
+riscos aceitos do `SECURITY.md`, que a T6.6 abre no fim desta fase.
+
+**Prova desta rodada.** `apps/api/test/retencao-de-auditoria.test.ts` — **4 casos**: a rotina nasce no
+catálogo com a agenda legível ("todos os dias às 03:00") e o executor conhecido; com a janela desligada
+**nada é apagado e a trilha não ganha registro** (o padrão seguro não deixa pegada); com a janela de 30
+dias só as linhas mais velhas caem, a contagem vem exata no metadata e a linha do expurgo é de plataforma
+(`scope: platform`, `companyId: null`); e o expurgo **só mexe na trilha** — uma conta e um aviso com data
+antiga ficam. O corte é `<` estritamente (uma linha que nasceu exatamente no instante do corte é da janela),
+o teto de lotes é 200 e o que sobrou é dito na mensagem.
+
+**Os portões, medidos nesta rodada.** Typecheck limpo (API, painel e o entrypoint serverless). A suíte da API
+inteira rodou verde, sem falha e sem teste pulado; a contagem exata de arquivos e casos é a da árvore final,
+medida depois da T6.6. A guarda de caracteres conferiu os arquivos tocados: **0 caractere de alfabeto não
+latino, sem BOM, com LF**.

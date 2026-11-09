@@ -8,6 +8,7 @@ import { NotificationPriority } from "@prisma/client";
 import { prisma } from "../../lib/prisma";
 import { diaNoFuso, meiaNoiteNoFuso, ontemNoFuso } from "../../lib/time";
 import { moeda, notificarDetalhado, varreduraGlobal } from "../notifications/notifications.service";
+import { expurgarAuditoria, janelaDeRetencao } from "../audit/retencao-auditoria";
 
 export interface ResultadoExecucao {
   /** Frase curta (<= 400 caracteres) gravada em cron_jobs.last_message. */
@@ -152,6 +153,29 @@ async function rotinaRelatorioDiario(agora: Date): Promise<ResultadoExecucao> {
   };
 }
 
+// ---- 4. Expurgo da trilha de auditoria (T6.5) ----
+// A única rotina que **apaga** alguma coisa do banco. A janela vem do ambiente
+// (AUDIT_RETENTION_DIAS) e o padrão é zero — desligado. A descrição da linha
+// diz qual é a janela configurada agora, para que ninguém leia "retention" na
+// tela e imagine que a trilha está sendo podada.
+async function rotinaExpurgoAuditoria(agora: Date): Promise<ResultadoExecucao> {
+  const r = await expurgarAuditoria(agora);
+  const janela = janelaDeRetencao();
+  return {
+    mensagem: r.ligado
+      ? `${r.apagadas} ${r.apagadas === 1 ? "linha apagada" : "linhas apagadas"} da trilha de auditoria (janela de ${janela} ${janela === 1 ? "dia" : "dias"})`
+      : "Retenção desligada: nenhuma linha da trilha de auditoria foi apagada.",
+    detalhes: {
+      ligado: r.ligado,
+      dias: r.dias,
+      apagadas: r.apagadas,
+      corte: r.corte,
+      lotes: r.lotes,
+      motivo: r.motivo,
+    },
+  };
+}
+
 export const JOBS: JobDefinicao[] = [
   {
     slug: "contas-vencidas",
@@ -173,6 +197,14 @@ export const JOBS: JobDefinicao[] = [
     descricao: "Fechamento de ontem (vendas confirmadas, total e clientes novos) para quem ligou o relatório nas preferências de notificação.",
     agenda: "0 8 * * *",
     handler: rotinaRelatorioDiario,
+  },
+  {
+    slug: "expurgo-de-auditoria",
+    nome: "Expurgo da auditoria",
+    descricao:
+      "Apaga as linhas da trilha de auditoria mais velhas que a janela configurada em AUDIT_RETENTION_DIAS. Com a janela em zero (padrão), nada é apagado. O corte em lote e o número do que caiu ficam na última execução.",
+    agenda: "0 3 * * *",
+    handler: rotinaExpurgoAuditoria,
   },
 ];
 

@@ -1,5 +1,30 @@
 ## [Não lançado]
 
+### A trilha de auditoria tem janela própria, e o que ela apaga é contado (2026-11-08)
+
+- **O que faltava.** A trilha de auditoria é dado pessoal: cada linha diz quem praticou a ação, de onde a
+  pessoa veio e o que mudou. Conservá-la para sempre é guarda sem fim, e a LGPD (art. 16, II e III) pede o
+  contrário — conservar só pelo tempo necessário e eliminar o que passou do prazo. O produto não tinha
+  nenhuma forma de dizer "quanto tempo guardamos".
+- **O que entrou.** `AUDIT_RETENTION_DIAS` (padrão **zero**, ou seja, desligado) e a rotina
+  `expurgo-de-auditoria`, que roda às 03:00 e também pelo botão "Executar agora" em `/app/rotinas`. O corte
+  é por **lotes de mil linhas**, com teto de duzentas lotes por corrida — o que sobrou fica para a corrida do
+  dia seguinte, e a mensagem da última execução diz o número exato do que caiu. O expurgo é a única rotina
+  que apaga alguma coisa, e o registro do corte só é gravado **quando apaga**: uma corrida que não achou nada
+  não escreve linha, senão a trilha enche de registro de que nada aconteceu. A linha do expurgo é de
+  plataforma (`ops.audit_purge`), porque a janela vale para a instalação inteira.
+- **Duas coisas declaradas, não escondidas.** A retenção apaga também as linhas que **provam o exercício de
+  um direito da LGPD** (`lgpd.export`, `lgpd.anonymize`, `lgpd.delete`) — a trilha é a prova, e quem
+  precisar guardar essa prova por mais tempo escolhe um prazo maior. E a janela é da plataforma, não de cada
+  empresa: uma empresa não escolhe por quantos dias fica guardada a prova de que ela mesma mexeu em dado de
+  alguém.
+- **Prova.** `apps/api/test/retencao-de-auditoria.test.ts` (4 casos) mede a rotina no catálogo (agenda
+  legível "todos os dias às 03:00", executor conhecido), o desligado que **não apaga e não deixa pegada**,
+  a janela de 30 dias que apaga só o que é velho e conta, e o fato de o expurgo mexer só na trilha — conta e
+  aviso com data antiga ficam. Decisão em `docs/adr/0026-retencao-configuravel-da-trilha-de-auditoria.md`;
+  operação em `docs/PRODUCAO.md`. Suíte da API inteira: **58 arquivos / 511 casos**, exit 0, zero falha e
+  zero skip, contra o banco de prova.
+
 ### O README voltou a ser o README do projeto: fatos conferidos na árvore, sem número inventado (2026-11-08)
 
 - **O que aconteceu.** A versão do README que o dono publicou no `origin/main` (commit `16d63ef`, integrado em
