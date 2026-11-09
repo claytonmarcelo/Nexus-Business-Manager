@@ -4,6 +4,26 @@ Lista de tudo que foi decidido **fora** do escopo da versão 1.0, com o motivo e
 Nada aqui é promessa de data: é registro de que a lacuna é conhecida, escolhida e rastreável.
 Ordem de chegada, mais novo primeiro.
 
+## Dependências
+
+- **N86 — as oito vulnerabilidades que o `npm audit` mediu na árvore.** `npm audit --audit-level=high` devolve
+  **exit 1** com **8 vulnerabilidades** (1 baixa, 2 moderadas, 5 altas, 0 críticas). Nenhuma foi introduzida
+  pela F7 — o diff de manifestos no intervalo da fase é vazio. A conta, com o caminho do conserto:
+  - `zod` **3.25.76** (alta) — só o **4.6.6+** corrige, e isso é **quebra de major**: decisão de produto, não
+    um `npm update`.
+  - `prisma` e `@prisma/config` **6.19.3** (alta) — o aviso cobre 6.13.0-dev.1 a 7.10.0; corrigir é **quebra de
+    major** da versão 6 para a 7.
+  - `fastify` **5.12.5** (baixa) — corrige em 5.12.6+, **sem** quebra de major.
+  - `nodemailer` **10.1.0** (moderada) — corrige em 10.1.4+, **sem** quebra de major.
+  - `follow-redirects` **1.16.1** (alta) — transitivo do `axios` do painel; o `axios ^1.7.7` já está declarado
+    no `package.json`, então subir dentro do range não quebra major. É o único dos oito que corre no **caminho
+    do navegador**.
+  - `deepmerge-ts` **7.1.5** (alta) e `fast-uri` **4.2.2** (moderada) — transitivos; sobem com o `prisma` e com o
+    `fastify`, respectivamente.
+  O `npm audit fix --force` está **proibido** nesta casa, e instalar dependência **pede aval do dono**; por
+  isso o item fica aqui, registrado e rastreável, em vez de mexido em silêncio. A fase F8 (CI, dependabot e
+  `npm audit` no pipeline) é o que transforma este número medido em alarme diário.
+
 ## Operação e hospedagem
 
 - **Store compartilhado do limitador de taxa.** Hoje o balde é por processo (ADR 0025, `docs/PRODUCAO.md`

@@ -1,5 +1,35 @@
 ## [Não lançado]
 
+### A F7 fecha, e a árvore inteira é conferida arquivo por arquivo (2026-11-08)
+
+- **O que faltava.** A guarda de caracteres olhava **os arquivos tocados na rodada** — rodada contra rodada,
+  um arquivo esquecido passa. E arquivo sem LF final não faz nenhuma suíte falhar: a política escrita no
+  repositório (`.editorconfig` com `insert_final_newline`, `.gitattributes` com `text eol=lf`) e a árvore real
+  discordavam, e a árvore real é a que o Git entrega ao clone.
+- **O que entrou.** A medição de hoje é sobre os **579 arquivos rastreados** (448 de texto, 131 binários),
+  lidos um a um: **0 com BOM, 0 com CRLF, 0 caractere de alfabeto não latino** e **5 arquivos sem LF final** —
+  `api/[...path].ts`, `deploy/env-vercel.cjs`, `docs/ROADMAP.md`,
+  `docs/adr/0025-anonimizar-preserva-assinatura-excluir-apaga-linha.md` e `tsconfig.serverless.json`. Todos
+  pré-existentes, nenhum tocado pela F7. O LF final foi acrescentado nos cinco: **um byte por arquivo**, sem
+  tocar em lógica. Com isso a guarda da árvore inteira voltou a zero em todas as quatro medidas.
+- **O que foi medido e não escondido.** `npm audit --audit-level=high` devolve **exit 1** e **8
+  vulnerabilidades** (1 baixa, 2 moderadas, 5 altas, 0 críticas) — **nenhuma introduzida pela F7**: o diff de
+  manifestos no intervalo da fase é vazio. A conta item a item, com o caminho do conserto, está no achado
+  **N86** de `docs/AUDITORIA.md` e na seção "Dependências" de `docs/ROADMAP.md`. `zod` (alta) e
+  `prisma`/`@prisma/config` (alta) só saem com **quebra de major**; `fastify` (baixa) e `nodemailer`
+  (moderada) saem **sem** quebra de major; `follow-redirects` (alta, transitivo do `axios` do painel) sai
+  subindo o `axios` dentro do range já declarado. O `npm audit fix --force` está proibido nesta casa e toda
+  instalação de dependência pede aval do dono, então o conserto **fica com ele** — a fase F8 (CI, dependabot e
+  `npm audit` no pipeline) é o que transforma este número medido em alarme diário.
+- **Prova.** Typecheck limpo nas três pontas (API, painel e o entrypoint serverless); build com exit 0 e sem
+  aviso de chunk (`index` 355,56 kB / 121,90 kB gzip, maior pedaço de rota 286,34 kB / 83,53 kB gzip, CSS
+  398,54 kB / 61,29 kB gzip); suíte da API **58 arquivos / 511 casos** em 340,39 s e suíte do painel **24
+  arquivos / 191 casos** em 11,78 s, exit 0 nos dois, zero falha e zero skip, contra o banco de prova; links da
+  documentação **26 relativos, 0 quebrado, 0 marcador**. Nada foi pulado nem enfraquecido.
+- **O que fica com o dono.** Preencher o campo de e-mail do `SECURITY.md` e ligar a opção "Private vulnerability
+  reporting" no GitHub; decidir se o `zod` e o `prisma` sobem de major antes ou depois da publicação; e
+  entregar o `.env.tidb.local` com a conexão do cluster TiDB, que é o que destrava a publicação.
+
 ### O canal de relato e o texto legal que ainda não pode ir ao site (2026-11-08)
 
 - **O que faltava.** Um repositório sem `SECURITY.md` não tem onde a pessoa relatar uma falha de segurança,

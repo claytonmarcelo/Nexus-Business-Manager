@@ -3015,3 +3015,80 @@ verdes**. Verificação de links da documentação: **26 links relativos, 0 queb
 caracteres nos arquivos tocados: **0 caractere de alfabeto não latino, sem BOM, com LF**. Nenhum teste foi
 pulado nem enfraquecido.
 
+## Adenda da execução — o encerramento da F7: a árvore inteira conforms, e a dependência que ainda pesa (2026-11-08)
+
+**O que a F7 prometia.** Cinco itens, e os cinco estão fechados: o aceite registrado com versão, data, IP e
+usuário (T6.2); o escape das três mensagens de e-mail (T6.1); o direito de acesso com o JSON do titular
+(T6.3); a eliminação com anonimização e exclusão (T6.4); a retenção configurável da trilha (T6.5); e o canal
+privado de relato com o texto legal marcado (T6.6). O que faltava **para fechar a fase** era a medição da
+árvore inteira, não mais uma funcionalidade: um arquivo pode estar sem LF final e nenhuma suíte acusar isso.
+
+### A guarda da árvore inteira, e o que ela encontrou
+
+A guarda de caracteres até aqui olhava **os arquivos tocados na rodada**. Rodada contra rodada, um arquivo
+esquecido passa. A medição de hoje é sobre os **579 arquivos rastreados** — 448 de texto e 131 binários, lidos
+um a um: **0 com BOM**, **0 com CRLF**, **0 caractere de alfabeto não latino** e **5 arquivos sem LF final**.
+
+Os cinco são `api/[...path].ts`, `deploy/env-vercel.cjs`, `docs/ROADMAP.md`,
+`docs/adr/0025-anonimizar-preserva-assinatura-excluir-apaga-linha.md` e `tsconfig.serverless.json`. Todos
+**pré-existentes** — nenhum foi tocado pela F7, e nenhum é culpa dela. Mas violam o **`.editorconfig`** da
+própria casa (`insert_final_newline = true`) e o **`.gitattributes`** da própria casa (`text eol=lf`): a regra
+escrita no repositório e a árvore real discordavam, e a árvore real é a que o Git entrega ao clone. O LF final
+foi acrescentado nos cinco — uma mudança de um byte por arquivo, sem tocar em lógica.
+
+Por que isso importa para produção: um arquivo sem LF final é um arquivo que o próximo `git diff` mostra como
+"mudou" só porque o editor acrescentou a quebra de linha, e é uma divergência silenciosa entre a política do
+repositório e o que o clone recebe. A correção é pequena; o que ela custou foi uma medição.
+
+### N86 — aberto: oito vulnerabilidades de dependência, nenhuma introduzida pela F7
+
+**A medição.** `npm audit --audit-level=high` devolve **exit 1** e **8 vulnerabilidades** na árvore: 1 baixa,
+2 moderadas, 5 altas, 0 críticas. O diff de manifestos entre o começo da F7 e o fim dela — `git diff --stat
+e29a1a9 HEAD -- '*package.json' '*package-lock.json'` — é **vazio**: a F7 não instalou, não removeu e não
+versionou nada. As oito são **herança da casa**, não produto desta fase.
+
+**A conta, item a item, com o caminho do conserto:**
+
+| Pacote | Versão na árvore | Gravidade | Quem traz | Conserto |
+|---|---|---|---|---|
+| `zod` | 3.25.76 | alta | direto, `@nexus/api` | **quebra de major** — só o 4.6.6+ corrige (estouro de memória ao validar coleção grande e limitada) |
+| `prisma` | 6.19.3 | alta | direto, `@nexus/api` | **quebra de major** — o aviso cobre 6.13.0-dev.1 a 7.10.0 |
+| `@prisma/config` | 6.19.3 | alta | direto, `@nexus/api` | vem com o `prisma` |
+| `deepmerge-ts` | 7.1.5 | alta | transitivo do `@prisma/config` | sobe junto com o `prisma` |
+| `follow-redirects` | 1.16.1 | alta | transitivo do `axios` do painel | subir o `axios` dentro do range já declarado |
+| `fastify` | 5.12.5 | baixa | direto, `@nexus/api` | 5.12.6+ — **sem** quebra de major |
+| `nodemailer` | 10.1.0 | moderada | direto, `@nexus/api` | 10.1.4+ — **sem** quebra de major |
+| `fast-uri` | 4.2.2 | moderada | transitivo do `ajv`/`fast-json-stringify` | sobe junto com o `fastify` |
+
+**Por que ficou registrado e não consertado.** Três motivos, todos honestos. O `npm audit fix --force` está
+**proibido** nesta casa, e sem ele o `zod` e o `prisma` não saem do lugar — os dois exigem **quebra de major**,
+que é decisão de produto, não um `npm update`. E toda instalação de dependência nova ou atualizada **pede aval
+do dono**, que é uma regra permanente deste projeto. Um `package-lock.json` mexido por conta própria seria
+exatamente o tipo de mudança silenciosa que o dono vetou. O `follow-redirects` — o mais grave dos oito, e o
+único que corre no **caminho do navegador**, porque o `axios` do painel segue redirecionamento — é o mais
+barato de fechar: `axios ^1.7.7` já está declarado no `package.json` do painel, e subir dentro do range não
+quebra major.
+
+O registro fica em `docs/ROADMAP.md` (seção nova, "Dependências") e na linha F8 de `docs/STATUS-AJUSTES.md`,
+com a conta item a item. A F8 — CI, dependabot, `npm audit` no pipeline — é a fase que transforma este número
+medido em **alarme diário**: é lá que a dependência para de ser um dado de arquivo e vira um portão que falha
+sozinho.
+
+### O que a F7 fecha e o que continua com o dono
+
+A F7 fecha. A licença continua **só relatada**, conforme a decisão D10 do dono: o `package.json` declara
+`UNLICENSED` e o `SECURITY.md` escreve isso por extenso. **Duas ações ficam com o dono** e nenhuma delas é
+código: preencher o campo de e-mail do `SECURITY.md` e ligar a opção "Private vulnerability reporting" nas
+configurações do repositório no GitHub. **Uma decisão de dependência fica com o dono**: se o `zod` e o
+`prisma` sobem de major agora, antes da publicação, ou depois dela.
+
+### Os portões do encerramento, medidos agora
+
+Typecheck limpo nas três pontas (API, painel e o entrypoint serverless). Build com **exit 0** e **sem aviso de
+chunk**: `index` em 355,56 kB / 121,90 kB gzip, maior pedaço de rota (Agenda) em 286,34 kB / 83,53 kB gzip, CSS
+único em 398,54 kB / 61,29 kB gzip. Suíte da API inteira: **58 arquivos / 511 casos**, exit 0, zero falha e
+zero skip, **340,39 s**, contra `nexusbusinessmanager_teste` (D6). Suíte do painel: **24 arquivos / 191
+casos**, exit 0, zero falha e zero skip, **11,78 s**. Links da documentação: **26 relativos, 0 quebrado, 0
+marcador**. Guarda da árvore inteira: **579 rastreados, 0 BOM, 0 CRLF, 0 não latino, 0 sem LF final**.
+`npm audit --audit-level=high`: **exit 1, 8 vulnerabilidades** (N86), nenhuma introduzida pela F7.
+
