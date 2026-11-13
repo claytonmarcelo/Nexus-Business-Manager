@@ -45,6 +45,6 @@
     "docker:provar-backup": "node tools/verify-backup.cjs"
   },
   "devDependencies": {
-    "puppeteer-core": "^25.13.0"
+    "puppeteer-core": "^25.16.0"
   }
 }
