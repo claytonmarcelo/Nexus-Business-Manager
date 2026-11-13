@@ -22,7 +22,7 @@
     "axios": "^1.7.7",
     "jquery": "^3.7.1",
     "react": "^18.3.1",
-    "react-dom": "^18.3.1",
+    "react-dom": "^19.3.1",
     "react-router-dom": "^7.18.4",
     "sweetalert2": "^11.26.0",
     "toastr": "^2.1.4"
@@ -35,7 +35,7 @@
     "@types/jquery": "^3.5.32",
     "@types/node": "^22.10.0",
     "@types/react": "^18.3.12",
-    "@types/react-dom": "^18.3.1",
+    "@types/react-dom": "^19.3.0",
     "@types/toastr": "^2.1.43",
     "@vitejs/plugin-react": "^5.2.0",
     "jsdom": "^27.4.0",
