@@ -26,9 +26,10 @@
 
 <p align="center">
   <sub>Estágio atual: módulos implementados e testados localmente, com autenticação reforçada,
-  isolamento multiempresa, recursos de LGPD, Docker e backup. Os portões da F8 estão em validação;
-  publicação e prontidão global ainda não foram comprovadas. A tabela <a href="#módulos">Módulos</a>
-  distingue funcionalidades implementadas, integrações ausentes e decisões pendentes.</sub>
+  isolamento multiempresa, recursos de LGPD, Docker e backup. Os portões da F8 estão medidos na
+  máquina; a execução remota do CI, a publicação e a prontidão global ainda não foram comprovadas.
+  A tabela <a href="#módulos">Módulos</a> distingue funcionalidades implementadas, integrações
+  ausentes e decisões pendentes.</sub>
 </p>
 
 ---
@@ -584,7 +585,7 @@ nexusbusinessmanager/
 │   ├── ROADMAP.md           → o que falta e a condição de entrada de cada item
 │   └── PRODUCAO.md          → o roteiro de publicação, backup e restauração
 ├── tools/                   → 61 arquivos versionáveis: pilha de prova, capturas e portões
-├── .github/                 → validações de CI e dependabot; execução remota ainda pendente
+├── .github/                 → workflow de portões e Dependabot versionados; execução remota ainda pendente
 ├── Dockerfile.api / Dockerfile.web / docker-compose.yml → a pilha em container
 ├── vercel.json / tsconfig.serverless.json               → a publicação na mesma origem
 ├── SECURITY.md              → canal de relato de falha e os riscos aceitos por escrito
@@ -1007,6 +1008,14 @@ workspace em vez do wrapper `.cmd` — o wrapper herda as restrições do `cmd.e
 node node_modules/vitest/vitest.mjs run --root apps/api
 ```
 
+Os portões rodam também no GitHub, a cada `push` na `main` e a cada `pull_request` para `main`:
+`.github/workflows/portoes.yml` sobe um MySQL efêmero sem senha, gera os segredos do teste na máquina
+do runner, aplica as migrations do banco de prova e roda tipos, build, as duas suítes, os links, o
+lint, a cobertura e o audit. O Dependabot abre pull request semanal de patch e minor, e major vai
+separado, porque major é decisão de produto. A execução remota e a marcação da verificação como
+obrigatória na proteção de branch são `NÃO VERIFICADAS` nesta máquina, onde o `gh` não está
+instalado; por isso este README não afirma bloqueio de merge.
+
 ---
 
 ## Demonstração
@@ -1066,11 +1075,15 @@ Para a pilha de prova — que é outra coisa, e nunca toca a porta do produto �
   a lacuna e é provado em banco vazio
 - [x] **C2 — Preparação do caminho de publicação** — entrypoint serverless e configuração para painel
   e API na mesma origem; não equivale a serviço publicado e validado
+- [x] **F8 — Qualidade como portão** — lint da casa, cobertura por arquivo com linha de base,
+  `npm audit` que não piora, suíte em processo único e workflow de CI com Dependabot versionados;
+  medido na máquina, com o portão de cobertura fechando igual à base
 
 ### A seguir
 
-- [ ] **F8 — Qualidade como portão** — concluir validação de CI, Dependabot, lint, cobertura e audit;
-  confirmar os checks obrigatórios no GitHub antes de afirmar bloqueio de merge
+- [ ] **F8 no GitHub — execução remota e checks obrigatórios** — rodar o workflow no repositório e
+  marcar a verificação como obrigatória na proteção de branch; a execução remota é `NÃO VERIFICADA`
+  porque o `gh` não está instalado nesta máquina
 - [ ] **Publicação e prontidão global** — configurar TiDB/Vercel, validar fluxos no ar e resolver ou
   aceitar explicitamente os achados de moeda, fuso, saúde da API e operação distribuída
 - [ ] **F9 — Revisão de prontidão e pacote da versão**

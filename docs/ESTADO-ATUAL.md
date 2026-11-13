@@ -15,7 +15,7 @@ pendente na F9. O que não pôde ser comprovado está marcado como `NÃO VERIFIC
 | Ferramentas | 61 arquivos versionáveis em `tools/`; entradas locais ignoradas não integram essa contagem |
 | Testes | API 60 arquivos / 553 casos e painel 24 arquivos / 191 casos, todos verdes, zero falha e zero skip, contra o banco de prova (`nexusbusinessmanager_teste`, decisão D6) |
 | Cobertura | 88,59% de instruções, 76,44% de ramificações, 88,55% de funções e 91,32% de linhas, em 100 arquivos de produção; igual à base versionada em `tools/cobertura-base.json` |
-| Qualidade F8 | Lint, comparação de audit e cobertura, postinstall e arquivos de CI/Dependabot implementados localmente; fase ainda em validação |
+| Qualidade F8 | Lint, comparação de audit e cobertura, postinstall e arquivos de CI/Dependabot implementados e medidos na máquina; a execução remota é a linha seguinte |
 | Execução remota | CI, Dependabot e checks obrigatórios no GitHub: `NÃO VERIFICADO`; YAML não configura proteção de branch |
 | Produção global | `NÃO VERIFICADO`: publicação TiDB/Vercel, fluxo autenticado com persistência e operação real ainda não comprovados |
 | Auditoria | N87 a N100 em `docs/AUDITORIA.md` e `docs/ROADMAP.md`; o N97 e o N100 foram corrigidos nesta rodada; registro não significa correção nem adiamento aprovado |
@@ -258,7 +258,9 @@ Arquivos da árvore versionada nesta rodada, medidos com
 `git ls-files --cached --others --exclude-standard` — ou seja, o que está no commit de
 agora mais os arquivos novos deste módulo, que ainda não aparecem no `git ls-files` puro:
 **506**. Código: 93 arquivos `.ts` em `apps/api/src` e 112 `.ts`/`.tsx` em `apps/web/src`.
-Não há `.github/` — ou seja, **nenhum CI versionado** (a pastinha é trabalho da T7/F8).
+Naquela rodada de 2026-10-13 não havia `.github/` — ou seja, **nenhum CI versionado** (a pastinha era
+trabalho da T7/F8). Hoje a pasta existe versionada, com o workflow de portões e o Dependabot medidos na
+máquina; a execução remota e os checks obrigatórios continuam `NÃO VERIFICADOS` (quadro medido acima).
 
 ---
 

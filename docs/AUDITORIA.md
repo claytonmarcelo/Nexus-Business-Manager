@@ -3308,9 +3308,10 @@ Nenhum outro achado foi corrigido nesta rodada, e a escalada continua valendo pa
 Na leitura desta revisão, `tools/verifica-cobertura.cjs:15` ainda escreve "a mesma philosophy do portão"
 no meio de um comentário em português; essa parte não foi dada como removida. Em
 `apps/api/src/plugins/security.ts:27-31`, o comentário promete o store compartilhado do limitador "na
-Fase 8 (Docker/compose introduz o Redis no stack)". A **F8 está em andamento**, com CI, dependabot e
-portões de qualidade em trabalho, não fechada. O `docker-compose.yml` não declara Redis e o store está
-no `docs/ROADMAP.md` como pós-1.0; o comentário não corresponde ao escopo atual dessa fase.
+Fase 8 (Docker/compose introduz o Redis no stack)". A **F8 foi encerrada na máquina**, com CI,
+dependabot e portões de qualidade medidos, mas a execução remota e o aceite continuam fora do alcance
+local. O `docker-compose.yml` não declara Redis e o store está no `docs/ROADMAP.md` como pós-1.0; o
+comentário não corresponde ao escopo atual dessa fase.
 
 ### N99 — BAIXA, a avaliar: duplicação de assets sem falha funcional comprovada
 
@@ -3379,17 +3380,18 @@ O registro histórico de N86, acima desta adenda, foi preservado. Ser transitivo
 HTTP de Node (`node_modules/axios/lib/adapters/http.js:12`). A inclusão efetiva no bundle não foi
 verificada nesta revisão; a alegação anterior de execução no navegador não se sustenta nessa evidência.
 
-O YAML local em trabalho (`.github/workflows/portoes.yml:23-27`) declara eventos `push` na `main` e
+O YAML versionado (`.github/workflows/portoes.yml:23-27`) declara eventos `push` na `main` e
 `pull_request` para `main`, não execução diária. `.github/dependabot.yml` declara frequência **semanal**.
 A existência desses arquivos não prova execução remota bem-sucedida nem proteção de branch/checks
-obrigatórios configurados no GitHub. A F8 continua em andamento, com execução remota e aceite pendentes;
-não se deve descrever o conjunto como alarme diário nem como bloqueio de merge já comprovado.
+obrigatórios configurados no GitHub. A F8 foi encerrada na máquina, com execução remota e aceite fora do
+alcance local; não se deve descrever o conjunto como alarme diário nem como bloqueio de merge já
+comprovado.
 
 ### Sobre os caracteres que o dono mandou eliminar
 
 A captura anexada ao pedido aponta entradas rotuladas com caracteres de alfabeto não latino no painel de
 anexos da IDE. A medição fechou: **0 caracteres não latinos** nos 579 arquivos rastreados e nos 1404
-arquivos de texto da árvore, em nome e em conteúdo. Aquelas entradas não são arquivo deste projeto — são
+arquivos de texto da árvore medidos naquela rodada, em nome e em conteúdo; a varredura repetida depois das correções fecha o mesmo zero em **588 arquivos rastreados**, dos quais **457 são de texto**, com 0 BOM e 0 CRLF. Aquelas entradas não são arquivo deste projeto — são
 o rótulo localizado que a IDE dá a texto colado, gravado fora do repositório com nome UUID em
 `.qoder/tmp/.../attachments/`. O idioma da interface está em `en` e o enum só oferece `zh` e `en`, de modo
 que o rótulo não vem do idioma escolhido. Nada foi apagado: o anexo é do dono, mora fora da árvore, e a
@@ -3400,7 +3402,8 @@ regra da casa proíbe apagar arquivo que não seja nosso. O que cabe aqui é o r
 Esta revisão corrige documentação, não implementa soluções para N87 a N99. N87 a N90 exigem revisão
 dos contratos de moeda/data e testes de apresentação; N91 exige prova da sonda na requisição completa;
 N92 exige orçamento de conexões e medição. Receber `.env.tidb.local` não resolve esses achados nem
-certifica prontidão para produção. A F8 ainda depende de execução remota e aceite.
+certifica prontidão para produção. A F8 foi encerrada na máquina; o que ainda depende de execução remota e
+aceite é o item do GitHub, que fica com o dono.
 
 N93 a N99 incluem ausência de referência estática, lacuna de produto, configuração de testes e
 observações de organização; não são todos inócuos nem defeitos funcionais comprovados. Prioridade,

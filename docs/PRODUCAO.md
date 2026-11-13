@@ -593,13 +593,14 @@ ninguém nem trocar segredo no ar.
 
 ## 13. O que existe localmente e o que ainda falta validar
 
-- **F8/T7 em andamento, não ausente nem concluída.** O pipeline local
+- **F8/T7 encerrada na máquina, com a execução remota fora do alcance local.** O pipeline
   `.github/workflows/portoes.yml` já declara instalação, migrations, tipos, build, suítes, links, lint,
   cobertura e audit; `tools/verifica-cobertura.cjs` e `tools/verifica-audit.cjs` existem, assim como o
-  `postinstall` da raiz que chama `prisma:generate`. São artefatos locais em trabalho, não prova de
-  execução remota: faltam essa execução e o aceite da F8. O YAML dispara em `push` na `main` e
-  `pull_request` para `main`; o Dependabot em `.github/dependabot.yml` é **semanal**, não alarme diário.
-  A existência do workflow não comprova proteção de branch nem checks obrigatórios no GitHub.
+  `postinstall` da raiz que chama `prisma:generate`. Os portões foram medidos na máquina e passaram,
+  mas esses artefatos versionados não são prova de execução remota: faltam essa execução e o aceite da F8.
+  O YAML dispara em `push` na `main` e `pull_request` para `main`; o Dependabot em
+  `.github/dependabot.yml` é **semanal**, não alarme diário. A existência do workflow não comprova
+  proteção de branch nem checks obrigatórios no GitHub.
 - **Baseline de migrations C1 já entregue (N54).**
   `apps/api/prisma/migrations/20261015000000_baseline/migration.sql` existe; a entrega e as provas de
   banco vazio estão registradas em `docs/STATUS-AJUSTES.md`, fase C1 (2026-10-15).

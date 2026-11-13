@@ -77,8 +77,8 @@ backlog pós-1.0 já aprovado; implementar e validar soluções exige trabalho a
 - **N98 — redação de cobertura e promessa de Redis.** Na leitura desta revisão,
   `tools/verifica-cobertura.cjs:15` ainda contém "philosophy"; não se marcou essa parte como removida.
   `plugins/security.ts:27-31` promete Redis "na Fase 8 (Docker/compose introduz o Redis no stack)".
-  A **F8 está em andamento**, não fechada; CI/dependabot/portões estão em trabalho, o compose não tem
-  Redis e o store compartilhado está no backlog pós-1.0.
+  A **F8 foi encerrada na máquina** (CI, Dependabot e portões medidos, com o portão de cobertura
+  fechando igual à base); o compose não tem Redis e o store compartilhado está no backlog pós-1.0.
 - **N99 — duplicação de assets sem falha funcional comprovada.** `apps/web/public/favicon.png` é
   byte-idêntico a `favicon-48.png`, sem link explícito no `index.html`; ser público permite acesso
   direto ou externo, portanto a busca local não prova desuso. As logos em
@@ -105,10 +105,10 @@ backlog pós-1.0 já aprovado; implementar e validar soluções exige trabalho a
     `fastify`, respectivamente.
   O `npm audit fix --force` está **proibido** nesta casa, e instalar dependência **pede aval do dono**; por
   isso o item fica aqui, registrado e rastreável, sem decisão implícita de adiá-lo para depois da 1.0.
-  A **F8 segue em andamento**: o YAML local `.github/workflows/portoes.yml` declara `push` na `main` e
-  `pull_request` para `main`; `.github/dependabot.yml` declara frequência **semanal**, não diária.
-  Faltam execução remota e aceite; esses arquivos não comprovam proteção de branch nem checks
-  obrigatórios para merge. A medição de vulnerabilidades acima é histórica, não um novo audit.
+  A **F8 foi encerrada localmente**: o YAML versionado `.github/workflows/portoes.yml` declara `push` na
+  `main` e `pull_request` para `main`; `.github/dependabot.yml` declara frequência **semanal**, não
+  diária. Faltam a execução remota e o aceite; esses arquivos não comprovam proteção de branch nem
+  checks obrigatórios para merge. A medição de vulnerabilidades acima é histórica, não um novo audit.
 
 ## Backlog com decisões e pendências operacionais já registradas
 

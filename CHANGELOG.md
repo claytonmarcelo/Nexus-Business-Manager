@@ -1,5 +1,31 @@
 ## [Não lançado]
 
+### O README passa a contar o CI de verdade, e os documentos param de dizer que a F8 está em andamento (2026-11-13)
+
+- **O que faltava.** O README da casa não falava do pipeline: uma busca por `workflow`, `GitHub Actions`,
+  `actions/checkout`, `branch` e `protec` não achava uma linha. E a busca por "F8" nos documentos achou
+  **8 pontos**, dos quais 4 ainda diziam que a fase estava em andamento, 1 afirmava que não existia
+  `.github/` — verdade em 2026-10-13, falsa desde o commit que versionou o workflow e o Dependabot — e 1
+  dizia que a fase ainda estava em validação. O README também afirmava que os portões da F8 "estavam em
+  validação", sem dizer o que eles medem nem o que continua fora do alcance da máquina.
+- **O que entrou.** O README ganhou, ao fim da seção de testes, o parágrafo que descreve o workflow:
+  MySQL efêmero sem senha, segredos gerados no runner, migrations do banco de prova, tipos, build, as duas
+  suítes, links, lint, cobertura e audit. No Roadmap, a F8 entra como concluída no que foi medido, e o
+  que falta vira item próprio — "F8 no GitHub — execução remota e checks obrigatórios" —, com a execução
+  remota marcada como `NÃO VERIFICADA` porque o `gh` não está instalado nesta máquina. `docs/ROADMAP.md`,
+  `docs/PRODUCAO.md`, `docs/AUDITORIA.md` e `docs/ESTADO-ATUAL.md` passaram a falar da mesma forma: F8
+  encerrada na máquina, execução remota fora do alcance local.
+- **Antes e depois.** O item do Roadmap que dizia "concluir validação de CI, Dependabot, lint, cobertura e
+  audit" foi trocado pelo item do GitHub, e o texto da auditoria sobre o YAML deixou de chamá-lo de "arquivo
+  local em trabalho" e passou a chamá-lo de versionado. Nenhuma linha de documentação afirma bloqueio de
+  merge, alarme diário ou prontidão para produção.
+- **Medido agora.** `node tools/verifica-links-doc.cjs` — **50 links relativos**, 0 quebrado, 0 marcador;
+  varredura de codificação na árvore rastreada — **588 arquivos** (457 de texto, 131 binários), **0 BOM**,
+  **0 CRLF**, **0 caractere de alfabeto não latino**, **0 sem LF final**; `git diff --check` sem erro.
+- **O que não está fechado.** A execução remota do CI e do Dependabot continua **NÃO VERIFICADA** — o `gh`
+  não está instalado nesta máquina —, e a proteção de branch com verificação obrigatória é passo do dono.
+  Publicação TiDB/Vercel, galeria (N13/N82) e prontidão global seguem pendentes.
+
 ### A suíte em processo único e o portão de cobertura que não oscila (2026-11-13)
 
 - **O que faltava.** A configuração da suíte usava `poolOptions.forks.singleFork`, opção removida no
