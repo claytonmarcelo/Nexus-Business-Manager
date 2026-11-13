@@ -97,7 +97,6 @@ describe("A trilha de auditoria não guarda senha, token nem corpo sensível (T6
       await prisma.legalDocument.deleteMany({ where: { kind: "LGPD" } });
     }
     await cleanup(trilha);
-    await app.close();
   });
 
   it("a falha de senha guarda o endereço da pessoa e não a senha", async () => {

@@ -142,7 +142,6 @@ afterAll(async () => {
   // os tokens caem por cascata junto do usuário; sobrar linha é defeito do fixture.
   expect(await prisma.recoveryCode.count()).toBeLessThanOrEqual(codigosAntes);
   expect(await prisma.emailVerificationToken.count()).toBeLessThanOrEqual(tokensAntes);
-  await app.close();
 });
 
 describe("Segundo fator (D3)", () => {

@@ -72,7 +72,6 @@ describe("CMS da página pública", () => {
       data: { content: null, published: false },
     });
     await cleanup(created);
-    await app.close();
   });
 
   it("leitura pública é anônima e não vaza o token de pulso", async () => {

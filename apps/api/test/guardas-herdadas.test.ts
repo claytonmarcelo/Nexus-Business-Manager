@@ -216,7 +216,6 @@ afterAll(async () => {
   // Regra 4 do contrato: a prova limpa o que escreveu, e mostra a contagem.
   expect(await prisma.notification.count()).toBe(avisosAntes);
   expect(await prisma.refreshToken.count({ where: { revokedAt: null } })).toBeLessThanOrEqual(tokensAntes);
-  await app.close();
 });
 
 describe("Guardas de papel sob o regime da F4", () => {
@@ -417,7 +416,7 @@ describe("Sessão, empresa ativa e recuperação sob o regime da F4", () => {
   it("aviso de negócio não atravessa empresa", async () => {
     const a = registrou(await makeAccount("OWNER"));
     const b = registrou(await makeAccount("OWNER"));
-    const tokenA = await sessaoDaContaSemEtapa(a);
+    await sessaoDaContaSemEtapa(a);
     const tokenB = await sessaoDaContaSemEtapa(b);
 
     const avisoDeA = await prisma.notification.create({
@@ -445,7 +444,6 @@ describe("Sessão, empresa ativa e recuperação sob o regime da F4", () => {
   it("o estoque continua atômico: duas vendas da última unidade, uma passa", async () => {
     const dono = registrou(await makeAccount("OWNER"));
     const accessToken = await sessaoDaContaSemEtapa(dono);
-    const authHeader = accessToken;
 
     const produto = await chamar("POST", "/api/products", accessToken, {
       name: "Item Guarda " + uid("p"),

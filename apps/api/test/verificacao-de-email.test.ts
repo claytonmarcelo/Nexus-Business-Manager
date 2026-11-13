@@ -153,7 +153,6 @@ afterAll(async () => {
   // linha órfã acumulando suíte após suíte.
   const depois = await prisma.emailVerificationToken.count();
   expect(depois).toBeLessThanOrEqual(tokensAntes);
-  await app.close();
 });
 
 describe("Verificação de e-mail do cadastro (D2)", () => {

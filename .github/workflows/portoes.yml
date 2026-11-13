@@ -1,0 +1,140 @@
+# O bloqueio de merge depende de configurar este job como verificação obrigatória no GitHub.
+#
+# Duas decisões que valem registro:
+#
+# 1. **Nenhum segredo é literal aqui.** Os segredos do teste (JWT, TOTP) são
+#    gerados no runner, a cada execução, e o MySQL de serviço roda sem senha:
+#    a máquina do CI é efêmera e morre com o job. O `.env` do dono nunca entra
+#    no repositório, nem em segredo do GitHub.
+#
+# 2. **O audit não bloqueia por hoje.** A árvore carrega 8 vulnerabilidades
+#    conhecidas (achado N86), e o conserto depende de decisão do dono — quebra
+#    de major no `zod` e no `prisma`. Um portão "zero vulnerabilidade" ficaria
+#    vermelho desde o primeiro dia. O que o pipeline cobra é o que dá para
+#    cobrar: a contagem **não piorou**. `tools/verifica-audit.cjs` compara com a
+#    linha de base versionada e falha quando a contagem sobe.
+
+name: Portões
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+# Dois push na mesma branch: o segundo cancela o primeiro. A casa mede o
+# suficiente para não precisar de dois jobs vivos ao mesmo tempo.
+concurrency:
+  group: portoes-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  portoes:
+    name: Portões da casa
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          # Sem senha: o serviço vive só durante o job, na máquina efêmera do
+          # runner. Nenhuma senha do dono é usada aqui.
+          MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
+          # O banco de prova tem o nome que a suíte exige (decisão D6). A suíte
+          # se recusa a rodar em outro: o vitest.config compara o nome com este.
+          MYSQL_DATABASE: nexusbusinessmanager_teste
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping --silent"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=12
+
+    steps:
+      - name: Código
+        uses: actions/checkout@v4
+
+      - name: Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: npm
+
+      - name: Ambiente de teste
+        # Antes da instalação de propósito: o `postinstall` gera o Prisma
+        # Client (N9) e o generate precisa do DATABASE_URL no ambiente quando
+        # não existe `.env` no clone limpo do CI.
+        #
+        # Os dois endereços são diferentes de propósito. A suíte se recusa a
+        # subir quando `DATABASE_URL` e `DATABASE_URL_TESTE` apontam para o
+        # mesmo banco (decisão D6: prova e desenvolvimento não dividem o
+        # banco). No CI não existe banco de desenvolvimento, mas a guarda
+        # continua valendo — ela é o que impede o acidente de um dia, e
+        # desligá-la no CI seria desligá-la justamente onde não há ninguém
+        # olhando. O endereço de desenvolvimento aponta para um banco que
+        # ninguém cria e que nada consulta: só precisa ter um nome diferente
+        # do banco de prova.
+        run: |
+          node <<'NODE'
+          const fs = require('node:fs');
+          const { randomBytes } = require('node:crypto');
+          const ambiente = {
+            NODE_ENV: 'test',
+            DATABASE_URL: 'mysql://root@127.0.0.1:3306/nexusbusinessmanager',
+            DATABASE_URL_TESTE: 'mysql://root@127.0.0.1:3306/nexusbusinessmanager_teste',
+            MAIL_TRANSPORT: 'memory',
+          };
+          for (const chave of ['JWT_ACCESS_SECRET', 'JWT_REFRESH_SECRET', 'TOTP_ENCRYPTION_KEY']) {
+            const valor = randomBytes(32).toString('hex');
+            console.log(`::add-mask::${valor}`);
+            ambiente[chave] = valor;
+          }
+          fs.appendFileSync(process.env.GITHUB_ENV, Object.entries(ambiente).map(([chave, valor]) => `${chave}=${valor}\n`).join(''));
+          NODE
+
+      - name: Instalar
+        # `npm ci` instala exatamente o que o package-lock diz e roda o
+        # `postinstall`, que gera o Prisma Client.
+        run: npm ci
+
+      - name: Migrações do banco de prova
+        # A cadeia versionada é aplicada no banco de prova, que é o único que
+        # existe aqui. O endereço de desenvolvimento fica de fora de propósito.
+        run: npx prisma migrate deploy --schema apps/api/prisma/schema.prisma
+        env:
+          DATABASE_URL: mysql://root@127.0.0.1:3306/nexusbusinessmanager_teste
+
+      - name: Tipos
+        run: npm run typecheck
+
+      - name: Build
+        run: npm run build
+
+      - name: Suíte da API
+        run: npm run test:api
+
+      - name: Suíte do painel
+        run: npm run test:web
+
+      - name: Links da documentação
+        run: node tools/verifica-links-doc.cjs
+
+      - name: Lint da casa
+        run: node tools/verifica-lint.cjs
+
+      - name: Cobertura da API
+        run: npm run test:coverage --workspace @nexus/api
+
+      - name: Portão de cobertura
+        # O portão é um script da casa e não o threshold do vitest: ele diz
+        # **qual** arquivo caiu abaixo do piso, e a exceção nomeada traz o
+        # motivo escrito na linha de base versionada.
+        run: node tools/verifica-cobertura.cjs
+
+      - name: Audit das dependências
+        run: node tools/verifica-audit.cjs

@@ -38,7 +38,6 @@ describe("Vínculo venda↔financeiro com parcelamento (Fase 3e)", () => {
   const created: { userIds: string[]; companyIds: string[] } = { userIds: [], companyIds: [] };
   afterAll(async () => {
     await cleanup(created);
-    await app.close();
   });
 
   async function account(role: "OWNER" | "ADMIN" | "MANAGER" | "STAFF" = "OWNER") {

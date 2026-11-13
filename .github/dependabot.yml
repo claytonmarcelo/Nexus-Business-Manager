@@ -1,0 +1,39 @@
+# Dependabot — a casa se atualiza sozinha, em letra miúda.
+#
+# A política: atualização de patch e de minor entra agrupada, num pull request só,
+# porque são mudanças que a casa prova com os portões; atualização de major entra
+# separada, porque major é decisão de produto (foi assim que o `zod` e o `prisma`
+# ficaram na conta do dono — achado N86 em `docs/AUDITORIA.md`).
+#
+# O dependabot abre pull request; ele não mergeia. Quem decide merge é a pessoa.
+
+version: 2
+
+updates:
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "06:00"
+      timezone: "America/Sao_Paulo"
+    open-pull-requests-limit: 6
+    labels: ["dependencia"]
+    groups:
+      patch-e-minor:
+        patterns: ["*"]
+        update-types: ["patch", "minor"]
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "06:00"
+      timezone: "America/Sao_Paulo"
+    open-pull-requests-limit: 3
+    labels: ["dependencia"]
+    groups:
+      acoes:
+        patterns: ["*"]
+        update-types: ["patch", "minor"]

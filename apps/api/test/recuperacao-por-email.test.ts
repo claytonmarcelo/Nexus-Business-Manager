@@ -83,7 +83,6 @@ afterEach(async () => {
 afterAll(async () => {
   await cleanup(criado);
   criado = { userIds: [], companyIds: [], emails: [] };
-  await app.close();
 });
 
 describe("Recuperação de senha entregue por e-mail (D1)", () => {

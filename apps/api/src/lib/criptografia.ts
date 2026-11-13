@@ -1,5 +1,5 @@
 import crypto from "node:crypto";
-import { env, isProd } from "../config/env";
+import { env } from "../config/env";
 
 // F4 (decisão D3): o envelope de cifrações de segredo em repouso.
 //

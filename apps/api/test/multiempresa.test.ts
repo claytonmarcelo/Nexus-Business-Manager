@@ -5,7 +5,6 @@ describe("Isolamento multiempresa", () => {
   const created: { userIds: string[]; companyIds: string[] } = { userIds: [], companyIds: [] };
   afterAll(async () => {
     await cleanup(created);
-    await app.close();
   });
 
   it("/users retorna apenas membros da empresa do token", async () => {

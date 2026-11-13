@@ -27,6 +27,7 @@ Thumbs.db
 
 # Testes / cobertura
 coverage/
+coverage-temp/
 .nyc_output/
 
 # Prisma

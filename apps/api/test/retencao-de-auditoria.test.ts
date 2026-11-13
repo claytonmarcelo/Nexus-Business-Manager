@@ -15,12 +15,32 @@ import { jobPorSlug } from "../src/modules/cron/cron.handlers";
 //     — o padrão seguro não deixa pegada;
 //  3. com a janela de 30 dias, só as linhas mais velhas caem, e o expurgo se
 //     registra na trilha da plataforma com a contagem exata;
-//  4. o expurgo só mexe na trilha: conta, aviso e demais tabelas ficam.
+//  4. a contagem fala no singular quando apaga uma linha e no plural quando
+//     apaga mais de uma;
+//  5. o expurgo só mexe na trilha: conta, aviso e demais tabelas ficam.
 const SLUG = "expurgo-de-auditoria";
 const ACAO_DO_EXPURGO = "ops.audit_purge";
+const JANELA = 30;
 
 function diasAtras(dias: number): Date {
   return new Date(Date.now() - dias * 24 * 60 * 60 * 1000);
+}
+
+// O expurgo apaga TODA linha mais velha que o corte, e o banco de prova é
+// compartilhado. Sem esta limpeza, o número de linhas apagadas depende do
+// lixo das rodadas anteriores — medido: 1 linha numa rodada, 8 na outra,
+// 12.131 na terceira — e o portão de cobertura passava a reprovar conforme o
+// dia do relógio, sem que nada no produto tivesse mudado. Era o suficiente
+// para a contagem no singular ("1 linha apagada") aparecer por acaso e
+// sumir na rodada seguinte.
+//
+// A folga de um dia é o que fecha a conta: o corte do expurgo fica uma hora
+// (na verdade um dia) antes do corte desta limpeza, então tudo que ele
+// alcançaria já saiu do banco quando a corrida começa. Depois da limpeza, o
+// único expurgável é o que o próprio teste criou.
+async function limpaPassadoExpirado(diasDaJanela: number): Promise<void> {
+  const corte = new Date(Date.now() - (diasDaJanela - 1) * 24 * 60 * 60 * 1000);
+  await prisma.auditLog.deleteMany({ where: { createdAt: { lt: corte } } });
 }
 
 describe("Retenção configurável da trilha de auditoria (T6.5)", () => {
@@ -42,7 +62,6 @@ describe("Retenção configurável da trilha de auditoria (T6.5)", () => {
       where: { action: { startsWith: "teste.retencao" } },
     });
     await cleanup(created);
-    await app.close();
   });
 
   it("a rotina nasce no catálogo, com agenda legível e executor conhecido", async () => {
@@ -81,6 +100,7 @@ describe("Retenção configurável da trilha de auditoria (T6.5)", () => {
   });
 
   it("com a janela de 30 dias apaga só as linhas mais velhas e conta o que apagou", async () => {
+    await limpaPassadoExpirado(JANELA);
     const velha = await prisma.auditLog.create({
       data: { action: "teste.retencao.velha", entity: "teste", createdAt: diasAtras(400) },
     });
@@ -91,7 +111,7 @@ describe("Retenção configurável da trilha de auditoria (T6.5)", () => {
       data: { action: "teste.retencao.agora", entity: "teste" },
     });
 
-    const res = await comFlag("AUDIT_RETENTION_DIAS", 30, async () =>
+    const res = await comFlag("AUDIT_RETENTION_DIAS", JANELA, async () =>
       app.inject({ method: "POST", url: `/api/ops/jobs/${SLUG}/run`, headers: auth(admin.token) }),
     );
     expect(res.statusCode).toBe(200);
@@ -114,9 +134,37 @@ describe("Retenção configurável da trilha de auditoria (T6.5)", () => {
     expect(linha!.scope).toBe("platform");
     expect(linha!.companyId).toBeNull();
     const meta = linha!.metadata as { dias?: number; apagadas?: number; corte?: string };
-    expect(meta.dias).toBe(30);
-    expect(meta.apagadas).toBeGreaterThanOrEqual(1);
+    expect(meta.dias).toBe(JANELA);
+    // A contagem é exata: com o passado expirado limpo, a única linha que
+    // cabe no corte é a que o teste criou.
+    expect(meta.apagadas).toBe(1);
     expect(typeof meta.corte).toBe("string");
+    // E ela fala no singular — a frase que o operador lê na tela de Rotinas.
+    expect(corpo.mensagem).toContain("1 linha apagada");
+  });
+
+  it("quando apaga mais de uma linha, a contagem fala no plural", async () => {
+    await limpaPassadoExpirado(JANELA);
+    await prisma.auditLog.create({
+      data: { action: "teste.retencao.velha-1", entity: "teste", createdAt: diasAtras(400) },
+    });
+    await prisma.auditLog.create({
+      data: { action: "teste.retencao.velha-2", entity: "teste", createdAt: diasAtras(401) },
+    });
+
+    const res = await comFlag("AUDIT_RETENTION_DIAS", JANELA, async () =>
+      app.inject({ method: "POST", url: `/api/ops/jobs/${SLUG}/run`, headers: auth(admin.token) }),
+    );
+    expect(res.statusCode).toBe(200);
+    const corpo = res.json();
+    expect(corpo.mensagem).toContain("2 linhas apagadas");
+
+    const linha = await prisma.auditLog.findFirst({
+      where: { action: ACAO_DO_EXPURGO },
+      orderBy: { createdAt: "desc" },
+    });
+    const meta = linha!.metadata as { apagadas?: number };
+    expect(meta.apagadas).toBe(2);
   });
 
   it("o expurgo só mexe na trilha: conta, aviso e as outras tabelas ficam", async () => {
@@ -136,7 +184,7 @@ describe("Retenção configurável da trilha de auditoria (T6.5)", () => {
       },
     });
 
-    await comFlag("AUDIT_RETENTION_DIAS", 30, async () =>
+    await comFlag("AUDIT_RETENTION_DIAS", JANELA, async () =>
       app.inject({ method: "POST", url: `/api/ops/jobs/${SLUG}/run`, headers: auth(admin.token) }),
     );
 

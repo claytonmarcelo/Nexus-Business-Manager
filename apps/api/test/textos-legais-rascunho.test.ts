@@ -76,7 +76,6 @@ describe("Textos legais: rascunho marcado e publicação com texto de verdade (T
     for (const kind of KINDS) await devolvaEstado(kind);
     await prisma.auditLog.deleteMany({ where: { action: { startsWith: "cms.legal" }, userId: admin.f.userId } });
     await cleanup(trilha);
-    await app.close();
   });
 
   it("a prateleira vazia entrega um rascunho marcado, que pede a revisão de um advogado", async () => {

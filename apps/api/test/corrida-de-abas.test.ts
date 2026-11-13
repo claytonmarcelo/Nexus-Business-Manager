@@ -156,7 +156,6 @@ afterAll(async () => {
   // confere aqui é que o acréscimo é só dos eventos desta suíte.
   expect(await prisma.refreshToken.count()).toBeLessThanOrEqual(tokensAntes);
   expect(await prisma.refreshToken.count()).toBe(tokensAntes);
-  await app.close();
 });
 
 describe("Corrida de abas na renovação de sessao", () => {

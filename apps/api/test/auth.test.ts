@@ -1,11 +1,10 @@
 import { describe, it, expect, afterAll } from "vitest";
-import { app, makeAccount, login, cleanup, uid } from "./helpers";
+import { app, makeAccount, login, cleanup } from "./helpers";
 
 describe("Autenticação", () => {
   const created: { userIds: string[]; companyIds: string[] } = { userIds: [], companyIds: [] };
   afterAll(async () => {
     await cleanup(created);
-    await app.close();
   });
 
   it("login válido retorna tokens e usuário com empresa ativa", async () => {

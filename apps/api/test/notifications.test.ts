@@ -13,7 +13,6 @@ describe("Notificações persistentes", () => {
 
   afterAll(async () => {
     await cleanup(created);
-    await app.close();
   });
 
   const auth = (token: string) => ({ authorization: `Bearer ${token}` });
@@ -193,7 +192,7 @@ describe("Notificações persistentes", () => {
   });
 
   it("atendente não pode disparar a varredura administrativa", async () => {
-    const { f, token } = await account("OWNER");
+    const { f } = await account("OWNER");
     const colega = await colegaDeEquipe(f);
 
     const bloqueado = await app.inject({ method: "POST", url: "/api/notifications/scan", headers: auth(colega.token), payload: {} });

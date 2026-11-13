@@ -11,7 +11,6 @@ describe("Estoque atômico sob concorrência (Fase 3a)", () => {
   const created: { userIds: string[]; companyIds: string[] } = { userIds: [], companyIds: [] };
   afterAll(async () => {
     await cleanup(created);
-    await app.close();
   });
 
   async function account() {

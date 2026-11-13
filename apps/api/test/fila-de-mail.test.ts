@@ -149,7 +149,6 @@ afterEach(async () => {
 afterAll(async () => {
   await cleanup(criado);
   criado = { userIds: [], companyIds: [], emails: [] };
-  await app.close();
 });
 
 describe("Fila de entrega de e-mail (N58)", () => {

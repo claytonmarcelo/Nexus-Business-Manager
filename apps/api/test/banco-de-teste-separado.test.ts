@@ -122,4 +122,39 @@ describe("banco de teste separado (T1 / D6)", () => {
     const depois = await contar(prisma);
     expect(depois).toEqual(antes);
   });
+
+  it("a limpeza da prova leva a trilha do fixture junto", async () => {
+    const conta = await makeAccount("STAFF");
+    const antes = await prisma.auditLog.count();
+    const comEmpresa = await prisma.auditLog.create({
+      data: {
+        userId: conta.userId,
+        companyId: conta.companyId,
+        action: "teste.limpeza.com-empresa",
+        entity: "user",
+        entityId: conta.userId,
+      },
+    });
+    // Evento de plataforma: a empresa não é dona da linha — quem praticou a
+    // ação é. É a linha que sobrevive à empresa e morre com a pessoa.
+    const semEmpresa = await prisma.auditLog.create({
+      data: {
+        userId: conta.userId,
+        action: "teste.limpeza.sem-empresa",
+        entity: "user",
+        entityId: conta.userId,
+      },
+    });
+
+    await cleanup({ userIds: [conta.userId], companyIds: [conta.companyId] });
+
+    // A trilha do fixture não pode sobrar no banco de prova. Linha órfã
+    // (sem dono) é o que enchia a tabela de auditoria a cada rodada e fazia o
+    // expurgo da retenção apagar um número diferente a cada execução.
+    expect(
+      await prisma.auditLog.count({ where: { id: { in: [comEmpresa.id, semEmpresa.id] } } }),
+      "a trilha do fixture tem de ir junto com ele",
+    ).toBe(0);
+    expect(await prisma.auditLog.count(), "a limpeza não pode deixar resíduo no banco de prova").toBe(antes);
+  });
 });

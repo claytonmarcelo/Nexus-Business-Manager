@@ -1,0 +1,12 @@
+{
+  "medidoEm": "2026-11-08",
+  "contagens": {
+    "info": 0,
+    "low": 1,
+    "moderate": 2,
+    "high": 5,
+    "critical": 0,
+    "total": 8
+  },
+  "nota": "Numero de medicao do npm audit. O portao falha quando a contagem piora."
+}

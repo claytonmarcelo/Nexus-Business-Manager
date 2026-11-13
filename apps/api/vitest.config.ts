@@ -49,12 +49,25 @@ export default defineConfig({
     environment: "node",
     include: ["test/**/*.test.ts"],
     // Banco compartilhado: executa suites em série para evitar corrida de dados.
-    // No vitest 5 os dois botões são obrigatórios: `singleFork` reúne tudo em
-    // um processo, `fileParallelism: false` fecha o agendador que por padrão
-    // chegou a rodar arquivos em paralelo — com o banco dividido, um teste de
-    // manutenção (503) do CMS atropelava o finance/clients do lado.
+    //
+    // A chave `poolOptions.forks.singleFork` não existe mais: o Vitest 4 removeu
+    // `poolOptions` inteiro, e o runner avisa isso e segue ignorando o que está
+    // ali (achado N97). A equivalência vigente é `maxWorkers: 1` com
+    // `isolate: false` — um worker só, com o módulo compartilhado entre os
+    // arquivos. Medido antes da correção: a suíte abria um processo novo por
+    // arquivo (44 PIDs numa rodada que passou), e uma rodada de cobertura perdeu
+    // 39 workers na criação (0xC0000142, STATUS_DLL_INIT_FAILED) depois de 20
+    // arquivos. O preço do processo único é o app compartilhado: como o módulo
+    // deixa de ser reavaliado por arquivo, o `app` dos helpers é um só para a
+    // suíte inteira, e nenhum arquivo pode fechá-lo (portão em
+    // `test/config-da-suite.test.ts`).
+    //
+    // `fileParallelism: false` fecha o agendador que por padrão chegou a rodar
+    // arquivos em paralelo — com o banco dividido, um teste de manutenção (503)
+    // do CMS atropelava o finance/clients do lado.
     pool: "forks",
-    poolOptions: { forks: { singleFork: true } },
+    maxWorkers: 1,
+    isolate: false,
     fileParallelism: false,
     // O vitest 5 roda a suíte tão rápido que um arquivo inteiro ultrapassa os
     // 100req/min do limitador global — e a suíte passaria a tropeçar em 429
@@ -83,10 +96,7 @@ export default defineConfig({
       // senão a cobertura subiria medindo a si mesma.
       include: ["src/**/*.ts"],
       exclude: ["src/server.ts", "src/**/*.d.ts"],
-      reporter: ["text", "text-summary", "html", "lcov"],
-      // Os portões mínimos por arquivo entram na Fase 7 (CI), quando a suíte
-      // estiver completa. Antes disso um threshold alto quebraria o build sem
-      // que houvesse nada a corrigir.
+      reporter: ["text", "text-summary", "html", "lcov", "json-summary"],
     },
   },
 });

@@ -1,5 +1,5 @@
 import { afterAll, describe, expect, it } from "vitest";
-import { app, cleanup, login, makeAccount, uid, type Fixture } from "./helpers";
+import { app, cleanup, login, makeAccount, type Fixture } from "./helpers";
 import { prisma } from "../src/lib/prisma";
 
 // T6.3 (F7), item 2 do PROMPT MESTRE: "exportacao dos dados do titular".

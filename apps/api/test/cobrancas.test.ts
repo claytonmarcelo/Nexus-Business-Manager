@@ -30,7 +30,6 @@ const created: { userIds: string[]; companyIds: string[] } = { userIds: [], comp
 
 afterAll(async () => {
   await cleanup(created);
-  await app.close();
 });
 
 const auth = (token: string) => ({ authorization: `Bearer ${token}` });

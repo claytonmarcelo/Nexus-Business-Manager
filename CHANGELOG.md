@@ -1,5 +1,72 @@
 ## [Não lançado]
 
+### A suíte em processo único e o portão de cobertura que não oscila (2026-11-13)
+
+- **O que faltava.** A configuração da suíte usava `poolOptions.forks.singleFork`, opção removida no
+  Vitest 4: o runner avisava e seguia ignorando a chave. A suíte abria um processo novo por arquivo
+  (**44 PIDs** numa rodada que passou) e a rodada de cobertura perdia **39 workers** na criação
+  (0xC0000142, `STATUS_DLL_INIT_FAILED`). E o portão de cobertura reprovava **conforme o dia**, com um
+  branch a menos em dois arquivos, sem que nada no produto tivesse mudado.
+- **O que entrou.** `apps/api/vitest.config.ts` passa a `pool: "forks"`, `maxWorkers: 1`,
+  `isolate: false` e `fileParallelism: false`; o `await app.close()` saiu de **36 arquivos** de teste, e
+  o portão novo `apps/api/test/config-da-suite.test.ts` (3 casos) impede que alguém feche o app ou
+  reintroduza a chave removida. O `cleanup()` dos fixtures passou a apagar a trilha de auditoria do
+  fixture por empresa **e** por pessoa, e a suíte da retenção passou a limpar o passado já expirado
+  antes de medir — a contagem do expurgo ficou fixa (1 linha) e ganhou o caso do plural (2 linhas).
+- **Antes e depois.** Com `--no-isolate` e os arquivos ainda fechando o app, **27 casos de 34** caíam.
+  O portão reprovava com **15/17 → 14/17** em `retencao-auditoria.ts` e **27/42 → 26/42** em
+  `cron.handlers.ts`; a causa foi medida no banco: **61.155** linhas de auditoria órfãs (**60.541** sem
+  dono) faziam o número de linhas apagadas variar entre **12.131**, **8** e **1**. O teste novo falhou
+  com `AssertionError: a trilha do fixture tem de ir junto com ele: expected 2 to be +0` antes da
+  correção. A base de cobertura versionada **não foi rebaixada**, e nenhum teste foi pulado, apagado ou
+  enfraquecido. O achado está registrado como **N100** em `docs/AUDITORIA.md`.
+- **Medido agora.** Cobertura **88,59% / 76,44% / 88,55% / 91,32%** em **100 arquivos** de produção,
+  igual à base versionada; suíte da API **60 arquivos / 553 casos** verdes (438,82 s; 633,86 s com o
+  medidor de cobertura ligado) e suíte do painel **24 arquivos / 191 casos** verdes, exit 0 nas duas, zero falha e
+  zero skip, contra `nexusbusinessmanager_teste` (D6); lint da casa em **225 arquivos de produção, zero
+  violação**; links da documentação **50 relativos, 0 quebrado, 0 marcador**; audit com **8
+  vulnerabilidades** (1 baixa, 2 moderadas, 5 altas), sem aumento contra a base. A árvore inteira,
+  588 arquivos rastreados, confere **0 BOM, 0 CRLF, 0 caractere de alfabeto não latino e 0 arquivo sem
+  LF final**.
+- **Duas linhas a mais no `.gitattributes`.** O arquivo passou a governar a si mesmo e o `.gitignore`
+  (`.gitignore text eol=lf` e `.gitattributes text eol=lf`). Com `core.autocrlf` ligado nesta máquina,
+  sem essas duas linhas o Git podia reescrever esses dois arquivos com CRLF no próximo checkout, e a
+  regra de UTF-8 sem BOM e LF da casa valeria só por acaso.
+- **O que não está fechado.** A execução remota do CI e do Dependabot continua **NÃO VERIFICADA** — o
+  `gh` não está instalado nesta máquina — e o YAML local não configura proteção de branch nem checks
+  obrigatórios: configurar isso é passo do dono. A galeria (N13/N82), a publicação TiDB/Vercel e a
+  prontidão global seguem pendentes. O audit continua em 8 vulnerabilidades, e o conserto do `zod` e do
+  `prisma` depende de decisão de major e de aval para instalar dependência.
+
+### Os portões também precisam provar que recusam o erro (2026-11-11)
+
+- **Qualidade em código.** A F8 ganhou lint próprio, comparação de cobertura por arquivo e um portão
+  de audit contra bases versionadas, sem dependência nova. O postinstall gera o cliente Prisma e o
+  compilador da API recusa declarações não usadas; imports e variáveis inúteis foram removidos sem
+  alterar os fluxos do produto.
+- **Falhas encontradas na revisão.** Resposta inválida do npm audit podia virar zero vulnerabilidades;
+  arquivo ausente do relatório de cobertura e exceção sem motivo podiam passar. O lint falhava ao
+  encontrar `any`, não enxergava console indexado e aceitava comentário vazio como justificativa de
+  silenciamento. As regressões executam os detectores reais e a CLI, não uma cópia da implementação.
+- **Antes e depois.** A primeira bateria reproduziu 11 falhas e fechou 29 casos; a prova de mascaramento
+  do CI elevou o conjunto a 30. A segunda revisão reproduziu quatro recusas ausentes para comentários
+  vazios (`4 failed | 33 passed`); após o ajuste, **37 casos passaram**, com lint em **225 fontes, zero
+  violação**, e typecheck da API, painel e serverless aprovado. O painel foi reexecutado sem a cobertura
+  concorrente: **24 arquivos / 191 casos**, em 25,23 s, sem repetir o timeout anterior do segundo fator.
+  Isso não estabelece, sozinho, a causa do timeout. A corrida final da API e da cobertura está pendente.
+- **Automação sem promessa falsa.** CI local para push/PR usa Node 24, MySQL efêmero e segredos gerados
+  mascarados antes da gravação; Dependabot é semanal. O campo inválido `exclude-types` foi removido.
+  O arquivo de Dependabot foi validado localmente contra o esquema público na revisão independente;
+  execução remota e checks obrigatórios no GitHub continuam não verificados.
+- **README e inventário.** Mantido o padrão do exemplo do dono, com a stack real e as seis capturas
+  existentes. A descrição distingue funcionalidade implementada de serviço publicado. Inventário
+  recontado: **587 arquivos versionáveis, 134 rotas em 21 arquivos, 35 models, 21 enums e duas migrations
+  ativas**. O estado atual separa esse quadro das medições históricas.
+- **O que não está fechado.** O audit continua em **8 vulnerabilidades**, sem aumento contra a base;
+  não houve atualização de pacote nem redução de piso. N87 a N99 foram registrados e retificados na
+  auditoria, sem correção silenciosa ou adiamento automático. F8, galeria, publicação TiDB/Vercel e
+  prontidão global permanecem parciais; fornecer a conexão não substitui a prova operacional.
+
 ### A F7 fecha, e a árvore inteira é conferida arquivo por arquivo (2026-11-08)
 
 - **O que faltava.** A guarda de caracteres olhava **os arquivos tocados na rodada** — rodada contra rodada,

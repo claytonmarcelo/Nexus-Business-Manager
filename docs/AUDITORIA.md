@@ -3091,4 +3091,318 @@ zero skip, **340,39 s**, contra `nexusbusinessmanager_teste` (D6). Suíte do pai
 casos**, exit 0, zero falha e zero skip, **11,78 s**. Links da documentação: **26 relativos, 0 quebrado, 0
 marcador**. Guarda da árvore inteira: **579 rastreados, 0 BOM, 0 CRLF, 0 não latino, 0 sem LF final**.
 `npm audit --audit-level=high`: **exit 1, 8 vulnerabilidades** (N86), nenhuma introduzida pela F7.
+---
 
+## Adenda da execução — a auditoria profissional pedida pelo dono: o que falta para a produção global (2026-11-09)
+
+O pedido foi analisar organização, API, código quebrado, pastas vazias, duplicatas e falhas para uso por
+empresas, funcionários e clientes. Quatro agentes iniciais falharam por indisponibilidade da fila; nenhum
+relatório desses agentes foi usado como evidência. O agente principal fez a triagem registrada abaixo.
+
+**Conferência de 2026-11-11.** Esta adenda preserva as medições da rodada anterior, mas corrige a contagem
+de arquivos locais, o exemplo de fusos e conclusões que excediam a evidência. A triagem estática não é uma
+certificação de produção nem uma prova de todos os contratos da API. Nenhum achado N87 a N99 foi corrigido
+no produto nesta rodada; as propostas abaixo dependem de implementação e testes próprios.
+
+### Alcance da triagem de 2026-11-09
+
+| Medida | Resultado e limite |
+| --- | --- |
+| Pastas vazias fora de dependências, Git, builds, cobertura e diretórios operacionais ignorados | **0** no escopo percorrido |
+| Duplicatas exatas entre os **448** textos rastreados | **0 grupos**; não detecta duplicação de lógica |
+| Busca por `TODO`, `FIXME`, `XXX`, `HACK` em **224** arquivos de `apps/*/src` | **0 ocorrências**; o conjunto também inclui testes do painel |
+| Busca textual por `catch` vazio, `any`, `console.log` e supressões TypeScript | Sem achados nos padrões usados; expressões regulares não excluem variantes multilinha ou outros usos |
+| Referências a 25 páginas, 36 componentes e 30 libs do painel | Nenhum arquivo sem referência encontrado; não prova alcançabilidade em execução |
+| Pareamento textual de chamadas HTTP e rotas | **147 ocorrências**, incluindo comentários, e **134 rotas declaradas**; nenhum par ausente entre os caminhos reconhecidos |
+| Arquivos `.local.*` encontrados | **4**, ignorados e não rastreados; nenhum conteúdo de credencial deve ser publicado |
+| `npm audit` contra a linha de base de 2026-11-08 | **8 vulnerabilidades, 0 a mais** (N86); não significa dependências sem vulnerabilidade |
+| Caracteres de alfabeto não latino (A1) | **0** em 579 rastreados e em 1404 textos percorridos naquela rodada |
+
+O pareamento textual não valida cargas de requisição, respostas, permissões ou chamadas dinâmicas. As 12
+rotas sem par literal inicial incluem detalhes por identificador, chamadas encadeadas ou variáveis e portas
+sem consumidor localizado, como `GET /api/cms/kinds` e a edição de categorias (N93/N94). Portanto, não são
+todas explicadas por caminhos dinâmicos. A cobertura funcional deve ser lida nos testes de cada módulo,
+não inferida dessa contagem. As famílias de segundo fator atendem escopos diferentes: a etapa do login e
+a configuração da conta autenticada, sem equivalência automática entre as portas.
+
+### N87 — ALTA, aberto: o relatório diário formata dinheiro em real fixo, e a empresa pode não usar real
+
+`apps/api/src/modules/cron/cron.handlers.ts:113-115` varre todas as empresas ativas e seleciona
+`{ id: true, timezone: true }` — só isso. Na linha **141** o total de vendas do dia vira texto por
+`moeda(totalVendas)`, e `moeda` mora em `apps/api/src/modules/notifications/notifications.service.ts:53-56`:
+um `Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" })` criado uma vez, fora de qualquer
+empresa, e devolvido para todas.
+
+A moeda e o idioma são campo da empresa, não do processo: o modelo `Company` em
+`apps/api/prisma/schema.prisma` declara `currency String @default("BRL")` e
+`language String @default("pt-BR")`, e a tela `/app/configuracoes` grava os dois. Uma empresa cadastrada
+em dólar ou em euro recebe o aviso do relatório diário — e o e-mail que vai com ele — escrito `R$ 1.234,56`.
+O número está certo; o símbolo e o separador estão errados para quem lê. Na mesma rotina, a linha **136**
+monta a data do relatório como `DD/MM/YYYY` fixo (`dataBr`), sem olhar o idioma da casa.
+
+**Caminho do conserto.** Selecionar `currency` e `language` junto com o fuso na varredura, e formatar com
+`Intl.NumberFormat(idioma, { style: "currency", currency: moedaDaEmpresa })` por empresa. O painel já faz
+certo em `apps/web/src/lib/format.ts:50` — a regra existe, só não chegou no servidor. Pede teste vermelho
+com duas empresas de moedas diferentes antes do conserto.
+
+### N88 — ALTA, aberto: a tela do Financeiro mostra a mesma data de dois jeitos diferentes
+
+`apps/web/src/pages/Finance.tsx:12` importa `formatDate` de `../lib/format`, que lê moeda, fuso e idioma
+da empresa ativa. A tela usa esse helper no modal de confirmação (linha **154**), no fluxo de caixa
+(linha **303**) e na exportação CSV (linha **183**). Mas a linha **40** declara um helper local próprio:
+`const fmtData = (iso: string) => new Date(iso).toLocaleDateString("pt-BR")`. E a coluna de vencimento da
+tabela de lançamentos (linha **389**) usa `fmtData(e.dueDate)`.
+
+O helper local formata no **fuso do navegador** e no idioma fixo, não no da empresa. Para o ISO explícito
+`2026-11-10T00:00:00Z`, a conferência com `Intl.DateTimeFormat("pt-BR", { timeZone })` devolveu
+**10/11/2026 em UTC** e **09/11/2026 em America/Sao_Paulo**. Portanto, com navegador em UTC e empresa em
+São Paulo, a tabela mostra **10/11** e o modal **09/11**, não o inverso. Isso demonstra divergência de
+apresentação; não determina sozinho qual data representa corretamente o vencimento de negócio, nem
+valida a regra de contas vencidas do servidor.
+
+**Caminho do conserto.** Primeiro definir se `dueDate` representa uma **data civil** ou um **instante**,
+e conferir esse contrato na entrada, persistência e resposta da API. Se for instante, unificar a
+formatação no fuso da empresa; se for data civil, preservar o dia sem conversão indevida de fuso.
+A troca do helper, isoladamente, não garante a correção. Testar coluna e modal com fusos diferentes e
+valores na virada do dia, conforme o contrato definido.
+
+### N89 — MÉDIA, aberto: o mês atual e o início do mês saem do relógio do navegador
+
+`apps/web/src/pages/Finance.tsx:41-44` calcula `mesAtual()` com `new Date().getFullYear()` e
+`getMonth()`, e esse valor é o filtro padrão da tela (linha **73**). `apps/web/src/pages/Agenda.tsx:307`
+calcula `inicioDoMes` do mesmo jeito, para contar os próximos compromissos. Os dois leem o fuso do
+**navegador**, não o `timezone` da empresa. Na virada do mês — ou na virada do dia, para quem está a
+algumas horas do fuso da casa — o filtro padrão do Financeiro e a contagem da Agenda discordam do que o
+servidor calculou. O projeto já tem o helper certo e já usa em outra tela:
+`apps/web/src/pages/Cobrancas.tsx:845` chama `diaDaEmpresa(user?.timezone ?? "America/Sao_Paulo")`, e o
+servidor tem `diaNoFuso`/`meiaNoiteNoFuso` em `apps/api/src/lib/time.ts`.
+
+**Caminho do conserto.** Derivar o mês e o início do mês do fuso da empresa, pelo helper que já existe.
+
+### N90 — MÉDIA, aberto: consistência de formato do mês no Dashboard
+
+`apps/web/src/pages/Dashboard.tsx:368` monta o rótulo do período com
+`new Date(...).toLocaleDateString("pt-BR", { month: "long", year: "numeric" })`, sem usar a preferência
+de formato da empresa (`Company.language`). O contrato de `apps/web/src/lib/format.ts:28-29` é explícito:
+o idioma escolhido muda a escrita de números e datas; **a interface continua intencionalmente em português**.
+O achado é de consistência da formatação de datas, não um defeito geral de idioma nem uma promessa de
+tradução da interface. O ajuste deve respeitar essa distinção ao formatar o rótulo de mês e ano.
+
+### N91 — ALTA, aberto: a sonda HTTP não basta para comprovar prontidão do banco
+
+`apps/api/src/modules/health/health.routes.ts:6-14`, **quando alcançado**, tenta `SELECT 1` e devolve
+**HTTP 200** com `{ status: "degraded", db: "down" }` se a consulta falhar. Em sucesso, o corpo é
+`{ status: "ok", db: "up" }` (ambos também incluem `ts`). O handler distingue os estados no corpo, não
+no código HTTP; a sonda de `docker-compose.yml:115` verifica apenas `r.ok` e aceita o 200 degradado.
+
+A requisição completa, porém, passa antes pelo `onRequest` de `apps/api/src/plugins/maintenance.ts:21-25`:
+`estadoManutencao()` é consultado **antes** de liberar `/api/health`. Em `cms.service.ts:782-794`, esse
+estado usa cache de **5 segundos** (`TTL_MANUTENCAO`, linha 697); com cache frio ou expirado chama
+`obterConfig()`, que faz `prisma.landingConfig.upsert` (linhas 311-312). Banco indisponível ou tabela
+ausente pode, portanto, produzir **500 antes do handler**. Com cache válido, a requisição pode chegar ao
+handler e retornar 200/degraded/down. Isso não prova que o container fica sempre healthy com o banco
+indisponível, nem que o painel dependente (`service_healthy`, linha 132) necessariamente sobe nesse estado.
+
+O comentário do compose sobre 500 sem tabelas não é necessariamente falso: descreve uma falha possível
+no gancho de manutenção. Já `apps/web/src/lib/statusServico.ts` lê `status` e `db`, em vez de confiar só
+no HTTP. O passo 5 de `docs/PRODUCAO.md` §12 foi corrigido para exigir corpo saudável e fluxo funcional.
+
+**Caminho do conserto.** Fazer a sonda validar o corpo (`status: "ok"`, `db: "up"`) ou definir readiness
+separada, com resposta não-2xx quando o banco não estiver pronto. Validar a requisição completa com
+**falhas injetadas**, incluindo cache frio/expirado e válido, e conferir o resultado da sonda. Não
+interromper o MySQL do WAMP nem derrubar o banco do dono para produzir essa prova; ela não foi executada
+nesta revisão documental.
+
+### N92 — MÉDIA, aberto: orçamento de conexões serverless não medido
+
+`apps/api/src/lib/prisma.ts:10-14` cria o cliente declarando só o `log` por ambiente. A varredura original
+por `connection_limit`, `pool_timeout` e `connectionLimit` em `docs/PRODUCAO.md`, `deploy/`,
+`apps/api/src/lib/prisma.ts` e `apps/api/.env.example` não localizou parâmetros nesses arquivos. Isso
+**não prova ausência de configuração de pool**: a URL secreta do ambiente pode conter essas opções e
+não foi inspecionada nesta revisão. Instâncias da Function podem manter pools próprios contra o TiDB.
+Não foi medido o orçamento que relaciona instâncias concorrentes, conexões por pool, outros consumidores
+e teto do plano; a folga real continua **NÃO VERIFICADA**.
+
+**Caminho do conserto.** Desenhar o orçamento com os limites do plano, concorrência prevista e margem
+operacional, sem depender exclusivamente de receber um `.env`. Depois conferir a configuração efetiva
+sem divulgar a URL e medir sob carga autorizada; dimensionar `connection_limit` e `pool_timeout` conforme
+a conta e registrar os limites em `docs/PRODUCAO.md`. O arquivo de ambiente, sozinho, não fecha o achado.
+
+### N93 — BAIXA, aberto: consumidor de uma rota não localizado estaticamente
+
+Para `GET /api/cms/kinds` (`apps/api/src/modules/cms/cms.routes.ts:144`), a busca textual registrada em
+`apps/`, `docs/` e `tools/` localizou a declaração e a referência de `docs/ESTADO-ATUAL.md:341`, mas não
+um consumidor funcional. Isso não exclui chamadas dinâmicas, ferramentas externas ou uso manual.
+A rota tem `preHandler: [app.authenticate]` e entra na varredura anônima de `isolamento-rotas.test.ts`;
+essa cobertura de autenticação não demonstra uso funcional. Confirmar a finalidade antes de decidir
+manutenção ou descontinuação, sem tratar ausência de referência local como inexistência absoluta de uso.
+
+### N94 — BAIXA, aberto: renomear categoria de produto existe na API e não existe na tela
+
+`PATCH /api/product-categories/:id` está declarado e é atacado por `apps/api/test/intrusao.test.ts:112`.
+O painel só lista (`apps/web/src/pages/Products.tsx:98`) e cria (linha **715**): quem cadastrou uma
+categoria com o nome errado não tem como corrigir pela tela. Lacuna de produto, não bug de código.
+
+### N95 — BAIXA, aberto: quatro scripts de patch sem chamada localizada na busca local
+
+`tools/patch-schema-admin.cjs` (297 linhas), `tools/patch-schema-compras.cjs` (79),
+`tools/patch-schema-crm.cjs` (48) e `tools/patch-schema-financeiro.cjs` (66) não tiveram chamada localizada
+na conferência de package.json, workflows, testes, docs e tools daquela rodada. As **65 entradas**
+listadas em `tools/` incluem arquivos ignorados; não são uma contagem de ferramentas rastreadas nem
+provam que esses quatro sejam os únicos órfãos. As próprias referências desta adenda também não são
+chamadas operacionais.
+
+Os scripts alteram `apps/api/prisma/schema.prisma`; os modelos que pretendem inserir já aparecem no
+schema e nas migrations. Isso sugere finalidade histórica, mas não comprova que possam ser removidos
+com segurança: confirmar usos manuais/externos e necessidade de preservação antes de qualquer decisão.
+Executá-los pode escrever no schema. Os pares de nome parecido citados na triagem não são duplicatas:
+`audit-responsive.cjs` mede 360/414/768 px e `audit-responsive2.cjs` mede 320 px com sidebar e modal
+abertos; `senha-admin.cjs` é o leitor rastreado e `senha-admin.local.cjs` é o arquivo local ignorado que
+guarda o valor, cujo conteúdo não deve ser publicado.
+
+### N96 — BAIXA, aberto: três diretivas de ESLint num repositório sem ESLint
+
+`apps/api/src/lib/audit.ts:58`, `apps/api/src/lib/prisma.ts:6` e
+`apps/api/src/modules/notifications/notifications.service.ts:235` carregam `eslint-disable-next-line`.
+Não existe arquivo de configuração do ESLint na raiz nem em `apps/api`/`apps/web`, e não existe dependência
+do ESLint em nenhum dos três `package.json` — a medição foi por listagem e por grep. O lint da casa é
+`tools/verifica-lint.cjs`, que não lê essas diretivas. São comentários que prometem uma ferramenta que o
+projeto não tem.
+
+### N97 — BAIXA, corrigido nesta rodada: a opção de pool removida no Vitest 4/5 ainda na configuração
+
+`apps/api/vitest.config.ts` declarava `poolOptions: { forks: { singleFork: true } }`, opção removida desde
+o Vitest 4. O runner não apenas ignorava a chave: ele emitia o aviso “DEPRECATED `test.poolOptions` was
+removed in Vitest 4” e seguia como se a opção valesse. O efeito medido foi o oposto do pretendido — a suíte
+abria um processo novo por arquivo (**44 PIDs distintos** numa rodada que passou), e a rodada de cobertura
+perdeu **39 workers** na criação (`Error: Worker exited unexpectedly with exit code 3221225794`, que é
+0xC0000142, `STATUS_DLL_INIT_FAILED` no Windows) depois de 20 arquivos — o que derrubou a cobertura de
+73,95%/63,77%/75,58%/76,67% contra a base de 88,59%/76,44%/88,55%/91,32%.
+
+A equivalência vigente foi conferida no código instalado do Vitest 5, não de memória: `poolOptions` não
+existe mais (`node_modules/vitest/dist/chunks/index.DpLw24bj.js:14382` avisa e ignora), e o reuso de um
+único worker com o módulo compartilhado vem de `maxWorkers: 1` com `isolate: false`
+(`index.DpLw24bj.js:11901` monta um `PoolRunner` novo por tarefa quando `isolate === true`, e reaproveita o
+runner existente quando é `false`; `base.DhkQeZwd.js:83` só zera o registro de módulos quando há isolamento).
+`fileParallelism: false` continua na configuração porque é ele que serializa os arquivos — `singleFork` nunca
+substituiu isso.
+
+A correção veio com o preço que a casa assume: sem isolamento por arquivo, o módulo não é reavaliado, e o
+`app` construído em `apps/api/test/helpers.ts` passa a ser **um só para a suíte inteira**. Nenhum arquivo de
+teste pode fechá-lo — fechar derrubaria os arquivos seguintes com “Fastify has already been closed and
+cannot be reopened”. A medição do estrago foi feita antes da correção: com `--no-isolate` e os arquivos
+ainda fechando o app, **27 casos de 34 caíram**. O `await app.close()` foi então retirado de **36
+arquivos** de teste; `isolamento-rotas.test.ts` foi preservado porque constrói o próprio app e fecha esse.
+
+O portão da correção é `apps/api/test/config-da-suite.test.ts` (3 casos): a chave removida não pode mais
+aparecer no código da configuração, a configuração **resolvida** precisa dizer `maxWorkers: 1`, `isolate:
+false`, `pool: "forks"` e `fileParallelism: false` sem emitir o aviso de depreciação, e nenhum arquivo de teste
+pode conter `app.close()`. O teste foi escrito primeiro e **falhou 3 de 3** pelos motivos certos (a chave
+presente, o `maxWorkers` resolvido como `undefined`, e a lista dos 36 arquivos que fechavam o app), e depois
+ficou verde com a correção aplicada.
+
+Nenhum outro achado foi corrigido nesta rodada, e a escalada continua valendo para o resto.
+
+### N98 — BAIXA, aberto: redação de cobertura e promessa de Redis em comentário
+
+Na leitura desta revisão, `tools/verifica-cobertura.cjs:15` ainda escreve "a mesma philosophy do portão"
+no meio de um comentário em português; essa parte não foi dada como removida. Em
+`apps/api/src/plugins/security.ts:27-31`, o comentário promete o store compartilhado do limitador "na
+Fase 8 (Docker/compose introduz o Redis no stack)". A **F8 está em andamento**, com CI, dependabot e
+portões de qualidade em trabalho, não fechada. O `docker-compose.yml` não declara Redis e o store está
+no `docs/ROADMAP.md` como pós-1.0; o comentário não corresponde ao escopo atual dessa fase.
+
+### N99 — BAIXA, a avaliar: duplicação de assets sem falha funcional comprovada
+
+A conferência de hash dos **131** binários rastreados registrou três grupos idênticos. Um é o **N82** já
+registrado (`22-configuracoes-empresa.png` e `22-configuracoes-lancamento-automatico.png`). Nos outros,
+`apps/web/public/favicon.png` é byte-idêntico a `favicon-48.png` e não tem link explícito no
+`apps/web/index.html`; isso **não comprova ausência de uso**, pois um asset público pode ser acessado
+diretamente ou por consumidor externo. As referências locais encontradas não esgotam esses acessos.
+
+`apps/web/src/assets/brand/logo.png` e `assets/brand/logo/logo.png` também são byte-idênticos, mas têm
+consumidores distintos (`apps/web/src/components/Logo.tsx:1`, via bundler, e README:2). Essa duplicação
+pode ser legítima para a distribuição em contextos diferentes. Não foi comprovada falha funcional nem
+remoção segura; avaliar finalidade e sincronização antes de decidir consolidar os arquivos.
+
+### N100 — MÉDIA, corrigido nesta rodada: o portão de cobertura reprovava conforme o dia, por resíduo do banco de prova
+
+O portão de cobertura (`tools/verifica-cobertura.cjs`) compara, arquivo por arquivo, a porcentagem
+medida com a linha de base versionada em `tools/cobertura-base.json`. Depois da correção do **N97**
+(a suíte passou a rodar em processo único, com `maxWorkers: 1` e `isolate: false`), o portão reprovou
+com um delta de um único ramo: `retencao-auditoria.ts` foi de 15/17 para 14/17 branches e
+`cron.handlers.ts` de 27/42 para 26/42, e o global caiu de 76,44% para 76,36% — contra a base de
+**88,59% / 76,44% / 88,55% / 91,32%**.
+
+A causa não era o código do produto. Os dois ramos perdidos são o mesmo: o **singular** de
+`"1 linha apagada"` (`retencao-auditoria.ts:127`) e o singular de `"1 linha apagada"` na frase da tela
+de Rotinas (`cron.handlers.ts:166`). O ramo só é tomado quando o expurgo apaga **exatamente uma**
+linha, e o número de linhas que o expurgo apaga depende do estado do banco de prova, que é
+**compartilhado** entre rodadas.
+
+A causa-raiz foi medida no banco: `audit_logs` declara `onDelete: SetNull` para pessoa e empresa
+(`apps/api/prisma/schema.prisma:232-233`), e o `cleanup()` dos fixtures **não apagava a trilha**.
+Apagada a empresa, a linha da auditoria sobrevivia sem dono — o banco de prova acumulou **61.155
+linhas** assim, **60.541 delas órfãs**. O corte do expurgo é `agora - 30 dias`, e a linha mais antiga
+do banco (2026-10-14T02:45:26Z) estava a cerca de sete minutos do corte: o número de linhas apagadas
+mudava com o relógio. Os registros `ops.audit_purge` do próprio banco provam a variação — **12.131**,
+depois **8**, depois **1**.
+
+Uma direção de correção foi descartada **por medição**, não por gosto: extrair o singular/plural para
+um helper compartilhado tiraria o ternário de `retencao-auditoria.ts` e levaria o arquivo a 14/16 =
+**87,50%**, abaixo do piso de 88,23% — o portão reprovaria de outro modo. A correção certa era
+**determinismo de estado**, não refatoração.
+
+O que mudou:
+
+- `apps/api/test/helpers.ts` — o `cleanup()` apaga a trilha do fixture em **dois recortes**, e os dois
+  rodam antes de a empresa e a pessoa irem embora: por `company_id` (a linha de tenant) e por
+  `user_id` (o evento de plataforma, em que a empresa é só a origem da sessão e a linha pertence a
+  quem praticou a ação).
+- `apps/api/test/retencao-de-auditoria.test.ts` — a suíte da retenção limpa o passado já expirado com
+  **um dia de folga** antes de medir, de modo que o único expurgável é o que o próprio teste criou; a
+  contagem passa a ser exata (**1** linha) e ganha o caso do plural (**2** linhas), que era justamente
+  o ramo que sumia.
+- `apps/api/test/banco-de-teste-separado.test.ts` — caso novo que prova que a trilha do fixture não
+  sobra no banco de prova. O teste foi escrito primeiro e **falhou pelo motivo certo** —
+  `AssertionError: a trilha do fixture tem de ir junto com ele: expected 2 to be +0` — e ficou verde
+  com a correção. A primeira versão do assert contava por `userId`, e ela passaria mesmo sem a
+  correção, porque o `onDelete: SetNull` zera o `user_id` ao apagar a pessoa: o assert foi trocado
+  pela contagem por **id** das linhas criadas, mais a contagem total antes e depois.
+
+Nenhum teste foi enfraquecido, pulado ou apagado, e a base de cobertura versionada **não foi
+rebaixada**. O que ficou medido depois da correção está na adenda de encerramento deste turno.
+
+
+O registro histórico de N86, acima desta adenda, foi preservado. Ser transitivo do `axios` do painel
+**não prova que `follow-redirects` entre no bundle do navegador**: o uso localizado está no adaptador
+HTTP de Node (`node_modules/axios/lib/adapters/http.js:12`). A inclusão efetiva no bundle não foi
+verificada nesta revisão; a alegação anterior de execução no navegador não se sustenta nessa evidência.
+
+O YAML local em trabalho (`.github/workflows/portoes.yml:23-27`) declara eventos `push` na `main` e
+`pull_request` para `main`, não execução diária. `.github/dependabot.yml` declara frequência **semanal**.
+A existência desses arquivos não prova execução remota bem-sucedida nem proteção de branch/checks
+obrigatórios configurados no GitHub. A F8 continua em andamento, com execução remota e aceite pendentes;
+não se deve descrever o conjunto como alarme diário nem como bloqueio de merge já comprovado.
+
+### Sobre os caracteres que o dono mandou eliminar
+
+A captura anexada ao pedido aponta entradas rotuladas com caracteres de alfabeto não latino no painel de
+anexos da IDE. A medição fechou: **0 caracteres não latinos** nos 579 arquivos rastreados e nos 1404
+arquivos de texto da árvore, em nome e em conteúdo. Aquelas entradas não são arquivo deste projeto — são
+o rótulo localizado que a IDE dá a texto colado, gravado fora do repositório com nome UUID em
+`.qoder/tmp/.../attachments/`. O idioma da interface está em `en` e o enum só oferece `zh` e `en`, de modo
+que o rótulo não vem do idioma escolhido. Nada foi apagado: o anexo é do dono, mora fora da árvore, e a
+regra da casa proíbe apagar arquivo que não seja nosso. O que cabe aqui é o relato, não a exclusão.
+
+### O que fica com o dono
+
+Esta revisão corrige documentação, não implementa soluções para N87 a N99. N87 a N90 exigem revisão
+dos contratos de moeda/data e testes de apresentação; N91 exige prova da sonda na requisição completa;
+N92 exige orçamento de conexões e medição. Receber `.env.tidb.local` não resolve esses achados nem
+certifica prontidão para produção. A F8 ainda depende de execução remota e aceite.
+
+N93 a N99 incluem ausência de referência estática, lacuna de produto, configuração de testes e
+observações de organização; não são todos inócuos nem defeitos funcionais comprovados. Prioridade,
+correção ou adiamento precisam de decisão explícita do dono. Registrá-los no ROADMAP não significa que
+seu adiamento para depois da 1.0 já tenha sido aprovado.

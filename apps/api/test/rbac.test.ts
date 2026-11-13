@@ -5,7 +5,6 @@ describe("RBAC", () => {
   const created: { userIds: string[]; companyIds: string[] } = { userIds: [], companyIds: [] };
   afterAll(async () => {
     await cleanup(created);
-    await app.close();
   });
 
   async function tokenFor(role: "OWNER" | "ADMIN" | "MANAGER" | "STAFF") {

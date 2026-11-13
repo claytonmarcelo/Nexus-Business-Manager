@@ -1,10 +1,31 @@
 # Estado atual do Nexus Business Manager
 
-Documento gerado por medição, não por memória. Cada número abaixo vem de um
-comando executado nesta rodada (2026-10-12), listado na seção "Como este arquivo
-foi medido" ao final. O que não pôde ser medido está marcado como
-`NÃO VERIFICADO`. Este arquivo é o retrato honesto do repositório no commit
-atual e o primeiro texto que um revisor externo deve ler.
+Este documento reúne medições de rodadas diferentes. O quadro abaixo é a conferência parcial de
+2026-11-13; as seções numeradas preservam o inventário histórico, com as datas de cada atualização.
+Seus números antigos não devem ser usados como retrato da árvore atual. A revisão integral segue
+pendente na F9. O que não pôde ser comprovado está marcado como `NÃO VERIFICADO`.
+
+## Conferência parcial — 2026-11-13
+
+| Item | Medição e limite |
+| --- | --- |
+| Arquivos versionáveis | 588, incluindo rastreados e novos não ignorados; não inclui dependências nem arquivos locais de credenciais |
+| API | 134 declarações de rota em 21 arquivos: 61 GET, 43 POST, 20 PATCH, 7 DELETE e 3 PUT; contadas pela AST TypeScript (medido em 2026-11-11; nenhuma rota mudou na rodada da T7) |
+| Schema Prisma | 35 models e 21 enums; duas migrations ativas, baseline de 2026-10-15 e eliminação do titular de 2026-10-17 |
+| Ferramentas | 61 arquivos versionáveis em `tools/`; entradas locais ignoradas não integram essa contagem |
+| Testes | API 60 arquivos / 553 casos e painel 24 arquivos / 191 casos, todos verdes, zero falha e zero skip, contra o banco de prova (`nexusbusinessmanager_teste`, decisão D6) |
+| Cobertura | 88,59% de instruções, 76,44% de ramificações, 88,55% de funções e 91,32% de linhas, em 100 arquivos de produção; igual à base versionada em `tools/cobertura-base.json` |
+| Qualidade F8 | Lint, comparação de audit e cobertura, postinstall e arquivos de CI/Dependabot implementados localmente; fase ainda em validação |
+| Execução remota | CI, Dependabot e checks obrigatórios no GitHub: `NÃO VERIFICADO`; YAML não configura proteção de branch |
+| Produção global | `NÃO VERIFICADO`: publicação TiDB/Vercel, fluxo autenticado com persistência e operação real ainda não comprovados |
+| Auditoria | N87 a N100 em `docs/AUDITORIA.md` e `docs/ROADMAP.md`; o N97 e o N100 foram corrigidos nesta rodada; registro não significa correção nem adiamento aprovado |
+
+Medição: `git ls-files --cached --others --exclude-standard -z`, AST de chamadas
+`app.get/post/patch/put/delete`, leitura do schema e enumeração das migrations ativas.
+As contagens de testes e cobertura das seções históricas abaixo são de rodadas anteriores e não substituem o
+quadro medido acima.
+
+## Histórico das medições
 
 Nesta rodada (2026-10-13, F3.2 Parte 1 — Ordens de Serviço) as seções 1, 3, 4, 5, 6, 7, 8, 9 e 10
 e o bloco "Como este arquivo foi medido" foram re-medidos porque o módulo mudou rotas, tabelas, telas e
@@ -648,11 +669,12 @@ se uma tela mudou de mãos com a última refatoração.
 
 ## 8. Testes
 
-Medidos no portão de fechamento da T6.3 (`npm test`, exit 0, saída real colada no relatório da
-rodada), com o banco de prova da decisão D6 ativo (a suíte da API não usa mock): zero falha e zero
-skip nas duas pontas, rodadas uma depois da outra e nunca sobrepostas. As durações variam corrida a
-corrida — o portão mediu **314,30 s** (API) e **11,49 s** (web) —, e o que sustenta o conteúdo da
-tabela é o contador de arquivos e casos, que não muda entre corridas.
+Medidos no portão de fechamento da T7 (2026-11-13), com o banco de prova da decisão D6 ativo (a
+suíte da API não usa mock) e com as duas pontas rodadas uma depois da outra e nunca sobrepostas:
+zero falha e zero skip nas duas. As durações variam corrida a corrida — a corrida com o medidor de
+cobertura ligado mediu **633,86 s** (API) e a do painel **27,20 s** (medida com a corrida da API ao
+lado) —, e o que sustenta o conteúdo da tabela é o contador de arquivos e casos, que não muda entre
+corridas.
 
 A tabela estava **três tarefas atrasada** quando esta rodada começou: ela dizia 50 arquivos / 459 casos
 na API e 20 / 156 no web, que são os números da T5.5, enquanto a T6.1, a T6.2 e a rodada do README/da
@@ -662,8 +684,18 @@ web. O atraso era de escrita, não de suíte — os casos novos existiam e passa
 
 | Suíte | Arquivos | Casos | Resultado | Duração |
 | --- | --- | --- | --- | --- |
-| API (`vitest`, forks, serial) | 54 | 483 | 54 passed (54) · 483 passed (483) | 314,30 s |
-| Web (jsdom + Testing Library) | 23 | 178 | 23 passed (23) · 178 passed (178) | 11,49 s |
+| API (`vitest`, forks, serial) | 60 | 553 | 60 passed (60) · 553 passed (553) | 633,86 s (com o medidor de cobertura ligado) |
+| Web (jsdom + Testing Library) | 24 | 191 | 24 passed (24) · 191 passed (191) | 27,20 s (medida com a corrida da API ao lado) |
+
+Sobre a medição anterior desta seção (54 arquivos / 483 casos na API), a API ganhou **6 arquivos e 70
+casos**: `config-da-suite.test.ts` (3 casos — o portão que impede a volta da chave de pool removida e o
+fechamento do app compartilhado) e `portoes-de-qualidade.test.ts` (19 casos — lint, cobertura e audit
+exercitados de verdade, com a prova vermelha junto) são arquivos novos; o resto dos casos novos está
+espalhado em arquivos que já existiam, e a repartição arquivo por arquivo **não** foi recontada nesta
+rodada. Entre os arquivos que já existiam, `banco-de-teste-separado.test.ts` ganhou o caso do resíduo
+da trilha de auditoria e `retencao-de-auditoria.test.ts` ganhou o caso do plural do expurgo — os dois
+escritos vermelhos antes da correção (achado **N100**). O painel não mudou de contagem desde a
+medição da T6.3: **24 arquivos / 191 casos**.
 
 Na API são **13 arquivos e 109 casos a mais** que a medição da F3.2 Parte 2 (37 / 350). Os dois
 primeiros entraram na T1 e na T2 e nunca tinham sido contados aqui

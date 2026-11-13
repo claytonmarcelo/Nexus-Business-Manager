@@ -9,7 +9,6 @@ describe("Cadastro e recuperação de senha", () => {
   const created: { userIds: string[]; companyIds: string[] } = { userIds: [], companyIds: [] };
   afterAll(async () => {
     await cleanup(created);
-    await app.close();
   });
 
   it("cadastro cria usuário + empresa própria como OWNER e já autentica", async () => {

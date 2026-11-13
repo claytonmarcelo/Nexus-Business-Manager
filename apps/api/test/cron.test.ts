@@ -86,7 +86,6 @@ describe("Cron: rotas /ops/jobs e executor", () => {
 
   afterAll(async () => {
     await cleanup(created);
-    await app.close();
   });
 
   it("RBAC: só o administrador da plataforma vê a lista; papel de empresa não abre", async () => {

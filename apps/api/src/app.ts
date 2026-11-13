@@ -55,7 +55,7 @@ export function buildApp(): FastifyInstance {
   // com payload vazio, e o parser padrão recusaria com 400 "Body cannot be
   // empty". Aqui corpo vazio vale {} — JSON escrito errado continua 400, mas
   // com a nossa mensagem.
-  app.addContentTypeParser("application/json", { parseAs: "string" }, (req, body, done) => {
+  app.addContentTypeParser("application/json", { parseAs: "string" }, (_req, body, done) => {
     const texto = String(body).trim();
     if (texto === "") return done(null, {});
     try {

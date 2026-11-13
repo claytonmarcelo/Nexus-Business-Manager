@@ -584,13 +584,29 @@ ninguém nem trocar segredo no ar.
 3. `node deploy/env-vercel.cjs prj_XXXX --url https://<painel> --team team_XXXX` para subir o ambiente.
 4. `vercel deploy --prod` com o Root Directory na **raiz** do repositório (o `vercel.json` da raiz não é lido
    se a pasta for `apps/web`).
-5. Prova no ar: `/`, `/login` e `/app` respondem 200, `/api/health` responde 200 (a rota existe, e o rewrite
-   deixa `/api/*` de fora do SPA), e o login de uma conta fictícia abre o painel.
+5. Prova no ar: conferir `/`, `/login` e `/app`, e exigir de `/api/health` HTTP 200 **com corpo JSON
+   saudável**: `status: "ok"` e `db: "up"`, conforme o contrato atual de `health.routes.ts:13` (não há
+   valor literal `"healthy"` nesse contrato). Só o 200 pode ser resposta degradada ou HTML do fallback
+   da SPA. Entrar com uma conta de prova autorizada e completar um fluxo autenticado que leia um dado
+   real persistido da empresa, conferindo a resposta da API e a exibição no painel; abrir a página de
+   login ou o shell do painel não basta. Registrar a evidência, sem expor credenciais ou dados pessoais.
 
-## 13. O que ainda não está aqui
+## 13. O que existe localmente e o que ainda falta validar
 
-- **Pipeline de CI, `npm audit`, portões de cobertura, `postinstall` do Prisma e o conserto da cadeia de
-  migrations para clone limpo** (N54) — F8 (T7).
+- **F8/T7 em andamento, não ausente nem concluída.** O pipeline local
+  `.github/workflows/portoes.yml` já declara instalação, migrations, tipos, build, suítes, links, lint,
+  cobertura e audit; `tools/verifica-cobertura.cjs` e `tools/verifica-audit.cjs` existem, assim como o
+  `postinstall` da raiz que chama `prisma:generate`. São artefatos locais em trabalho, não prova de
+  execução remota: faltam essa execução e o aceite da F8. O YAML dispara em `push` na `main` e
+  `pull_request` para `main`; o Dependabot em `.github/dependabot.yml` é **semanal**, não alarme diário.
+  A existência do workflow não comprova proteção de branch nem checks obrigatórios no GitHub.
+- **Baseline de migrations C1 já entregue (N54).**
+  `apps/api/prisma/migrations/20261015000000_baseline/migration.sql` existe; a entrega e as provas de
+  banco vazio estão registradas em `docs/STATUS-AJUSTES.md`, fase C1 (2026-10-15).
+  `deploy/preparar-banco-de-dados.cjs` executa `migrate deploy`, sem o antigo fallback de `db push`.
+  O relato da T5.1 na seção 4 preserva o estado anterior à C1; não descreve uma ausência atual do
+  baseline. A validação remota do pipeline continua pendente, e não se reaplicaram migrations nem se
+  repetiram provas de banco nesta revisão documental.
 - **Política de logs com rotação e retenção** — o backup do banco existe desde a T5.2, a rotação de log ainda não.
   O nível de log de produção (N69, seção 7) está na mesma conta.
 - **Store compartilhado do limitador de taxa.** Os tetos por endereço (`@fastify/rate-limit`, store em memória)

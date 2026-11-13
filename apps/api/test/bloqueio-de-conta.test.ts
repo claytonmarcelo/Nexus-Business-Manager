@@ -89,7 +89,6 @@ afterAll(async () => {
   // que criou, inclusive as linhas de endereço que não é de ninguém.
   const depois = await prisma.loginAttempt.count();
   expect(depois).toBeLessThanOrEqual(tentativasAntes);
-  await app.close();
 });
 
 describe("Bloqueio de conta por tentativas de login", () => {

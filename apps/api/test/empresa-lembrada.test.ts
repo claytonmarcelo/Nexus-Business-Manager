@@ -115,7 +115,6 @@ async function casaLembrada(userId: string): Promise<string | null> {
 describe("A empresa escolhida quando ninguém pede (N32 / D5)", () => {
   afterAll(async () => {
     await cleanup(criados);
-    await app.close();
   });
 
   it("sem pedir empresa, o login devolve o vínculo mais antigo — e sempre o mesmo", async () => {

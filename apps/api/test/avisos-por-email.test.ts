@@ -147,7 +147,6 @@ afterEach(async () => {
 afterAll(async () => {
   await cleanup(criado);
   criado = { userIds: [], companyIds: [], emails: [] };
-  await app.close();
 });
 
 describe("Avisos por e-mail (N59)", () => {

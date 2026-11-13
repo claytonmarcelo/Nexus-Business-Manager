@@ -1,0 +1,613 @@
+{
+  "medidoEm": "2026-11-09",
+  "global": {
+    "statements": 88.59,
+    "branches": 76.44,
+    "functions": 88.55,
+    "lines": 91.32
+  },
+  "porArquivo": {
+    "src/app.ts": {
+      "statements": 85.18,
+      "branches": 50,
+      "functions": 80,
+      "lines": 86.53
+    },
+    "src/config/env.ts": {
+      "statements": 60,
+      "branches": 33.33,
+      "functions": 66.66,
+      "lines": 57.14
+    },
+    "src/config/producao.ts": {
+      "statements": 99.01,
+      "branches": 98.86,
+      "functions": 100,
+      "lines": 100
+    },
+    "src/lib/audit.ts": {
+      "statements": 88.88,
+      "branches": 100,
+      "functions": 100,
+      "lines": 88.88
+    },
+    "src/lib/auth.ts": {
+      "statements": 75,
+      "branches": 80,
+      "functions": 100,
+      "lines": 100
+    },
+    "src/lib/brFields.ts": {
+      "statements": 90,
+      "branches": 83.87,
+      "functions": 100,
+      "lines": 97.95
+    },
+    "src/lib/company-context.ts": {
+      "statements": 85.71,
+      "branches": 80,
+      "functions": 100,
+      "lines": 100
+    },
+    "src/lib/criptografia.ts": {
+      "statements": 97.22,
+      "branches": 90,
+      "functions": 100,
+      "lines": 97.22
+    },
+    "src/lib/errors.ts": {
+      "statements": 94.11,
+      "branches": 75,
+      "functions": 85.71,
+      "lines": 93.75
+    },
+    "src/lib/installments.ts": {
+      "statements": 95,
+      "branches": 88,
+      "functions": 100,
+      "lines": 100
+    },
+    "src/lib/mail/console.ts": {
+      "statements": 25,
+      "branches": 0,
+      "functions": 25,
+      "lines": 25
+    },
+    "src/lib/mail/fake.ts": {
+      "statements": 100,
+      "branches": 100,
+      "functions": 100,
+      "lines": 100
+    },
+    "src/lib/mail/fila.ts": {
+      "statements": 91.25,
+      "branches": 85.71,
+      "functions": 95.23,
+      "lines": 91.66
+    },
+    "src/lib/mail/index.ts": {
+      "statements": 76.47,
+      "branches": 28.12,
+      "functions": 100,
+      "lines": 73.33
+    },
+    "src/lib/mail/mensagens.ts": {
+      "statements": 100,
+      "branches": 72.72,
+      "functions": 100,
+      "lines": 100
+    },
+    "src/lib/mail/porta.ts": {
+      "statements": 85.71,
+      "branches": 50,
+      "functions": 100,
+      "lines": 100
+    },
+    "src/lib/mail/smtp.ts": {
+      "statements": 0,
+      "branches": 0,
+      "functions": 0,
+      "lines": 0
+    },
+    "src/lib/money.ts": {
+      "statements": 97.95,
+      "branches": 92.85,
+      "functions": 100,
+      "lines": 97.5
+    },
+    "src/lib/pagination.ts": {
+      "statements": 100,
+      "branches": 100,
+      "functions": 100,
+      "lines": 100
+    },
+    "src/lib/password.ts": {
+      "statements": 100,
+      "branches": 100,
+      "functions": 100,
+      "lines": 100
+    },
+    "src/lib/passwordPolicy.ts": {
+      "statements": 100,
+      "branches": 62.5,
+      "functions": 100,
+      "lines": 100
+    },
+    "src/lib/pix.ts": {
+      "statements": 86.95,
+      "branches": 83.33,
+      "functions": 100,
+      "lines": 95.23
+    },
+    "src/lib/platform.ts": {
+      "statements": 83.33,
+      "branches": 75,
+      "functions": 100,
+      "lines": 100
+    },
+    "src/lib/prisma.ts": {
+      "statements": 100,
+      "branches": 66.66,
+      "functions": 100,
+      "lines": 100
+    },
+    "src/lib/rbac.ts": {
+      "statements": 100,
+      "branches": 97.05,
+      "functions": 100,
+      "lines": 100
+    },
+    "src/lib/segundo-fator.ts": {
+      "statements": 93.1,
+      "branches": 80,
+      "functions": 100,
+      "lines": 95.65
+    },
+    "src/lib/stock.ts": {
+      "statements": 81.25,
+      "branches": 72.22,
+      "functions": 100,
+      "lines": 92.85
+    },
+    "src/lib/tentativas.ts": {
+      "statements": 96.66,
+      "branches": 96.42,
+      "functions": 100,
+      "lines": 100
+    },
+    "src/lib/time.ts": {
+      "statements": 100,
+      "branches": 81.25,
+      "functions": 100,
+      "lines": 100
+    },
+    "src/lib/tokens.ts": {
+      "statements": 87.5,
+      "branches": 50,
+      "functions": 100,
+      "lines": 100
+    },
+    "src/lib/tx.ts": {
+      "statements": 100,
+      "branches": 91.66,
+      "functions": 100,
+      "lines": 100
+    },
+    "src/modules/agenda/agenda.routes.ts": {
+      "statements": 100,
+      "branches": 100,
+      "functions": 100,
+      "lines": 100
+    },
+    "src/modules/agenda/agenda.schemas.ts": {
+      "statements": 90.9,
+      "branches": 100,
+      "functions": 75,
+      "lines": 90.9
+    },
+    "src/modules/agenda/agenda.service.ts": {
+      "statements": 96.55,
+      "branches": 85.18,
+      "functions": 100,
+      "lines": 98.05
+    },
+    "src/modules/audit/audit.routes.ts": {
+      "statements": 84.44,
+      "branches": 64.86,
+      "functions": 100,
+      "lines": 86.11
+    },
+    "src/modules/audit/retencao-auditoria.ts": {
+      "statements": 100,
+      "branches": 88.23,
+      "functions": 100,
+      "lines": 100
+    },
+    "src/modules/auth/auth.routes.ts": {
+      "statements": 97.56,
+      "branches": 80,
+      "functions": 100,
+      "lines": 98.75
+    },
+    "src/modules/auth/auth.service.ts": {
+      "statements": 95.3,
+      "branches": 86.66,
+      "functions": 100,
+      "lines": 98.38
+    },
+    "src/modules/auth/schemas.ts": {
+      "statements": 100,
+      "branches": 100,
+      "functions": 100,
+      "lines": 100
+    },
+    "src/modules/auth/segundo-fator.service.ts": {
+      "statements": 87.73,
+      "branches": 81.53,
+      "functions": 100,
+      "lines": 94.5
+    },
+    "src/modules/auth/verificacao.service.ts": {
+      "statements": 100,
+      "branches": 100,
+      "functions": 100,
+      "lines": 100
+    },
+    "src/modules/charges/charge-adapters.ts": {
+      "statements": 83.33,
+      "branches": 65.62,
+      "functions": 100,
+      "lines": 88
+    },
+    "src/modules/charges/charges.routes.ts": {
+      "statements": 100,
+      "branches": 50,
+      "functions": 100,
+      "lines": 100
+    },
+    "src/modules/charges/charges.schemas.ts": {
+      "statements": 95.23,
+      "branches": 95.23,
+      "functions": 100,
+      "lines": 94.73
+    },
+    "src/modules/charges/charges.service.ts": {
+      "statements": 90.16,
+      "branches": 74.57,
+      "functions": 100,
+      "lines": 94.28
+    },
+    "src/modules/clients/clients.routes.ts": {
+      "statements": 100,
+      "branches": 100,
+      "functions": 100,
+      "lines": 100
+    },
+    "src/modules/clients/clients.schemas.ts": {
+      "statements": 100,
+      "branches": 66.66,
+      "functions": 100,
+      "lines": 100
+    },
+    "src/modules/clients/clients.service.ts": {
+      "statements": 100,
+      "branches": 100,
+      "functions": 100,
+      "lines": 100
+    },
+    "src/modules/cms/cms.routes.ts": {
+      "statements": 95.38,
+      "branches": 100,
+      "functions": 87.5,
+      "lines": 96.77
+    },
+    "src/modules/cms/cms.schemas.ts": {
+      "statements": 100,
+      "branches": 25,
+      "functions": 100,
+      "lines": 100
+    },
+    "src/modules/cms/cms.service.ts": {
+      "statements": 93.82,
+      "branches": 74.61,
+      "functions": 92,
+      "lines": 96.47
+    },
+    "src/modules/companies/companies.routes.ts": {
+      "statements": 77.77,
+      "branches": 100,
+      "functions": 66.66,
+      "lines": 77.77
+    },
+    "src/modules/companies/companies.schemas.ts": {
+      "statements": 100,
+      "branches": 100,
+      "functions": 100,
+      "lines": 100
+    },
+    "src/modules/companies/companies.service.ts": {
+      "statements": 64.61,
+      "branches": 76.78,
+      "functions": 66.66,
+      "lines": 70.37
+    },
+    "src/modules/crm/crm.routes.ts": {
+      "statements": 100,
+      "branches": 100,
+      "functions": 100,
+      "lines": 100
+    },
+    "src/modules/crm/crm.schemas.ts": {
+      "statements": 100,
+      "branches": 100,
+      "functions": 100,
+      "lines": 100
+    },
+    "src/modules/crm/crm.service.ts": {
+      "statements": 98.18,
+      "branches": 88.23,
+      "functions": 100,
+      "lines": 97.87
+    },
+    "src/modules/cron/cron.handlers.ts": {
+      "statements": 97.87,
+      "branches": 64.28,
+      "functions": 100,
+      "lines": 100
+    },
+    "src/modules/cron/cron.parse.ts": {
+      "statements": 86.27,
+      "branches": 86.41,
+      "functions": 71.42,
+      "lines": 90.1
+    },
+    "src/modules/cron/cron.routes.ts": {
+      "statements": 100,
+      "branches": 100,
+      "functions": 100,
+      "lines": 100
+    },
+    "src/modules/cron/cron.runner.ts": {
+      "statements": 0,
+      "branches": 0,
+      "functions": 0,
+      "lines": 0
+    },
+    "src/modules/cron/cron.schemas.ts": {
+      "statements": 100,
+      "branches": 100,
+      "functions": 100,
+      "lines": 100
+    },
+    "src/modules/cron/cron.service.ts": {
+      "statements": 80,
+      "branches": 64,
+      "functions": 85.71,
+      "lines": 85.71
+    },
+    "src/modules/finance/finance.routes.ts": {
+      "statements": 97.91,
+      "branches": 100,
+      "functions": 90.9,
+      "lines": 100
+    },
+    "src/modules/finance/finance.schemas.ts": {
+      "statements": 100,
+      "branches": 100,
+      "functions": 100,
+      "lines": 100
+    },
+    "src/modules/finance/finance.service.ts": {
+      "statements": 67.74,
+      "branches": 48.8,
+      "functions": 100,
+      "lines": 75
+    },
+    "src/modules/gateways/gateways.routes.ts": {
+      "statements": 87.5,
+      "branches": 50,
+      "functions": 100,
+      "lines": 93.33
+    },
+    "src/modules/gateways/gateways.schemas.ts": {
+      "statements": 100,
+      "branches": 100,
+      "functions": 100,
+      "lines": 100
+    },
+    "src/modules/gateways/gateways.service.ts": {
+      "statements": 90.47,
+      "branches": 84,
+      "functions": 92.85,
+      "lines": 100
+    },
+    "src/modules/health/health.routes.ts": {
+      "statements": 83.33,
+      "branches": 50,
+      "functions": 100,
+      "lines": 83.33
+    },
+    "src/modules/lgpd/lgpd.routes.ts": {
+      "statements": 100,
+      "branches": 100,
+      "functions": 100,
+      "lines": 100
+    },
+    "src/modules/lgpd/lgpd.schemas.ts": {
+      "statements": 100,
+      "branches": 100,
+      "functions": 100,
+      "lines": 100
+    },
+    "src/modules/lgpd/lgpd.service.ts": {
+      "statements": 97.87,
+      "branches": 80.76,
+      "functions": 100,
+      "lines": 100
+    },
+    "src/modules/notifications/notifications.routes.ts": {
+      "statements": 100,
+      "branches": 100,
+      "functions": 100,
+      "lines": 100
+    },
+    "src/modules/notifications/notifications.schemas.ts": {
+      "statements": 100,
+      "branches": 100,
+      "functions": 100,
+      "lines": 100
+    },
+    "src/modules/notifications/notifications.service.ts": {
+      "statements": 95.55,
+      "branches": 80.18,
+      "functions": 97.14,
+      "lines": 97.32
+    },
+    "src/modules/platform-accounts/contas.routes.ts": {
+      "statements": 100,
+      "branches": 50,
+      "functions": 100,
+      "lines": 100
+    },
+    "src/modules/platform-accounts/contas.schemas.ts": {
+      "statements": 100,
+      "branches": 100,
+      "functions": 100,
+      "lines": 100
+    },
+    "src/modules/platform-accounts/contas.service.ts": {
+      "statements": 100,
+      "branches": 80,
+      "functions": 100,
+      "lines": 100
+    },
+    "src/modules/products/products.routes.ts": {
+      "statements": 95.08,
+      "branches": 100,
+      "functions": 91.66,
+      "lines": 95.08
+    },
+    "src/modules/products/products.schemas.ts": {
+      "statements": 100,
+      "branches": 87.5,
+      "functions": 100,
+      "lines": 100
+    },
+    "src/modules/products/products.service.ts": {
+      "statements": 81.31,
+      "branches": 55.55,
+      "functions": 90,
+      "lines": 81.92
+    },
+    "src/modules/purchases/purchases.routes.ts": {
+      "statements": 97.67,
+      "branches": 50,
+      "functions": 90,
+      "lines": 100
+    },
+    "src/modules/purchases/purchases.schemas.ts": {
+      "statements": 100,
+      "branches": 100,
+      "functions": 100,
+      "lines": 100
+    },
+    "src/modules/purchases/purchases.service.ts": {
+      "statements": 88.88,
+      "branches": 77.14,
+      "functions": 94.73,
+      "lines": 95.12
+    },
+    "src/modules/reports/reports.routes.ts": {
+      "statements": 70.9,
+      "branches": 50,
+      "functions": 50,
+      "lines": 65.95
+    },
+    "src/modules/reports/reports.service.ts": {
+      "statements": 50.41,
+      "branches": 33.57,
+      "functions": 32.87,
+      "lines": 53.77
+    },
+    "src/modules/sales/sales.routes.ts": {
+      "statements": 100,
+      "branches": 100,
+      "functions": 100,
+      "lines": 100
+    },
+    "src/modules/sales/sales.schemas.ts": {
+      "statements": 100,
+      "branches": 100,
+      "functions": 100,
+      "lines": 100
+    },
+    "src/modules/sales/sales.service.ts": {
+      "statements": 94.62,
+      "branches": 90,
+      "functions": 100,
+      "lines": 100
+    },
+    "src/modules/service-orders/service-orders.routes.ts": {
+      "statements": 100,
+      "branches": 100,
+      "functions": 100,
+      "lines": 100
+    },
+    "src/modules/service-orders/service-orders.schemas.ts": {
+      "statements": 90.9,
+      "branches": 88.88,
+      "functions": 83.33,
+      "lines": 94.73
+    },
+    "src/modules/service-orders/service-orders.service.ts": {
+      "statements": 93.8,
+      "branches": 86.58,
+      "functions": 100,
+      "lines": 97.2
+    },
+    "src/modules/users/users.routes.ts": {
+      "statements": 100,
+      "branches": 100,
+      "functions": 100,
+      "lines": 100
+    },
+    "src/modules/users/users.schemas.ts": {
+      "statements": 100,
+      "branches": 100,
+      "functions": 100,
+      "lines": 100
+    },
+    "src/modules/users/users.service.ts": {
+      "statements": 88.23,
+      "branches": 77.77,
+      "functions": 100,
+      "lines": 93.18
+    },
+    "src/plugins/auth.ts": {
+      "statements": 100,
+      "branches": 92.85,
+      "functions": 100,
+      "lines": 100
+    },
+    "src/plugins/gate.ts": {
+      "statements": 100,
+      "branches": 85.71,
+      "functions": 100,
+      "lines": 100
+    },
+    "src/plugins/maintenance.ts": {
+      "statements": 100,
+      "branches": 90,
+      "functions": 100,
+      "lines": 100
+    },
+    "src/plugins/security.ts": {
+      "statements": 100,
+      "branches": 50,
+      "functions": 100,
+      "lines": 100
+    }
+  },
+  "exceptuados": {},
+  "nota": "Numero de medicao da cobertura por arquivo. O portao falha quando algum arquivo cai abaixo do que valia aqui."
+}

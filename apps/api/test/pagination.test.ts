@@ -6,7 +6,6 @@ describe("Paginação global", () => {
   const created: { userIds: string[]; companyIds: string[] } = { userIds: [], companyIds: [] };
   afterAll(async () => {
     await cleanup(created);
-    await app.close();
   });
 
   it("respeita pageSize e devolve meta coerente", async () => {

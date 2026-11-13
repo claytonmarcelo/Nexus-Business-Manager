@@ -3,6 +3,13 @@ import { prisma } from "../src/lib/prisma";
 import { hashPassword } from "../src/lib/password";
 import { env } from "../src/config/env";
 
+// O app é um só para a suíte inteira. A configuração roda o Vitest com
+// `maxWorkers: 1` e `isolate: false` (achado N97): sem isolamento por arquivo
+// o módulo não é reavaliado, e o que se constrói aqui é o mesmo app para todos
+// os arquivos. Por isso nenhum arquivo de teste fecha o app — fechá-lo aqui
+// derrubaria os arquivos seguintes com "Fastify has already been closed and
+// cannot be reopened". O portão que impede alguém de fechar está em
+// `test/config-da-suite.test.ts`.
 export const app = buildApp();
 
 let counter = 0;
@@ -58,8 +65,9 @@ app.inject = ((pedido: string | PedidoInjetado) => {
 // anterior no caminho de volta, inclusive quando o trecho lança. `env` é o objeto
 // validado pelo zod de `config/env.ts`, e os serviços o leem na hora da chamada —
 // foi assim que a F4 pôde provar os dois lados de REQUIRE_EMAIL_VERIFICATION sem
-// subir um segundo processo da API. O `vitest` roda os arquivos em série num único
-// processo (pool forks + singleFork), então não há corrida com outra suíte.
+// subir um segundo processo da API. O `vitest` roda os arquivos em série, num
+// worker só (pool forks + `maxWorkers: 1` + `isolate: false`), então não há
+// corrida com outra suíte.
 export async function comFlag<T>(
   nome: keyof typeof env,
   valor: string | number,
@@ -131,12 +139,30 @@ export function origemDaSessao(metadata: unknown): string | null {
 // compra aponta fornecedor — barram o deleteMany direto da empresa se a
 // limpeza tentar contar só com as cascatas. ids vêm dos próprios testes (uuid),
 // nunca de usuário, então a interpolação na lista IN é segura aqui.
+//
+// A trilha de auditoria entra na limpeza junto, e por dois motivos medidos:
+//
+//  1. **Ela é a única tabela que sobrevivia ao fixture.** `audit_logs` tem
+//     `onDelete: SetNull` para pessoa e empresa (schema.prisma): apagada a
+//     conta, a linha não vai junto — ela fica órfã, sem dono. O banco de prova
+//     acumulou 61.155 linhas assim, 60.541 delas sem ninguém (medido).
+//  2. **O número que a retenção apaga dependia desse lixo.** O expurgo conta
+//     as linhas mais velhas que a janela, e o banco compartilhado fazia esse
+//     número varyer de 1 para 12.131 entre rodadas — o suficiente para o
+//     portão de cobertura reprovar num dia e passar no outro, sem que nada
+//     no produto tivesse mudado.
+//
+// Por isso a trilha é apagada por DOIS recortes, e os dois têm de rodar
+// antes de a empresa e a pessoa irem embora: por empresa (a linha de tenant) e
+// por pessoa (o evento de plataforma, em que a empresa é só a origem da
+// sessão e a linha pertence a quem praticou a ação).
 export async function cleanup(ids: {
   userIds?: string[];
   companyIds?: string[];
   emails?: string[];
 }): Promise<void> {
   const empresaIds = (ids.companyIds ?? []).map((i) => `'${i.replace(/'/g, "")}'`).join(",");
+  const usuarioIds = (ids.userIds ?? []).map((i) => `'${i.replace(/'/g, "")}'`).join(",");
   if (empresaIds) {
     const viaPai: Array<[child: string, parent: string]> = [
       ["sale_items", "sales"],
@@ -157,9 +183,17 @@ export async function cleanup(ids: {
     for (const tabela of proprias) {
       await prisma.$executeRawUnsafe(`DELETE FROM \`${tabela}\` WHERE company_id IN (${empresaIds})`);
     }
+    // A trilha da casa, antes de a empresa sair: a linha de tenant pertence à
+    // empresa, e quem já tinha sido apagado deixou de apontar para alguém.
+    await prisma.$executeRawUnsafe(`DELETE FROM \`audit_logs\` WHERE company_id IN (${empresaIds})`);
     await prisma.company.deleteMany({ where: { id: { in: ids.companyIds } } });
   }
-  if (ids.userIds?.length) await prisma.user.deleteMany({ where: { id: { in: ids.userIds } } });
+  if (ids.userIds?.length) {
+    // A trilha de quem praticou a ação, antes de a pessoa sair: o evento de
+    // plataforma não tem empresa dona, e sem esta linha ele viraria órfã.
+    await prisma.$executeRawUnsafe(`DELETE FROM \`audit_logs\` WHERE user_id IN (${usuarioIds})`);
+    await prisma.user.deleteMany({ where: { id: { in: ids.userIds } } });
+  }
   // F4: a contagem de tentativas é chaveada pelo endereço, não pelo id da conta
   // (é o que permite bloquear quem testa e-mail inexistente sem denunciar quais
   // existem). Sem foreign key, ela não cai junto do `deleteMany` de `users`, então

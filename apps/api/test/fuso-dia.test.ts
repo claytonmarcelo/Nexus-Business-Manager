@@ -68,7 +68,6 @@ describe("Meia-noite no fuso da empresa (Fase 3c)", () => {
   const created: { userIds: string[]; companyIds: string[] } = { userIds: [], companyIds: [] };
   afterAll(async () => {
     await cleanup(created);
-    await app.close();
   });
 
   async function empresa(timezone: string) {

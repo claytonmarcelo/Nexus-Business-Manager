@@ -33,7 +33,6 @@ const created: { userIds: string[]; companyIds: string[] } = { userIds: [], comp
 
 afterAll(async () => {
   await cleanup(created);
-  await app.close();
 });
 
 describe("Configurações da empresa", () => {

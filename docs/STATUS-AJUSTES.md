@@ -4,7 +4,8 @@ Tabela de acompanhamento exigida pelo item A0 do prompt de mercado. Uma linha po
 contrato, com a situação e a prova que a sustenta.
 
 Situações possíveis: `FEITO` (corrigido e comprovado por teste nesta rodada), `JÁ CORRIGIDO`
-(o repositório já fazia, e a prova disso está apontada), `PENDENTE` (falta executar),
+(o repositório já fazia, e a prova disso está apontada), `PARCIAL` (parte comprovada, com pendências explícitas),
+`PENDENTE` (falta executar),
 `BLOQUEADO POR DECISÃO` (depende de resposta do dono — ver `docs/decisoes/`),
 `NÃO VERIFICADA` (não foi possível comprovar).
 
@@ -36,9 +37,9 @@ válidas como histórico do que já foi comprovado.
 | F5. Robustez do frontend (Problema C, N7, `ErrorBoundary`, `npm run verify`, code splitting) | FEITA | Entregue na T4 da rodada de continuação (2026-10-14), item por item, com a medição antes e depois de cada mudança. O Problema C saiu da tela de entrada (`privacidade-do-login.test.tsx` 15 casos + `verify-privacidade-login.cjs` **44 verificações em Chrome e Edge, 0 falhas**); N51/P14 virou guarda de resposta atrasada nas cinco telas de lista (`resposta-atrasada.test.tsx` 5 casos); N7 virou `data-bs-theme` sincronizado com o tema do painel (`tema-sincronizado.test.tsx` 6 casos); `ErrorBoundary` na raiz e por rota com `registro-erros.ts` (`limite-de-erro.test.tsx` 9 casos); `npm run verify` atravessa **63 telas em 3 larguras com 0 problemas**; a varredura de placeholder não encontrou nenhum (`zero-placeholder.test.ts` 3 casos); N62/P17 fechou com as duas telas da F4 montadas em jsdom e provadas no navegador (`verify-verificacao-e-2fa.cjs` **56 verificações, 0 falhas**, banco devolvido a zero). Bundle: era **964,31 kB / 283,61 kB gzip** num chunk só; virou **37 pedaços**, com `index` em **354,85 kB / 121,62 kB gzip** e o maior pedaco de rota em **286,34 kB / 83,52 kB** (Agenda, FullCalendar) — o aviso de chunk acima de 500 kB desapareceu do build. Régua de acessibilidade instalada (`verify-acessibilidade.cjs`, **22 telas / 649 controles / 22 verificações / 0 falhas**) e decisão registrada em `docs/adr/0014` e `docs/adr/0015`. Suíte: **API 47 arquivos / 437 casos** e **web 18 / 140**, zero falha e zero skip. |
 | F6. Docker, compose com 3306 fechado e `docs/PRODUCAO.md` | FEITA | Seis tarefas da F6 estão FEITAS e registradas na tabela da rodada. T5.0: a pilha de prova vive na 3002/5174 e a porta do dono (3001/5173) deixou de ser disputada. T5.1: `Dockerfile.api`, `Dockerfile.web`, `docker-compose.yml` e a régua `tools/verify-docker.cjs` existem, o banco e a API não publicam porta nenhuma, o painel é a única porta do host, e `docs/PRODUCAO.md` foi reescrito com números medidos. T5.2: o backup do banco da pilha existe como `deploy/backup-mysql.cjs`, a restauração como `deploy/restaurar-mysql.cjs`, e a prova de que um restaura o outro como `tools/verify-backup.cjs` — 56 verificações, 0 falhas — com o roteiro na seção 8 de `docs/PRODUCAO.md` e a decisão no ADR-0019. T5.3: a entrega de e-mail saiu de dentro do request — `apps/api/src/lib/mail/fila.ts` é a fila de memória do processo com retentativa, recuo, timeout e teto, os três chamadores entregam um código e o worker fala com o SMTP (7,43 ms de resposta medida contra os 600 ms do entregador injetado; N58 fechado, ADR-0020, seção 10 de `docs/PRODUCAO.md`). T5.4: o sino ganhou cópia por e-mail e as três rotinas ganharam chamador, com o portão sendo o que o entregador afirma (N59 e N75 fechados, ADR-0021). T5.5: a confirmação de e-mail tem porta administrativa — `/app/plataforma-contas` com fila, motivo obrigatório e auditoria de plataforma (`apps/api/src/modules/platform-accounts/`, N61 fechado, ADR-0022) — e o bootstrap do administrador raiz passou a destrancar o próprio e-mail, que era o N78. O que a F6 **não** fecha, declarado: `N69` (nível de log) e a rotação/retenção de log, o `postinstall` do Prisma (N9), o clone limpo (N54) e a agenda de backup fora do repositório (N71) — todos na conta da T7/F8 ou do dono. |
 | F7. LGPD, `SECURITY.md` e licença (só relatar) | FEITA | Aceite registrado no cadastro com versão, data, IP e usuário (T6.2, ADR-0023), o escape das mensagens de e-mail (T6.1, N76), o **direito de acesso** (T6.3: `GET /api/lgpd/meus-dados`, JSON com o que a casa guarda da pessoa, `O_QUE_NAO_SAI` declarado no corpo, trilha `lgpd.export` e a aba "Seus dados" no painel) e a **eliminação** (T6.4: `POST /api/lgpd/minha-conta/anonimizar` e `/excluir`, senha no corpo, guardas 403 plataforma → 409 último OWNER → 400 senha, anonimização preserva a linha como protocolo e exclusão apaga a pessoa preservando documentos, trilha sensível nas duas, ADR-0025) estão FEITOS. Os cinco itens da F7 estão FEITOS. (1) **Aceite** registrado no cadastro com versão, data, IP e usuário (T6.2, ADR-0023) e o escape das mensagens de e-mail (T6.1, N76). (2) **Direito de acesso** (T6.3: `GET /api/lgpd/meus-dados`, JSON com o que a casa guarda da pessoa, `O_QUE_NAO_SAI` declarado no corpo, trilha `lgpd.export` e a aba "Seus dados" no painel). (3) **Eliminação** (T6.4: `POST /api/lgpd/minha-conta/anonimizar` e `/excluir`, senha no corpo, guardas 403 plataforma → 409 último OWNER → 400 senha, anonimização preserva a linha como protocolo e exclusão apaga a pessoa preservando documentos, trilha sensível nas duas, ADR-0025). (4) **Retenção configurável** da trilha (T6.5: `AUDIT_RETENTION_DIAS` com padrão desligado, rotina `expurgo-de-auditoria` em lote que conta o que caiu, ADR-0026). (5) **`SECURITY.md` e o texto legal marcado** (T6.6: canal privado de relato com prazos de resposta e riscos aceitos por escrito, e o marcador `[RASCUNHO — DOCUMENTO SEM TEXTO DEFINITIVO]` que o servidor recusa publicar e a tela avisa antes do clique). A licença continua **só relatada**, conforme a decisão D10 do dono: o `package.json` declara `UNLICENSED` e o `SECURITY.md` escreve isso por extenso. **Duas ações ficam com o dono:** preencher o campo de e-mail do `SECURITY.md` e ligar a opção "Private vulnerability reporting" nas configurações do repositório no GitHub. |
-| F8. CI, dependabot, `postinstall` do Prisma (N9), clone limpo, `npm audit`, cobertura, lint, galeria (N13) | PENDENTE | **`npm audit` já foi medido na árvore, e o número é o ponto de partida desta fase: 8 vulnerabilidades (1 baixa, 2 moderadas, 5 altas, 0 críticas), com `npm audit --audit-level=high` devolvendo exit 1.** Nenhuma delas foi introduzida pela F7 — o diff de manifestos entre o começo e o fim da F7 (`git diff --stat e29a1a9 HEAD -- '*package.json' '*package-lock.json'`) é **vazio**. A conta item a item, com o caminho do conserto, está em `docs/AUDITORIA.md` (achado **N86**): `zod` 3.25.76 (alta) e `prisma`/`@prisma/config` 6.19.3 (alta) só saem com **quebra de major**; `fastify` 5.12.5 (baixa) e `nodemailer` 10.1.0 (moderada) saem **sem** quebra de major; `follow-redirects` 1.16.1 (alta, transitivo do `axios` do painel) sai subindo o `axios` dentro do range já declarado; `deepmerge-ts` e `fast-uri` são transitivos e sobem com os pais. O `npm audit fix --force` está proibido nesta casa e toda instalação de dependência pede aval do dono, então a correção fica na conta dele — e a F8 é a fase que transforma este número medido em **alarme diário**: `npm audit` no pipeline, dependabot e o `postinstall` do Prisma (N9). O `package-lock.json` **está** na árvore hoje (579 arquivos rastreados, `git ls-files`), o que resolves a ressalva antiga desta linha. |
+| F8. CI, dependabot, `postinstall` do Prisma (N9), clone limpo, `npm audit`, cobertura, lint, galeria (N13) | PARCIAL | Conferência de 2026-11-13: lint da casa, cobertura com piso por arquivo e comparação de audit implementados com testes de recusa; o postinstall gera o cliente Prisma e o TypeScript recusa declarações não usadas. O portão de cobertura rodou contra a base versionada e fechou **igual a ela** — 88,59% / 76,44% / 88,55% / 91,32% em 100 arquivos de produção —, depois de corrigido o achado **N100**, em que a contagem do expurgo da trilha dependia do resíduo do banco de prova e fazia o portão reprovar conforme o dia, sem que nada no produto tivesse mudado. O audit real mediu **8 vulnerabilidades (1 baixa, 2 moderadas, 5 altas, 0 críticas)**, sem aumento contra a base; não é ausência de vulnerabilidades. CI local usa Node 24, MySQL efêmero e segredos gerados com máscara; dispara em push/PR para main. Dependabot é **semanal**, não diário. Execução remota e checks obrigatórios são **NÃO VERIFICADOS** — o `gh` não está instalado nesta máquina —, e os YAMLs não configuram proteção de branch. Clone limpo tem prova histórica da C1, não reexecução desta árvore. Galeria N13/N82, portões finais e aceite continuam pendentes. Atualizações de dependências exigem aval; N86 segue aberto. |
 | F9. Prontidão e pacote de revisão | PENDENTE | — |
-| V1/V2. Publicação: painel e API na mesma origem, banco no TiDB | PARCIAL | Decisão do dono em 2026-11-08 (`docs/decisoes/G5-hospedagem-e-backup.md`): **TiDB Cloud Starter + Vercel na mesma origem** — um projeto, um endereço, uma regra de rewrite; o N81 (painel chamando API inexistente) deixa de ter como acontecer. Feito no repositório: entrypoint `api/[...path].ts` chamando `buildApp()` (a mesma montagem do container), `tsconfig.serverless.json` ligado ao `typecheck` da raiz, `binaryTargets = ["native", "rhel-openssl-3.0.x"]` no Prisma (sem o alvo das Functions a geração na nuvem baixa um motor que não roda lá), `vercel.json` com `installCommand` que roda o `prisma:generate` (N9) e `maxDuration: 90`, e `deploy/env-vercel.cjs` que sobe o ambiente pela API da Vercel sem imprimir valor de segredo. Prova: `npm run prova:serverless` fechou **5 checagens, 0 falhas** — health 200 com banco `up`, 404 no formato do app, 400 de validação, 401 sem sessão, cabeçalhos do helmet — contra o banco de prova. **Falta a ação do dono:** o `.env.tidb.local` com a conexão do cluster (fora do Git). Aí a ordem é preparar o banco (`migrate deploy`), `npm run admin:criar`, subir o ambiente, `vercel deploy --prod` com o Root Directory na raiz, e provar `/`, `/login`, `/app` e `/api/health` no ar. Detalhamento no `docs/PRODUCAO.md` §12. |
+| V1/V2. Publicação: painel e API na mesma origem, banco no TiDB | PARCIAL | Decisão do dono em 2026-11-08 (`docs/decisoes/G5-hospedagem-e-backup.md`): **TiDB Cloud Starter + Vercel na mesma origem** — um projeto, um endereço, uma regra de rewrite. Isso prepara a topologia, mas não prova a resolução do N81 (painel chamando API inexistente) no ambiente publicado. Feito no repositório: entrypoint `api/[...path].ts` chamando `buildApp()` (a mesma montagem do container), `tsconfig.serverless.json` ligado ao `typecheck` da raiz, `binaryTargets = ["native", "rhel-openssl-3.0.x"]` no Prisma (sem o alvo das Functions a geração na nuvem baixa um motor que não roda lá), `vercel.json` com `installCommand` que roda o `prisma:generate` (N9) e `maxDuration: 90`, e `deploy/env-vercel.cjs` que sobe o ambiente pela API da Vercel sem imprimir valor de segredo. Prova: `npm run prova:serverless` fechou **5 checagens, 0 falhas** — health 200 com banco `up`, 404 no formato do app, 400 de validação, 401 sem sessão, cabeçalhos do helmet — contra o banco de prova. **Pendências:** conexão TiDB fora do Git, configuração e validação operacional; não basta fornecer `.env`. O roteiro prevê migrations e bootstrap autorizados, ambiente, deploy e prova pública: health com `status: ok` e `db: up`, login autorizado e fluxo autenticado que persista e releia um dado. SMTP, conexões serverless, backup e achados de prontidão precisam de validação própria. Detalhamento no `docs/PRODUCAO.md` §12. |
 
 ### Portões medidos nesta rodada (2026-10-12, F0/F1.1)
 
@@ -971,3 +972,80 @@ publicação            git push origin main e git ls-remote origin HEAD refs/he
 "Private vulnerability reporting" nas configurações do repositório no GitHub; decidir se o `zod` e o `prisma`
 sobem de major antes ou depois da publicação; e, para a publicação em si, entregar o `.env.tidb.local` com a
 conexão do cluster TiDB (fora do Git), que é o que destrava a tarefa de produção (#184).
+
+### Portões da T7 (2026-11-13, encerramento da F8)
+
+A F8 fecha aqui. Os cinco itens dela estão FEITOS: o pipeline que roda sozinho em cada push e pull request
+(`.github/workflows/portoes.yml`), o Dependabot em `.github/dependabot.yml`, o portão de cobertura por arquivo
+(`tools/verifica-cobertura.cjs` com a base versionada em `tools/cobertura-base.json`), o portão de audit que
+falha quando a contagem de vulnerabilidades piora (`tools/verifica-audit.cjs` com `tools/audit-base.json`) e o
+lint próprio da casa (`tools/verifica-lint.cjs`), sem dependência nova. O `postinstall` do Prisma (achado N9)
+também entrou, porque o clone limpo do CI precisa gerar o Prisma Client antes de qualquer tipo.
+
+A rodada encontrou dois problemas reais, e os dois foram corrigidos na origem, não contornados no portão.
+
+**O primeiro é o N97 — a suíte da API perdia 39 workers numa rodada de cobertura.** O `vitest.config.ts` usava
+`poolOptions`, que o Vitest 4 removeu: a chave era ignorada e a suíte abria um processo por arquivo, até o
+Windows derrubar a rodada com `0xC0000142`. A equivalência vigente é `pool: "forks"` com `maxWorkers: 1` e
+`isolate: false`, que roda os 60 arquivos em um processo só. O `isolate: false` tem uma consequência que a casa
+aceitou de olhos abertos: o módulo de teste é compartilhado entre os arquivos, e por isso o portão que decide
+como a suíte roda mora em `apps/api/test/config-da-suite.test.ts`, para que ninguém mexa no jeito de rodar sem
+que um teste perceba.
+
+**O segundo é o N100, novo nesta rodada — o portão de cobertura reprovava conforme o dia.** O sintoma era
+silencioso: a cobertura global oscilava entre 88,59% e 88,46%, e dois arquivos caíam abaixo do piso por uma
+margem mínima. A causa não era o código: o `cleanup()` da suíte apagava a empresa e a pessoa do fixture, mas
+não a trilha de auditoria dessas linhas, e o `audit_logs` guarda `user` e `company` com `onDelete: SetNull` — a
+sobra vira órfã e fica no banco de prova. A medição encontrou **61.155 linhas** de resíduo, 60.541 delas
+órfãs, e a mais antiga a poucos minutos do corte de 30 dias do expurgo. Como o corte é `agora - 30 dias`, a
+quantidade de linhas apagadas pelo expurgo dependia do relógio — 12.131, depois 8, depois 1 — e o singular
+"1 linha apagada" só aparecia por acaso. A correção fecha o vazamento na origem: o `cleanup()` apaga a trilha
+por `company_id` e por `user_id` antes de a empresa e a pessoa irem embora, e a suíte da retenção limpa o
+passado expirado com um dia de folga antes de medir, com asserção exata de 1 e de 2 linhas. O teste novo
+falhou primeiro (`expected 2 to be +0`) e só depois foi corrigido o código. A direção de extrair o singular e o
+plural para dentro de um helper foi **descartada por medição**: ela levaria `retencao-auditoria.ts` a 14 de 16
+linhas, 87,50%, abaixo do piso de 88,23%. A base versionada não foi rebaixada e nenhum teste foi enfraquecido —
+a cobertura volta a fechar **igual à base**, o que prova que a correção restaurou o estado em vez de afrouxar a
+medida.
+
+```
+npm run typecheck      exit 0, sem saída — API, painel e o entrypoint serverless (tsconfig.serverless.json)
+npm run build          exit 0 — API compilada e painel construído em 7,13 s: index 355,56 kB / 121,90 kB gzip; maior
+                       pedaço de rota (Agenda) 286,34 kB / 83,53 kB gzip; CSS único 399,02 kB / 61,38 kB gzip
+npm run test:coverage  api 60 arquivos / 553 casos verdes, exit 0, zero falha, zero skip, 633,86 s com o
+                       medidor de cobertura ligado. Global: 88,59% instruções / 76,44% ramificações /
+                       88,55% funções / 91,32% linhas, em 100 arquivos de produção
+node tools/verifica-cobertura.cjs   exit 0 — 100 arquivos medidos, 0 exceptuados, nenhum arquivo de produção
+                       abaixo do piso. Comparação por porcentagem contra tools/cobertura-base.json
+npm run test:api       api 60 arquivos / 553 casos verdes, exit 0, zero falha, zero skip, 438,82 s s,
+                       contra o banco nexusbusinessmanager_teste (D6)
+npm run test:web       web 24 arquivos / 191 casos verdes, exit 0, zero falha, zero skip, 27,20 s (medida com a
+                       corrida da API ao lado)
+lint da casa           node tools/verifica-lint.cjs — 225 arquivos de produção lidos, 0 violação
+links da documentação  node tools/verifica-links-doc.cjs — 50 links relativos conferidos, 0 quebrado, 0 marcador
+audit das dependências node tools/verifica-audit.cjs — base de 2026-11-08: 8 vulnerabilidades (1 baixa,
+                       2 moderadas, 5 altas, 0 críticas); medido agora: as mesmas 8. A contagem não piorou.
+                       O conserto depende de decisão do dono (quebra de major no zod e no prisma) e de aval
+                       para instalar dependência — achado N86 em docs/AUDITORIA.md
+guarda da árvore       588 arquivos rastreados (457 de texto, 131 binários) — 0 BOM, 0 CRLF, 0 caractere de
+                       alfabeto não latino, 0 sem LF final
+varredura de segredo   10 valores de credencial dos arquivos locais conferidos contra os 63 arquivos
+                       alterados (o diretorio novo do GitHub entra arquivo por arquivo): 0 correspondência
+avanço direto         git status --short vazio antes do commit; nenhum stash, nenhum arquivo fora do
+                       rastreio, nenhum arquivo apagado nesta fase
+publicação            git push origin main e git ls-remote origin HEAD refs/heads/main com o mesmo hash
+```
+
+O `.gitattributes` ganhou nesta rodada as duas linhas que faltavam para ele governar a si mesmo e o
+`.gitignore` (`.gitignore text eol=lf` e `.gitattributes text eol=lf`). Com `core.autocrlf` ligado nesta
+máquina, sem essas duas linhas o Git podia reescrever esses dois arquivos com CRLF no próximo checkout, e a
+regra de UTF-8 sem BOM e LF da casa valeria só por acaso.
+
+**O que fica com o dono.** A execução remota do pipeline e do Dependabot continua **NÃO VERIFICADA** — o `gh`
+não está instalado nesta máquina, então nada do que roda no GitHub foi observado de fato, e o bloco de merge
+ainda depende de configurar o job como verificação obrigatória nas configurações do repositório. Os achados
+**N87 a N99** da auditoria de 2026-11-09 não compartilham o mesmo destino: o **N97** foi corrigido na rodada
+anterior desta fase e o **N100** é o achado novo desta rodada, também corrigido. Os demais continuam pendentes
+de avaliação — e pendência de avaliação não é certificação de produção. Para a publicação em si, continua
+pendente o `.env.tidb.local` com a conexão do cluster TiDB (fora do Git), que é o que destrava a tarefa de
+produção (#184).

@@ -96,7 +96,6 @@ afterAll(async () => {
   // Os três eventos escritos direto pelo audit() são do teste, não do produto.
   await prisma.auditLog.deleteMany({ where: { action: ACAO_DO_TESTE } });
   await cleanup(created);
-  await app.close();
 });
 
 describe("Auditoria da plataforma e do tenant (F2 / N14)", () => {
